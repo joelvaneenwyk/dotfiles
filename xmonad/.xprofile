@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Add extra things to the PATH to be accessible to dmenu.
+if [ -d "$HOME/.local/bin" ]; then
+   PATH="$HOME/.local/bin:$PATH"
+fi
+
+if [ -d "$HOME/.local/sbin" ]; then
+   PATH="$HOME/.local/sbin:$PATH"
+fi
+
+if [ -d "$HOME/.rbenv" ]; then
+   PATH="$HOME/.rbenv/bin:$PATH"
+   eval "$(rbenv init -)"
+fi
+
+xrandr --output GPU-0.DP-0 --auto \
+       --output GPU-0.DP-1 --auto --below GPU-0.DP-0 \
+       --output GPU-1.DP-0 --auto --right-of GPU-0.DP-1
+
+xrdb -merge $HOME/.Xresources
+
+# Add tray for icons.
+trayer --edge bottom --align right --SetDockType true --SetPartialStrut true --expand false --widthtype percent --width 10% --height 20 --transparent true --alpha 255 &
+
+# Allow nautilus to take care of plugin USB drives and Dropbox icons
+nautilus --no-desktop -n &
+
+if [ -x /usr/bin/nm-applet ] ; then
+   nm-applet --sm-disable &
+fi
+
+if [ -x /usr/bin/gnome-power-manager ] ; then
+   gnome-power-manager &
+fi
+
+if [ -x /usr/bin/gnome-screensaver ]; then
+   gnome-screensaver &
+fi
+
+# Start some useful apps.
+bitlbee -F &
+minbif ~/.local/etc/minbif/minbif.conf
+dropbox start &
+google-chrome &
+skype &
+sup &
+znc &
+weechat &
+
+# Speed up the mouse.
+xset m 5/2 0
+
+# Enable numlock.
+numlockx on
+
+# Switch to norman keyboard layout.
+setxkbmap -layout norman -option ctrl:nocaps; xset r 66
+
+# Clear the background.
+xsetroot -solid black
+feh --bg-fill ~/Pictures/P1018702.JPG
+
+# Start xmonad.
+exec xmonad
+

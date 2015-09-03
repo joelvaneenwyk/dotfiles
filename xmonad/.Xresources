@@ -1,0 +1,165 @@
+! Base16 Bright
+! Scheme: Chris Kempson (http://chriskempson.com)
+
+#define base00 #000000
+#define base01 #303030
+#define base02 #505050
+#define base03 #b0b0b0
+#define base04 #d0d0d0
+#define base05 #e0e0e0
+#define base06 #f5f5f5
+#define base07 #ffffff
+#define base08 #fb0120
+#define base09 #fc6d24
+#define base0A #fda331
+#define base0B #a1c659
+#define base0C #76c7b7
+#define base0D #6fb3d2
+#define base0E #d381c3
+#define base0F #be643c
+
+*.foreground:   base05
+*.background:   base00
+*.cursorColor:  base05
+
+*.color0:       base00
+*.color1:       base08
+*.color2:       base0B
+*.color3:       base0A
+*.color4:       base0D
+*.color5:       base0E
+*.color6:       base0C
+*.color7:       base05
+
+*.color8:       base03
+*.color9:       base08
+*.color10:      base0B
+*.color11:      base0A
+*.color12:      base0D
+*.color13:      base0E
+*.color14:      base0C
+*.color15:      base07
+
+! Note: colors beyond 15 might not be loaded (e.g., xterm, urxvt),
+! use 'shell' template to set these if necessary
+*.color16:      base09
+*.color17:      base0F
+*.color18:      base01
+*.color19:      base02
+*.color20:      base04
+*.color21:      base06
+
+! URxvt*termName:           string
+! URxvt*geometry:           geometry
+! URxvt*chdir:              string
+! URxvt*reverseVideo:       boolean
+URxvt*loginShell:           true
+! URxvt*jumpScroll:         boolean
+! URxvt*skipScroll:         boolean
+! URxvt*pastableTabs:       boolean
+! URxvt*scrollstyle:        mode
+URxvt*scrollBar:            false
+! URxvt*scrollBar_right:    boolean
+! URxvt*scrollBar_align:    mode
+! URxvt*thickness:          number
+! URxvt*scrollTtyOutput:    boolean
+! URxvt*scrollTtyKeypress:  boolean
+! URxvt*scrollWithBuffer:   boolean
+! URxvt*inheritPixmap:      boolean
+URxvt*transparent:          true
+! URxvt*tintColor:          color
+URxvt*shading:              15
+! URxvt*blurRadius:         HxV
+! URxvt*fading:             number
+! URxvt*fadeColor:          color
+! URxvt*utmpInhibit:        boolean
+URxvt*urgentOnBell:         true
+! URxvt*visualBell:         boolean
+! URxvt*mapAlert:           boolean
+! URxvt*meta8:              boolean
+! URxvt*mouseWheelScrollPage:   boolean
+! URxvt*tripleclickwords:   boolean
+! URxvt*insecure:           boolean
+! URxvt*cursorUnderline:    boolean
+! URxvt*cursorBlink:        boolean
+! URxvt*pointerBlank:       boolean
+! URxvt*background:         color
+! URxvt*foreground:         color
+! URxvt*color0:             color
+! URxvt*color1:             color
+! URxvt*color2:             color
+! URxvt*color3:             color
+! URxvt*color4:             color
+! URxvt*color5:             color
+! URxvt*color6:             color
+! URxvt*color7:             color
+! URxvt*color8:             color
+! URxvt*color9:             color
+! URxvt*color10:            color
+! URxvt*color11:            color
+! URxvt*color12:            color
+! URxvt*color13:            color
+! URxvt*color14:            color
+! URxvt*color15:            color
+! URxvt*colorBD:            color
+! URxvt*colorIT:            color
+! URxvt*colorUL:            color
+! URxvt*colorRV:            color
+! URxvt*underlineColor:     color
+! URxvt*scrollColor:        color
+! URxvt*troughColor:        color
+! URxvt*highlightColor:     color
+! URxvt*cursorColor:        color
+! URxvt*cursorColor2:       color
+! URxvt*pointerColor:       color
+! URxvt*pointerColor2:      color
+! URxvt*borderColor:        color
+! URxvt*path:               search path
+! URxvt*backgroundPixmap:   file[;geom]
+! URxvt*iconFile:           file
+URxvt*font:                 xft:Hack:style=Regular:size=10
+URxvt*boldFont:             xft:Hack:style=Bold:size=10
+URxvt*italicFont:           xft:Hack:style=Oblique:size=10
+URxvt*boldItalicFont:       xft:Hack:style=BoldOblique:size=10
+! URxvt*intensityStyles:    boolean
+! URxvt*inputMethod:        name
+! URxvt*preeditType:        style
+! URxvt*imLocale:           string
+! URxvt*imFont:             fontname
+! URxvt*title:              string
+! URxvt*iconName:           string
+! URxvt*saveLines:          number
+! URxvt*depth:              number
+! URxvt*buffered:           boolean
+! URxvt*transient-for:      windowid
+! URxvt*override-redirect:  boolean
+! URxvt*hold:               boolean
+! URxvt*externalBorder:     number
+! URxvt*internalBorder:     number
+! URxvt*borderLess:         boolean
+! URxvt*lineSpace:          number
+URxvt*letterSpace:          -1
+! URxvt*skipBuiltinGlyphs:  boolean
+! URxvt*pointerBlankDelay:  number
+! URxvt*backspacekey:       string
+! URxvt*deletekey:          string
+! URxvt*print-pipe:         string
+! URxvt*modifier:           modifier
+! URxvt*cutchars:           string
+! URxvt*answerbackString:   string
+! URxvt*secondaryScreen:    boolean
+! URxvt*secondaryScroll:    boolean
+! URxvt*perl-lib:           string
+! URxvt*perl-eval:          perl-eval
+URxvt*perl-ext-common:      default,clipboard,url-select
+! URxvt*perl-ext:           string
+URxvt*iso14755:             false
+! URxvt*iso14755_52:        boolean
+! URxvt*xrm:                string
+
+URxvt.clipboard.autocopy:   true
+
+URxvt.keysym.M-u:           perl:url-select:select_next
+URxvt.url-select.launcher:  /usr/bin/xdg-open
+URxvt.url-select.underline: true
+

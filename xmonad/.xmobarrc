@@ -1,0 +1,19 @@
+Config
+   {
+      font = "xft:Inconsolata-dz for Powerline Medium:size=10:antialias=true",
+      bgColor = "black",
+      fgColor = "grey",
+      position = BottomW L 90
+      commands = [
+         Run Cpu ["-L","3","-H","50","--normal","green","--high","red"] 10,
+         Run Memory ["-t","Mem: <usedratio>%"] 10,
+         Run Swap [] 10,
+         Run Date "%a %Y-%m-%_d %H:%M" "date" 10,
+         Run StdinReader,
+         Run Com ".xmonad/mail_unread.sh" [] "inbox" 60
+      ],
+      sepChar = "%",
+      alignSep = "}{",
+      template = "%StdinReader% }{ %cpu% | %memory% | %inbox%     <fc=#ee9a00>%date%</fc>"
+   }
+
