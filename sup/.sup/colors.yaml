@@ -1,0 +1,358 @@
+---
+
+# Sup color scheme based on vim's wombat.
+# http://dengmao.wordpress.com/2007/01/22/vim-color-scheme-wombat/
+#
+# Requires running sup in a 256-color terminal.
+# (I'm using the debian package rxvt-unicode-256color)
+#
+# Usage: put the file at ~/.sup/colors.yaml
+
+
+# the colors used, their palette index
+# see https://upload.wikimedia.org/wikipedia/en/1/15/Xterm_256color_chart.svg
+# ---- many shades of gray
+# 230 statusbar foreground light-gray
+# 232 twiddle background very dark gray
+# 234 default background dark gray
+# 238 statusbar background medium-gray
+# 239 cursor background medium-gray
+# 241 twiddle foreground dark gray 
+# 252 default text color light-gray
+# ---- other colors
+# 220 not-so-bright-yellow
+# 113 light green
+# 192 light yellow-green
+# 111 light blue
+# 173 orange-red
+
+
+# ======================================
+# globals
+
+:status:
+  :fg: 230
+  :bg: 238
+
+:twiddle:
+  :fg: 241
+  :bg: 232
+
+# default text color, if nothing else is specified
+:text:
+  :fg: 252
+  :bg: 234
+  :highlight: default_highlight
+
+# the default cursor line
+# doesn't do anything on its own, we have to refer to it explicitly
+:default_highlight:
+  :fg: 252
+  :bg: 239
+
+# ======================================
+# thread-index-mode
+
+:date:
+  :fg: 252
+  :bg: 234
+  :highlight: default_highlight
+
+# the single '>' character displayed when a message is directly to me (as
+# opposed to say a mailing list that I subscribed to)
+:to_me:
+  :fg: 113
+  :bg: 234
+  :highlight: to_me_highlight
+:to_me_highlight:
+  :fg: 113
+  :bg: 239
+
+:size_widget:
+  :fg: 252
+  :bg: 234
+  :highlight: default_highlight
+
+# email subject of read messages
+:index_old:
+  :fg: 252
+  :bg: 234
+  :highlight: default_highlight
+
+# email subject of unread messages
+:index_new:
+  :fg: 220
+  :bg: 234
+  :highlight: index_new_highlight
+:index_new_highlight:
+  :fg: 220
+  :bg: 239
+
+# text snipped displayed next to the subject
+:snippet:
+  :fg: 113
+  :bg: 234
+  :highlight: snippet_highlight
+:snippet_highlight:
+  :fg: 113
+  :bg: 239
+
+# labels of an email
+:label:
+  :fg: 111
+  :bg: 234
+  :highlight: label_highlight
+:label_highlight:
+  :fg: 111
+  :bg: 239
+
+# the '>' character that gets displayed when a message is tagged
+:tagged:
+  :fg: 220
+  :bg: 234
+  :highlight: tagged_highlight
+:tagged_highlight:
+  :fg: 220
+  :bg: 239
+
+# the one-character widget '*' that gets displayed when a message is starred
+:starred:
+  :fg: 220
+  :bg: 234
+  :highlight: starred_highlight
+:starred_highlight:
+  :fg: 220
+  :bg: 239
+
+# subject of a starred message
+:index_starred:
+  :fg: 220
+  :bg: 234
+  :highlight: index_starred_highlight
+:index_starred_highlight:
+  :fg: 220
+  :bg: 239
+
+# subject of draft messages in index mode
+:index_draft:
+  :fg: 173
+  :bg: 234
+  :highlight: index_draft_highlight
+:index_draft_highlight:
+  :fg: 173
+  :bg: 239
+
+# ======================================
+# thread-view-mode
+
+# message header
+:message_patina:
+  :fg: 192
+  :bg: 236
+  :highlight: message_patina_highlight
+:message_patina_highlight:
+  :fg: 192
+  :bg: 239
+
+# message header, alternating color
+:alternate_patina:
+  :fg: 111
+  :bg: 236
+  :highlight: alternate_patina_highlight
+:alternate_patina_highlight:
+  :fg: 111
+  :bg: 239
+
+# the single star character
+:starred_patina:
+  :fg: 220
+  :bg: 236
+  :highlight: starred_patina_highlight
+:starred_patina_highlight:
+  :fg: 220
+  :bg: 239
+
+# the single star character, alternating color
+:alternate_starred_patina:
+  :fg: 220
+  :bg: 236
+  :highlight: alternate_starred_patina_highlight
+:alternate_starred_patina_highlight:
+  :fg: 220
+  :bg: 239
+
+# line that says "an unreceived message" in thread-view-mode
+:missing_message:
+  :fg: 173
+  :bg: 236
+  :highlight: missing_message_highlight
+:missing_message_highlight:
+  :fg: 173
+  :bg: 239
+
+# quoted text in a message body
+:quote:
+  :fg: 113
+  :bg: 234
+  :highlight: quote_highlight
+:quote_highlight:
+  :fg: 113
+  :bg: 239
+
+# the line of text that says "+ (n quoted lines)"
+:quote_patina:
+  :fg: 113
+  :bg: 234
+  :highlight: quote_patina_highlight
+:quote_patina_highlight:
+  :fg: 113
+  :bg: 239
+
+# email signatures inside an email body
+:sig:
+  :fg: 113
+  :bg: 234
+  :highlight: sig_highlight
+:sig_highlight:
+  :fg: 113
+  :bg: 239
+
+# the line of text that says "+ (n-line signature)"
+:sig_patina:
+  :fg: 113
+  :bg: 234
+  :highlight: sig_patina_highlight
+:sig_patina_highlight:
+  :fg: 113
+  :bg: 239
+
+# attachments at the end of an email
+:attachment:
+  :fg: 111
+  :bg: 234
+  :highlight: attachment_highlight
+:attachment_highlight:
+  :fg: 111
+  :bg: 239
+
+
+# valid cryptographic signature
+:cryptosig_valid:
+  :fg: 241
+  :bg: 234
+  :highlight: default_highlight
+
+# signature from someone whose public key we do have, but haven't verified
+:cryptosig_valid_untrusted:
+  :fg: 173
+  :bg: 234
+  :highlight: cryptosig_valid_untrusted_highlight
+:cryptosig_valid_untrusted_highlight:
+  :fg: 173
+  :bg: 239
+
+# signature from someone whose public key we don't have
+:cryptosig_unknown:
+  :fg: 173
+  :bg: 234
+  :highlight: cryptosig_unknown_highlight
+:cryptosig_unknown_highlight:
+  :fg: 173
+  :bg: 239
+
+# I don't have a message with an invalid crypto signature, so this is untested
+:cryptosig_invalid:
+  :fg: 173
+  :bg: 234
+
+# ======================================
+# label list (the thing you get by pressing L then <enter>)
+
+:labellist_old:
+  :fg: 252
+  :bg: 234
+  :highlight: default_highlight
+
+:labellist_new:
+  :fg: 220
+  :bg: 234
+  :highlight: labellist_new_highlight
+:labellist_new_highlight:
+  :fg: 220
+  :bg: 239
+
+# ======================================
+# misc
+
+:regular_buf:
+  :fg: 252
+  :bg: 234
+  :highlight: default_highlight
+
+:system_buf:
+  :fg: 252
+  :bg: 234
+  :highlight: default_highlight
+
+:modified_buffer:
+  :fg: 252
+  :bg: 234
+  :highlight: default_highlight
+
+:search_highlight:
+  :fg: black
+  :bg: 220
+  :highlight: search_highlight_highlight
+:search_highlight_highlight:
+  :fg: black
+  :bg: 220
+
+# in thread-view-mode, the text saying "This message is a draft. Hit 'e' to edit, 'y' to send."
+:draft_notification:
+  :fg: 173
+  :bg: 234
+  :highlight: draft_notification_highlight
+:draft_notification_highlight:
+  :fg: 173
+  :bg: 239
+
+# currently only used for enclosed messages. It's a line that says "Begin enclosed message sent on..."
+# We color it the same as attachments.
+:generic_notice_patina:
+  :fg: 111
+  :bg: 234
+  :highlight: attachment_highlight
+
+
+# ======================================
+# selector widgets (the things that let you choose Account, Crypto, Reply to, etc.)
+
+:horizontal_selector_selected:
+  :fg: 220
+  :bg: 234
+  :highlight: horizontal_selector_selected_highlight
+:horizontal_selector_selected_highlight:
+  :fg: 220
+  :bg: 239
+
+:horizontal_selector_unselected:
+  :fg: 252
+  :bg: 234
+  :highlight: default_highlight
+
+
+# ======================================
+# completion-mode: the screen you get when you press <Tab> in the To: prompt
+
+:completion_character:
+  :fg: black
+  :bg: 220
+
+
+# ======================================
+# not yet finished
+
+# what's an option?
+:option:
+  :fg: 252
+  :bg: 234

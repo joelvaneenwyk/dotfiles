@@ -1,0 +1,17 @@
+%ldap_server_db = (
+    'people' => ['ldaps://ldap.example.com:636',
+               'ou=people,o=example',
+               'givenname sn cn mail exADMailAcct fullName', 'givenname sn cn mail exADMailAcct fullName',
+               '${exADMailAcct}', '${fullName}', ''],
+    'groups' => ['ldaps://ldap.example.com:636',
+               'ou=groups,o=example',
+               'cn mail', 'cn mail',
+               '${mail}@example.com', '${cn}', ''],
+    'dl' => ['ldaps://ldap.example.com:636',
+               'ou=dl,o=example',
+               'cn mail', 'cn mail',
+               '${mail}@example.com', '${cn}', '']
+);
+
+1;
+

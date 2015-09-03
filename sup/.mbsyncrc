@@ -1,0 +1,41 @@
+CopyArrivalDate yes
+Create Slave
+Expunge Both
+
+IMAPAccount mail
+Host mail.example.com
+User jdve
+PassCmd "secret-tool lookup user jdve"
+UseIMAPS yes
+PipelineDepth 100
+
+IMAPStore mail-remote
+Account mail
+Trash "Deleted Items"
+
+MaildirStore mail-local
+Path /local/mnt/data/mail/
+Inbox /local/mnt/data/mail/inbox
+Trash trash
+
+Channel mail-inbox
+Master :mail-remote:
+Slave :mail-local:
+Pattern INBOX
+
+Channel mail-rules
+Master :mail-remote:INBOX/
+Slave :mail-local:
+Patterns * !INBOX
+SyncState *
+
+Channel mail-sent
+Master :mail-remote:"Sent Items"
+Slave :mail-local:sent
+SyncState *
+
+Group mail
+Channel mail-inbox
+Channel mail-rules
+Channel mail-sent
+

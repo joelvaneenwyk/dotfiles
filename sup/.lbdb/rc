@@ -1,0 +1,2 @@
+METHODS="m_ldap"
+LDAP_NICKS="people groups dl"
