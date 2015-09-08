@@ -15,6 +15,9 @@ if test (which hub) != ""
     alias git="hub"
 end
 
+# use z
+. $HOME/.config/fish/z.fish
+
 # load rbenv
 if test (which rbenv) != ""
     status --is-interactive; and . (rbenv init -|psub)
