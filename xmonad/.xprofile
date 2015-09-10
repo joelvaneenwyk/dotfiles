@@ -23,9 +23,6 @@ xrdb -merge $HOME/.Xresources
 # Add tray for icons.
 trayer --edge bottom --align right --SetDockType true --SetPartialStrut true --expand false --widthtype percent --width 10% --height 20 --transparent true --alpha 255 &
 
-# Allow nautilus to take care of plugin USB drives and Dropbox icons
-nautilus --no-desktop -n &
-
 if [ -x /usr/bin/nm-applet ] ; then
    nm-applet --sm-disable &
 fi
@@ -60,7 +57,4 @@ setxkbmap -layout norman -option ctrl:nocaps; xset r 66
 # Clear the background.
 xsetroot -solid black
 feh --bg-fill ~/Pictures/P1018702.JPG
-
-# Start xmonad.
-exec xmonad
 
