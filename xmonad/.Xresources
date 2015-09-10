@@ -49,6 +49,8 @@
 *.color20:      base04
 *.color21:      base06
 
+Xft.dpi:        96
+
 ! URxvt*termName:           string
 ! URxvt*geometry:           geometry
 ! URxvt*chdir:              string
