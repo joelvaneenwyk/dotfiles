@@ -12,3 +12,6 @@ fi
 export EDITOR="vim"
 export PAGER="less -r"
 
+
+# added by Anaconda 2.3.0 installer
+export PATH="/Users/jvaneenwyk/anaconda/bin:$PATH"

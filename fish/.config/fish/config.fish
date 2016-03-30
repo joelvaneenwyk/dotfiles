@@ -1,6 +1,10 @@
 # suppress fish greeting
 set -x fish_greeting ""
 
+# update path
+set -gx PATH $HOME/.local/bin $HOME/.local/sbin $PATH
+set -gx PATH $HOME/anaconda/bin $PATH
+
 # color stderr in red
 set -x LD_PRELOAD "$HOME/.local/lib/libstderred.so"
 
