@@ -1,5 +1,6 @@
 fish/.config/fish/fishd.*
 fish/.config/fish/fish_history
+fish/.local/share/
 vim/.vim/bundle/
 xmonad/.xmonad/xmonad-x86_64-linux
 xmonad/.xmonad/xmonad.errors
