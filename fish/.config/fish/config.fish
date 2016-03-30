@@ -6,12 +6,15 @@ set -gx PATH $HOME/.local/bin $HOME/.local/sbin $PATH
 set -gx PATH $HOME/anaconda/bin $PATH
 
 # color stderr in red
-set -x LD_PRELOAD "$HOME/.local/lib/libstderred.so"
+set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
+
+# use java 1.7 by default
+set -gx JAVA_HOME (/usr/libexec/java_home -v 1.7)
 
 # aliases
 alias more="less -r"
 alias less="less -r"
-alias ll="ls -lh --color=always"
+alias ll="ls -lh"
 alias grep="grep --color=always"
 
 # use hub if available
@@ -21,6 +24,9 @@ end
 
 # use z
 . $HOME/.config/fish/z.fish
+
+# set editor
+set -gx EDITOR /usr/bin/vim
 
 # load rbenv
 if test (which rbenv) != ""

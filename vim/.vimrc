@@ -5,7 +5,7 @@
 set encoding=utf-8
 set runtimepath=~/.vim,$VIMRUNTIME        " Use our home directory settings.
 set nocompatible                          " Don't bother with old VI compatibility.
-source $VIMRUNTIME/mswin.vim              " Make VIM windows-friendly.
+"source $VIMRUNTIME/mswin.vim              " Make VIM windows-friendly.
 set viminfo+=n~/.viminfo                  " Set where to store session info.
 
 set history=50                            " Keep 50 lines of command line history.
@@ -92,7 +92,7 @@ if has('win32')
       autocmd GUIEnter * call libcallnr("vimtweak.dll", "EnableMaximize", 1)
    endif
 elseif has('mac')
-   set gfn=Consolas:h12
+   set gfn=Hack:h12
 else
    set gfn=Hack\ 10
 endif
@@ -119,6 +119,7 @@ Bundle 'digitaltoad/vim-jade'
 Bundle 'vim-scripts/LargeFile'
 Bundle 'chriskempson/base16-vim'
 Bundle 'nvie/vim-flake8'
+Bundle 'derekwyatt/vim-scala'
 
 " Configure airline.
 let g:airline#extensions#tabline#enabled = 1
