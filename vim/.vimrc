@@ -27,9 +27,8 @@ set background=dark                       " Use the darker background.
 set laststatus=2                          " Always show the status bar.
 set noshowmode                            " Don't need the default mode line.
 set hidden                                " Don't require saving before switching buffers.
-set cm=blowfish                           " Encryption method.
 
-set wildignore+=*.hi,*.o,*.one,*.pyc,tags.lock,tags,*.litcoffee.html
+set wildignore+=*.hi,*.o,*.one,*.pyc,tags.lock,tags,*.litcoffee.html,*.class,*/target/*
 
 autocmd VimEnter * set vb t_vb=           " No beeps or flashes.
 autocmd! bufwritepost .vimrc source %     " Auto-reload vimrc.
@@ -103,23 +102,32 @@ call vundle#rc()
 
 filetype off
 
+" Generally useful plugins.
+Bundle 'chriskempson/base16-vim'
 Bundle 'moll/vim-bbye'
-Bundle 'kien/ctrlp.vim'
+Bundle 'ctrlpvim/ctrlp.vim'
 Bundle 'scrooloose/nerdtree'
 Bundle 'majutsushi/tagbar'
 Bundle 'bling/vim-airline'
 Bundle 'terryma/vim-multiple-cursors'
+Bundle 'vim-scripts/LargeFile'
+Bundle 'tpope/vim-fugitive'
+Bundle 'ervandew/supertab'
+
+" Plugins for web development.
 Bundle 'jelera/vim-javascript-syntax'
-Bundle 'vim-scripts/lbdbq'
 Bundle 'tpope/vim-markdown'
 Bundle 'kchmck/vim-coffee-script'
-Bundle 'mintplant/vim-literate-coffeescript'
 Bundle 'groenewege/vim-less'
 Bundle 'digitaltoad/vim-jade'
-Bundle 'vim-scripts/LargeFile'
-Bundle 'chriskempson/base16-vim'
+
+" Plugins for python development.
 Bundle 'nvie/vim-flake8'
+
+" Plugins for java/scala development.
 Bundle 'derekwyatt/vim-scala'
+Bundle 'ensime/ensime-vim'
+
 
 " Configure airline.
 let g:airline#extensions#tabline#enabled = 1
@@ -135,6 +143,11 @@ let g:ctrlp_working_path_mode = 'ra'
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
 let NERDTreeRespectWildIgnore=1
 map <F2> :NERDTreeToggle<CR>
+
+" Configure ensime.
+autocmd BufWritePost *.scala silent :EnTypeCheck
+au FileType scala nnoremap <localleader>t :EnTypeCheck<CR>
+au FileType scala nnoremap <localleader>df :EnDeclaration<CR>
 
 " Configure GUI settings.
 colorscheme base16-bright
