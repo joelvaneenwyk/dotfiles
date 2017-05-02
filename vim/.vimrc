@@ -113,6 +113,7 @@ Bundle 'terryma/vim-multiple-cursors'
 Bundle 'vim-scripts/LargeFile'
 Bundle 'tpope/vim-fugitive'
 Bundle 'ervandew/supertab'
+Bundle 'luochen1990/rainbow'
 
 " Plugins for web development.
 Bundle 'jelera/vim-javascript-syntax'
