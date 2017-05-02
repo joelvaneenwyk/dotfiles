@@ -33,6 +33,9 @@ if test (which rbenv) != ""
     status --is-interactive; and . (rbenv init -|psub)
 end
 
+# enable activating anaconda environments
+source (conda info --root)/etc/fish/conf.d/conda.fish
+
 function bash
     set -lx NOFISH 1
     /bin/bash $argv
