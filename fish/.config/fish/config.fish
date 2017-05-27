@@ -8,8 +8,8 @@ set -gx PATH $HOME/anaconda/bin $PATH
 # color stderr in red
 set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
 
-# use java 1.7 by default
-set -gx JAVA_HOME (/usr/libexec/java_home -v 1.7)
+# use java 1.8 by default
+set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
 
 # aliases
 alias more="less -r"
