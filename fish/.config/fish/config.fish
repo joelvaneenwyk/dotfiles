@@ -2,7 +2,7 @@
 set -x fish_greeting ""
 
 # update path
-set -gx PATH $HOME/.local/bin $HOME/.local/sbin $PATH
+set -gx PATH $HOME/.local/bin $PATH
 set -gx PATH $HOME/anaconda/bin $PATH
 
 # color stderr in red
