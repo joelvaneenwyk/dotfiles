@@ -28,11 +28,6 @@ end
 # set editor
 set -gx EDITOR /usr/bin/vim
 
-# load rbenv
-if test (which rbenv) != ""
-    status --is-interactive; and . (rbenv init -|psub)
-end
-
 # enable activating anaconda environments
 source (conda info --root)/etc/fish/conf.d/conda.fish
 
