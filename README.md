@@ -111,10 +111,10 @@ etc, etc, etc...
 # details
 
 ## osx -> chunkwm
-Here's how to use [chunkwm][https://github.com/koekeishiya/chunkwm]:
+Here's how to use [chunkwm](https://github.com/koekeishiya/chunkwm):
 
-* Follow the instructions on the chunkwm [README][https://github.com/koekeishiya/chunkwm] to install it using brew.
-* Follow the instructions on the khd [README][https://github.com/koekeishiya/khd] to install it using brew.
+* Follow the instructions on the chunkwm [README](https://github.com/koekeishiya/chunkwm) to install it using brew.
+* Follow the instructions on the khd [README](https://github.com/koekeishiya/khd) to install it using brew.
 * Start chunkwm: `brew services start crisidev/chunkwm/chunkwm`
 * Start khd: `brew services start koekeishiya/formulae/kh`
 
