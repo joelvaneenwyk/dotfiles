@@ -22,9 +22,6 @@ if test (which hub) != ""
     alias git="hub"
 end
 
-# use z
-. $HOME/.config/fish/z.fish
-
 # set editor
 set -gx EDITOR /usr/bin/vim
 
