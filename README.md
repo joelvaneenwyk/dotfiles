@@ -75,7 +75,7 @@ this will symlink the file to `/etc/X11`.
 
 **note:** stow can only create a symlink if a config file does not already exist. if a default file was created upon program installation you must delete it first before you can install a new one with stow. this does not apply to directories, only files.
 
-#tl;dr
+# tl;dr
 navigate to your home directory
 
 `cd ~`
