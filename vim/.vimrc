@@ -71,6 +71,10 @@ vmap <Tab> ><CR>gv
 vmap <S-Tab> <<CR>gv
 imap <S-Tab> <C-D>
 
+" Keep selection after indenting.
+vnoremap > ><CR>gv 
+vnoremap < <<CR>gv 
+
 " Mappings for file tabs.
 map <C-Tab> :bnext<CR>
 map <C-S-Tab> :bprevious<CR>
@@ -114,6 +118,8 @@ Bundle 'vim-scripts/LargeFile'
 Bundle 'tpope/vim-fugitive'
 Bundle 'ervandew/supertab'
 Bundle 'luochen1990/rainbow'
+Bundle 'w0rp/ale'
+Bundle 'mileszs/ack.vim'
 
 " Plugins for web development.
 Bundle 'jelera/vim-javascript-syntax'
@@ -128,7 +134,6 @@ Bundle 'nvie/vim-flake8'
 " Plugins for java/scala development.
 Bundle 'derekwyatt/vim-scala'
 Bundle 'ensime/ensime-vim'
-
 
 " Configure airline.
 let g:airline#extensions#tabline#enabled = 1
@@ -149,6 +154,9 @@ map <F2> :NERDTreeToggle<CR>
 autocmd BufWritePost *.scala silent :EnTypeCheck
 au FileType scala nnoremap <localleader>t :EnTypeCheck<CR>
 au FileType scala nnoremap <localleader>df :EnDeclaration<CR>
+
+" Configure ack.
+let g:ackprg = 'ag --nogroup --nocolor --column'
 
 " Configure GUI settings.
 colorscheme base16-bright
