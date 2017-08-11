@@ -1,9 +1,6 @@
 # reload config
 cmd + alt + ctrl - r : khd -e "reload"
 
-# open terminal, blazingly fast compared to iTerm/Hyper
-cmd - return : open -na /Applications/iTerm\ 2.app
-
 # focus window
 alt - h : chunkc tiling::window --focus west
 alt - j : chunkc tiling::window --focus south
@@ -119,11 +116,4 @@ alt - s : chunkc tiling::window --toggle sticky;\
 
 # float next window to be tiled
 shift + alt - t : chunkc set window_float_next 1
-
-# change layout of desktop
-ctrl + alt - a : chunkc tiling::desktop --layout bsp
-ctrl + alt - s : chunkc tiling::desktop --layout monocle
-ctrl + alt - d : chunkc tiling::desktop --layout float
-
-ctrl + alt - w : chunkc tiling::desktop --deserialize ~/.chunkwm_layouts/dev_1
 
