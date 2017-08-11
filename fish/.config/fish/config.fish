@@ -25,6 +25,11 @@ end
 # set editor
 set -gx EDITOR /usr/bin/vim
 
+# set color scheme
+if status --is-interactive
+    eval sh $HOME/.config/base16-shell/scripts/base16-ir-black.sh
+end
+
 # enable activating anaconda environments
 source (conda info --root)/etc/fish/conf.d/conda.fish
 
