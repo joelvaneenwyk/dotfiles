@@ -154,7 +154,7 @@ map <F2> :NERDTreeToggle<CR>
 let g:ackprg = 'ag --nogroup --nocolor --column'
 
 " Configure GUI settings.
-colorscheme base16-bright
+colorscheme base16-ir-black
 
 if has('gui_running')
    set background=dark
