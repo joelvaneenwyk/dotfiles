@@ -12,6 +12,7 @@ set history=50                            " Keep 50 lines of command line histor
 set ruler                                 " Show the cursor position all the time.
 set showcmd                               " Display incomplete commands.
 set expandtab shiftwidth=3 softtabstop=3  " Use three spaces for tabs by default.
+set backspace=indent,eol,start            " Allow backspace to delete
 set cinoptions=(0,Ws                      " C-indent customizations.
 set incsearch                             " Do incremental searching.
 set ignorecase                            " Case-insensitive search.
@@ -20,6 +21,7 @@ set nobackup nowritebackup noswapfile     " Don't use backups or swap files.
 set selection=inclusive                   " Include the current character in selections.
 set nowrap                                " Don't wrap lines.
 set nomousehide                           " Don't hide the mouse.
+set mouse=nicr
 set scrolloff=5                           " Leave some space when scrolling.
 set guioptions-=m                         " Hide menu bar.
 set guioptions-=T                         " Hide tool bar.
@@ -116,7 +118,6 @@ Bundle 'bling/vim-airline'
 Bundle 'terryma/vim-multiple-cursors'
 Bundle 'vim-scripts/LargeFile'
 Bundle 'tpope/vim-fugitive'
-Bundle 'ervandew/supertab'
 Bundle 'luochen1990/rainbow'
 Bundle 'w0rp/ale'
 Bundle 'mileszs/ack.vim'
@@ -133,7 +134,6 @@ Bundle 'nvie/vim-flake8'
 
 " Plugins for java/scala development.
 Bundle 'derekwyatt/vim-scala'
-Bundle 'ensime/ensime-vim'
 
 " Configure airline.
 let g:airline#extensions#tabline#enabled = 1
@@ -149,11 +149,6 @@ let g:ctrlp_working_path_mode = 'ra'
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
 let NERDTreeRespectWildIgnore=1
 map <F2> :NERDTreeToggle<CR>
-
-" Configure ensime.
-autocmd BufWritePost *.scala silent :EnTypeCheck
-au FileType scala nnoremap <localleader>t :EnTypeCheck<CR>
-au FileType scala nnoremap <localleader>df :EnDeclaration<CR>
 
 " Configure ack.
 let g:ackprg = 'ag --nogroup --nocolor --column'
