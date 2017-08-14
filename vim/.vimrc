@@ -114,7 +114,8 @@ Bundle 'moll/vim-bbye'
 Bundle 'ctrlpvim/ctrlp.vim'
 Bundle 'scrooloose/nerdtree'
 Bundle 'majutsushi/tagbar'
-Bundle 'bling/vim-airline'
+Bundle 'vim-airline/vim-airline'
+Bundle 'vim-airline/vim-airline-themes'
 Bundle 'terryma/vim-multiple-cursors'
 Bundle 'vim-scripts/LargeFile'
 Bundle 'tpope/vim-fugitive'
@@ -154,7 +155,10 @@ map <F2> :NERDTreeToggle<CR>
 let g:ackprg = 'ag --nogroup --nocolor --column'
 
 " Configure GUI settings.
-colorscheme base16-ir-black
+if filereadable(expand("~/.vimrc_background"))
+  let base16colorspace=256
+  source ~/.vimrc_background
+endif
 
 if has('gui_running')
    set background=dark
