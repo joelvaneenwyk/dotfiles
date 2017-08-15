@@ -5,11 +5,9 @@
 set encoding=utf-8
 set runtimepath=~/.vim,$VIMRUNTIME        " Use our home directory settings.
 set nocompatible                          " Don't bother with old VI compatibility.
-"source $VIMRUNTIME/mswin.vim              " Make VIM windows-friendly.
 set viminfo+=n~/.viminfo                  " Set where to store session info.
 
 set history=50                            " Keep 50 lines of command line history.
-set ruler                                 " Show the cursor position all the time.
 set showcmd                               " Display incomplete commands.
 set expandtab shiftwidth=3 softtabstop=3  " Use three spaces for tabs by default.
 set backspace=indent,eol,start            " Allow backspace to delete
@@ -21,7 +19,7 @@ set nobackup nowritebackup noswapfile     " Don't use backups or swap files.
 set selection=inclusive                   " Include the current character in selections.
 set nowrap                                " Don't wrap lines.
 set nomousehide                           " Don't hide the mouse.
-set mouse=nicr
+set mouse=nicr                            " Enable mouse interactions.
 set scrolloff=5                           " Leave some space when scrolling.
 set guioptions-=m                         " Hide menu bar.
 set guioptions-=T                         " Hide tool bar.
@@ -29,6 +27,7 @@ set background=dark                       " Use the darker background.
 set laststatus=2                          " Always show the status bar.
 set noshowmode                            " Don't need the default mode line.
 set hidden                                " Don't require saving before switching buffers.
+set clipboard=unnamed                     " Share clipboard with system.
 
 set wildignore+=*.hi,*.o,*.one,*.pyc,tags.lock,tags,*.litcoffee.html,*.class,*/target/*
 
