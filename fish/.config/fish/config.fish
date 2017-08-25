@@ -16,6 +16,7 @@ alias more="less -r"
 alias less="less -r"
 alias ll="ls -lh"
 alias grep="grep --color=always"
+alias pr="hub -c core.commentChar='%' pull-request"
 
 # use hub if available
 if test (which hub) != ""

@@ -121,6 +121,7 @@ Bundle 'tpope/vim-fugitive'
 Bundle 'luochen1990/rainbow'
 Bundle 'w0rp/ale'
 Bundle 'mileszs/ack.vim'
+Bundle 'jez/vim-github-hub'
 
 " Plugins for web development.
 Bundle 'jelera/vim-javascript-syntax'
