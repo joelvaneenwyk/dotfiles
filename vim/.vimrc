@@ -49,6 +49,7 @@ autocmd FileType coffee setlocal sw=2 sts=2
 autocmd FileType litcoffee setlocal sw=2 sts=2
 autocmd FileType haskell setlocal sw=4 sts=4
 autocmd FileType yaml setlocal sw=2 sts=2
+autocmd FileType markdown setlocal wrap linebreak
 
 " Display control characters
 "   For tabs, paint a >--
