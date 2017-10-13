@@ -31,6 +31,9 @@ if status --is-interactive
     source $HOME/.config/base16-shell/profile_helper.fish
 end
 
+bass source ~/.config/base16-fzf/build_scheme/base16-ir-black.config
+set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
+
 # enable activating anaconda environments
 source (conda info --root)/etc/fish/conf.d/conda.fish
 
