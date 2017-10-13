@@ -79,7 +79,7 @@ chunkc set focused_border_skip_floating  0
 #
 
 chunkc core::load tiling.so
-chunkc core::load ffm.so
+#chunkc core::load ffm.so
 chunkc core::load border.so
 
 #
