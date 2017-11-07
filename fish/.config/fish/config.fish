@@ -1,3 +1,12 @@
+# install plugins
+if not functions -q fundle; eval (curl -sfL https://git.io/fundle-install); end
+
+fundle plugin 'edc/bass'
+fundle plugin 'fisherman/fzf'
+fundle plugin 'fisherman/z'
+fundle plugin 'jichu4n/fish-command-timer'
+fundle init
+
 # suppress fish greeting
 set -x fish_greeting ""
 
@@ -31,7 +40,7 @@ if status --is-interactive
     source $HOME/.config/base16-shell/profile_helper.fish
 end
 
-bass source ~/.config/base16-fzf/build_scheme/base16-ir-black.config
+bass source ~/.config/base16-fzf/build_scheme/(basename (readlink $HOME/.base16_theme) .sh).config
 set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
 
 # enable activating anaconda environments

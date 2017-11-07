@@ -1,1 +1,0 @@
-/Users/jvaneenwyk/.config/fisherman/command-timer/conf.d/fish_command_timer.fish
