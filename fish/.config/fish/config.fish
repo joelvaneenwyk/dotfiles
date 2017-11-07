@@ -44,23 +44,7 @@ bass source ~/.config/base16-fzf/build_scheme/(basename (readlink $HOME/.base16_
 set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
 
 # enable activating anaconda environments
-source (conda info --root)/etc/fish/conf.d/conda.fish
-
-function bash
-    set -lx NOFISH 1
-    /bin/bash $argv
-end
-
-function haste
-    set bin (which haste)
-    eval $bin > /tmp/haste.url
-    if test $status = 0
-        set url (cat /tmp/haste.url)
-        echo $url | xclip -selection primary
-        echo $url | xclip -selection clipboard
-        xdg-open $url
-    end
-
-    rm -f /tmp/haste.url
+if test (which conda) != ""
+    source (conda info --root)/etc/fish/conf.d/conda.fish
 end
 
