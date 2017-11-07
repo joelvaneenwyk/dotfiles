@@ -78,15 +78,9 @@ vnoremap > ><CR>gv
 vnoremap < <<CR>gv 
 
 " Mappings for file tabs.
-map <C-Tab> :bnext<CR>
-map <C-S-Tab> :bprevious<CR>
-map <C-Backspace> :Bdelete<CR>
-map <C-Insert> :tabnew<CR>
-map <C-Delete> :tabclose<CR>
-
-" Programming mappings.
-map <F5> :make<CR>
-map <F8> :TagbarToggle<CR>
+set wildchar=<Tab> wildmenu wildmode=full
+set wildcharm=<C-Z>
+nnoremap <F3> :b <C-Z>
 
 if has('win32')
    set gfn=Inconsolata-dz_for_Powerline:h11
