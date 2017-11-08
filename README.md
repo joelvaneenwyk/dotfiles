@@ -114,8 +114,14 @@ etc, etc, etc...
 Here's how to use [chunkwm](https://github.com/koekeishiya/chunkwm):
 
 * Follow the instructions on the chunkwm [README](https://github.com/koekeishiya/chunkwm) to install it using brew.
-* Follow the instructions on the khd [README](https://github.com/koekeishiya/khd) to install it using brew.
-* Start chunkwm: `brew services start crisidev/chunkwm/chunkwm`
-* Start khd: `brew services start koekeishiya/formulae/kh`
+* Follow the instructions on the khd [README](https://github.com/koekeishiya/skhd) to install it using brew.
+* Start chunkwm: `brew services start chunkwm`
+* Start khd: `brew services start skhd`
 
 Assuming you've already used `stow osx` to link in your configs, it should just work at this point.
+
+## vim
+
+```
+brew install vim --with-override-system-vi
+```
