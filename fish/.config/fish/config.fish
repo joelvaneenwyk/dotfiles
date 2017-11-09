@@ -11,8 +11,13 @@ fundle init
 set -x fish_greeting ""
 
 # update path
-set -gx PATH $HOME/.local/bin $PATH
-set -gx PATH $HOME/anaconda/bin $PATH
+if test -d $HOME/.local/bin
+    set -gx PATH $HOME/.local/bin $PATH
+end
+
+if test -d $HOME/anaconda/bin
+    set -gx PATH $HOME/anaconda/bin $PATH
+end
 
 # color stderr in red
 set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
@@ -28,7 +33,7 @@ alias grep="grep --color=always"
 alias pr="hub -c core.commentChar='%' pull-request"
 
 # use hub if available
-if test (which hub) != ""
+if type -q hub
     alias git="hub"
 end
 
@@ -40,11 +45,11 @@ if status --is-interactive
     source $HOME/.config/base16-shell/profile_helper.fish
 end
 
-bass source ~/.config/base16-fzf/build_scheme/(basename (readlink $HOME/.base16_theme) .sh).config
+bass source ~/.config/base16-fzf/build_scheme/(basename (readlink (readlink $HOME/.base16_theme)) .sh).config
 set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
 
 # enable activating anaconda environments
-if test (which conda) != ""
+if type -q conda
     source (conda info --root)/etc/fish/conf.d/conda.fish
 end
 
