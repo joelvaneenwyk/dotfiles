@@ -1,6 +1,3 @@
-# reload config
-cmd + alt + ctrl - r : khd -e "reload"
-
 # focus window
 alt - h : chunkc tiling::window --focus west
 alt - j : chunkc tiling::window --focus south
