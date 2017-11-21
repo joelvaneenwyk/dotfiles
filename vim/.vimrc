@@ -127,6 +127,7 @@ Bundle 'digitaltoad/vim-jade'
 
 " Plugins for python development.
 Bundle 'nvie/vim-flake8'
+Bundle 'ludovicchabant/vim-gutentags'
 
 " Plugins for java/scala development.
 Bundle 'derekwyatt/vim-scala'
@@ -145,6 +146,9 @@ let g:ctrlp_working_path_mode = 'ra'
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
 let NERDTreeRespectWildIgnore=1
 map <F2> :NERDTreeToggle<CR>
+
+" Configure tags.
+let g:gutentags_ctags_tagfile = '.git/tags'
 
 " Configure ack.
 let g:ackprg = 'ag --nogroup --nocolor --column'
