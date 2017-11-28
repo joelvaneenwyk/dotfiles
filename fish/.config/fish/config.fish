@@ -15,8 +15,8 @@ if test -d $HOME/.local/bin
     set -gx PATH $HOME/.local/bin $PATH
 end
 
-if test -d $HOME/anaconda/bin
-    set -gx PATH $HOME/anaconda/bin $PATH
+if test -d $HOME/anaconda3/bin
+    set -gx PATH $HOME/anaconda3/bin $PATH
 end
 
 # color stderr in red
