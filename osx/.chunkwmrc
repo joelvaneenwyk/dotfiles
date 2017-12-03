@@ -87,7 +87,7 @@ chunkc core::load border.so
 #       to pass value containing a whitespace.
 #
 
-chunkc tiling::rule --owner \"System Preferences\" --state tile
+chunkc tiling::rule --owner \"System Preferences\" --state float
 chunkc tiling::rule --owner Finder --name Copy --state float
 chunkc tiling::rule --owner MacPass --state float
 chunkc tiling::rule --owner Calculator --state float
