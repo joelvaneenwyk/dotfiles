@@ -1,3 +1,42 @@
+## NOTE(koekeishiya): A list of all built-in modifier and literal keywords can
+#                     be found at https://github.com/koekeishiya/skhd/issues/1
+#
+#                     A hotkey is written according to the following rules:
+#
+#                       hotkey   = <keysym> ':' <command> |
+#                                  <keysym> '->' ':' <command>
+#
+#                       keysym   = <mod> '-' <key> | <key>
+#
+#                       mod      = 'built-in mod keyword' | <mod> '+' <mod>
+#
+#                       key      = <literal> | <keycode>
+#
+#                       literal  = 'single letter or built-in keyword'
+#
+#                       keycode  = 'apple keyboard kVK_<Key> values (0x3C)'
+#
+#                       ->       = keypress is not consumed by skhd
+#
+#                       command  = command is executed through '$SHELL -c' and
+#                                  follows valid shell syntax. if the $SHELL environment
+#                                  variable is not set, it will default to '/bin/bash'.
+#                                  when bash is used, the ';' delimeter can be specified
+#                                  to chain commands.
+#
+#                                  to allow a command to extend into multiple lines,
+#                                  prepend '\' at the end of the previous line.
+#
+#                                  an EOL character signifies the end of the bind.
+
+
+# DISABLE: conflicts with DataGrip executing SQL commands
+# open terminal, blazingly fast compared to iTerm/Hyper
+cmd - return : open -na /Applications/Kitty.app
+
+# close focused window
+alt - w : chunkc tiling::window --close
+
 # focus window
 alt - h : chunkc tiling::window --focus west
 alt - j : chunkc tiling::window --focus south
@@ -22,6 +61,16 @@ shift + cmd - j : chunkc tiling::window --warp south
 shift + cmd - k : chunkc tiling::window --warp north
 shift + cmd - l : chunkc tiling::window --warp east
 
+# DISABLE: conflicts with common movements
+# move floating windows / windows on a floating space
+#shift + alt - up     : chunkc tiling::window --warp-floating fullscreen
+#shift + alt - left   : chunkc tiling::window --warp-floating left
+#shift + alt - right  : chunkc tiling::window --warp-floating right
+#shift + cmd - left   : chunkc tiling::window --warp-floating top-left
+#shift + cmd - right  : chunkc tiling::window --warp-floating top-right
+#shift + ctrl - left  : chunkc tiling::window --warp-floating bottom-left
+#shift + ctrl - right : chunkc tiling::window --warp-floating bottom-right
+
 # send window to desktop
 shift + alt - x : chunkc tiling::window --send-to-desktop $(chunkc get _last_active_desktop)
 shift + alt - z : chunkc tiling::window --send-to-desktop prev
@@ -32,20 +81,6 @@ shift + alt - 3 : chunkc tiling::window --send-to-desktop 3
 shift + alt - 4 : chunkc tiling::window --send-to-desktop 4
 shift + alt - 5 : chunkc tiling::window --send-to-desktop 5
 shift + alt - 6 : chunkc tiling::window --send-to-desktop 6
-
-# send window to desktop and switch desktop
-shift + cmd - x : `id=$(chunkc get _last_active_desktop); chunkc tiling::window -d $id; khd -p "cmd + alt - $id" &> /dev/null`
-shift + cmd - z : chunkc tiling::window -d prev; khd -p "cmd + alt - z"
-shift + cmd - c : chunkc tiling::window -d next; khd -p "cmd + alt - c"
-shift + cmd - 1 : chunkc tiling::window -d 1; khd -p "cmd + alt - 1"
-shift + cmd - 2 : chunkc tiling::window -d 2; khd -p "cmd + alt - 2"
-shift + cmd - 3 : chunkc tiling::window -d 3; khd -p "cmd + alt - 3"
-shift + cmd - 4 : chunkc tiling::window -d 4; khd -p "cmd + alt - 4"
-shift + cmd - 5 : chunkc tiling::window -d 5; khd -p "cmd + alt - 5"
-shift + cmd - 6 : chunkc tiling::window -d 6; khd -p "cmd + alt - 6"
-
-# switch to last active desktop
-cmd + alt - x   : `id=$(chunkc get _last_active_desktop); khd -p "cmd + alt - $id" &> /dev/null`
 
 # focus monitor
 ctrl + alt - z  : chunkc tiling::monitor -f prev
@@ -113,4 +148,11 @@ alt - s : chunkc tiling::window --toggle sticky;\
 
 # float next window to be tiled
 shift + alt - t : chunkc set window_float_next 1
+
+# change layout of desktop
+ctrl + alt - a : chunkc tiling::desktop --layout bsp
+ctrl + alt - s : chunkc tiling::desktop --layout monocle
+ctrl + alt - d : chunkc tiling::desktop --layout float
+
+ctrl + alt - w : chunkc tiling::desktop --deserialize ~/.chunkwm_layouts/dev_1
 
