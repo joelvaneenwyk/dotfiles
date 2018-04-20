@@ -40,7 +40,14 @@ if type -q hub
 end
 
 # set editor
-set -gx EDITOR /usr/bin/vim
+if type -q nvim
+    alias vi="nvim"
+    alias vim="nvim"
+
+    set -gx EDITOR /usr/local/bin/nvim
+else
+    set -gx EDITOR /usr/bin/vim
+end
 
 # set color scheme
 if status --is-interactive
