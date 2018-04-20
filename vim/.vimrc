@@ -36,6 +36,7 @@ autocmd! bufwritepost .vimrc source %     " Auto-reload vimrc.
 
 " File-type specific settings.
 autocmd FileType css setlocal sw=2 sts=2
+autocmd FileType scss setlocal sw=2 sts=2
 autocmd FileType less setlocal sw=2 sts=2
 autocmd FileType jade setlocal sw=2 sts=2
 autocmd FileType java setlocal sw=2 sts=2
