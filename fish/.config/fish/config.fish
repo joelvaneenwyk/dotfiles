@@ -19,6 +19,8 @@ if test -d $HOME/anaconda3/bin
     set -gx PATH $HOME/anaconda3/bin $PATH
 end
 
+set -gx PATH ./node_modules/.bin $PATH
+
 # color stderr in red
 set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
 
