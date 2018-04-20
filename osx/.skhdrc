@@ -32,7 +32,7 @@
 
 # DISABLE: conflicts with DataGrip executing SQL commands
 # open terminal, blazingly fast compared to iTerm/Hyper
-cmd - return : open -na /Applications/Kitty.app
+# cmd - return : open -na /Applications/Kitty.app
 
 # close focused window
 alt - w : chunkc tiling::window --close
@@ -152,7 +152,7 @@ shift + alt - t : chunkc set window_float_next 1
 # change layout of desktop
 ctrl + alt - a : chunkc tiling::desktop --layout bsp
 ctrl + alt - s : chunkc tiling::desktop --layout monocle
-ctrl + alt - d : chunkc tiling::desktop --layout float
+#ctrl + alt - d : chunkc tiling::desktop --layout float
 
 ctrl + alt - w : chunkc tiling::desktop --deserialize ~/.chunkwm_layouts/dev_1
 
