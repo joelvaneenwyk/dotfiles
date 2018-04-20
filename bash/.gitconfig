@@ -14,3 +14,5 @@
 	df = diff
 [pull]
 	rebase = true
+[commit]
+	verbose = true
