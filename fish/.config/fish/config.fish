@@ -30,9 +30,14 @@ set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
 # aliases
 alias more="less -r"
 alias less="less -r"
-alias ll="ls -lh"
+alias ll="ls -l"
 alias grep="grep --color=always"
 alias pr="hub -c core.commentChar='%' pull-request"
+
+# use exa if available
+if type -q exa
+    alias ls="exa --git --time-style=iso"
+end
 
 # use hub if available
 if type -q hub
