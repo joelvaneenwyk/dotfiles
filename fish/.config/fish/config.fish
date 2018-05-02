@@ -37,6 +37,7 @@ alias pr="hub -c core.commentChar='%' pull-request"
 # use exa if available
 if type -q exa
     alias ls="exa --git --time-style=iso"
+    alias lt="ll --tree"
 else
     echo "Pro Tip: brew install exa"
 end
