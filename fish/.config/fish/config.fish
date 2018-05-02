@@ -37,11 +37,15 @@ alias pr="hub -c core.commentChar='%' pull-request"
 # use exa if available
 if type -q exa
     alias ls="exa --git --time-style=iso"
+else
+    echo "Pro Tip: brew install exa"
 end
 
 # use hub if available
 if type -q hub
     alias git="hub"
+else
+    echo "Pro Tip: brew install hub"
 end
 
 # set editor
@@ -52,6 +56,8 @@ if type -q nvim
     set -gx EDITOR /usr/local/bin/nvim
 else
     set -gx EDITOR /usr/bin/vim
+
+    echo "Pro Tip: brew install neovim"
 end
 
 # set color scheme
