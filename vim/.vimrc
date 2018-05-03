@@ -130,8 +130,8 @@ Bundle 'digitaltoad/vim-jade'
 Bundle 'nvie/vim-flake8'
 Bundle 'ludovicchabant/vim-gutentags'
 
-" Plugins for java/scala development.
-Bundle 'derekwyatt/vim-scala'
+Bundle 'lervag/vimtex'
+Bundle 'donRaphaco/neotex'
 
 " Configure airline.
 let g:airline#extensions#tabline#enabled = 1
