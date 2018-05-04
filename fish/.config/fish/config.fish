@@ -66,7 +66,7 @@ if status --is-interactive
     source $HOME/.config/base16-shell/profile_helper.fish
 end
 
-bass source ~/.config/base16-fzf/build_scheme/(basename (readlink (readlink $HOME/.base16_theme)) .sh).config
+source $HOME/.config/base16-fzf/fish/(basename (readlink (readlink $HOME/.base16_theme)) .sh).fish
 set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
 
 # enable activating anaconda environments
