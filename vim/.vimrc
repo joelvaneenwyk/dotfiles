@@ -143,6 +143,13 @@ let g:gutentags_ctags_tagfile = '.git/tags'
 " Configure ack.
 let g:ackprg = 'ag --nogroup --nocolor --column'
 
+" Configure vimtex.
+let g:vimtex_view_method = 'skim'
+
+if has("nvim")
+  let g:vimtex_latexmk_progname = 'nvr'
+endif
+
 " Configure GUI settings.
 if filereadable(expand("~/.vimrc_background"))
   let base16colorspace=256
