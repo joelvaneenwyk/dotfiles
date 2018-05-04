@@ -145,9 +145,10 @@ let g:ackprg = 'ag --nogroup --nocolor --column'
 
 " Configure vimtex.
 let g:vimtex_view_method = 'skim'
+let g:tex_flavor = 'latex'
 
-if has("nvim")
-  let g:vimtex_latexmk_progname = 'nvr'
+if has('nvim')
+  let g:vimtex_compiler_progname = 'nvr'
 endif
 
 " Configure GUI settings.
