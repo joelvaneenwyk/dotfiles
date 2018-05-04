@@ -1,7 +1,6 @@
 # install plugins
 if not functions -q fundle; eval (curl -sfL https://git.io/fundle-install); end
 
-fundle plugin 'edc/bass'
 fundle plugin 'fisherman/getopts'
 fundle plugin 'fisherman/fzf'
 fundle plugin 'fisherman/z'
