@@ -35,39 +35,28 @@ autocmd VimEnter * set vb t_vb=           " No beeps or flashes.
 autocmd! bufwritepost .vimrc source %     " Auto-reload vimrc.
 
 " File-type specific settings.
+autocmd FileType coffee setlocal sw=2 sts=2
+autocmd FileType conf setlocal sw=4 sts=4
 autocmd FileType css setlocal sw=2 sts=2
-autocmd FileType scss setlocal sw=2 sts=2
-autocmd FileType less setlocal sw=2 sts=2
+autocmd FileType haskell setlocal sw=4 sts=4
+autocmd FileType html setlocal sw=2 sts=2
+autocmd FileType htmldjango setlocal sw=2 sts=2
 autocmd FileType jade setlocal sw=2 sts=2
 autocmd FileType java setlocal sw=2 sts=2
 autocmd FileType javascript setlocal sw=2 sts=2
-autocmd FileType ruby setlocal sw=2 sts=2
-autocmd FileType html setlocal sw=2 sts=2
-autocmd FileType htmldjango setlocal sw=2 sts=2
-autocmd FileType python setlocal sw=4 sts=4
-autocmd FileType conf setlocal sw=4 sts=4
-autocmd FileType coffee setlocal sw=2 sts=2
+autocmd FileType less setlocal sw=2 sts=2
 autocmd FileType litcoffee setlocal sw=2 sts=2
-autocmd FileType haskell setlocal sw=4 sts=4
-autocmd FileType yaml setlocal sw=2 sts=2
 autocmd FileType markdown setlocal wrap linebreak
+autocmd FileType python setlocal sw=4 sts=4
+autocmd FileType ruby setlocal sw=2 sts=2
+autocmd FileType scss setlocal sw=2 sts=2
+autocmd FileType yaml setlocal sw=2 sts=2
 
 " Display control characters
 "   For tabs, paint a >--
 "   For trailing spaces, paint a -
 set list
 set lcs=tab:>-,trail:-
-
-" For all modes, navigate by words delimited by any special character,
-" instead of stopping only at whitespace.
-map <C-Left> b
-map <C-Right> w
-imap <C-S-Left> <C-O><C-S-Left>
-imap <C-S-Right> <C-O><C-S-Right>
-vmap <C-S-Left> b
-vmap <C-S-Right> w
-nmap <C-S-Left> gh<C-S-Left>
-nmap <C-S-Right> gh<C-S-Right>
 
 " Indent/unindent using tabs.
 vmap <Tab> ><CR>gv
