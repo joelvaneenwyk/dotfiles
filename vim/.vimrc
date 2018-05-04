@@ -103,7 +103,7 @@ call vundle#rc()
 
 filetype off
 
-" Generally useful plugins.
+" Generally useful.
 Bundle 'chriskempson/base16-vim'
 Bundle 'moll/vim-bbye'
 Bundle 'ctrlpvim/ctrlp.vim'
@@ -119,19 +119,19 @@ Bundle 'w0rp/ale'
 Bundle 'mileszs/ack.vim'
 Bundle 'jez/vim-github-hub'
 
-" Plugins for web development.
+" For web development.
 Bundle 'jelera/vim-javascript-syntax'
 Bundle 'tpope/vim-markdown'
 Bundle 'kchmck/vim-coffee-script'
 Bundle 'groenewege/vim-less'
 Bundle 'digitaltoad/vim-jade'
 
-" Plugins for python development.
+" For python.
 Bundle 'nvie/vim-flake8'
 Bundle 'ludovicchabant/vim-gutentags'
 
+" For latex.
 Bundle 'lervag/vimtex'
-Bundle 'donRaphaco/neotex'
 
 " Configure airline.
 let g:airline#extensions#tabline#enabled = 1
