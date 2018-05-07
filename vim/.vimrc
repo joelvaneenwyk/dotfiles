@@ -46,10 +46,11 @@ autocmd FileType java setlocal sw=2 sts=2
 autocmd FileType javascript setlocal sw=2 sts=2
 autocmd FileType less setlocal sw=2 sts=2
 autocmd FileType litcoffee setlocal sw=2 sts=2
-autocmd FileType markdown setlocal wrap linebreak
+autocmd FileType markdown setlocal wrap linebreak tw=80
 autocmd FileType python setlocal sw=4 sts=4
 autocmd FileType ruby setlocal sw=2 sts=2
 autocmd FileType scss setlocal sw=2 sts=2
+autocmd FileType tex setlocal wrap linebreak tw=80
 autocmd FileType yaml setlocal sw=2 sts=2
 
 " Display control characters
