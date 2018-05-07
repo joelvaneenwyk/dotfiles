@@ -26,7 +26,7 @@ function install_apps() {
 
    brew bundle
 
-   pip install neovim-remote
+   pip3 install neovim-remote
 }
 
 function configure_apps() {
