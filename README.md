@@ -49,6 +49,10 @@ enter the dotfiles directory
 
 `cd dotfiles`
 
+## osx
+`./init-osx.sh`
+
+## linux
 install the bash settings
 
 `stow bash`
@@ -103,22 +107,6 @@ but you can override the default behavior and symlink files to another location 
 **note:** stow can only create a symlink if a config file does not already exist. if a default file was created upon program installation you must delete it first before you can install a new one with stow. this does not apply to directories, only files.
 
 # details
-
-## osx -> chunkwm
-here's how to use [chunkwm](https://github.com/koekeishiya/chunkwm):
-
-* follow the instructions on the chunkwm [README](https://github.com/koekeishiya/chunkwm) to install it using brew.
-* follow the instructions on the khd [README](https://github.com/koekeishiya/skhd) to install it using brew.
-* start chunkwm: `brew services start chunkwm`
-* start khd: `brew services start skhd`
-
-assuming you've already used `stow osx` to link in your configs, it should just work at this point.
-
-## vim
-
-```
-brew install vim --with-override-system-vi
-```
 
 ## x11
 to install the **x11** config you need to execute the command:
