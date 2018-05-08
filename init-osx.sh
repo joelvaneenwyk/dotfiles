@@ -129,6 +129,7 @@ function configure_iterm2() {
 
 function configure_system() {
    # Disable Gatekeeper entirely to get rid of "Are you sure you want to open this application?" dialog
+   echo "Type password to disable Gatekeeper questions (are you sure you want to open this application?)"
    sudo spctl --master-disable
 }
 
