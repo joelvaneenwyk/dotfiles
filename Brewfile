@@ -23,3 +23,5 @@ cask "skim"
 cask "typora"
 cask "wire"
 
+mas 'Amphetamine', id: 937984704
+

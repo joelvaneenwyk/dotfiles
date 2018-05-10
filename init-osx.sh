@@ -13,10 +13,9 @@ main() {
 
    configure_dock
    configure_finder
-   configure_system
-
    configure_apps
    configure_iterm2
+   configure_system
 }
 
 function install_apps() {
@@ -35,6 +34,9 @@ function configure_apps() {
    stow fonts
    stow osx
    stow vim
+
+   defaults delete com.if.Amphetamine >/dev/null || true
+   defaults import com.if.Amphetamine .osx/amphetamine.plist
 }
 
 function configure_dock() {
