@@ -14,7 +14,6 @@ main() {
    configure_dock
    configure_finder
    configure_apps
-   configure_iterm2
    configure_system
 }
 
@@ -37,6 +36,9 @@ function configure_apps() {
 
    defaults delete com.if.Amphetamine >/dev/null || true
    defaults import com.if.Amphetamine .osx/amphetamine.plist
+
+   defaults delete com.googlecode.iterm2 >/dev/null || true
+   defaults import com.googlecode.iterm2 .osx/iterm2.plist
 }
 
 function configure_dock() {
@@ -106,27 +108,6 @@ function configure_finder() {
    # Use list view in all Finder windows by default
    # Four-letter codes for the other view modes: `icnv`, `clmv`, `Flwv`
    defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
-}
-
-function configure_iterm2() {
-   # Set shell
-   /usr/libexec/PlistBuddy -c "Set 'New Bookmarks':0:'Command' /usr/local/bin/fish" ~/Library/Preferences/com.googlecode.iterm2.plist
-   /usr/libexec/PlistBuddy -c "Set 'New Bookmarks':0:'Custom Command' Yes" ~/Library/Preferences/com.googlecode.iterm2.plist
-   # Enable window transparency
-   /usr/libexec/PlistBuddy -c "Set 'New Bookmarks':0:'Transparency' 0.18" ~/Library/Preferences/com.googlecode.iterm2.plist
-   # Set font
-   /usr/libexec/PlistBuddy -c "Set 'New Bookmarks':0:'Normal Font' 'Hack-Regular 12'" ~/Library/Preferences/com.googlecode.iterm2.plist
-   /usr/libexec/PlistBuddy -c "Set 'New Bookmarks':0:'Non Ascii Font' 'Hack-Regular 12'" ~/Library/Preferences/com.googlecode.iterm2.plist
-   # Hide title bar
-   /usr/libexec/PlistBuddy -c "Set 'New Bookmarks':0:'Window Type' 12" ~/Library/Preferences/com.googlecode.iterm2.plist
-   # Unlimited Scrollback
-   /usr/libexec/PlistBuddy -c "Set 'New Bookmarks':0:'Unlimited Scrollback' true" ~/Library/Preferences/com.googlecode.iTerm2.plist
-   # Mute bell
-   /usr/libexec/PlistBuddy -c "Set 'New Bookmarks':0:'Silence Bell' true" ~/Library/Preferences/com.googlecode.iTerm2.plist
-   # Disable warning when quitting
-   defaults write com.googlecode.iterm2 PromptOnQuit -bool false
-   # Hide scrollbars
-   defaults write com.googlecode.iterm2 HideScrollbar 1
 }
 
 function configure_system() {
