@@ -119,3 +119,5 @@ chunkc tiling::rule --owner Finder --name Copy --state float
 chunkc tiling::rule --owner MacPass --state float
 chunkc tiling::rule --owner Calculator --state float
 chunkc tiling::rule --owner Arq --state float
+chunkc tiling::rule --owner Wansview --state float
+chunkc tiling::rule --owner GIMP --state float
