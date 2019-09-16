@@ -47,6 +47,7 @@ autocmd FileType javascript setlocal sw=2 sts=2
 autocmd FileType less setlocal sw=2 sts=2
 autocmd FileType litcoffee setlocal sw=2 sts=2
 autocmd FileType markdown setlocal wrap linebreak tw=80
+autocmd FileType nim setlocal sw=2 sts=2
 autocmd FileType python setlocal sw=4 sts=4
 autocmd FileType ruby setlocal sw=2 sts=2
 autocmd FileType scss setlocal sw=2 sts=2
@@ -108,6 +109,8 @@ Bundle 'luochen1990/rainbow'
 Bundle 'w0rp/ale'
 Bundle 'mileszs/ack.vim'
 Bundle 'jez/vim-github-hub'
+Bundle 'scrooloose/nerdcommenter'
+Bundle 'prabirshrestha/asyncomplete.vim'
 
 " For web development.
 Bundle 'jelera/vim-javascript-syntax'
@@ -122,6 +125,9 @@ Bundle 'ludovicchabant/vim-gutentags'
 
 " For latex.
 Bundle 'lervag/vimtex'
+
+" For nim.
+Bundle 'alaviss/nim.nvim'
 
 " Configure airline.
 let g:airline#extensions#tabline#enabled = 1
