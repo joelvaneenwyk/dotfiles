@@ -75,12 +75,6 @@ function configure_dock() {
    ## 10: Put display to sleep
    ## 11: Launchpad
    ## 12: Notification Center
-   ## Top left screen corner → Mission Control
-   defaults write com.apple.dock wvous-tl-corner -int 2
-   defaults write com.apple.dock wvous-tl-modifier -int 0
-   ## Top right screen corner → Desktop
-   defaults write com.apple.dock wvous-tr-corner -int 4
-   defaults write com.apple.dock wvous-tr-modifier -int 0
    ## Bottom right screen corner → Start screen saver
    defaults write com.apple.dock wvous-br-corner -int 5
    defaults write com.apple.dock wvous-br-modifier -int 0
@@ -94,8 +88,6 @@ function configure_finder() {
    # Require password immediately after sleep or screen saver begins
    defaults write com.apple.screensaver askForPassword -int 1
    defaults write com.apple.screensaver askForPasswordDelay -int 0
-   # allow quitting via ⌘ + q; doing so will also hide desktop icons
-   defaults write com.apple.finder QuitMenuItem -bool true
    # Set home directory as the default location for new Finder windows
    defaults write com.apple.finder NewWindowTarget -string "PfLo"
    defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/"
