@@ -11,7 +11,6 @@ brew "exa"
 brew "fzf"
 brew "hub"
 brew "the_silver_searcher"
-brew "python"
 
 brew "crisidev/chunkwm/chunkwm"
 brew "koekeishiya/formulae/skhd"
