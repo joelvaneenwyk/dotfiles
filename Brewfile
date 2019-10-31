@@ -15,6 +15,7 @@ brew "the_silver_searcher"
 brew "crisidev/chunkwm/chunkwm"
 brew "koekeishiya/formulae/skhd"
 
+cask "amethyst"
 cask "arq"
 cask "brave-browser"
 cask "hammerspoon"
