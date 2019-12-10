@@ -5,6 +5,7 @@ fundle plugin 'fisherman/getopts'
 fundle plugin 'fisherman/fzf'
 fundle plugin 'fisherman/z'
 fundle plugin 'jorgebucaran/fish-nvm'
+fundle plugin 'terlar/fry'
 fundle init
 
 # suppress fish greeting
