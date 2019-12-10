@@ -193,3 +193,5 @@ function! PositionCursorFromVimInfo()
 endfunction
 autocmd BufReadPost * call PositionCursorFromVimInfo()
 
+hi Normal guibg=NONE ctermbg=NONE
+
