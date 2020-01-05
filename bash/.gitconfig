@@ -16,3 +16,5 @@
 	rebase = true
 [commit]
 	verbose = true
+[core]
+   excludesfile = /Users/jdve/.gitignore
