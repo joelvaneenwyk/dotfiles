@@ -4,8 +4,6 @@ if not functions -q fundle; eval (curl -sfL https://git.io/fundle-install); end
 fundle plugin 'fisherman/getopts'
 fundle plugin 'fisherman/fzf'
 fundle plugin 'fisherman/z'
-fundle plugin 'jorgebucaran/fish-nvm'
-fundle plugin 'terlar/fry'
 fundle init
 
 # suppress fish greeting
@@ -34,6 +32,7 @@ alias less="less -r"
 alias ll="ls -l"
 alias grep="grep --color=always"
 alias pr="hub -c core.commentChar='%' pull-request"
+alias ag="ag --path-to-ignore ~/.ignore"
 
 # use exa if available
 if type -q exa
@@ -74,4 +73,7 @@ set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
 if type -q conda
     source (conda info --root)/etc/fish/conf.d/conda.fish
 end
+
+# Enable asdf for managing runtimes.
+source /usr/local/opt/asdf/asdf.fish
 
