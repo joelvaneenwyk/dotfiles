@@ -1,7 +1,5 @@
 cask_args appdir: "/Applications"
 
-tap "crisidev/chunkwm"
-tap "koekeishiya/formulae"
 tap "neovim/neovim"
 
 brew "stow"
@@ -12,12 +10,9 @@ brew "fzf"
 brew "hub"
 brew "the_silver_searcher"
 
-brew "crisidev/chunkwm/chunkwm"
-brew "koekeishiya/formulae/skhd"
-
 cask "amethyst"
 cask "arq"
-cask "brave-browser"
+cask "google-chrome"
 cask "hammerspoon"
 cask "iterm2"
 cask "macpass"
