@@ -158,6 +158,9 @@ if has('nvim')
   let g:vimtex_compiler_progname = 'nvr'
 endif
 
+" Configure fzf.
+set rtp+=/usr/local/opt/fzf
+
 " Configure GUI settings.
 if filereadable(expand("~/.vimrc_background"))
   let base16colorspace=256
