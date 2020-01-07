@@ -17,4 +17,4 @@
 [commit]
 	verbose = true
 [core]
-   excludesfile = /Users/jdve/.gitignore
+   excludesfile = /Users/jdve/.gitignore_global
