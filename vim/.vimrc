@@ -89,55 +89,51 @@ else
 endif
 
 " Load plugins.
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
-
-filetype off
+call plug#begin('~/.vim/plugged')
 
 " Generally useful.
-Bundle 'chriskempson/base16-vim'
-Bundle 'moll/vim-bbye'
-Bundle 'ctrlpvim/ctrlp.vim'
-Bundle 'scrooloose/nerdtree'
-Bundle 'majutsushi/tagbar'
-Bundle 'vim-airline/vim-airline'
-Bundle 'vim-airline/vim-airline-themes'
-Bundle 'terryma/vim-multiple-cursors'
-Bundle 'vim-scripts/LargeFile'
-Bundle 'tpope/vim-fugitive'
-Bundle 'luochen1990/rainbow'
-Bundle 'w0rp/ale'
-Bundle 'mileszs/ack.vim'
-Bundle 'jez/vim-github-hub'
-Bundle 'scrooloose/nerdcommenter'
-Bundle 'prabirshrestha/asyncomplete.vim'
+Plug 'chriskempson/base16-vim'
+Plug 'moll/vim-bbye'
+Plug 'scrooloose/nerdtree'
+Plug 'majutsushi/tagbar'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'terryma/vim-multiple-cursors'
+Plug 'vim-scripts/LargeFile'
+Plug 'tpope/vim-fugitive'
+Plug 'luochen1990/rainbow'
+Plug 'w0rp/ale'
+Plug 'mileszs/ack.vim'
+Plug 'jez/vim-github-hub'
+Plug 'scrooloose/nerdcommenter'
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug '/usr/local/opt/fzf'
 
 " For web development.
-Bundle 'jelera/vim-javascript-syntax'
-Bundle 'tpope/vim-markdown'
-Bundle 'kchmck/vim-coffee-script'
-Bundle 'groenewege/vim-less'
-Bundle 'digitaltoad/vim-jade'
+Plug 'jelera/vim-javascript-syntax'
+Plug 'tpope/vim-markdown'
+Plug 'kchmck/vim-coffee-script'
+Plug 'groenewege/vim-less'
+Plug 'digitaltoad/vim-jade'
+Plug 'lepture/vim-jinja'
 
 " For python.
-Bundle 'nvie/vim-flake8'
-Bundle 'ludovicchabant/vim-gutentags'
+Plug 'nvie/vim-flake8'
+Plug 'ludovicchabant/vim-gutentags'
 
 " For latex.
-Bundle 'lervag/vimtex'
+Plug 'lervag/vimtex'
 
 " For nim.
-Bundle 'alaviss/nim.nvim'
+Plug 'alaviss/nim.nvim'
+
+call plug#end()
 
 " Configure airline.
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tagbar#enabled = 0
 let g:airline_powerline_fonts = 1
 let g:airline_theme = 'wombat'
-
-" Configure CtrlP.
-let g:ctrlp_clear_cache_on_exit = 0
-let g:ctrlp_working_path_mode = 'ra'
 
 " Configure NERDTree.
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
@@ -158,8 +154,21 @@ if has('nvim')
   let g:vimtex_compiler_progname = 'nvr'
 endif
 
-" Configure fzf.
-set rtp+=/usr/local/opt/fzf
+" Configure fzf
+let $FZF_DEFAULT_COMMAND = 'fd --type f'
+
+let g:fzf_action = {
+      \ 'ctrl-s': 'split',
+      \ 'ctrl-v': 'vsplit'
+      \ }
+nnoremap <c-p> :FZF<cr>
+augroup fzf
+  autocmd!
+  autocmd! FileType fzf
+  autocmd  FileType fzf set laststatus=0 noshowmode noruler
+    \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
+augroup END
+
 
 " Configure GUI settings.
 if filereadable(expand("~/.vimrc_background"))
