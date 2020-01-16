@@ -3,7 +3,7 @@ fish/.config/fish/fishd.*
 fish/.config/fish/fish_history
 fish/.config/fish/functions/fundle.fish
 fish/.config/fish/fundle/
-vim/.vim/bundle/
+vim/.vim/plugged/
 xmonad/.xmonad/xmonad-x86_64-linux
 xmonad/.xmonad/xmonad.errors
 xmonad/.xmonad/xmonad.hi

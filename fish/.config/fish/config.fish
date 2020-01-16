@@ -32,7 +32,10 @@ alias less="less -r"
 alias ll="ls -l"
 alias grep="grep --color=always"
 alias pr="hub -c core.commentChar='%' pull-request"
-alias ag="ag --path-to-ignore ~/.ignore"
+
+# configure fzf
+set -gx FZF_FIND_FILE_COMMAND "fd --type f . \$dir"
+set -gx FZF_CTRL_T_COMMAND "fd --type f . \$dir"
 
 # use exa if available
 if type -q exa
