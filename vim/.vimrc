@@ -112,10 +112,10 @@ Plug '/usr/local/opt/fzf'
 " For web development.
 Plug 'jelera/vim-javascript-syntax'
 Plug 'tpope/vim-markdown'
-Plug 'kchmck/vim-coffee-script'
 Plug 'groenewege/vim-less'
 Plug 'digitaltoad/vim-jade'
-Plug 'lepture/vim-jinja'
+Plug 'Glench/Vim-Jinja2-Syntax'
+Plug 'prettier/vim-prettier', { 'do': 'yarn install' }
 
 " For python.
 Plug 'nvie/vim-flake8'
