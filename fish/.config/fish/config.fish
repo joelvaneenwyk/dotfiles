@@ -32,6 +32,7 @@ alias less="less -r"
 alias ll="ls -l"
 alias grep="grep --color=always"
 alias pr="hub -c core.commentChar='%' pull-request"
+alias rg="rg --smart-case"
 
 # configure fzf
 set -gx FZF_FIND_FILE_COMMAND "fd --type f . \$dir"
@@ -69,7 +70,7 @@ if status --is-interactive
     source $HOME/.config/base16-shell/profile_helper.fish
 end
 
-source $HOME/.config/base16-fzf/fish/(basename (readlink (readlink $HOME/.base16_theme)) .sh).fish
+source $HOME/.config/base16-fzf/fish/(basename (readlink $HOME/(readlink $HOME/.base16_theme)) .sh).fish
 set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
 
 # enable activating anaconda environments
