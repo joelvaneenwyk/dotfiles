@@ -1,3 +1,6 @@
 Pipfile.lock
 .DS_Store
 node_modules/
+tasks.json
+.vscode/
+
