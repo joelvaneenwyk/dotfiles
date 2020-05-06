@@ -44,6 +44,7 @@ autocmd FileType htmldjango setlocal sw=2 sts=2
 autocmd FileType jade setlocal sw=2 sts=2
 autocmd FileType java setlocal sw=2 sts=2
 autocmd FileType javascript setlocal sw=2 sts=2
+autocmd FileType json setlocal sw=2 sts=2
 autocmd FileType less setlocal sw=2 sts=2
 autocmd FileType litcoffee setlocal sw=2 sts=2
 autocmd FileType markdown setlocal wrap linebreak tw=80
