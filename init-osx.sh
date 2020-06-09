@@ -42,6 +42,9 @@ function configure_apps() {
 
    defaults delete com.freron.MailMate >/dev/null || true
    defaults import com.freron.MailMate .osx/mailmate.plist
+
+   defaults delete com.amethyst.Amethyst >/dev/null || true
+   defaults import com.amethyst.Amethyst .osx/amethyst.plist
 }
 
 function configure_dock() {
