@@ -26,6 +26,8 @@ function install_apps() {
 }
 
 function configure_apps() {
+   mkdir -p ~/.ssh
+
    stow bash
    stow fish
    stow fonts
