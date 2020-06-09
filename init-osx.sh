@@ -43,8 +43,6 @@ function configure_apps() {
 }
 
 function configure_dock() {
-   quit "Dock"
-
    # Set the icon size of Dock items to 36 pixels
    defaults write com.apple.dock tilesize -int 36
    # Wipe all (default) app icons from the Dock
@@ -75,8 +73,6 @@ function configure_dock() {
    ## Bottom right screen corner → Start screen saver
    defaults write com.apple.dock wvous-br-corner -int 5
    defaults write com.apple.dock wvous-br-modifier -int 0
-
-   open "Dock"
 }
 
 function configure_finder() {
@@ -103,18 +99,8 @@ function configure_system() {
    # Disable Gatekeeper entirely to get rid of "Are you sure you want to open this application?" dialog
    echo "Type password to disable Gatekeeper questions (are you sure you want to open this application?)"
    sudo spctl --master-disable
-}
 
-function quit() {
-   app=$1
-   killall "$app" > /dev/null 2>&1
-}
-
-function open() {
-   app=$1
-   osascript << EOM
-tell application "$app" to activate
-EOM
+   defaults write -g com.apple.mouse.scaling 3.0
 }
 
 main "$@"
