@@ -79,5 +79,8 @@ if type -q conda
 end
 
 # Enable asdf for managing runtimes.
-source /usr/local/opt/asdf/asdf.fish
+if type -q asdf
+    source /usr/local/opt/asdf/asdf.fish
+end
+
 
