@@ -8,6 +8,8 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
+echo 'Loading ~/.profile'
+
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
     # include .bashrc if it exists
@@ -29,5 +31,3 @@ fi
 export EDITOR="vim"
 export PAGER="less -r"
 
-# added by Anaconda3 5.0.1 installer
-export PATH="/Users/jvaneenwyk/anaconda3/bin:$PATH"
