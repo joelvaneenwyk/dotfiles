@@ -40,8 +40,8 @@ function configure_apps() {
    defaults delete com.googlecode.iterm2 >/dev/null || true
    defaults import com.googlecode.iterm2 .osx/iterm2.plist
 
-   defaults delete com.freron.MailMate.plist >/dev/null || true
-   defaults import com.freron.MailMate.plist .osx/iterm2.plist
+   defaults delete com.freron.MailMate >/dev/null || true
+   defaults import com.freron.MailMate .osx/mailmate.plist
 }
 
 function configure_dock() {
