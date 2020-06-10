@@ -4,6 +4,7 @@ tap "homebrew/cask-fonts"
 tap "neovim/neovim"
 
 brew "stow"
+brew "asdf"
 brew "fd"
 brew "fish"
 brew "neovim"
