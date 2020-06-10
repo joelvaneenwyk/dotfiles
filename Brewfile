@@ -18,6 +18,7 @@ cask "https://raw.githubusercontent.com/Homebrew/homebrew-cask/5b112c6a968113fb3
 cask "dozer"
 cask "dropbox"
 cask "font-hack"
+cask "fsnotes"
 cask "google-chrome"
 cask "hammerspoon"
 cask "iterm2"

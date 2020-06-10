@@ -37,17 +37,14 @@ function configure_apps() {
    stow vim
    stow vscode
 
-   defaults delete com.if.Amphetamine >/dev/null || true
-   defaults import com.if.Amphetamine .osx/amphetamine.plist
+   for f in .osx/*.plist; do
+      [ -e "$f" ] || continue
 
-   defaults delete com.googlecode.iterm2 >/dev/null || true
-   defaults import com.googlecode.iterm2 .osx/iterm2.plist
-
-   defaults delete com.freron.MailMate >/dev/null || true
-   defaults import com.freron.MailMate .osx/mailmate.plist
-
-   defaults delete com.amethyst.Amethyst >/dev/null || true
-   defaults import com.amethyst.Amethyst .osx/amethyst.plist
+      echo "Importing settings from $f"
+      plist=$(basename -s .plist $f)
+      echo defaults delete $plist >/dev/null || true
+      echo defaults import $plist $f
+   done
 }
 
 function configure_dock() {
