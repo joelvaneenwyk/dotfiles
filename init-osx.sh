@@ -33,6 +33,7 @@ function configure_apps() {
    stow fish
    stow fonts
    stow osx
+   stow ruby
    stow vim
    stow vscode
 
