@@ -26,6 +26,7 @@ function install_apps() {
 }
 
 function configure_apps() {
+   mkdir -p ~/.config/fish
    mkdir -p ~/.ssh
 
    stow bash
