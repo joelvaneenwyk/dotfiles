@@ -11,7 +11,11 @@
     "diffEditor.ignoreTrimWhitespace": true,
     "editor.tabSize": 2,
     "workbench.colorTheme": "Monokai",
-    "terminal.integrated.shell.osx": "/usr/local/bin/fish",
+    "terminal.integrated.shell.osx": "/bin/bash",
+    "terminal.integrated.shellArgs.osx": [
+        "-lc",
+        "fish"
+    ],
     "diffEditor.renderSideBySide": false,
     "dart.debugExternalLibraries": true,
     "dart.debugSdkLibraries": true
