@@ -33,6 +33,7 @@ function configure_apps() {
    stow fonts
    stow osx
    stow vim
+   stow vscode
 
    defaults delete com.if.Amphetamine >/dev/null || true
    defaults import com.if.Amphetamine .osx/amphetamine.plist

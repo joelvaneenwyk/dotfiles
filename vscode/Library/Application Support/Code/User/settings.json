@@ -1,0 +1,18 @@
+{
+    "files.trimTrailingWhitespace": true,
+    "scssLint.runOnTextChange": true,
+    "terminal.external.osxExec": "iTerm.app",
+    "terminal.integrated.copyOnSelection": true,
+    "terminal.integrated.automationShell.osx": "/bin/bash",
+    "vscode-neovim.neovimPath": "/usr/local/bin/nvim",
+    "git.autofetch": true,
+    "ruby.useBundler": true,
+    "window.zoomLevel": 0,
+    "diffEditor.ignoreTrimWhitespace": true,
+    "editor.tabSize": 2,
+    "workbench.colorTheme": "Monokai",
+    "terminal.integrated.shell.osx": "/usr/local/bin/fish",
+    "diffEditor.renderSideBySide": false,
+    "dart.debugExternalLibraries": true,
+    "dart.debugSdkLibraries": true
+}
