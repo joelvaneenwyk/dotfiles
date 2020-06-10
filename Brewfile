@@ -1,5 +1,6 @@
 cask_args appdir: "/Applications"
 
+tap "homebrew/cask-fonts"
 tap "neovim/neovim"
 
 brew "stow"
@@ -12,10 +13,10 @@ brew "hub"
 brew "ripgrep"
 
 cask "amethyst"
-cask "arq"
-cask "dozer"
 cask "https://raw.githubusercontent.com/Homebrew/homebrew-cask/5b112c6a968113fb37d147f854451fb0988bd4db/Casks/arq.rb"
+cask "dozer"
 cask "dropbox"
+cask "font-hack"
 cask "google-chrome"
 cask "hammerspoon"
 cask "iterm2"
