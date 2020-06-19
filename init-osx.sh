@@ -105,9 +105,10 @@ function configure_system() {
    echo "Type password to disable Gatekeeper questions (are you sure you want to open this application?)"
    sudo spctl --master-disable
 
-   defaults write -g com.apple.mouse.scaling 3.0      # mouse speed
-   defaults write -g com.apple.trackpad.scaling 2     # trackpad speed
-   defaults write -g com.apple.trackpad.forceClick 1  # tap to click
+   defaults write -g com.apple.mouse.scaling 3.0                                 # mouse speed
+   defaults write -g com.apple.trackpad.scaling 2                                # trackpad speed
+   defaults write -g com.apple.trackpad.forceClick 1                             # tap to click
+   defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag 1    # three finger drag
 }
 
 main "$@"
