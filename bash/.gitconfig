@@ -1,8 +1,4 @@
 # This is Git's per-user configuration file.
-[user]
-# Please adapt and uncomment the following lines:
-	name = Jonathan Van Eenwyk
-	email = jonathan@vihanti.com
 [push]
 	default = simple
 [alias]
@@ -17,4 +13,4 @@
 [commit]
 	verbose = true
 [core]
-   excludesfile = /Users/jdve/.gitignore_global
+	excludesfile = /Users/jdve/.gitignore_global
