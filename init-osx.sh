@@ -28,6 +28,7 @@ function install_apps() {
 function configure_apps() {
    mkdir -p ~/.config/fish
    mkdir -p ~/.ssh
+   mkdir -p ~/Library/Application\ Support/Code
 
    stow bash
    stow fish
