@@ -23,7 +23,6 @@
  python         > flake8 config
  sup            > sup mail client configs
  vim            > vim configs
- weechat        > irc client configs
  x11            > three-monitor x11 config
  xmonad         > x11 window manager configs
 ```
