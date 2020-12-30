@@ -16,6 +16,7 @@
         "-l"
     ],
     "diffEditor.renderSideBySide": false,
-    "dart.debugExternalLibraries": true,
-    "dart.debugSdkLibraries": true
+    "dart.debugExternalLibraries": false,
+    "dart.debugSdkLibraries": false,
+    "dart.openDevTools": "flutter"
 }
