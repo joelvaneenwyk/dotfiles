@@ -12,5 +12,12 @@
 	rebase = true
 [commit]
 	verbose = true
+	gpgsign = true
 [core]
 	excludesfile = /Users/jdve/.gitignore_global
+[user]
+	name = Jonathan Van Eenwyk
+	email = hello@jdve.me
+	signingkey = E828D601E558B68F40FAFA23A4034F973E0882E5
+[init]
+	defaultBranch = main
