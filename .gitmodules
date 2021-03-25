@@ -7,6 +7,6 @@
 [submodule "fish/.config/base16-fzf"]
 	path = fish/.config/base16-fzf
 	url = git@github.com:nicodebo/base16-fzf.git
-[submodule "osx/Library/Application Support/Resources"]
-	path = osx/Library/Application Support/Resources
+[submodule "macos/Library/Application Support/Resources"]
+	path = macos/Library/Application Support/Resources
 	url = https://github.com/chauncey-garrett/mailmate.git
