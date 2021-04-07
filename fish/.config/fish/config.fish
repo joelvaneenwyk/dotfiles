@@ -18,6 +18,10 @@ if test -d $HOME/anaconda3/bin
     set -gx PATH $HOME/anaconda3/bin $PATH
 end
 
+if test -d $HOME/.config/git-fuzzy
+    set -gx PATH $HOME/.config/git-fuzzy/bin $PATH
+end
+
 set -gx PATH ./node_modules/.bin $PATH
 
 # color stderr in red

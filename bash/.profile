@@ -8,8 +8,6 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
-echo 'Loading ~/.profile'
-
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
     # include .bashrc if it exists
@@ -25,6 +23,10 @@ fi
 
 if [ -d "$HOME/.local/sbin" ]; then
    PATH="$HOME/.local/sbin:$PATH"
+fi
+
+if [ -d "$HOME/.config/git-fuzzy" ]; then
+   PATH="$HOME/.config/git-fuzzy/bin:$PATH"
 fi
 
 # set some defaults

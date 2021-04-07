@@ -10,3 +10,6 @@
 [submodule "macos/Library/Application Support/Resources"]
 	path = macos/Library/Application Support/Resources
 	url = https://github.com/chauncey-garrett/mailmate.git
+[submodule "fish/.config/git-fuzzy"]
+	path = fish/.config/git-fuzzy
+	url = git@github.com:bigH/git-fuzzy.git
