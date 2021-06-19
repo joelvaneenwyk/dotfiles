@@ -12,6 +12,8 @@ brew "exa"
 brew "fzf"
 brew "hub"
 brew "ripgrep"
+brew "koekeishiya/formulae/skhd"
+brew "koekeishiya/formulae/yabai"
 
 cask "amethyst"
 cask "https://raw.githubusercontent.com/Homebrew/homebrew-cask/5b112c6a968113fb37d147f854451fb0988bd4db/Casks/arq.rb"
