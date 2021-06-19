@@ -16,8 +16,8 @@
         "-l"
     ],
     "diffEditor.renderSideBySide": false,
-    "dart.debugExternalLibraries": false,
-    "dart.debugSdkLibraries": false,
+    "dart.debugExternalLibraries": true,
+    "dart.debugSdkLibraries": true,
     "dart.openDevTools": "flutter",
     "files.exclude": {
         "**/.classpath": true,
@@ -30,5 +30,7 @@
     "editor.fontFamily": "JetBrains Mono, Hack, Menlo, Monaco, 'Courier New', monospace",
     "editor.fontLigatures": true,
     "editor.fontSize": 11,
-    "terminal.integrated.fontSize": 11
+    "terminal.integrated.fontSize": 11,
+    "workbench.startupEditor": "none",
+    "terminal.integrated.tabs.enabled": false
 }
