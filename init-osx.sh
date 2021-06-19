@@ -110,6 +110,7 @@ function configure_system() {
    defaults write -g com.apple.trackpad.scaling 2                                # trackpad speed
    defaults write -g com.apple.trackpad.forceClick 1                             # tap to click
    defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag 1    # three finger drag
+   defaults write -g ApplePressAndHoldEnabled -bool false                        # repeat keys on hold
 }
 
 main "$@"
