@@ -54,5 +54,5 @@ echo "yabai configuration loaded.."
 
 # kill any existing limelight process if one exists, before we launch a new one
 killall limelight &> /dev/null
-~/.local/bin/limelight &> /dev/null &
+/Users/jdve/.local/bin/limelight &> /dev/null &
 
