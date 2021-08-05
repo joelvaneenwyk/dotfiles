@@ -30,5 +30,5 @@ cask "typora"
 cask "visual-studio-code"
 cask "wire"
 
+# Powerful keep-awake utility, see https://apps.apple.com/us/app/amphetamine/id937984704
 mas 'Amphetamine', id: 937984704
-

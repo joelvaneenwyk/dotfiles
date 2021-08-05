@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Usage: ./init-osx.sh
+# Usage: ./init.sh
 #
 # - Install commonly used apps using "brew bundle" (see Brewfile).
 # - Uses "stow" to link config files into home directory.
@@ -9,6 +9,39 @@
 set -e
 
 main() {
+   unameOut="$(uname -s)"
+   case "${unameOut}" in
+   Linux*)
+      machine=Linux
+      initialize_linux
+      ;;
+   Darwin*)
+      machine=Mac
+      initialize_macos
+      ;;
+   CYGWIN*)
+      machine=Cygwin
+      initialize_windows
+      ;;
+   MINGW*)
+      machine=MinGw
+      initialize_windows
+      ;;
+   *) machine="UNKNOWN:${unameOut}" ;;
+   esac
+
+   echo "Initialized '${machine}' machine."
+}
+
+function initialize_linux() {
+   echo "No initialization routines setup for Linux platform."
+}
+
+function initialize_windows() {
+   echo "No initialization routines setup for Windows platform."
+}
+
+function initialize_macos() {
    install_apps
 
    configure_dock
@@ -42,9 +75,9 @@ function configure_apps() {
       [ -e "$f" ] || continue
 
       echo "Importing settings from $f"
-      plist=$(basename -s .plist $f)
-      echo defaults delete $plist >/dev/null || true
-      echo defaults import $plist $f
+      plist=$(basename -s .plist "$f")
+      echo defaults delete "$plist" >/dev/null || true
+      echo defaults import "$plist" "$f"
    done
 }
 
@@ -55,7 +88,7 @@ function configure_dock() {
    defaults write com.apple.dock persistent-apps -array
    # Disable Dashboard
    defaults write com.apple.dashboard mcx-disabled -bool true
-   # Don’t show Dashboard as a Space
+   # Don't show Dashboard as a Space
    defaults write com.apple.dock dashboard-in-overlay -bool true
    # Automatically hide and show the Dock
    defaults write com.apple.dock autohide -bool true
@@ -106,12 +139,11 @@ function configure_system() {
    echo "Type password to disable Gatekeeper questions (are you sure you want to open this application?)"
    sudo spctl --master-disable
 
-   defaults write -g com.apple.mouse.scaling 3.0                                 # mouse speed
-   defaults write -g com.apple.trackpad.scaling 2                                # trackpad speed
-   defaults write -g com.apple.trackpad.forceClick 1                             # tap to click
-   defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag 1    # three finger drag
-   defaults write -g ApplePressAndHoldEnabled -bool false                        # repeat keys on hold
+   defaults write -g com.apple.mouse.scaling 3.0                              # mouse speed
+   defaults write -g com.apple.trackpad.scaling 2                             # trackpad speed
+   defaults write -g com.apple.trackpad.forceClick 1                          # tap to click
+   defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag 1 # three finger drag
+   defaults write -g ApplePressAndHoldEnabled -bool false                     # repeat keys on hold
 }
 
 main "$@"
-

@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 # ~/.profile: executed by the command interpreter for login shells.
 # This file is not read by bash(1), if ~/.bash_profile or ~/.bash_login
 # exists.
@@ -10,10 +12,10 @@
 
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
-    # include .bashrc if it exists
-    if [ -f "$HOME/.bashrc" ]; then
-        . "$HOME/.bashrc"
-    fi
+   # include .bashrc if it exists
+   if [ -f "$HOME/.bashrc" ]; then
+      . "$HOME/.bashrc"
+   fi
 fi
 
 # add extra things to the PATH
@@ -30,6 +32,5 @@ if [ -d "$HOME/.config/git-fuzzy" ]; then
 fi
 
 # set some defaults
-export EDITOR="vim"
+export EDITOR="micro"
 export PAGER="less -r"
-

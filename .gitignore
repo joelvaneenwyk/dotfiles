@@ -1,3 +1,4 @@
+.tmp
 Brewfile.lock.json
 fish/.local/share
 fish/.config/fish/fishd.*
