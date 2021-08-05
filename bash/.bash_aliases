@@ -11,10 +11,10 @@ alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
 # some more ls aliases
-alias ll='ls -alF'
-alias ls='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
+alias ll='ls -alF --color=always'
+alias ls='ls -alF --color=always'
+alias la='ls -A --color=always'
+alias l='ls -CF --color=always'
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert

@@ -124,3 +124,9 @@ to install the **x11** config you need to execute the command:
 `stow -t / x11`
 
 this will symlink the files to `/etc/X11`.
+
+## Resources
+
+- [Inspiration - dotfiles.github.io](https://dotfiles.github.io/inspiration/)
+- [dotfiles-windows: dotfiles for Windows, including Developer-minded system defaults. Built in PowerShell](https://github.com/jayharris/dotfiles-windows)
+- [Scoop](https://scoop.sh/)

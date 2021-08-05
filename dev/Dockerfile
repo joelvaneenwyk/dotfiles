@@ -1,11 +1,13 @@
 FROM ubuntu:latest
 
-RUN apt update
-RUN apt install -y git stow sudo micro
+RUN apt-get update
+RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y git stow sudo micro neofetch
 
+# Add a default user and then switch over to that user
 RUN useradd -ms /bin/bash default
-
 USER default
+
+# Now switch to working in the user home directory
 WORKDIR /home/default
 
 # Update SSH file so that we can pull from GitHub non-interactively
@@ -19,3 +21,6 @@ RUN git clone --recursive https://github.com/joelvaneenwyk/dotfiles.git || true
 
 COPY --chown=default ./ ./dotfiles
 RUN (cd dotfiles && stow --adopt bash)
+
+ENTRYPOINT [ "/bin/bash", "-c" ]
+CMD ["neofetch && bash"]

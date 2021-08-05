@@ -112,3 +112,5 @@ fi
 
 # shellcheck disable=SC1091
 [ -x "$(command -v asdf)" ] && source "$(brew --prefix asdf)/asdf.sh"
+
+cd "$HOME" || return
