@@ -1,4 +1,6 @@
-# This is a basic workflow to help you get started with Actions
+#
+# Workflow to validate that dotfiles are setup correct for all supported platforms
+#
 
 name: Validate
 
@@ -19,13 +21,17 @@ jobs:
   init:
     strategy:
       matrix:
-        platform: [ubuntu-latest, macos-latest, windows-latest]
-        shell: [bash]
-        launch: ["bash init.sh"]
+        platform:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
         include:
+          - platform: ubuntu-latest
+            launch: bash init.sh
+          - platform: macos-latest
+            launch: bash init.sh
           - platform: windows-latest
-            shell: cmd
-            launch: call init.bat
+            launch: cmd /c init.bat
 
     # The type of runner that the job will run on
     runs-on: ${{ matrix.platform }}
@@ -38,5 +44,4 @@ jobs:
       # Runs a single command using the runners shell
       - name: Initialize environment
         working-directory: ${{ github.workspace }}
-        shell: ${{ matrix.shell }}
         run: ${{ matrix.launch }}
