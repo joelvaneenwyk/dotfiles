@@ -30,8 +30,6 @@ Function Test-CommandExists {
 } #end function test-CommandExists
 
 Function Initialize-Environment {
-    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-
     $root = Resolve-Path -Path "$PSScriptRoot\.."
     $tempFolder = "$root\.tmp"
 

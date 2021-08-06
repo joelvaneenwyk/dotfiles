@@ -11,11 +11,12 @@ if "%~1"=="clean" (
 )
 
 if not "%DOT_INITIALIZED%"=="1" (
-    set "PATH=%~dp0windows;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
+    set "PATH=%~dp0windows;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
     echo Initializing environment...
 )
 
 setlocal EnableDelayedExpansion
+    call powershell -Command "& {Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force -Scope CurrentUser}" > nul 2>&1
     call powershell -File "%~dp0powershell\Initialize-Environment.ps1"
 
     call msys2 --version > nul 2>&1
