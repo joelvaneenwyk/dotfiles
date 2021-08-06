@@ -20,13 +20,9 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
+        shell: [bash]
+        launch: ["bash init.sh"]
         include:
-          - platform: ubuntu-latest
-            shell: bash
-            launch: bash init.sh
-          - platform: macos-latest
-            shell: bash
-            launch: bash init.sh
           - platform: windows-latest
             shell: cmd
             launch: call init.bat
