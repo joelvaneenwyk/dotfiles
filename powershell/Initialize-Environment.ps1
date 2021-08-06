@@ -55,7 +55,7 @@ Function Initialize-Environment {
             Write-Host "Failed to install packages with 'scoop' manager."
         }
 
-        $tempFolder = "$PSScriptRoot\.tmp"
+        $tempFolder = "$PSScriptRoot\..\.tmp"
         if ( -not(Test-Path -Path "$tempFolder") ) {
             New-Item -ItemType directory -Path "$tempFolder" | Out-Null
         }
@@ -191,8 +191,8 @@ Function Initialize-Environment {
                 Install-Module -Name PSDotFiles -Scope CurrentUser -Force -SkipPublisherCheck
             }
 
-            Install-DotFiles -Path "$PSScriptRoot" | Out-Null
-            Write-Host "Installed 'DotFiles' from: '$PSScriptRoot'"
+            Install-DotFiles -Path "$PSScriptRoot\..\" | Out-Null
+            Write-Host "Installed 'DotFiles' from: '$PSScriptRoot\..\'"
         }
         catch [Exception] {
             Write-Host "Failed to install 'PSDotFiles' module.", $_.Exception.Message

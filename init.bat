@@ -29,10 +29,10 @@ if not "%DOT_INITIALIZED%"=="1" (
 
 setlocal EnableDelayedExpansion
     if not exist "%TEXLIVE_BIN%\texi2dvi.exe" (
-        rmdir /s /q "%TEXDIR%"
+        if exist "%TEXDIR%" rmdir /s /q "%TEXDIR%"
     )
 
-    powershell -File "%~dp0init.ps1"
+    powershell -File "%~dp0powershell\Initialize-Environment.ps1"
 
     set _texInstallCommand="%TEXLIVE_INSTALL%" -no-gui -portable -profile "%~dp0windows\texlive.profile"
     if not exist "%TEXLIVE_BIN%\texi2dvi.exe" (
@@ -51,7 +51,7 @@ setlocal EnableDelayedExpansion
 
     call :MakeLink "Documents\WindowsPowerShell" "Microsoft.PowerShell_profile.ps1"
     call :MakeLink "Documents\PowerShell" "Profile.ps1"
-    echo Created symbolic links to PowerShell profile: '%~dp0pwsh\Profile.ps1'
+    echo Created symbolic links to PowerShell profile: '%~dp0powershell\Profile.ps1'
 
     if not exist "%STOW%" (
         msys2 -where "%~dp0" -shell bash -no-start -c ./windows/build-stow.sh
@@ -80,12 +80,12 @@ exit /b 0
     set _cloud=%OneDrive%\%~1
     if exist "%_cloud%" (
         if exist "%_cloud%\%~2" del "%_cloud%\%~2" > nul 2>&1
-        mklink "%_cloud%\%~2" "%~dp0pwsh\Profile.ps1" > nul 2>&1
+        mklink "%_cloud%\%~2" "%~dp0powershell\Profile.ps1" > nul 2>&1
     )
 
     set _local=%USERPROFILE%\%~1
     if exist "%_local%" (
         if exist "%_local%\%~2" del "%_local%\%~2"
-        mklink "%_local%\%~2" "%~dp0pwsh\Profile.ps1" > nul 2>&1
+        mklink "%_local%\%~2" "%~dp0powershell\Profile.ps1" > nul 2>&1
     )
 exit /b 0
