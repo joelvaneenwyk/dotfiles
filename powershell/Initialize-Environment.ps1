@@ -30,6 +30,18 @@ Function Test-CommandExists {
 } #end function test-CommandExists
 
 Function Initialize-Environment {
+    Write-Host "PowerShell Version: $($host.Version)"
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
+    try {
+        Install-PackageProvider -Name NuGet -Force -Scope CurrentUser | Out-Null
+        Write-Host "Installed NuGet package provider."
+    }
+    catch {
+        Write-Host "Failed to install NuGet package provider"
+    }
+
     $root = Resolve-Path -Path "$PSScriptRoot\.."
     $tempFolder = "$root\.tmp"
 

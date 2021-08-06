@@ -30,5 +30,5 @@ autoreconf --install --verbose
 # Documentation part is expected to fail but we can ignore that
 make --keep-going --ignore-errors || true
 
-rm -f "configure~"
-git checkout -- aclocal.m4 || true
+rm -f "./configure~"
+git checkout -- "./aclocal.m4" || true

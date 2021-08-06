@@ -2,6 +2,7 @@ cask_args appdir: "/Applications"
 
 tap "homebrew/cask-fonts"
 tap "neovim/neovim"
+tap "koekeishiya/formulae"
 
 brew "asdf"
 brew "exa"
