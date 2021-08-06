@@ -4,10 +4,13 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+DOTFILE_CONFIG_ROOT="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 function _initialize_windows() {
-    export PATH=$SCRIPT_DIR/../stow/bin:$SCRIPT_DIR/../.tmp/texlive/bin/win32:$PATH
+    export STOW_ROOT=$DOTFILE_CONFIG_ROOT/../stow
+    export PERL5LIB=$PERL5LIB:$DOTFILE_CONFIG_ROOT/../stow/lib
+    export PATH=$DOTFILE_CONFIG_ROOT/../stow/bin:$DOTFILE_CONFIG_ROOT/../.tmp/texlive/bin/win32:$PATH
+    alias stow='perl -I "$STOW_ROOT/lib" "$STOW_ROOT/bin/stow"'
 }
 
 unameOut="$(uname -s)"
@@ -149,4 +152,4 @@ fi
 # shellcheck disable=SC1091
 [ -x "$(command -v asdf)" ] && source "$(brew --prefix asdf)/asdf.sh"
 
-echo "Initialized '${machine}:${variant}' environment."
+echo "Initialized '${machine}:${variant}' environment: '$DOTFILE_CONFIG_ROOT'"

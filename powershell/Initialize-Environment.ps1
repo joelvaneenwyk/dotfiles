@@ -32,6 +32,9 @@ Function Test-CommandExists {
 Function Initialize-Environment {
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
+    $root = Resolve-Path -Path "$PSScriptRoot\.."
+    $tempFolder = "$root\.tmp"
+
     try {
         if (-not(Test-CommandExists "scoop")) {
             Write-Host "Initializing 'scoop' package manager..."
@@ -55,37 +58,8 @@ Function Initialize-Environment {
             Write-Host "Failed to install packages with 'scoop' manager."
         }
 
-        $tempFolder = "$PSScriptRoot\..\.tmp"
         if ( -not(Test-Path -Path "$tempFolder") ) {
             New-Item -ItemType directory -Path "$tempFolder" | Out-Null
-        }
-
-        try {
-            $tempTexTargetFolder = "$tempFolder\texlive-install"
-            if ( -not(Test-Path -Path "$tempTexTargetFolder\install-tl-windows.bat" -PathType Leaf) ) {
-                $tempTexFolder = "$tempFolder\texlive-tmp"
-                $tempTexArchive = "$tempFolder\install-tl.zip"
-
-                if ( -not(Test-Path -Path "$tempTexArchive" -PathType Leaf) ) {
-                    $url = 'https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip'
-                    Start-BitsTransfer -Source $url -Destination $tempTexArchive
-                }
-
-                # Remove tex folder if it exists
-                If (Test-Path "$tempTexFolder" -PathType Any) {
-                    Remove-Item -Recurse -Force "$tempTexFolder" | Out-Null
-                }
-                Expand-Archive "$tempTexArchive" -DestinationPath "$tempTexFolder" -Force
-
-                $tempTexVersionFolder = Get-ChildItem -Path "$tempTexFolder" -Force -Directory | Select-Object -First 1
-                Move-Item -Path "$tempTexVersionFolder" -Destination "$tempFolder\texlive"
-
-                Remove-Item -Recurse -Force "$tempTexFolder" | Out-Null
-                Remove-Item -Recurse -Force "$tempTexArchive" | Out-Null
-            }
-        }
-        catch [Exception] {
-            Write-Host "Failed to download and extra TeX Live.", $_.Exception.Message
         }
 
         # https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/install.ps1
@@ -108,10 +82,15 @@ Function Initialize-Environment {
                 # Download the font
                 $url = 'https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/CascadiaCode.zip'
                 Start-BitsTransfer -Source $url -Destination $zipFile
-                Expand-Archive "$zipFile" -DestinationPath "$zipDir" -Force
-                Remove-Item -Recurse -Force "$zipFile" | Out-Null
+                Expand-Archive "$zipFile" -DestinationPath "$tempFontFolder" -Force
 
-                Rename-Item -Path "$tempFontFolder\$fontNameOriginal.ttf" -NewName "$targetTempFontPath"
+                Remove-Item -Recurse -Force "$zipFile" | Out-Null
+                Write-Host "Removed intermediate archive: '$zipFile'"
+
+                Write-Host "Downloaded font: '$tempFontFolder\$fontNameOriginal.ttf'"
+                Write-Host "Renamed font: '$targetTempFontPath'"
+
+                Move-Item -Path "$tempFontFolder\$fontNameOriginal.ttf" -Destination "$targetTempFontPath"
             }
 
             # Remove the existing font first
@@ -191,8 +170,8 @@ Function Initialize-Environment {
                 Install-Module -Name PSDotFiles -Scope CurrentUser -Force -SkipPublisherCheck
             }
 
-            Install-DotFiles -Path "$PSScriptRoot\..\" | Out-Null
-            Write-Host "Installed 'DotFiles' from: '$PSScriptRoot\..\'"
+            Install-DotFiles -Path "$root" | Out-Null
+            Write-Host "Installed 'DotFiles' from: '$root'"
         }
         catch [Exception] {
             Write-Host "Failed to install 'PSDotFiles' module.", $_.Exception.Message
