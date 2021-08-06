@@ -2,28 +2,28 @@
     "shellcheck.enable": true,
     "shellcheck.enableQuickFix": true,
 
-    "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
     // "Adds a space between a keyword and its associated scriptblock expression."
-    "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
+    "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
     // "Adds a space between a keyword (if, elseif, while, switch, etc) and its associated conditional expression."
-    "powershell.codeFormatting.whitespaceAroundOperator": true,
+    "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
     // "Adds spaces before and after an operator ('=', '+', '-', etc.)."
-    "powershell.codeFormatting.whitespaceAfterSeparator": true,
+    "powershell.codeFormatting.whitespaceAroundOperator": true,
     // "Adds a space after a separator (',' and ';')."
-    "powershell.codeFormatting.whitespaceInsideBrace": true,
+    "powershell.codeFormatting.whitespaceAfterSeparator": true,
     // "Adds a space after an opening brace ('{') and before a closing brace ('}')."
-    "powershell.codeFormatting.whitespaceBetweenParameters": true,
+    "powershell.codeFormatting.whitespaceInsideBrace": true,
     // "Removes redundant whitespace between parameters."
-    "powershell.codeFormatting.addWhitespaceAroundPipe": true,
+    "powershell.codeFormatting.whitespaceBetweenParameters": true,
     // "Adds a space before and after the pipeline operator ('|') if it is missing."
-    "powershell.codeFormatting.trimWhitespaceAroundPipe": false,
+    "powershell.codeFormatting.addWhitespaceAroundPipe": true,
     // "Trims extraneous whitespace (more than 1 character) before and after the pipeline operator ('|')."
-    "powershell.codeFormatting.ignoreOneLineBlock": true,
+    "powershell.codeFormatting.trimWhitespaceAroundPipe": false,
     // "Does not reformat one-line code blocks, such as \"if (...) {...} else {...}\"."
-    "powershell.codeFormatting.alignPropertyValuePairs": true,
+    "powershell.codeFormatting.ignoreOneLineBlock": false,
     // "Align assignment statements in a hashtable or a DSC Configuration."
-    "powershell.codeFormatting.useCorrectCasing": true,
+    "powershell.codeFormatting.alignPropertyValuePairs": true,
     // "Use correct casing for cmdlets."
+    "powershell.codeFormatting.useCorrectCasing": true,
 
     "cSpell.words": [
         "beaners",
