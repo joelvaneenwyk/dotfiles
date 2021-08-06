@@ -9,10 +9,12 @@ _dot_windows_script_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null 
 echo "Script directory: '$_dot_windows_script_root'"
 source "$_dot_windows_script_root/../bash/.bashrc"
 
-echo "Downloading minimal packages to build 'stow' on Windows using MSYS2..."
-#pacman -S --noconfirm make perl autoconf automake1.16 texinfo texinfo-tex
+if [ -x "$(command -v pacman)" ]; then
+    echo "Downloading minimal packages to build 'stow' on Windows using MSYS2..."
+    pacman -S --noconfirm make perl autoconf automake1.16 git
+fi
 
-#cpan CPAN::DistnameInfo
+cpan CPAN::DistnameInfo
 
 # This will consistently hangs in MSYS2 (see https://rt-cpan.github.io/Public/Bug/Display/64319/) so we
 # just skip it as it's not strictly necessary.
@@ -27,3 +29,6 @@ autoreconf --install --verbose
 
 # Documentation part is expected to fail but we can ignore that
 make --keep-going --ignore-errors || true
+
+rm -f "configure~"
+git checkout -- aclocal.m4 || true

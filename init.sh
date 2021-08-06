@@ -38,11 +38,38 @@ main() {
 }
 
 function initialize_linux() {
-   echo "No initialization routines setup for Linux platform."
+   sudo apt-get update
+   DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y git stow sudo micro neofetch
+   DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
+   stow --adopt bash
+   stow --adopt vim
+   neofetch
 }
 
 function initialize_windows() {
+   _dot_script_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+   _dot_initialized="$_dot_script_root/.tmp/.initialized"
+
+   # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
+   if [ -x "$(command -v pacman)" ] && [ ! -f "$_dot_initialized" ]; then
+      rm -f /var/lib/pacman/db.lck
+      pacman -Syu --noconfirm
+      pacman -S --noconfirm msys2-keyring
+
+      if [ -f /etc/pacman.d/gnupg/ ]; then
+         rm -r /etc/pacman.d/gnupg/
+      fi
+
+      pacman-key --init
+      pacman-key --populate msys2
+
+      pacman -Syuu --noconfirm
+   fi
+
    ./windows/build-stow.sh
+
+   mkdir --parents "$_dot_script_root/.tmp/"
+   touch "$_dot_initialized"
 }
 
 function initialize_macos() {

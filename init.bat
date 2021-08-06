@@ -10,6 +10,16 @@ if "%~1"=="clean" (
     echo Cleared out temporary files and reinitializing environment.
 )
 
+::
+:: e.g. init wsl --user jvaneenwyk --distribution Ubuntu
+::
+:: https://docs.microsoft.com/en-us/windows/wsl/reference
+::
+if "%~1"=="wsl" (
+    wsl %~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9 -- bash -c ./init.sh
+    exit /b %ERRORLEVEL%
+)
+
 if not "%DOT_INITIALIZED%"=="1" (
     set "PATH=%~dp0windows;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
     echo Initializing environment...
@@ -23,6 +33,7 @@ setlocal EnableDelayedExpansion
     if %ERRORLEVEL% NEQ 0 (
         call scoop install msys2
     )
+    call msys2 -where "%~dp0" -shell bash -no-start -c ./init.sh
 
     call perl --version > nul 2>&1
     if %ERRORLEVEL% NEQ 0 (
@@ -38,13 +49,6 @@ setlocal EnableDelayedExpansion
 
     call :MakeLink "Documents\WindowsPowerShell" "Microsoft.PowerShell_profile.ps1"
     call :MakeLink "Documents\PowerShell" "Profile.ps1"
-
-    if not exist "%STOW%" (
-        call msys2 -where "%~dp0" -shell bash -no-start -c ./windows/build-stow.sh
-    )
-
-    if exist "%~dp0stow\configure~" del "%~dp0stow\configure~" > nul 2>&1
-    git -C stow checkout -- aclocal.m4 > nul 2>&1
 endlocal & (
     set DOT_INITIALIZED=1
 )
