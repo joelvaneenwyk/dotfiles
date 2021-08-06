@@ -13,3 +13,6 @@
 [submodule "fish/.config/git-fuzzy"]
 	path = fish/.config/git-fuzzy
 	url = git@github.com:bigH/git-fuzzy.git
+[submodule "stow"]
+	path = stow
+	url = https://github.com/aspiers/stow

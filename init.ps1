@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+    Returns true if the given command can be executed from the shell.
+.INPUTS
+    Command name which does not need to be a full path.
+.OUTPUTS
+    Whether or not the command exists and can be executed.
+#>
 Function Test-CommandExists {
     Param ($command)
 
@@ -47,26 +55,63 @@ Function Initialize-Environment {
             Write-Host "Failed to install packages with 'scoop' manager."
         }
 
+        $tempFolder = "$PSScriptRoot\.tmp"
+        if ( -not(Test-Path -Path "$tempFolder") ) {
+            New-Item -ItemType directory -Path "$tempFolder" | Out-Null
+        }
+
+        try {
+            $tempTexTargetFolder = "$tempFolder\texlive-install"
+            if ( -not(Test-Path -Path "$tempTexTargetFolder\install-tl-windows.bat" -PathType Leaf) ) {
+                $tempTexFolder = "$tempFolder\texlive-tmp"
+                $tempTexArchive = "$tempFolder\install-tl.zip"
+
+                if ( -not(Test-Path -Path "$tempTexArchive" -PathType Leaf) ) {
+                    $url = 'https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip'
+                    Start-BitsTransfer -Source $url -Destination $tempTexArchive
+                }
+
+                # Remove tex folder if it exists
+                If (Test-Path "$tempTexFolder" -PathType Any) {
+                    Remove-Item -Recurse -Force "$tempTexFolder" | Out-Null
+                }
+                Expand-Archive "$tempTexArchive" -DestinationPath "$tempTexFolder" -Force
+
+                $tempTexVersionFolder = Get-ChildItem -Path "$tempTexFolder" -Force -Directory | Select-Object -First 1
+                Move-Item -Path "$tempTexVersionFolder" -Destination "$tempFolder\texlive"
+
+                Remove-Item -Recurse -Force "$tempTexFolder" | Out-Null
+                Remove-Item -Recurse -Force "$tempTexArchive" | Out-Null
+            }
+        }
+        catch [Exception] {
+            Write-Host "Failed to download and extra TeX Live.", $_.Exception.Message
+        }
+
         # https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/install.ps1
         try {
-            $url = 'https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/CascadiaCode.zip'
-
             $fontNameOriginal = "Caskaydia Cove Nerd Font Complete Windows Compatible"
             $fontName = "CaskaydiaCove NF"
+            $tempFontFolder = "$tempFolder\fonts"
             $targetFontPath = "C:\Windows\Fonts\$fontName.ttf"
-            $targetTempFontPath = "$PSScriptRoot\.tmp\$fontName.ttf"
+            $targetTempFontPath = "$tempFontFolder\$fontName.ttf"
 
             if ( -not(Test-Path -Path "$targetTempFontPath" -PathType Leaf) ) {
-                Remove-Item -Recurse -Force "$PSScriptRoot\.tmp" | Out-Null
-                New-Item -ItemType directory -Path "$PSScriptRoot\.tmp" | Out-Null
-                $zipFile = "$PSScriptRoot\.tmp\font.zip"
-                $zipDir = "$PSScriptRoot\.tmp"
+                if (Test-Path -Path "$targetTempFontPath" -PathType Any) {
+                    Remove-Item -Recurse -Force "$tempFontFolder" | Out-Null
+                }
+
+                New-Item -ItemType directory -Path "$tempFontFolder" | Out-Null
+                $zipFile = "$tempFontFolder\font.zip"
+                $zipDir = "$tempFontFolder"
 
                 # Download the font
+                $url = 'https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/CascadiaCode.zip'
                 Start-BitsTransfer -Source $url -Destination $zipFile
                 Expand-Archive "$zipFile" -DestinationPath "$zipDir" -Force
+                Remove-Item -Recurse -Force "$zipFile" | Out-Null
 
-                Rename-Item -Path "$PSScriptRoot\.tmp\$fontNameOriginal.ttf" -NewName "$targetTempFontPath"
+                Rename-Item -Path "$tempFontFolder\$fontNameOriginal.ttf" -NewName "$targetTempFontPath"
             }
 
             # Remove the existing font first
@@ -82,7 +127,7 @@ Function Initialize-Environment {
             }
         }
         catch [Exception] {
-            Write-Host $_.Exception.GetType().FullName, $_.Exception.Message
+            Write-Host "Failed to download and install font.", $_.Exception.Message
         }
 
         # Need to set this for console
@@ -127,11 +172,11 @@ Function Initialize-Environment {
         }
 
         try {
-            Import-Module Terminal-Icons
-
+            Import-Module WindowsConsoleFonts
             Set-ConsoleFont "$fontName" | Out-Null
 
             # After the above are setup, can add this to Profile to always loads
+            Import-Module Terminal-Icons
             Set-TerminalIconsTheme -ColorTheme DevBlackOps -IconTheme DevBlackOps
 
             Write-Host "Updated terminal icons and font."

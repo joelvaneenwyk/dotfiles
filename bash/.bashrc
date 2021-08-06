@@ -4,7 +4,43 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-# If not running interactively, don't do anything
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+function _initialize_windows() {
+    export PATH=$SCRIPT_DIR/../stow/bin:$SCRIPT_DIR/../.tmp/texlive/bin/win32:$PATH
+}
+
+unameOut="$(uname -s)"
+case "${unameOut}" in
+Linux*)
+    machine=Linux
+    variant=$unameOut
+    ;;
+Darwin*)
+    machine=macOS
+    variant=$unameOut
+    ;;
+CYGWIN*)
+    machine=Windows
+    variant=Cygwin
+    _initialize_windows
+    ;;
+MINGW*)
+    machine=Windows
+    variant=MINGW
+    _initialize_windows
+    ;;
+MSYS*)
+    machine=Windows
+    variant=MSYS
+    _initialize_windows
+    ;;
+*)
+    machine="UNKNOWN"
+    variant=${unameOut};;
+esac
+
+# If not running interactively, don't do anything else.
 case $- in
 *i*) ;;
 *) return ;;
@@ -113,4 +149,4 @@ fi
 # shellcheck disable=SC1091
 [ -x "$(command -v asdf)" ] && source "$(brew --prefix asdf)/asdf.sh"
 
-cd "$HOME" || return
+echo "Initialized '${machine}:${variant}' environment."

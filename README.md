@@ -33,30 +33,35 @@
 
 ## table of contents
 
-- [tl;dr](#tldr)
+- [Setup](#Setup)
 - [introduction](#dotfiles)
 - [managing](#managing)
 - [installing](#installing)
 - [how it works](#how-it-works)
 - [details](#details)
 
-## tl;dr
+## Setup
 
-navigate to your home directory
+1. Navigate to your home directory
 
-`cd ~`
+      > `cd ~`
 
-clone the repo:
+2. Clone the repo:
 
-`git clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
+      > `git clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
 
-enter the `dotfiles` directory
+3. Enter the `dotfiles` directory and then follow per platform instructions below.
 
-### osx
+### Windows
+
+1. Download and install [Gpg4win - Kleopatra](https://www.gpg4win.org/index.html)
+2. Import Secret Key from secure location e.g. `{cloud}\Documents\Keys`
+
+### macOS
 
 `cd dotfiles && ./init-osx.sh`
 
-### linux
+### Linux
 
 install the bash settings
 
@@ -76,22 +81,23 @@ uninstall xmonad configs
 
 etc, etc, etc...
 
-## introduction
+## Introduction
 
-in the unix world programs are commonly configured in two different ways, via shell arguments or text based configuration files. programs with many options like window managers or text editors are configured on a per-user basis with files in your home directory `~`. in unix like operating systems any file or directory name that starts with a period or full stop character is considered hidden, and in a default view will not be displayed. thus the name dotfiles.
+In the unix world programs are commonly configured in two different ways, via shell arguments or text based configuration files. programs with many options like window managers or text editors are configured on a per-user basis with files in your home directory `~`. in unix like operating systems any file or directory name that starts with a period or full stop character is considered hidden, and in a default view will not be displayed. thus the name dotfiles.
 
-it's been said of every console user:
+It's been said of every console user:
+
 > _"you are your dotfiles"_.
 
-since they dictate how your system will look and function. to many users (see [ricers](http://unixporn.net) and [beaners](http://nixers.net)) these files are very important, and need to be backed up and shared. people who create custom themes have the added challenge of managing multiple versions of them. i have tried many organization techniques. and just take my word for it when i say, keeping a git repo in the root of your home directory is a bad idea. i've written custom shell scripts for moving or symlinking files into place. there are even a few dotfile managers, but they all seem to have lots of dependencies. i knew there had to be a simple tool to help me.
+This is because these files dictate how the system will look, feel, and function. to many users (see [ricers](http://unixporn.net) and [beaners](http://nixers.net)) these files are very important, and need to be backed up and shared. people who create custom themes have the added challenge of managing multiple versions of them. i have tried many organization techniques. and just take my word for it when i say, keeping a git repo in the root of your home directory is a bad idea. i've written custom shell scripts for moving or symlinking files into place. there are even a few dotfile managers, but they all seem to have lots of dependencies. i knew there had to be a simple tool to help me.
 
-## managing
+## Management
 
-i manage mine with [gnu stow](http://www.gnu.org/software/stow/), a free, portable, lightweight symlink farm manager. this allows me to keep a versioned directory of all my config files that are virtually linked into place via a single command. this makes sharing these files among many users (root) and computers super simple. and does not clutter your home directory with version control files.
+This repository was designed to be used with [gnu stow](http://www.gnu.org/software/stow/), a free, portable, lightweight symlink farm manager. this allows me to keep a versioned directory of all my config files that are virtually linked into place via a single command. this makes sharing these files among many users (root) and computers super simple. and does not clutter your home directory with version control files.
 
-## installing
+## Installation
 
-stow is available for all linux and most other unix like distributions via your package manager.
+[Stow](https://www.gnu.org/software/stow/) is available for all linux and most other unix-like distributions via your favorite package manager.
 
 - `sudo pacman -S stow`
 - `sudo apt-get install stow`

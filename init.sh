@@ -27,6 +27,10 @@ main() {
       machine=MinGw
       initialize_windows
       ;;
+   MSYS*)
+      machine=MSYS
+      initialize_windows
+      ;;
    *) machine="UNKNOWN:${unameOut}" ;;
    esac
 
@@ -38,7 +42,7 @@ function initialize_linux() {
 }
 
 function initialize_windows() {
-   echo "No initialization routines setup for Windows platform."
+   ./windows/build-stow.sh
 }
 
 function initialize_macos() {

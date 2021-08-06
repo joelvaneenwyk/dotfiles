@@ -15,6 +15,7 @@
 	gpgsign = true
 [core]
 	excludesfile = /Users/joelvaneenwyk/.gitignore_global
+	autocrlf = false
 [user]
 	name = Joel Van Eenwyk
 	email = joel.vaneenwyk@gmail.com
