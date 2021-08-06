@@ -35,26 +35,35 @@ Function Initialize-Environment {
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
     try {
+        #
+        # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
+        #
+        # Error it is attempting to mitigate: "The term 'PackageManagement\Get-PackageSource' is not recognized as the name
+        # of a cmdlet, function, script file, or operable program."
+        #
+        Import-Module PackageManagement -RequiredVersion 1.0.0.1
+
+        # Now install the NuGet package provider if possible.
         Install-PackageProvider -Name NuGet -Force -Scope CurrentUser | Out-Null
         Write-Host "Installed NuGet package provider."
     }
-    catch {
-        Write-Host "Failed to install NuGet package provider"
+    catch [Exception] {
+        Write-Host "Failed to install NuGet package provider", $_.Exception.Message
     }
 
     $root = Resolve-Path -Path "$PSScriptRoot\.."
     $tempFolder = "$root\.tmp"
+
+    if ( -not(Test-Path -Path "$tempFolder") ) {
+        New-Item -ItemType directory -Path "$tempFolder" | Out-Null
+    }
 
     try {
         if (-not(Test-CommandExists "scoop")) {
             Write-Host "Initializing 'scoop' package manager..."
             Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
         }
-    }
-    catch {
-        Write-Host "Exception caught while installing `scoop` package manager."
-    }
-    finally {
+
         try {
             if (-not(Test-CommandExists "sudo")) {
                 scoop install "sudo"
@@ -67,11 +76,11 @@ Function Initialize-Environment {
         catch {
             Write-Host "Failed to install packages with 'scoop' manager."
         }
-
-        if ( -not(Test-Path -Path "$tempFolder") ) {
-            New-Item -ItemType directory -Path "$tempFolder" | Out-Null
-        }
-
+    }
+    catch {
+        Write-Host "Exception caught while installing `scoop` package manager."
+    }
+    finally {
         # https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/install.ps1
         try {
             $fontNameOriginal = "Caskaydia Cove Nerd Font Complete Windows Compatible"
