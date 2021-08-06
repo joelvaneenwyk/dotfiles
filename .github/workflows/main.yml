@@ -22,11 +22,11 @@ jobs:
         platform: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - platform: ubuntu-latest
-            launch: bash ${{ github.workspace }}/init.sh
+            launch: bash init.sh
           - platform: macos-latest
-            launch: bash ${{ github.workspace }}/init.sh
+            launch: bash init.sh
           - platform: windows-latest
-            launch: call "${{ github.workspace }}\init.bat"
+            launch: call init.bat
 
     # The type of runner that the job will run on
     runs-on: ${{ matrix.platform }}
@@ -38,4 +38,5 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Initialize environment
+        working-directory: ${{ github.workspace }}
         run: ${{ matrix.launch }}
