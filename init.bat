@@ -10,24 +10,54 @@ if "%~1"=="clean" (
     echo Cleared out temporary files and reinitializing environment.
 )
 
-::
-:: e.g. init wsl --user jvaneenwyk --distribution Ubuntu
-::
-:: https://docs.microsoft.com/en-us/windows/wsl/reference
-::
-if "%~1"=="wsl" (
-    wsl %~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9 -- bash -c ./init.sh
-    exit /b %ERRORLEVEL%
-)
-
 if not "%DOT_INITIALIZED%"=="1" (
     set "PATH=%~dp0windows;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
     echo Initializing environment...
 )
 
 setlocal EnableDelayedExpansion
-    call powershell -Command "& {Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force -Scope CurrentUser}" > nul 2>&1
-    call powershell -File "%~dp0powershell\Initialize-Environment.ps1"
+    ::
+    :: e.g. init wsl --user jvaneenwyk --distribution Ubuntu
+    ::
+    :: https://docs.microsoft.com/en-us/windows/wsl/reference
+    ::
+    if "%~1"=="wsl" (
+        wsl %~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9 -- bash -c ./init.sh
+        exit /b %ERRORLEVEL%
+    )
+
+    set _container_platform=%~2
+    if "%_container_platform%"=="" (
+        set _container_platform=linux
+    )
+
+    set _container_name=menv:!_container_platform!
+    set _container_instance=menv_!_container_platform!
+
+    ::
+    :: Initialize an Ubuntu container for testing.
+    ::
+    if "%~1"=="docker" (
+        docker rm --force "!_container_name!" > nul 2>&1
+        docker stop "!_container_instance!" > nul 2>&1
+
+        docker build -t "!_container_name!" -f "%~dp0docker\Dockerfile.!_container_platform!" .
+
+        if %ERRORLEVEL% EQU 0 (
+            docker run --name "!_container_instance!" -it --rm "!_container_name!"
+        ) else (
+            echo Docker build failed.
+        )
+
+        exit /b 0
+    )
+
+    set _pwsh=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+    if not exist !_pwsh! set _pwsh=C:\Program Files\PowerShell\pwsh.exe
+    if not exist !_pwsh! set _pwsh=C:\Program Files\PowerShell\7\pwsh.exe
+
+    call !_pwsh! -Command "& {Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force -Scope CurrentUser}" > nul 2>&1
+    call !_pwsh! -File "%~dp0powershell\Initialize-Environment.ps1"
 
     call msys2 --version > nul 2>&1
     if %ERRORLEVEL% NEQ 0 (

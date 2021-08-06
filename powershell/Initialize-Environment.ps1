@@ -42,6 +42,7 @@ Function Initialize-Environment {
         # of a cmdlet, function, script file, or operable program."
         #
         Import-Module PackageManagement -RequiredVersion 1.0.0.1
+        Import-Module PowerShellGet
 
         # Now install the NuGet package provider if possible.
         Install-PackageProvider -Name NuGet -Force -Scope CurrentUser | Out-Null
@@ -53,6 +54,12 @@ Function Initialize-Environment {
 
     $root = Resolve-Path -Path "$PSScriptRoot\.."
     $tempFolder = "$root\.tmp"
+
+    $fontNameOriginal = "Caskaydia Cove Nerd Font Complete Windows Compatible"
+    $fontName = "CaskaydiaCove NF"
+    $tempFontFolder = "$tempFolder\fonts"
+    $targetFontPath = "C:\Windows\Fonts\$fontName.ttf"
+    $targetTempFontPath = "$tempFontFolder\$fontName.ttf"
 
     if ( -not(Test-Path -Path "$tempFolder") ) {
         New-Item -ItemType directory -Path "$tempFolder" | Out-Null
@@ -72,6 +79,10 @@ Function Initialize-Environment {
             if (-not(Test-CommandExists "nuget")) {
                 scoop install "nuget"
             }
+
+            if (-not(Test-CommandExists "clink")) {
+                scoop install "clink"
+            }
         }
         catch {
             Write-Host "Failed to install packages with 'scoop' manager."
@@ -83,12 +94,6 @@ Function Initialize-Environment {
     finally {
         # https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/install.ps1
         try {
-            $fontNameOriginal = "Caskaydia Cove Nerd Font Complete Windows Compatible"
-            $fontName = "CaskaydiaCove NF"
-            $tempFontFolder = "$tempFolder\fonts"
-            $targetFontPath = "C:\Windows\Fonts\$fontName.ttf"
-            $targetTempFontPath = "$tempFontFolder\$fontName.ttf"
-
             if ( -not(Test-Path -Path "$targetTempFontPath" -PathType Leaf) ) {
                 if (Test-Path -Path "$targetTempFontPath" -PathType Any) {
                     Remove-Item -Recurse -Force "$tempFontFolder" | Out-Null
@@ -96,7 +101,6 @@ Function Initialize-Environment {
 
                 New-Item -ItemType directory -Path "$tempFontFolder" | Out-Null
                 $zipFile = "$tempFontFolder\font.zip"
-                $zipDir = "$tempFontFolder"
 
                 # Download the font
                 $url = 'https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/CascadiaCode.zip'
@@ -118,10 +122,10 @@ Function Initialize-Environment {
             }
 
             # Must use Namespace part or will not install properly
-            $FontsFolder = (New-Object -ComObject Shell.Application).Namespace(0x14)
+            $fontsFolder = (New-Object -ComObject Shell.Application).Namespace(0x14)
             If (-not(Test-Path "$targetFontPath" -PathType Container)) {
                 # Following action performs the install, requires user to click on yes
-                $FontsFolder.CopyHere("$targetFontPath", 16)
+                $fontsFolder.CopyHere("$targetFontPath", 16)
             }
         }
         catch [Exception] {
@@ -151,8 +155,8 @@ Function Initialize-Environment {
 
         try {
             if (-not(Get-Module -ListAvailable -Name "Terminal-Icons")) {
-                Write-Host "Installing 'Terminal-Icons' module..."
-                Install-Module Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck -Repository PSGallery
+                Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck -Repository PSGallery
+                Write-Host "Installed 'Terminal-Icons' module."
             }
         }
         catch [Exception] {
@@ -161,18 +165,19 @@ Function Initialize-Environment {
 
         try {
             if (-not(Get-Module -ListAvailable -Name "WindowsConsoleFonts")) {
-                Write-Host "Installing 'WindowsConsoleFonts' module..."
-                Install-Module WindowsConsoleFonts -Scope CurrentUser -Force -SkipPublisherCheck
+                Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -SkipPublisherCheck
+                Write-Host "Installed 'WindowsConsoleFonts' module."
             }
+
+            Import-Module WindowsConsoleFonts
+            Add-Font "$targetTempFontPath"
+            Set-ConsoleFont "$fontName" | Out-Null
         }
         catch [Exception] {
             Write-Host "Failed to install WindowsConsoleFonts.", $_.Exception.Message
         }
 
         try {
-            Import-Module WindowsConsoleFonts
-            Set-ConsoleFont "$fontName" | Out-Null
-
             # After the above are setup, can add this to Profile to always loads
             Import-Module Terminal-Icons
             Set-TerminalIconsTheme -ColorTheme DevBlackOps -IconTheme DevBlackOps
