@@ -14,15 +14,12 @@
 	verbose = true
 	gpgsign = true
 [core]
-	excludesfile = /Users/joelvaneenwyk/.gitignore_global
-	autocrlf = false
+	excludesfile = ~/.gitignore_global
 [user]
 	name = Joel Van Eenwyk
 	email = joel.vaneenwyk@gmail.com
 	signingkey = F7B61CE9EF223B20
 [init]
 	defaultBranch = main
-[gpg]
-	program = "c:\\Program Files (x86)\\GnuPG\\bin\\gpg.exe"
 [tag]
 	gpgsign = true

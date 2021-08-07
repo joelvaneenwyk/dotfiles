@@ -31,6 +31,10 @@ if [ -d "$HOME/.config/git-fuzzy" ]; then
    PATH="$HOME/.config/git-fuzzy/bin:$PATH"
 fi
 
+if [ -d "/mnt/c/Program Files/Microsoft VS Code/bin" ]; then
+   PATH="/mnt/c/Program Files/Microsoft VS Code/bin:$PATH"
+fi
+
 # set some defaults
 export EDITOR="micro"
 export PAGER="less -r"

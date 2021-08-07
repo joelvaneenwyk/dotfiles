@@ -27,6 +27,12 @@
     // "Use correct casing for cmdlets."
     "powershell.codeFormatting.useCorrectCasing": true,
 
+    "files.associations": {
+        ".gitconfig_common": "properties",
+        ".gitconfig_linux": "properties",
+        ".gitconfig_windows": "properties",
+        ".gitconfig_wsl": "properties"
+    },
     "cSpell.words": [
         "beaners",
         "dotfile",

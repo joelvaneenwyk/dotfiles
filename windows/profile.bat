@@ -1,4 +1,4 @@
-@ECHO OFF
+@echo off
 ::
 :: This is used as an auto-run script and invoked for every new instance of 'cmd.exe' starts. This script
 :: is also invoked when running e.g. 'for /f %%l in ('some command') do ...'

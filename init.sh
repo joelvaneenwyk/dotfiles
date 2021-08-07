@@ -37,12 +37,39 @@ main() {
    echo "Initialized '${machine}' machine."
 }
 
+function initialize_gitconfig() {
+   _dot_script_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+   _gitConfig="$HOME/.gitconfig"
+
+   rm -f "$_gitConfig"
+   unlink "$_gitConfig" > /dev/null 2>&1 || true
+   echo "[include]" > "$_gitConfig"
+   echo "    path = $_dot_script_root/git/.gitconfig_common" >> "$_gitConfig"
+   echo "    path = $_dot_script_root/git/.gitconfig_linux" >> "$_gitConfig"
+
+   if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null ; then
+      echo "    path = $_dot_script_root/git/.gitconfig_wsl" >> "$_gitConfig"
+      echo "Added WSL to '.gitconfig' include directives."
+   fi
+
+   echo "Created custom '.gitconfig' with include directives."
+}
+
 function initialize_linux() {
    sudo apt-get update
    DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y git stow sudo micro neofetch
    DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
+
    stow --adopt bash
    stow --adopt vim
+
+   initialize_gitconfig
+
+   # Install the secure key-server certificate (Ubuntu/Debian)
+   mkdir -p /usr/local/share/ca-certificates/
+   curl -s https://sks-keyservers.net/sks-keyservers.netCA.pem | sudo tee /usr/local/share/ca-certificates/sks-keyservers.netCA.crt
+   sudo update-ca-certificates
+
    neofetch
 }
 
@@ -73,6 +100,8 @@ function initialize_windows() {
 }
 
 function initialize_macos() {
+   initialize_gitconfig
+
    install_apps
 
    configure_dock

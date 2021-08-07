@@ -4,7 +4,8 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-DOTFILE_CONFIG_ROOT="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+export GPG_TTY=$(tty)
+export DOTFILE_CONFIG_ROOT="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 function _initialize_windows() {
     export STOW_ROOT=$DOTFILE_CONFIG_ROOT/../stow
@@ -17,7 +18,12 @@ unameOut="$(uname -s)"
 case "${unameOut}" in
 Linux*)
     machine=Linux
-    variant=$unameOut
+
+    if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null ; then
+        variant=WSL
+    else
+        variant=$(uname -mrs)
+    fi
     ;;
 Darwin*)
     machine=macOS
@@ -159,3 +165,9 @@ echo "▓▓░░"
 echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
 echo ""
 echo "Initialized '${machine}:${variant}' environment: '$DOTFILE_CONFIG_ROOT'"
+echo ""
+echo "Commands:"
+echo ""
+echo "  gpgtest     Validate that git commit signing will work with secret key"
+echo "  refresh     Try to pull latest 'dotfiles' and reload profile"
+echo "  micro       Default text editor. Press 'F2' to save and 'F4' to exit."

@@ -25,7 +25,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     :$SetProfile
     call "%~dp0windows\profile.bat"
     set _profile_initialized=1
-    set "_path=%~dp0windows;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
+    set "_path=C:\Program Files (x86)\GnuPG\bin;%~dp0windows;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
 
     set _initialize=0
 
@@ -114,12 +114,19 @@ setlocal EnableExtensions EnableDelayedExpansion
     )
 
     if "!_stow!"=="1" (
-        call :StowProfile "%~dp0bash\.bash_aliases"
-        call :StowProfile "%~dp0bash\.bashrc"
-        call :StowProfile "%~dp0bash\.gitconfig"
-        call :StowProfile "%~dp0bash\.gitignore_global"
-        call :StowProfile "%~dp0bash\.profile"
-        call :StowProfile "%~dp0bash\.ctags"
+        set _gitConfig=.gitconfig
+        call :WriteGitConfig "%USERPROFILE%"
+        call :WriteGitConfig "%USERPROFILE%\scoop\persist\msys2\home"
+        call :StowProfile "%~dp0bash\git" ".gitignore_global"
+
+        call :CreateLink "%USERPROFILE%" "%~nx1" "%~1"
+        call :CreateLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%" "%~nx1" "%~1"
+
+        call :StowProfile "%~dp0bash\.gnupg" "gpg.conf"
+        call :StowProfile "%~dp0bash" ".bash_aliases"
+        call :StowProfile "%~dp0bash" ".bashrc"
+        call :StowProfile "%~dp0bash" ".profile"
+        call :StowProfile "%~dp0bash" ".ctags"
 
         call :StowPowerShell "Documents\WindowsPowerShell" "Microsoft.PowerShell_profile.ps1"
         call :StowPowerShell "Documents\PowerShell" "Profile.ps1"
@@ -135,6 +142,20 @@ endlocal & (
 )
 
 exit /b %ERRORLEVEL%
+
+::-----------------------------------
+:: Write .gitconfig
+::-----------------------------------
+:WriteGitConfig %1=TargetFolder
+    setlocal EnableExtensions EnableDelayedExpansion
+    set _gitConfig=.gitconfig
+    if exist "%~1" (
+        echo [include] > "%~1\%_gitConfig%"
+        echo path = "%~dp0bash\git\.gitconfig_common" >> "%~1\%_gitConfig%"
+        echo path = "%~dp0bash\git\.gitconfig_windows" >> "%~1\%_gitConfig%"
+        echo Created custom '.gitconfig' with include directives: '%~1'
+    )
+endlocal & exit /b
 
 ::-----------------------------------
 :: Query if autorun installed
@@ -194,9 +215,9 @@ exit /b
     %EXEC% reg add "%KEY%" /v "AutoRun" /t REG_SZ /d "%SPROFILE%" /f
 endlocal & exit /b 0
 
-:StowProfile
-    call :CreateLink "%USERPROFILE%" "%~nx1" "%~1"
-    call :CreateLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%" "%~nx1" "%~1"
+:StowProfile %1=RelativeRoot %2=Filename
+    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%~dp0%~1%~2"
+    call :CreateLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%\%~1" "%~2" "%~dp0%~1%~2"
 exit /b 0
 
 :StowPowerShell
@@ -204,10 +225,12 @@ exit /b 0
     call :CreateLink "%USERPROFILE%\%~1" "%~2" "%~dp0powershell\Profile.ps1"
 exit /b 0
 
-:CreateLink
+:CreateLink %1=LinkDirectory %2=LinkFilename %3=TargetPath
+    setlocal EnableExtensions EnableDelayedExpansion
     set _linkDir=%~1
     set _linkFilename=%~2
     set _linkTarget=%~3
+    if not exist "%_linkDir%" mkdir "%_linkDir%" > nul 2>&1
     if exist "%_linkDir%" (
         if exist "%_linkDir%\%_linkFilename%" del "%_linkDir%\%_linkFilename%"
         mklink "%_linkDir%\%_linkFilename%" "%_linkTarget%" > nul 2>&1
