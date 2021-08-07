@@ -64,7 +64,7 @@ USER ContainerAdministrator
 # This is basically the correct code except for the /M
 RUN setx PATH "%PATH%;%ProgramFiles%\PowerShell;" /M
 
-USER ContainerUser
+#USER ContainerUser
 ### End workaround ###
 
 COPY --from=installer-env ["\\PowerShell\\", "$ProgramFiles\\PowerShell"]
@@ -91,12 +91,10 @@ ENV POWERSHELL_TELEMETRY_OPTOUT="0"
 
 SHELL ["cmd", "/S", "/C"]
 
-USER ContainerUser
-WORKDIR C:\\Users\\ContainerUser
-
+WORKDIR C:\\Users\\ContainerAdministrator
 COPY ./ ./dotfiles
 
-WORKDIR C:\\Users\\ContainerUser\\dotfiles
+WORKDIR C:\\Users\\ContainerAdministrator\\dotfiles
 RUN call init.bat
 
 CMD ["cmd.exe"]

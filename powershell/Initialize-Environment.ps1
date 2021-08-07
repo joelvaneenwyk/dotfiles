@@ -29,24 +29,98 @@ Function Test-CommandExists {
     return $IsValid
 } #end function test-CommandExists
 
+Function Get-File {
+    <#
+.SYNOPSIS
+    Downloads a file
+.DESCRIPTION
+    Downloads a file
+.PARAMETER Url
+    URL to file/resource to download
+.PARAMETER Filename
+    file to save it as locally
+.EXAMPLE
+    C:\PS> Get-File -Name "mynuget.exe" -Url https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+#>
+
+    Param(
+        [Parameter(Position = 0, mandatory = $true)]
+        [string]$Url,
+        [string]$Filename = ''
+    )
+
+    # Get filename
+    if (!$Filename) {
+        $Filename = [System.IO.Path]::GetFileName($Url)
+    }
+
+    Write-Host "Download: $Url to $Filename"
+
+    $FilePath = $Filename
+
+    # Make absolute local path
+    if (![System.IO.Path]::IsPathRooted($Filename)) {
+        $FilePath = Join-Path (Get-Item -Path ".\" -Verbose).FullName $Filename
+    }
+
+    if ($null -ne ($Url -as [System.URI]).AbsoluteURI) {
+        $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
+        $client = New-Object -TypeName System.Net.Http.HttpClient -ArgumentList $handler
+        $client.Timeout = New-Object -TypeName System.TimeSpan -ArgumentList 0, 30, 0
+        $cancelTokenSource = [System.Threading.CancellationTokenSource]::new(-1)
+        $responseMsg = $client.GetAsync([System.Uri]::new($Url), $cancelTokenSource.Token)
+        $responseMsg.Wait()
+        if (!$responseMsg.IsCanceled) {
+            $response = $responseMsg.Result
+            if ($response.IsSuccessStatusCode) {
+                $downloadedFileStream = [System.IO.FileStream]::new(
+                    $FilePath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+
+                $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
+                # TODO: Progress bar? Total size?
+                Write-Host "Downloading ..."
+                $copyStreamOp.Wait()
+
+                $downloadedFileStream.Close()
+                if ($null -ne $copyStreamOp.Exception) {
+                    throw $copyStreamOp.Exception
+                }
+            }
+        }
+    }
+    else {
+        throw "Cannot download from $Url"
+    }
+}
 Function Initialize-Environment {
     Write-Host "PowerShell Version: $($host.Version)"
 
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     try {
+        # Now install the NuGet package provider if possible.
+        Install-PackageProvider -Name NuGet -Scope CurrentUser -Force | Out-Null
+        Write-Host "Installed NuGet package provider."
+
+        if (-not(Get-InstalledModule -Name "PackageManagement")) {
+            Install-Module -Name PackageManagement -Scope CurrentUser -Force
+            Write-Host "Installed 'PackageManagement' module."
+        }
+
+        if (-not(Get-InstalledModule -Name "PowerShellGet")) {
+            Install-Module -Name PowerShellGet -AllowPrerelease -Scope CurrentUser -Force
+            Write-Host "Installed 'PowerShellGet' module."
+        }
+
         #
         # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
         #
         # Error it is attempting to mitigate: "The term 'PackageManagement\Get-PackageSource' is not recognized as the name
         # of a cmdlet, function, script file, or operable program."
         #
-        Import-Module PackageManagement -RequiredVersion 1.0.0.1
-        Import-Module PowerShellGet
+        Import-Module PackageManagement
 
-        # Now install the NuGet package provider if possible.
-        Install-PackageProvider -Name NuGet -Force -Scope CurrentUser | Out-Null
-        Write-Host "Installed NuGet package provider."
+        Import-Module PowerShellGet
     }
     catch [Exception] {
         Write-Host "Failed to install NuGet package provider", $_.Exception.Message
@@ -55,8 +129,9 @@ Function Initialize-Environment {
     $root = Resolve-Path -Path "$PSScriptRoot\.."
     $tempFolder = "$root\.tmp"
 
-    $fontNameOriginal = "Caskaydia Cove Nerd Font Complete Windows Compatible"
-    $fontName = "CaskaydiaCove NF"
+    $fontUrl = 'https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/JetBrainsMono.zip'
+    $fontNameOriginal = "JetBrains Mono Regular Nerd Font Complete Mono Windows Compatible"
+    $fontName = "JetBrainsMono NF"
     $tempFontFolder = "$tempFolder\fonts"
     $targetFontPath = "C:\Windows\Fonts\$fontName.ttf"
     $targetTempFontPath = "$tempFontFolder\$fontName.ttf"
@@ -72,6 +147,10 @@ Function Initialize-Environment {
         }
 
         try {
+            if (-not(Test-CommandExists "git")) {
+                scoop install "git"
+            }
+
             if (-not(Test-CommandExists "sudo")) {
                 scoop install "sudo"
             }
@@ -92,20 +171,35 @@ Function Initialize-Environment {
         Write-Host "Exception caught while installing `scoop` package manager."
     }
     finally {
+        try {
+            if (-not(Get-InstalledModule -Name "WindowsConsoleFonts")) {
+                Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -SkipPublisherCheck
+                Write-Host "Installed 'WindowsConsoleFonts' module."
+            }
+
+            Import-Module WindowsConsoleFonts
+            Remove-Font "$targetTempFontPath"
+        }
+        catch [Exception] {
+            Write-Host "Failed to install WindowsConsoleFonts.", $_.Exception.Message
+        }
+
         # https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/install.ps1
         try {
             if ( -not(Test-Path -Path "$targetTempFontPath" -PathType Leaf) ) {
-                if (Test-Path -Path "$targetTempFontPath" -PathType Any) {
+                if (Test-Path -Path "$tempFontFolder") {
                     Remove-Item -Recurse -Force "$tempFontFolder" | Out-Null
                 }
 
-                New-Item -ItemType directory -Path "$tempFontFolder" | Out-Null
+                if ( -not(Test-Path -Path "$tempFontFolder") ) {
+                    New-Item -ItemType directory -Path "$tempFontFolder" | Out-Null
+                }
+
                 $zipFile = "$tempFontFolder\font.zip"
 
                 # Download the font
-                $url = 'https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/CascadiaCode.zip'
-                Start-BitsTransfer -Source $url -Destination $zipFile
-                Expand-Archive "$zipFile" -DestinationPath "$tempFontFolder" -Force
+                Get-File -Url $fontUrl -Filename $zipFile
+                Expand-Archive -Path "$zipFile" -DestinationPath "$tempFontFolder" -Force
 
                 Remove-Item -Recurse -Force "$zipFile" | Out-Null
                 Write-Host "Removed intermediate archive: '$zipFile'"
@@ -154,7 +248,7 @@ Function Initialize-Environment {
         }
 
         try {
-            if (-not(Get-Module -ListAvailable -Name "Terminal-Icons")) {
+            if (-not(Get-InstalledModule -Name "Terminal-Icons")) {
                 Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck -Repository PSGallery
                 Write-Host "Installed 'Terminal-Icons' module."
             }
@@ -164,13 +258,11 @@ Function Initialize-Environment {
         }
 
         try {
-            if (-not(Get-Module -ListAvailable -Name "WindowsConsoleFonts")) {
-                Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -SkipPublisherCheck
-                Write-Host "Installed 'WindowsConsoleFonts' module."
-            }
-
             Import-Module WindowsConsoleFonts
-            Add-Font "$targetTempFontPath"
+
+            # We do NOT want to add the temporary font because it makes it impossible to remove
+            # Add-Font "$targetTempFontPath"
+
             Set-ConsoleFont "$fontName" | Out-Null
         }
         catch [Exception] {
@@ -189,7 +281,7 @@ Function Initialize-Environment {
         }
 
         try {
-            if (-not(Get-Module -ListAvailable -Name "PSDotFiles")) {
+            if (-not(Get-InstalledModule -Name "PSDotFiles")) {
                 Write-Host "Installing 'PSDotFiles' module..."
                 Install-Module -Name PSDotFiles -Scope CurrentUser -Force -SkipPublisherCheck
             }
@@ -202,7 +294,7 @@ Function Initialize-Environment {
         }
 
         try {
-            if (-not(Get-Module -ListAvailable -Name "posh-git")) {
+            if (-not(Get-InstalledModule -Name "posh-git")) {
                 Write-Host "Installing 'posh-git' module..."
                 Install-Module posh-git -Scope CurrentUser -Force -SkipPublisherCheck
             }
@@ -212,7 +304,7 @@ Function Initialize-Environment {
         }
 
         try {
-            if (-not(Get-Module -ListAvailable -Name "oh-my-posh")) {
+            if (-not(Get-InstalledModule -Name "oh-my-posh")) {
                 Write-Host "Installing 'oh-my-posh' module..."
                 Install-Module oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck
                 Get-PoshThemes
@@ -223,7 +315,7 @@ Function Initialize-Environment {
         }
 
         try {
-            if (-not(Get-Module -ListAvailable -Name "PSReadLine")) {
+            if (-not(Get-InstalledModule -Name "PSReadLine")) {
                 Write-Host "Installing 'PSReadLine' module..."
                 Install-Module -Name PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck
             }

@@ -1,21 +1,43 @@
 @echo off
 
-set STOW=%~dp0stow\bin\stow
+chcp 65001 >NUL 2>&1
 
-if "%~1"=="clean" (
-    set DOT_INITIALIZED=
-    if exist "%~dp0.tmp" rmdir /s /q "%~dp0.tmp"
-    if exist "%~dp0stow\bin\stow" del "%~dp0stow\bin\stow"
-    if exist "%~dp0stow\bin\chkstow" del "%~dp0stow\bin\chkstow"
-    echo Cleared out temporary files and reinitializing environment.
-)
+setlocal EnableExtensions EnableDelayedExpansion
 
-if not "%DOT_INITIALIZED%"=="1" (
-    set "PATH=%~dp0windows;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
-    echo Initializing environment...
-)
+    set STOW=%~dp0stow\bin\stow
+    set NAME=mycelio
+    set "COMMENT=echo #"
+    set "SCRIPT=%~nx0"                              &:# Script name
+    set "SNAME=%~n0"                                &:# Script name, without its extension
+    set "SPATH=%~dp0" & set "SPATH=!SPATH:~0,-1!"   &:# Script path, without the trailing \
+    set "SPROFILE=%~dp0windows\profile.bat"         &:# Full path to profile script
+    set ^"ARG0=%0^"                                 &:# Script invokation name
+    set ^"ARGS=%*^"                                 &:# Argument line
+    set _path=%PATH%
+    set _profile_initialized=%DOT_PROFILE_INITIALIZED%
+    set "USER[HKLM]=all users"
+    set "USER[HKCU]=%USERNAME%"
+    set "HIVE="
 
-setlocal EnableDelayedExpansion
+    if "%~1"=="cls" goto:$SetProfile
+    if "%DOT_PROFILE_INITIALIZED%"=="1" goto:$StartInitialize
+
+    :$SetProfile
+    call "%~dp0windows\profile.bat"
+    set _profile_initialized=1
+    set "_path=%~dp0windows;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
+
+    set _initialize=0
+
+    :$StartInitialize
+    if "%~1"=="clean" (
+        set _initialize=1
+        if exist "%~dp0.tmp" rmdir /s /q "%~dp0.tmp"
+        if exist "%~dp0stow\bin\stow" del "%~dp0stow\bin\stow"
+        if exist "%~dp0stow\bin\chkstow" del "%~dp0stow\bin\chkstow"
+        echo Cleared out temporary files and reinitializing environment.
+    )
+
     ::
     :: e.g. init wsl --user jvaneenwyk --distribution Ubuntu
     ::
@@ -56,43 +78,128 @@ setlocal EnableDelayedExpansion
     if not exist !_pwsh! set _pwsh=C:\Program Files\PowerShell\pwsh.exe
     if not exist !_pwsh! set _pwsh=C:\Program Files\PowerShell\7\pwsh.exe
 
-    call !_pwsh! -Command "& {Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force -Scope CurrentUser}" > nul 2>&1
-    call !_pwsh! -File "%~dp0powershell\Initialize-Environment.ps1"
+    call :InstallAutoRun
 
     call msys2 --version > nul 2>&1
     if %ERRORLEVEL% NEQ 0 (
-        call scoop install msys2
+        set _initialize=1
     )
-    call msys2 -where "%~dp0" -shell bash -no-start -c ./init.sh
-
     call perl --version > nul 2>&1
     if %ERRORLEVEL% NEQ 0 (
-        call scoop install perl
+        set _initialize=1
+    )
+    if "%~1"=="-f" (
+        set _initialize=1
     )
 
-    call :MakeHomeLink "%~dp0bash\.bash_aliases"
-    call :MakeHomeLink "%~dp0bash\.bashrc"
-    call :MakeHomeLink "%~dp0bash\.gitconfig"
-    call :MakeHomeLink "%~dp0bash\.gitignore_global"
-    call :MakeHomeLink "%~dp0bash\.profile"
-    call :MakeHomeLink "%~dp0bash\.ctags"
+    set _stow=!_initialize!
+    if "%~1"=="stow" (
+        set _stow=1
+    )
 
-    call :MakeLink "Documents\WindowsPowerShell" "Microsoft.PowerShell_profile.ps1"
-    call :MakeLink "Documents\PowerShell" "Profile.ps1"
+    if "!_initialize!"=="1" (
+        call "!_pwsh!" -Command "& {Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force -Scope CurrentUser}" > nul 2>&1
+        call "!_pwsh!" -File "%~dp0powershell\Initialize-Environment.ps1"
+
+        call msys2 --version > nul 2>&1
+        if %ERRORLEVEL% NEQ 0 (
+            call scoop install msys2
+        )
+        call msys2 -where "%~dp0" -shell bash -no-start -c ./init.sh
+
+        call perl --version > nul 2>&1
+        if %ERRORLEVEL% NEQ 0 (
+            call scoop install perl
+        )
+    )
+
+    if "!_stow!"=="1" (
+        call :StowProfile "%~dp0bash\.bash_aliases"
+        call :StowProfile "%~dp0bash\.bashrc"
+        call :StowProfile "%~dp0bash\.gitconfig"
+        call :StowProfile "%~dp0bash\.gitignore_global"
+        call :StowProfile "%~dp0bash\.profile"
+        call :StowProfile "%~dp0bash\.ctags"
+
+        call :StowPowerShell "Documents\WindowsPowerShell" "Microsoft.PowerShell_profile.ps1"
+        call :StowPowerShell "Documents\PowerShell" "Profile.ps1"
+
+        echo Initialized profile settings into local directories for user.
+    ) else (
+        echo Profile for '%USERNAME%' already initialized.
+    )
 endlocal & (
-    set DOT_INITIALIZED=1
+    set "DOT_INITIALIZED=1"
+    set "DOT_PROFILE_INITIALIZED=%_profile_initialized%"
+    set "PATH=%_path%""
 )
-
-echo Environment initialized and ready for use.
 
 exit /b %ERRORLEVEL%
 
-:MakeHomeLink
+::-----------------------------------
+:: Query if autorun installed
+::-----------------------------------
+:CheckAutoRunInstalled %1=Hive %2=OutputVarName
+    setlocal EnableExtensions EnableDelayedExpansion
+    set "KEY=%1\Software\Microsoft\Command Processor"
+    for /f "tokens=2,3*" %%a in ('reg query "!KEY!" /v AutoRun 2^>NUL ^| findstr AutoRun') do (
+        set "TYPE=%%a"
+        set "VALUE=%%b"
+        if "%~2"=="" echo !USER[%1]!: !VALUE!
+        if "!TYPE!"=="REG_EXPAND_SZ" call set "VALUE=!VALUE!"
+    )
+endlocal & (if not "%~2"=="" (set "%~2=%VALUE%")) & exit /b
+
+::-----------------------------------
+:: Check if the user has system administrator rights. %ERRORLEVEL% 0=Yes; 5=No
+::-----------------------------------
+:IsAdmin
+    >NUL 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
+exit /b
+
+::-----------------------------------
+:: Remove existing auto run and replace it if possible
+::-----------------------------------
+:InstallAutoRun
+    setlocal EnableExtensions EnableDelayedExpansion
+    for %%h in (HKLM HKCU) do (
+        call :CheckAutoRunInstalled %%h AutoRun
+        if defined AutoRun (
+            if not "%SPROFILE%"=="!AutoRun!" (
+                >&2 echo WARNING: Different AutoRun script already installed for !USER[%%h]!: !AutoRun!
+
+                :# Delete the key otherwise next will display an error
+                set "KEY=%%h\Software\Microsoft\Command Processor"
+                %COMMENT% Deleting "!KEY!\AutoRun"
+                %EXEC% reg delete "!KEY!" /v "AutoRun" /f
+            ) else (
+                %COMMENT% Skipped AutoRun installed. Key already exists.
+                endlocal & exit /b 0
+            )
+        )
+    )
+
+    :# No keys should exist now so try to install
+    if not defined HIVE (
+        call :IsAdmin
+        if not errorlevel 1 (       :# Admin user. Install for all users.
+            set "HIVE=HKLM"
+        ) else (        :           # Normal user. Install for current user.
+            set "HIVE=HKCU"
+        )
+    )
+
+    set "KEY=%HIVE%\Software\Microsoft\Command Processor"
+    %COMMENT% Creating registry key "%KEY%" value "AutoRun"
+    %EXEC% reg add "%KEY%" /v "AutoRun" /t REG_SZ /d "%SPROFILE%" /f
+endlocal & exit /b 0
+
+:StowProfile
     call :CreateLink "%USERPROFILE%" "%~nx1" "%~1"
     call :CreateLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%" "%~nx1" "%~1"
 exit /b 0
 
-:MakeLink
+:StowPowerShell
     call :CreateLink "%OneDrive%\%~1" "%~2" "%~dp0powershell\Profile.ps1"
     call :CreateLink "%USERPROFILE%\%~1" "%~2" "%~dp0powershell\Profile.ps1"
 exit /b 0

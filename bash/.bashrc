@@ -110,7 +110,6 @@ xterm* | rxvt*)
     PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
     ;;
 *) ;;
-
 esac
 
 # enable color support of ls
@@ -152,4 +151,11 @@ fi
 # shellcheck disable=SC1091
 [ -x "$(command -v asdf)" ] && source "$(brew --prefix asdf)/asdf.sh"
 
+echo "▓▓░░"
+echo "▓▓░░   ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓"
+echo "▓▓░░   ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃"
+echo "▓▓░░   ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛"
+echo "▓▓░░"
+echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
+echo ""
 echo "Initialized '${machine}:${variant}' environment: '$DOTFILE_CONFIG_ROOT'"

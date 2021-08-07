@@ -2,6 +2,8 @@
     "shellcheck.enable": true,
     "shellcheck.enableQuickFix": true,
 
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+
     // "Adds a space between a keyword and its associated scriptblock expression."
     "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
     // "Adds a space between a keyword (if, elseif, while, switch, etc) and its associated conditional expression."

@@ -11,3 +11,5 @@ xmonad/.xmonad/xmonad.errors
 xmonad/.xmonad/xmonad.hi
 xmonad/.xmonad/xmonad.o
 
+windows/clink/clink_history
+windows/clink/clink.log

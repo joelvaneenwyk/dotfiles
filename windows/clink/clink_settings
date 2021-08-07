@@ -1,0 +1,69 @@
+#
+# Default clink settings. For explanation of these and other settings see:
+#
+#   - https://chrisant996.github.io/clink/clink.html
+#   - https://github.com/cmderdev/cmder/blob/master/vendor/clink_settings.default
+#
+
+# name: Strips CR and LF chars on paste
+# type: enum
+# options: delete,space,ampersand,crlf
+clink.paste_crlf = space
+
+# name: Auto-answer terminate prompt
+# type: enum
+# options: off,answer_yes,answer_no
+cmd.auto_answer = answer_yes
+
+# name: Prompt color
+# type: color
+color.prompt = red
+
+color.doskey = bold cyan
+color.cmd = bold yellow
+color.flag = bold
+color.arg = bold yellow
+color.filtered = bold yellow
+
+# name: Skip adding lines prefixed with whitespace
+# type: boolean
+history.ignore_space = False
+
+# name: Sets how command history expansion is applied
+# type: enum
+# options: off,on,not_squoted,not_dquoted,not_quoted
+history.expand_mode = not_dquoted
+
+# name: The number of history lines to save
+# type: integer
+history.max_lines = 10000
+
+history.save = True
+
+# name: Share history between instances
+# type: boolean
+history.shared = True
+
+# name: Support Windows' Ctrl-Alt substitute for AltGr
+# type: boolean
+terminal.use_altgr_substitute = True
+
+# When matching executables as the first word (exec.enable), include executables in the current
+# directory. (This is implicit if the word being completed is a relative path).
+exec.cwd = True
+
+# When matching executables as the first word (exec.enable), also include directories
+# relative to the current working directory as matches.
+exec.dirs = True
+
+# Match executables when completing the first word of a line.
+exec.enable = True
+
+# When matching executables as the first word (exec.enable), include executables found in the
+# directories specified in the %PATH% environment variable.
+exec.path = True
+
+# If the line begins with whitespace then Clink bypasses executable
+# matching (exec.path) and will do normal files matching instead.
+exec.space_prefix = True
+

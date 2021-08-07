@@ -1,6 +1,6 @@
 #
 # Author: Joel Van Eenwyk
-# Instalation: Copy to default documents profile for user e.g.
+# Installation: Copy to default documents profile for user e.g.
 #
 #   - C:\Users\jovaneen\Documents\PowerShell\Profile.ps1
 #   - C:\Users\jovaneen\OneDrive - Microsoft\Documents\PowerShell\Profile.ps1
