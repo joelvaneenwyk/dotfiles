@@ -159,8 +159,14 @@ Function Initialize-Environment {
                 scoop install "nuget"
             }
 
+            # https://github.com/chrisant996/clink
             if (-not(Test-CommandExists "clink")) {
                 scoop install "clink"
+            }
+
+            # https://micro-editor.github.io/
+            if (-not(Test-CommandExists "micro")) {
+                scoop install "micro"
             }
         }
         catch {

@@ -13,23 +13,23 @@ main() {
    case "${unameOut}" in
    Linux*)
       machine=Linux
-      initialize_linux
+      initialize_linux "$@"
       ;;
    Darwin*)
       machine=Mac
-      initialize_macos
+      initialize_macos "$@"
       ;;
    CYGWIN*)
       machine=Cygwin
-      initialize_windows
+      initialize_windows "$@"
       ;;
    MINGW*)
       machine=MinGw
-      initialize_windows
+      initialize_windows "$@"
       ;;
    MSYS*)
       machine=MSYS
-      initialize_windows
+      initialize_windows "$@"
       ;;
    *) machine="UNKNOWN:${unameOut}" ;;
    esac
@@ -77,11 +77,16 @@ function initialize_windows() {
    _dot_script_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
    _dot_initialized="$_dot_script_root/.tmp/.initialized"
 
+   if [ "$1" == "clean" ]; then
+      rm -rf "${_dot_script_root}/.tmp"
+      echo "Removed workspace temporary files to force a rebuild."
+   fi
+
    # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
    if [ -x "$(command -v pacman)" ] && [ ! -f "$_dot_initialized" ]; then
       rm -f /var/lib/pacman/db.lck
       pacman -Syu --noconfirm
-      pacman -S --noconfirm msys2-keyring
+      pacman -S --noconfirm --needed msys2-keyring curl unzip
 
       if [ -f /etc/pacman.d/gnupg/ ]; then
          rm -r /etc/pacman.d/gnupg/
@@ -90,12 +95,19 @@ function initialize_windows() {
       pacman-key --init
       pacman-key --populate msys2
 
-      pacman -Syuu --noconfirm
+      # Long version of '-Syuu' gets fresh package databases from server and
+      # upgrades the packages while allowing downgrades '-uu' as well if needed.
+      pacman --sync --refresh -uu --noconfirm
    fi
 
-   ./windows/build-stow.sh
-
    mkdir --parents "$_dot_script_root/.tmp/"
+
+   if [ ! -x "$(command -v micro)" ]; then
+      (cd "$_dot_script_root/.tmp/" && curl "https://getmic.ro" | bash)
+   fi
+
+   source "$_dot_script_root/windows/build-stow.sh"
+
    touch "$_dot_initialized"
 }
 

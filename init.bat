@@ -149,10 +149,13 @@ exit /b %ERRORLEVEL%
 :WriteGitConfig %1=TargetFolder
     setlocal EnableExtensions EnableDelayedExpansion
     set _gitConfig=.gitconfig
+    set _gitRoot=%~dp0git
+    set "_gitRoot=!_gitRoot:\=/!"
     if exist "%~1" (
-        echo [include] > "%~1\%_gitConfig%"
-        echo path = "%~dp0bash\git\.gitconfig_common" >> "%~1\%_gitConfig%"
-        echo path = "%~dp0bash\git\.gitconfig_windows" >> "%~1\%_gitConfig%"
+        echo.[include] > "%~1\%_gitConfig%"
+        echo.    path = "!_gitRoot!/.gitconfig_common">> "%~1\%_gitConfig%"
+        echo.    path = "!_gitRoot!/.gitconfig_windows">> "%~1\%_gitConfig%"
+
         echo Created custom '.gitconfig' with include directives: '%~1'
     )
 endlocal & exit /b

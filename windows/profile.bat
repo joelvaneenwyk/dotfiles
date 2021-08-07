@@ -16,67 +16,79 @@
 :: IMPORTANT: Do not use %CMDCMDLINE% as is may contain unprotected | & > < characters. Use !CMDCMDLINE! instead.
 ::
 
-set "CMD=!CMDCMDLINE!"
-set "CMD=!CMD:|=\x7C!"
-set "CMD=!CMD:>=\x3E!"
-set "CMD=!CMD:<=\x3C!"
-set "CMD=!CMD:&=\x36!"
+setlocal EnableExtensions EnableDelayedExpansion
 
-call :SplitArgs !CMD!
+    if "%~1"=="--refresh" goto:$InitializeProfile
 
-:: for /f invokes %COMSPEC% without quotes, whereas new shells' ARG0 have quotes.
-if "!ARG0!"=="%COMSPEC%" (
-    :# This is not a new top cmd.exe instance
-    exit /b 0
+    set "CMD=!CMDCMDLINE!"
+    set "CMD=!CMD:|=\x7C!"
+    set "CMD=!CMD:>=\x3E!"
+    set "CMD=!CMD:<=\x3C!"
+    set "CMD=!CMD:&=\x36!"
+
+    call :SplitArgs !CMD!
+
+    :: for /f invokes %COMSPEC% without quotes, whereas new shells' ARG0 have quotes.
+    if "!ARG0!"=="%COMSPEC%" (
+        :# This is not a new top cmd.exe instance
+        exit /b 0
+    )
+
+    :: This is not a new top cmd.exe instance
+    if /i "!ARG1!"=="/c" (
+        exit /b 0
+    )
+
+    ::
+    :: This is a new top 'cmd.exe' instance so initialize it.
+    ::
+
+    if "%DOT_AUTORUN_INITIALIZED%"=="1" exit /b 0
+
+    :$InitializeProfile
+
+    chcp 65001 >NUL 2>&1
+
+    ::
+    :: This logo was generated with figlet after testing with selection of fonts.
+    ::
+    ::    - apt install figlet
+    ::    - git clone https://github.com/xero/figlet-fonts
+    ::    - find figlet-fonts/ -printf "%f\n" | xargs -n 1 -I % figlet -d ./figlet-fonts/ -f % myceli0
+    ::
+    :: These fonts all display the logo quite well:
+    ::
+    ::    - fire code (good but 'I' doesn't align)
+    ::    - gintronic (very nice)
+    ::    - hasklig (pretty good)
+    ::    - jetbrains mono (better than most)
+    ::    - julia-mono (amazing)
+    ::    - mensch
+    ::    - luculent
+    ::    - victor mono (quite good)
+    ::    - source code pro (bars have spaces)
+    ::
+
+    echo █├═════════════════════════════════
+    echo ▓│
+    echo ▓│  ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓
+    echo ▓│  ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃
+    echo ▓│  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
+    echo ▓│
+    echo ▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+endlocal & (
+    set DOT_AUTORUN_INITIALIZED=1
+    set "PATH=%~dp0;%~dp0..;%~dp0..\.tmp;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
 )
-
-if /i "!ARG1!"=="/c" (
-    %DEBUG.LOG% :# This is not a new top cmd.exe instance
-    exit /b 0
-)
-
-::
-:: This is a new top 'cmd.exe' instance so initialize it.
-::
-
-if "%DOT_AUTORUN_INITIALIZED%"=="1" exit /b 0
-set DOT_AUTORUN_INITIALIZED=1
-
-chcp 65001 >NUL 2>&1
-
-::
-:: This logo was generated with figlet after testing with selection of fonts.
-::
-::    - apt install figlet
-::    - git clone https://github.com/xero/figlet-fonts
-::    - find figlet-fonts/ -printf "%f\n" | xargs -n 1 -I % figlet -d ./figlet-fonts/ -f % myceli0
-::
-:: These fonts all display the logo quite well:
-::
-::    - fire code (good but 'I' doesn't align)
-::    - gintronic (very nice)
-::    - hasklig (pretty good)
-::    - jetbrains mono (better than most)
-::    - julia-mono (amazing)
-::    - mensch
-::    - luculent
-::    - victor mono (quite good)
-::    - source code pro (bars have spaces)
-::
-
-echo ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-echo ▓▓
-echo ▓▓  ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓
-echo ▓▓  ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃
-echo ▓▓  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
-echo ▓▓
-echo ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 
 doskey ls=dir /Q
 doskey ll=dir /Q
 doskey cp=copy $*
 doskey mv=move $*
 doskey h=doskey /HISTORY
+doskey edit=%~dp0..\.tmp\micro.exe $*
+doskey refresh=%~dp0profile.bat --refresh
 doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
 
 :: This must be the last operation we do.

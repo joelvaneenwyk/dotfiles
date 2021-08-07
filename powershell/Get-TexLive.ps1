@@ -1,4 +1,4 @@
-Function Download-TexLive {
+Function Get-TexLive {
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 
     $tempFolder = "$PSScriptRoot\..\.tmp"
@@ -38,4 +38,4 @@ Function Download-TexLive {
     }
 }
 
-Download-TexLive
+Get-TexLive

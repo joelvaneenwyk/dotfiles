@@ -2,6 +2,8 @@
     "shellcheck.enable": true,
     "shellcheck.enableQuickFix": true,
 
+    "perl.enable": false,
+
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
 
     // "Adds a space between a keyword and its associated scriptblock expression."
@@ -38,6 +40,7 @@
         "dotfile",
         "dotfiles",
         "kleopatra",
+        "noconfirm",
         "pacman",
         "symlink",
         "symlinking",

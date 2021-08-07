@@ -1,6 +1,6 @@
-# `dotfiles`
+# Portable Configuration
 
-```bash
+```ansi
       ██            ██     ████ ██  ██
      ░██           ░██    ░██░ ░░  ░██
      ░██  ██████  ██████ ██████ ██ ░██  █████   ██████
@@ -13,9 +13,9 @@
 
   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
  ░▓             ▓
- ░▓ about       ▓ custom config files
- ░▓ code        ▓ https://github.com/joelvaneenwyk/dotfiles
- ░▓ attribution ▓ derived from https://github.com/jdve/dotfiles
+ ░▓ about       ▓  custom config files
+ ░▓ code        ▓  https://github.com/joelvaneenwyk/dotfiles
+ ░▓ attribution ▓  derived from https://github.com/jdve/dotfiles
  ░▓             ▓
  ░▓▓▓▓▓▓▓▓▓▓▓▓▓▓
  ░░░░░░░░░░░░░░
@@ -23,7 +23,8 @@
  bash           > basic bash setup
  fish           > fish setup
  fonts          > favorite fonts
- osx            > special sauce for MacOS/OSX
+ macos          > special sauce for macOS / OSX
+ windows        > helper scripts for Windows
  python         > flake8 config
  sup            > sup mail client configs
  vim            > vim configs
@@ -34,52 +35,42 @@
 ## table of contents
 
 - [Setup](#Setup)
-- [introduction](#dotfiles)
-- [managing](#managing)
-- [installing](#installing)
-- [how it works](#how-it-works)
-- [details](#details)
+- [Introduction](#dotfiles)
+- [Management](#managing)
+- [Install](#installing)
+- [Implementation](#how-it-works)
+- [Details](#details)
 
 ## Setup
 
-1. Navigate to your home directory
-
-      > `cd ~`
-
-2. Clone the repo:
-
-      > `git clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
-
-3. Enter the `dotfiles` directory and then follow per platform instructions below.
+Instructions are provided below for each platform, but the high level approach for each is to clone the `git` repository and then run the initialization script for that platform.
 
 ### Windows
 
-1. Download and install [Gpg4win - Kleopatra](https://www.gpg4win.org/index.html)
-2. Import Secret Key from secure location e.g. `{cloud}\Documents\Keys`
+1. Clone the repo from your home directory:
+      > `git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
+2. Enter the `dotfiles` directory and then follow per platform instructions below.
+3. To setup commit signing, download and install [Gpg4win - Kleopatra](https://www.gpg4win.org/index.html)
+      - Import Secret Key from secure location e.g. `{cloud}\Documents\Keys`
 
 ### macOS
 
-`cd dotfiles && ./init-osx.sh`
+Most versions of MacOS will already have Git installed, and you can activate it through the terminal with git version. However, if you don't have Git installed for whatever reason, you can install the latest version of Git using one of [several methods](https://github.com/git-guides/install-git). Once installed, run the following:
+
+1. Clone the repo from your home directory:
+      > `git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
+2. `cd dotfiles && ./init-osx.sh`
 
 ### Linux
 
-install the bash settings
-
-`(cd dotfiles && stow --adopt bash)`
-
-install bash settings for the root user
-
-`sudo stow bash -t /root`
-
-install [xmonad](https://xmonad.org/) configs
-
-`stow xmonad`
-
-uninstall xmonad configs
-
-`stow -D xmonad`
-
-etc, etc, etc...
+1. Clone the repo from your home directory:
+      > `git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
+2. Install the bash settings.
+      > `(cd dotfiles && stow --adopt bash)`
+3. Install bash settings for the root user
+      > `sudo stow bash -t /root`
+4. Install [xmonad](https://xmonad.org/) configs
+      > `stow xmonad`
 
 ## Introduction
 
@@ -99,40 +90,43 @@ This repository was designed to be used with [gnu stow](http://www.gnu.org/softw
 
 [Stow](https://www.gnu.org/software/stow/) is available for all linux and most other unix-like distributions via your favorite package manager.
 
-- `sudo pacman -S stow`
-- `sudo apt-get install stow`
+- `sudo pacman -S --noconfirm --needed stow`
+- `sudo apt-get -y install stow`
 - `brew install stow`
 
 or clone it [from source](https://savannah.gnu.org/git/?group=stow) and [build it](http://git.savannah.gnu.org/cgit/stow.git/tree/INSTALL) yourself.
 
-## how it works
+## Implementation
 
-by default the stow command will create symlinks for files in the parent directory of where you execute the command. so my dotfiles setup assumes this repo is located in the root of your home directory `~/dotfiles`. and all stow commands should be executed in that directory. otherwise you'll need to use the `-d` flag with the repo directory location.
+By default, the `stow` command will create symlinks for files in the parent directory of where you execute the command. so my dotfiles setup assumes this repo is located in the root of your home directory `~/dotfiles`. and all stow commands should be executed in that directory. otherwise you'll need to use the `-d` flag with the repo directory location.
 
-to install most of my configs you execute the stow command with the folder name as the only argument.
+To install most of my configs you execute the stow command with the folder name as the only argument.
 
-to install my **bash** configs use the command:
+To install **bash** configs use the command:
 
-`stow bash`
+```bash
+stow bash
+```
 
-this will symlink files to `~/` and various other places.
+This will symlink files to `~/` and various other places. You can override the default behavior and symlink files to another location with the `-t` (target) argument flag.
 
-but you can override the default behavior and symlink files to another location with the `-t` (target) argument flag.
+**Note:** `stow` can only create a symlink if a config file does not already exist. If a default file was created upon program installation, you can add the `--adopt` flag which will delete the existing configuration settings before you install a new one with stow.
 
-**note:** stow can only create a symlink if a config file does not already exist. if a default file was created upon program installation you must delete it first before you can install a new one with stow. this does not apply to directories, only files.
-
-## details
+## Details
 
 ### x11
 
 to install the **x11** config you need to execute the command:
 
-`stow -t / x11`
+```bash
+stow -t / x11
+```
 
-this will symlink the files to `/etc/X11`.
+This will symlink the files to `/etc/X11`.
 
 ## Resources
 
+- [Stow](https://www.gnu.org/software/stow/manual/stow.html)
 - [Inspiration - dotfiles.github.io](https://dotfiles.github.io/inspiration/)
 - [dotfiles-windows: dotfiles for Windows, including Developer-minded system defaults. Built in PowerShell](https://github.com/jayharris/dotfiles-windows)
 - [Scoop](https://scoop.sh/)
