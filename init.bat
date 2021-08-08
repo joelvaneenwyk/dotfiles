@@ -82,11 +82,11 @@ setlocal EnableExtensions EnableDelayedExpansion
     call :InstallAutoRun
 
     call msys2 --version > nul 2>&1
-    if %ERRORLEVEL% NEQ 0 (
+    if errorlevel 1 (
         set _initialize=1
     )
     call perl --version > nul 2>&1
-    if %ERRORLEVEL% NEQ 0 (
+    if errorlevel 1 (
         set _initialize=1
     )
     if "%~1"=="-f" (
@@ -121,17 +121,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     )
 
     if "!_initialize!"=="1" (
-        exit /b 0
-        call msys2 --version > nul 2>&1
-        if %ERRORLEVEL% NEQ 0 (
-            call scoop install msys2
-        )
         call msys2 -where "%~dp0" -shell bash -no-start -c ./init.sh
-
-        call perl --version > nul 2>&1
-        if %ERRORLEVEL% NEQ 0 (
-            call scoop install perl
-        )
     )
 
     if "!_stow!"=="1" (
@@ -177,7 +167,7 @@ exit /b %ERRORLEVEL%
 
     if exist "C:\Windows\System32\%~1" (
         copy /B /Y /V "C:\Windows\System32\%~1" "%_deploy%\%~1" > nul 2>&1
-        echo Copied system file to temporary folder for Docker use: '%~1'
+        echo Copied system file for Docker: '%~1'
     )
 
     :$SystemDeploy

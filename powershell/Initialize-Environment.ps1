@@ -205,6 +205,10 @@ Function Initialize-Environment {
             if (-not(Test-CommandExists "micro")) {
                 scoop install "micro"
             }
+
+            if (-not(Test-CommandExists "perl")) {
+                scoop install "perl"
+            }
         }
         catch {
             Write-Host "Failed to install packages with 'scoop' manager."
