@@ -49,9 +49,11 @@ Instructions are provided below for each platform, but the high level approach f
 
 1. Clone the repo from your home directory:
       > `git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
-2. Enter the `dotfiles` directory and then follow per platform instructions below.
+2. Enter the `dotfiles` directory and then run `init`
 3. To setup commit signing, download and install [Gpg4win - Kleopatra](https://www.gpg4win.org/index.html)
       - Import Secret Key from secure location e.g. `{cloud}\Documents\Keys`
+
+NOTE: The PowerShell setup steps can fail if you have your PowerShell modules and settings stored in OneDrive or some other cloud provider. Please follow steps to migrate to local path, e.g. [How to prevent Powershell Modules being installed into OneDrive - Stack Overflow](https://stackoverflow.com/a/67531193)
 
 ### macOS
 

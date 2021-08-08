@@ -13,9 +13,22 @@
 # See https://github.com/dahlbyk/posh-git/issues/860
 $Env:POSHGIT_CYGWIN_WARNING = 'off'
 
-Import-Module posh-git
-Import-Module oh-my-posh
+try {
+    Import-Module oh-my-posh -ErrorAction 'silentlycontinue' | Out-Null
+    Set-PoshPrompt -Theme stelbent.minimal
+}
+catch {
+    Write-Host "Failed to setup 'oh-my-posh' prompt."
+}
 
-Set-PoshPrompt -Theme stelbent.minimal
+try {
+    Import-Module posh-git -ErrorAction 'SilentlyContinue' | Out-Null
+}
+catch {
+    Write-Host "Failed to import 'posh-git' module."
+}
 
-Write-Host "Initialized global PowerShell profile."
+#
+# NOTE: This script is called in each sub-shell as well so reduce noise by not calling anything
+# that may write to the console host.
+#

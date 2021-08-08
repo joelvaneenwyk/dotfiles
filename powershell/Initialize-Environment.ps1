@@ -54,7 +54,8 @@ Function Get-File {
         $Filename = [System.IO.Path]::GetFileName($Url)
     }
 
-    Write-Host "Download: $Url to $Filename"
+    Write-Host "Downloading file from source: $Url"
+    Write-Host "Target file: '$Filename'"
 
     $FilePath = $Filename
 
@@ -77,8 +78,8 @@ Function Get-File {
                     $FilePath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
 
                 $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
-                # TODO: Progress bar? Total size?
-                Write-Host "Downloading ..."
+
+                Write-Host "Download started..."
                 $copyStreamOp.Wait()
 
                 $downloadedFileStream.Close()
@@ -87,31 +88,19 @@ Function Get-File {
                 }
             }
         }
+
+        Write-Host "Downloaded file: '$Filename'"
     }
     else {
         throw "Cannot download from $Url"
     }
 }
 Function Initialize-Environment {
-    Write-Host "PowerShell Version: $($host.Version)"
+    Write-Host "PowerShell v$($host.Version)"
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     try {
-        # Now install the NuGet package provider if possible.
-        Install-PackageProvider -Name NuGet -Scope CurrentUser -Force | Out-Null
-        Write-Host "Installed NuGet package provider."
-
-        if (-not(Get-InstalledModule -Name "PackageManagement")) {
-            Install-Module -Name PackageManagement -Scope CurrentUser -Force
-            Write-Host "Installed 'PackageManagement' module."
-        }
-
-        if (-not(Get-InstalledModule -Name "PowerShellGet")) {
-            Install-Module -Name PowerShellGet -AllowPrerelease -Scope CurrentUser -Force
-            Write-Host "Installed 'PowerShellGet' module."
-        }
-
         #
         # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
         #
@@ -120,10 +109,52 @@ Function Initialize-Environment {
         #
         Import-Module PackageManagement
 
+        # Now install the NuGet package provider if possible.
+        $NugetPackage = Get-PackageProvider -Name "NuGet" -ForceBootstrap >$null
+        if ($?) {
+            Write-Host "Installed NuGet package provider."
+        }
+        else {
+            Write-Host "Failed to install NuGet package source. $NugetPackage"
+        }
+
+        # We do not check if module is installed because 'Get-Package' may not exist yet.
+        Install-Module -Name PowerShellGet -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue >$null
+        if ($?) {
+            Write-Host "Installed 'PowerShellGet' module."
+
+            Update-Module -Name PowerShellGet -Force -ErrorAction SilentlyContinue >$null
+            Write-Host "Updated 'PowerShellGet' module to latest version."
+        }
+        else {
+            Write-Host "Failed to install and update 'PowerShellGet' module."
+        }
+
         Import-Module PowerShellGet
     }
     catch [Exception] {
         Write-Host "Failed to install NuGet package provider", $_.Exception.Message
+    }
+
+    # Set Microsoft PowerShell Gallery to 'Trusted' as this is needed for packages
+    # like 'WindowsConsoleFonts' and 'PSReadLine' installed below.
+    try {
+        $psGallery = Get-PSRepository -Name "*PSGallery*"
+        if ($null -eq $psGallery) {
+            if ($host.Version.Major -ge 5) {
+                Register-PSRepository -Default -InstallationPolicy Trusted
+            }
+            else {
+                Register-PSRepository -Name PSGallery -SourceLocation "https://www.powershellgallery.com/api/v2/" -InstallationPolicy Trusted
+            }
+            Write-Host "Registered 'PSGallery' repository."
+        }
+        else {
+            Write-Host "Already registered 'PSGallery' repository."
+        }
+    }
+    catch [Exception] {
+        Write-Host "Failed to add repository.", $_.Exception.Message
     }
 
     $root = Resolve-Path -Path "$PSScriptRoot\.."
@@ -178,13 +209,19 @@ Function Initialize-Environment {
     }
     finally {
         try {
-            if (-not(Get-InstalledModule -Name "WindowsConsoleFonts")) {
+            if (-not(Get-InstalledModule -Name "WindowsConsoleFonts" -ErrorAction SilentlyContinue)) {
                 Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -SkipPublisherCheck
                 Write-Host "Installed 'WindowsConsoleFonts' module."
             }
 
-            Import-Module WindowsConsoleFonts
-            Remove-Font "$targetTempFontPath"
+            # This can fail in containers as 'GetCurrentConsoleFont' will fail during build
+            # so we just ignore the error here and continue.
+            Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue | Out-Null
+
+            # Try to remove the old font if we can
+            if (Test-Path -Path "$targetTempFontPath" -PathType Leaf) {
+                Remove-Font "$targetTempFontPath" -ErrorAction SilentlyContinue | Out-Null
+            }
         }
         catch [Exception] {
             Write-Host "Failed to install WindowsConsoleFonts.", $_.Exception.Message
@@ -241,20 +278,8 @@ Function Initialize-Environment {
             Write-Host "Failed to update font registry. Requires administrator access."
         }
 
-        # Set Microsoft PowerShell Gallery to 'Trusted'
         try {
-            $repo = Get-PSRepository -Name "PSGallery" -ErrorAction Ignore;
-            if ($null -eq $repo) {
-                Write-Host "Adding 'PSGallery' repository..."
-                Set-PSRepository -Name 'PSGallery' -InstallationPolicy Trusted
-            }
-        }
-        catch [Exception] {
-            Write-Host "Failed to add repository.", $_.Exception.Message
-        }
-
-        try {
-            if (-not(Get-InstalledModule -Name "Terminal-Icons")) {
+            if ($null -eq (Get-InstalledModule -Name "Terminal-Icons" -ErrorAction SilentlyContinue)) {
                 Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck -Repository PSGallery
                 Write-Host "Installed 'Terminal-Icons' module."
             }
@@ -287,7 +312,37 @@ Function Initialize-Environment {
         }
 
         try {
-            if (-not(Get-InstalledModule -Name "PSDotFiles")) {
+            if ($null -eq (Get-InstalledModule -Name "PSReadLine" -ErrorAction SilentlyContinue)) {
+                Write-Host "Installing 'PSReadLine' module..."
+                Install-Module -Name PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck
+            }
+        }
+        catch {
+            Write-Host "Failed to install 'PSReadLine' module.", $_.Exception.Message
+        }
+
+        try {
+            if ($null -eq (Get-InstalledModule -Name "oh-my-posh" -ErrorAction SilentlyContinue)) {
+                Install-Module oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck | Out-Null
+                Write-Host "Installed 'oh-my-posh' module."
+            }
+        }
+        catch [Exception] {
+            Write-Host "Failed to install 'oh-my-posh' module.", $_.Exception.Message
+        }
+
+        try {
+            if ($null -eq (Get-InstalledModule -Name "posh-git" -ErrorAction SilentlyContinue)) {
+                Install-Module posh-git -Scope CurrentUser -Force -SkipPublisherCheck
+                Write-Host "Installed 'posh-git' module."
+            }
+        }
+        catch [Exception] {
+            Write-Host "Failed to install 'posh-git' module.", $_.Exception.Message
+        }
+
+        try {
+            if (-not(Get-InstalledModule -Name "PSDotFiles" -ErrorAction SilentlyContinue)) {
                 Write-Host "Installing 'PSDotFiles' module..."
                 Install-Module -Name PSDotFiles -Scope CurrentUser -Force -SkipPublisherCheck
             }
@@ -297,37 +352,6 @@ Function Initialize-Environment {
         }
         catch [Exception] {
             Write-Host "Failed to install 'PSDotFiles' module.", $_.Exception.Message
-        }
-
-        try {
-            if (-not(Get-InstalledModule -Name "posh-git")) {
-                Write-Host "Installing 'posh-git' module..."
-                Install-Module posh-git -Scope CurrentUser -Force -SkipPublisherCheck
-            }
-        }
-        catch [Exception] {
-            Write-Host "Failed to install 'posh-git' module.", $_.Exception.Message
-        }
-
-        try {
-            if (-not(Get-InstalledModule -Name "oh-my-posh")) {
-                Write-Host "Installing 'oh-my-posh' module..."
-                Install-Module oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck
-                Get-PoshThemes
-            }
-        }
-        catch [Exception] {
-            Write-Host "Failed to install 'oh-my-posh' module.", $_.Exception.Message
-        }
-
-        try {
-            if (-not(Get-InstalledModule -Name "PSReadLine")) {
-                Write-Host "Installing 'PSReadLine' module..."
-                Install-Module -Name PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck
-            }
-        }
-        catch {
-            Write-Host "Failed to install 'PSReadLine' module.", $_.Exception.Message
         }
 
         Write-Host "Initialized PowerShell environment."

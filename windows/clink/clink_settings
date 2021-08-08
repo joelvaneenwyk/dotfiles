@@ -66,4 +66,3 @@ exec.path = True
 # If the line begins with whitespace then Clink bypasses executable
 # matching (exec.path) and will do normal files matching instead.
 exec.space_prefix = True
-

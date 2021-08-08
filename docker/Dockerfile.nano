@@ -1,12 +1,12 @@
 # escape=`
 
-# Args used by 'from' statements must be defined here
-ARG WindowsRepo=mcr.microsoft.com/windows/servercore:20H2
+# Args used by from statements must be defined here:
+ARG WindowsRepo=mcr.microsoft.com/windows/nanoserver:20H2
 
 # Use server core as an installer container to extract PowerShell,
 # As this is a multi-stage build, this stage will eventually be thrown away
+ARG InstallerVersion=nanoserver
 ARG InstallerRepo=mcr.microsoft.com/powershell
-ARG InstallerVersion=windowsservercore
 FROM ${InstallerRepo}:$InstallerVersion  AS installer-env
 
 # Arguments for installing PowerShell, must be defined in the container they are used
@@ -14,10 +14,12 @@ ARG PS_VERSION=7.1.3
 
 ARG PS_PACKAGE_URL=https://github.com/PowerShell/PowerShell/releases/download/v$PS_VERSION/PowerShell-$PS_VERSION-win-x64.zip
 
-# Disable telemetry
+# disable telemetry
 ENV POWERSHELL_TELEMETRY_OPTOUT="1"
 
 SHELL ["pwsh", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+ARG PS_PACKAGE_URL_BASE64
 
 RUN Write-host "Verifying valid Version..."; `
     if (!($env:PS_VERSION -match '^\d+\.\d+\.\d+(-\w+(\.\d+)?)?$' )) { `
@@ -47,9 +49,24 @@ ENV ProgramFiles="C:\Program Files" `
     # Persist %PSCORE% ENV variable for user convenience
     PSCORE="$ProgramFiles\PowerShell\pwsh.exe" `
     # Set the default windows path so we can use it
-    WindowsPATH="C:\Windows\system32;C:\Windows"
+    WindowsPATH="C:\Windows\system32;C:\Windows" `
+    POWERSHELL_DISTRIBUTION_CHANNEL="PSDocker-NanoServer-20H2"
 
-RUN setx PATH "%PATH%;%ProgramFiles%\PowerShell;"
+### Begin workaround ###
+# Without this, PowerShell will fail. The command should be like this:
+#
+#   - https://github.com/PowerShell/PowerShell-Docker/blob/f81009c42c96af46aef81eb1515efae0ef29ad5f/release/preview/nanoserver/docker/Dockerfile#L76
+#
+# Note that changing user on nanoserver is not recommended, see:
+#
+#   - https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/container-base-images#base-image-differences
+#
+# But we are working around a bug introduced in the nanoserver image introduced in 1809
+USER ContainerAdministrator
+
+# This is basically the correct code except for the /M
+RUN setx PATH "%PATH%;%ProgramFiles%\PowerShell;" /M
+### End workaround ###
 
 COPY --from=installer-env ["\\PowerShell\\", "$ProgramFiles\\PowerShell"]
 
@@ -66,6 +83,9 @@ RUN pwsh `
             if((get-date) -gt $stopTime) { throw 'timout expired'} `
             Start-Sleep -Seconds 6 ; `
         }"
+
+# re-enable telemetry
+ENV POWERSHELL_TELEMETRY_OPTOUT="0"
 
 SHELL ["cmd", "/S", "/C"]
 

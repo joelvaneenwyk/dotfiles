@@ -1,5 +1,6 @@
 .git
 .osx
 .tmp
+!.tmp/windows
 .vscode
 dev

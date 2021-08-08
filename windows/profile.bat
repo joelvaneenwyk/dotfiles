@@ -82,6 +82,13 @@ endlocal & (
     set "PATH=%~dp0;%~dp0..;%~dp0..\.tmp;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
 )
 
+:: Check to see if 'doskey' is valid first as some versions
+:: of Windows (e.g. nanoserver) do not have 'doskey' support.
+if "%USERNAME%"=="ContainerAdministrator" goto:$StartClink
+
+doskey /? >NUL 2>&1
+if errorlevel 1 goto:$StartClink
+
 doskey ls=dir /Q
 doskey ll=dir /Q
 doskey cp=copy $*
@@ -91,15 +98,20 @@ doskey edit=%~dp0..\.tmp\micro.exe $*
 doskey refresh=%~dp0profile.bat --refresh
 doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
 
+:$StartClink
+if "%CLINK_INJECTED%"=="1" goto:$InitializedProfile
+
 :: This must be the last operation we do.
 call clink --version > nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    clink inject --quiet --profile "%~dp0clink\"
-) else (
+if errorlevel 1 (
     echo.
-    echo Initialized environment with `dotfiles` project.
+    echo Initialized `dotfiles` environment without clink.
+) else (
+    set CLINK_INJECTED=1
+    clink inject --session dot_mycelio --profile "%~dp0clink" --quiet --nolog
 )
 
+:$InitializedProfile
 exit /b
 
 ::-----------------------------------

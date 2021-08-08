@@ -1,10 +1,20 @@
 {
+    "[powershell]":{
+        "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
+        "editor.semanticHighlighting.enabled": false,
+        "editor.formatOnSave": true,
+        "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+    },
+
     "shellcheck.enable": true,
     "shellcheck.enableQuickFix": true,
 
     "perl.enable": false,
 
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
+
+    "powershell.scriptAnalysis.enable": true,
+    "powershell.scriptAnalysis.settingsPath": "powershell/PSScriptAnalyzerSettings.psd1",
 
     // "Adds a space between a keyword and its associated scriptblock expression."
     "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
