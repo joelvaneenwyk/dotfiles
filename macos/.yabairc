@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # the scripting-addition must be loaded manually if
 # you are running yabai on macOS Big Sur. Uncomment
@@ -54,5 +54,4 @@ echo "yabai configuration loaded.."
 
 # kill any existing limelight process if one exists, before we launch a new one
 killall limelight &> /dev/null
-/Users/jdve/.local/bin/limelight &> /dev/null &
-
+"$HOME/.local/bin/limelight" &> /dev/null &

@@ -14,20 +14,12 @@ function usbDeviceCallback(data)
    end
 end
 
-usbWatcher = hs.usb.watcher.new(usbDeviceCallback)
-usbWatcher:start()
-
-hyper = {"ctrl", "alt", "shift", "command"}
-
 -- Add global hotkeys to switch keyboard layout.
 function setLayout(name)
    return function()
       hs.keycodes.setLayout(name)
    end
 end
-
-hs.hotkey.bind(hyper, "n", setLayout("Norman"))
-hs.hotkey.bind(hyper, "i", setLayout("U.S."))
 
 -- Add global hotkey to switch to Hindi input. This requires making
 -- sure that keyboard layout matches attached keyboard layout.
@@ -36,5 +28,11 @@ function setHindi()
    hs.keycodes.setMethod("Hindi (A→अ)")
 end
 
-hs.hotkey.bind(hyper, "o", setHindi)
+usbWatcher = hs.usb.watcher.new(usbDeviceCallback)
+usbWatcher:start()
 
+hyper = {"ctrl", "alt", "shift", "command"}
+
+--hs.hotkey.bind(hyper, "o", setHindi)
+--hs.hotkey.bind(hyper, "n", setLayout("Norman"))
+--hs.hotkey.bind(hyper, "i", setLayout("U.S."))

@@ -6,6 +6,8 @@ fundle plugin 'fisherman/fzf'
 fundle plugin 'fisherman/z'
 fundle init
 
+fundle install
+
 # suppress fish greeting
 set -x fish_greeting ""
 

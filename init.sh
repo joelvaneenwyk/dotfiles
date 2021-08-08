@@ -60,8 +60,8 @@ function initialize_linux() {
    DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y git stow sudo micro neofetch
    DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
 
-   stow --adopt bash
-   stow --adopt vim
+   stow bash
+   stow vim
 
    initialize_gitconfig
 
@@ -127,15 +127,20 @@ function install_apps() {
       /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
    fi
 
-   brew bundle
+   if ! brew bundle; then
+      echo "Install with 'brew' failed with errors, but continuing."
+   fi
 
    # If user is not signed into the Apple store, notify them and skip install
    if ! mas account >/dev/null; then
       echo "Skipped app store installs. Please open App Store and sign in using your Apple ID."
    else
       # Powerful keep-awake utility, see https://apps.apple.com/us/app/amphetamine/id937984704
-      mas 'Amphetamine', id: 937984704
+      # 'Amphetamine', id: 937984704
+      mas install 937984704 || true
    fi
+
+   echo "Installed dependencies with 'brew' package manager."
 }
 
 function configure_apps() {
@@ -149,7 +154,10 @@ function configure_apps() {
    stow macos
    stow ruby
    stow vim
-   stow vscode
+   stow zsh
+
+   # We use built-in VSCode syncing so disabled the stow operation
+   #stow vscode
 
    for f in .osx/*.plist; do
       [ -e "$f" ] || continue
@@ -159,6 +167,8 @@ function configure_apps() {
       echo defaults delete "$plist" >/dev/null || true
       echo defaults import "$plist" "$f"
    done
+
+   echo "Configured applications with settings."
 }
 
 function configure_dock() {
@@ -171,7 +181,7 @@ function configure_dock() {
    # Don't show Dashboard as a Space
    defaults write com.apple.dock dashboard-in-overlay -bool true
    # Automatically hide and show the Dock
-   defaults write com.apple.dock autohide -bool true
+   defaults write com.apple.dock autohide -bool false
    # Remove the auto-hiding Dock delay
    defaults write com.apple.dock autohide-delay -float 0
    # Disable the Launchpad gesture (pinch with thumb and three fingers)
@@ -192,6 +202,8 @@ function configure_dock() {
    ## Bottom right screen corner → Start screen saver
    defaults write com.apple.dock wvous-br-corner -int 5
    defaults write com.apple.dock wvous-br-modifier -int 0
+
+   echo "Configured Dock."
 }
 
 function configure_finder() {
@@ -212,6 +224,8 @@ function configure_finder() {
    # Use list view in all Finder windows by default
    # Four-letter codes for the other view modes: `icnv`, `clmv`, `Flwv`
    defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+
+   echo "Configured Finder."
 }
 
 function configure_system() {
@@ -224,6 +238,8 @@ function configure_system() {
    defaults write -g com.apple.trackpad.forceClick 1                          # tap to click
    defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag 1 # three finger drag
    defaults write -g ApplePressAndHoldEnabled -bool false                     # repeat keys on hold
+
+   echo "Configured system settings."
 }
 
 main "$@"

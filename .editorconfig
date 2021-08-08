@@ -1,0 +1,8 @@
+[*.{sh,bash,bats,conf,fish}]
+indent_style = space
+indent_size = 4
+binary_next_line = true
+switch_case_indent = true
+space_redirects = true
+keep_padding = true
+function_next_line = true

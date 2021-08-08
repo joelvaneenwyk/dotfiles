@@ -1,3 +1,7 @@
+#
+# Config for a hotkey daemon for macOS, see https://github.com/koekeishiya/skhd
+#
+
 # swap current window into largest space
 alt - return : yabai -m window --swap largest
 

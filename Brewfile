@@ -17,11 +17,9 @@ brew "neovim"
 brew "ripgrep"
 brew "stow"
 
-cask "arq"
 cask "dropbox"
-cask "font-jetbrains-mono"
+
 cask "fsnotes"
-cask "google-chrome"
 cask "hiddenbar"
 cask "iterm2"
 cask "macpass"
@@ -29,5 +27,15 @@ cask "mailmate"
 cask "mylio"
 cask "skype"
 cask "typora"
-cask "visual-studio-code"
 cask "wire"
+
+#
+# These will fail if already installed.
+#
+
+#cask "google-chrome"
+
+# https://github.com/JetBrains/JetBrainsMono
+#cask "font-jetbrains-mono"
+
+#cask "visual-studio-code"

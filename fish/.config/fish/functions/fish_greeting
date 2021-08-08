@@ -1,4 +1,4 @@
 function fish_greeting --description 'Login greeting'
-   echo 
+   echo Welcome to phish.
 end
 
