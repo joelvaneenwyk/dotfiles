@@ -4,6 +4,7 @@ tap "homebrew/cask-fonts"
 tap "neovim/neovim"
 tap "koekeishiya/formulae"
 
+brew "micro"
 brew "gpg"
 brew "mas"
 brew "asdf"
@@ -29,14 +30,3 @@ cask "mylio"
 cask "skype"
 cask "typora"
 cask "wire"
-
-#
-# These will fail if already installed.
-#
-
-#cask "google-chrome"
-
-# https://github.com/JetBrains/JetBrainsMono
-#cask "font-jetbrains-mono"
-
-#cask "visual-studio-code"

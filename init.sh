@@ -127,9 +127,22 @@ function install_apps() {
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
     fi
 
+    brew upgrade
+
     if ! brew bundle; then
         echo "Install with 'brew' failed with errors, but continuing."
     fi
+
+    cask upgrade
+
+    # The ones below are separate as they can fail if already installed.
+
+    brew install --cask "google-chrome" || true
+
+    # https://github.com/JetBrains/JetBrainsMono
+    brew install --cask "font-jetbrains-mono" || true
+
+    brew install --cask "visual-studio-code" || true
 
     # If user is not signed into the Apple store, notify them and skip install
     if ! mas account >/dev/null; then
