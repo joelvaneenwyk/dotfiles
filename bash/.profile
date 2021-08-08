@@ -12,27 +12,27 @@
 
 # if running bash
 if [ -n "$BASH_VERSION" ]; then
-   # include .bashrc if it exists
-   if [ -f "$HOME/.bashrc" ]; then
-      . "$HOME/.bashrc"
-   fi
+    # include .bashrc if it exists
+    if [ -f "$HOME/.bashrc" ]; then
+        . "$HOME/.bashrc"
+    fi
 fi
 
 # add extra things to the PATH
 if [ -d "$HOME/.local/bin" ]; then
-   PATH="$HOME/.local/bin:$PATH"
+    PATH="$HOME/.local/bin:$PATH"
 fi
 
 if [ -d "$HOME/.local/sbin" ]; then
-   PATH="$HOME/.local/sbin:$PATH"
+    PATH="$HOME/.local/sbin:$PATH"
 fi
 
 if [ -d "$HOME/.config/git-fuzzy" ]; then
-   PATH="$HOME/.config/git-fuzzy/bin:$PATH"
+    PATH="$HOME/.config/git-fuzzy/bin:$PATH"
 fi
 
 if [ -d "/mnt/c/Program Files/Microsoft VS Code/bin" ]; then
-   PATH="/mnt/c/Program Files/Microsoft VS Code/bin:$PATH"
+    PATH="/mnt/c/Program Files/Microsoft VS Code/bin:$PATH"
 fi
 
 # set some defaults

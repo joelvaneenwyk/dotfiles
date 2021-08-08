@@ -1,12 +1,14 @@
+#!/usr/bin/env fish
+
 # install plugins
-if not functions -q fundle; eval (curl -sfL https://git.io/fundle-install); end
+if not functions -q fundle
+    eval (curl -sfL https://git.io/fundle-install)
+end
 
-fundle plugin 'fisherman/getopts'
-fundle plugin 'fisherman/fzf'
-fundle plugin 'fisherman/z'
+fundle plugin fisherman/getopts
+fundle plugin fisherman/fzf
+fundle plugin fisherman/z
 fundle init
-
-fundle install
 
 # suppress fish greeting
 set -x fish_greeting ""
@@ -30,7 +32,9 @@ set -gx PATH ./node_modules/.bin $PATH
 set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
 
 # use java 1.8 by default
-set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
+if test -d /usr/libexec/java_home
+    set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
+end
 
 # aliases
 alias more="less -r"
@@ -88,5 +92,3 @@ end
 if type -q asdf
     source /usr/local/opt/asdf/asdf.fish
 end
-
-

@@ -4,6 +4,7 @@ tap "homebrew/cask-fonts"
 tap "neovim/neovim"
 tap "koekeishiya/formulae"
 
+brew "gpg"
 brew "mas"
 brew "asdf"
 brew "exa"

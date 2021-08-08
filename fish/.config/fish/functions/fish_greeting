@@ -1,4 +1,5 @@
+#!/usr/bin/env fish
+
 function fish_greeting --description 'Login greeting'
    echo Welcome to phish.
 end
-
