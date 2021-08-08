@@ -101,14 +101,6 @@ Function Initialize-Environment {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     try {
-        #
-        # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
-        #
-        # Error it is attempting to mitigate: "The term 'PackageManagement\Get-PackageSource' is not recognized as the name
-        # of a cmdlet, function, script file, or operable program."
-        #
-        Import-Module PackageManagement
-
         # Now install the NuGet package provider if possible.
         $NugetPackage = Get-PackageProvider -Name "NuGet" -ForceBootstrap >$null
         if ($?) {
@@ -131,6 +123,14 @@ Function Initialize-Environment {
         }
 
         Import-Module PowerShellGet
+
+        #
+        # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
+        #
+        # Error it is attempting to mitigate: "The term 'PackageManagement\Get-PackageSource' is not recognized as the name
+        # of a cmdlet, function, script file, or operable program."
+        #
+        Import-Module PackageManagement
     }
     catch [Exception] {
         Write-Host "Failed to install NuGet package provider", $_.Exception.Message
@@ -188,6 +188,10 @@ Function Initialize-Environment {
 
             if (-not(Test-CommandExists "nuget")) {
                 scoop install "nuget"
+            }
+
+            if (-not(Test-CommandExists "msys2")) {
+                scoop install "msys2"
             }
 
             # https://github.com/chrisant996/clink

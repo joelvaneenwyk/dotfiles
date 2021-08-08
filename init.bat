@@ -117,12 +117,6 @@ setlocal EnableExtensions EnableDelayedExpansion
         %%p -Command "& {Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force -Scope CurrentUser}"
         echo Updated PowerShell execution policy.
 
-        %%p -Command "& {Remove-Module -Name PackageManagement -Force}" > nul 2>&1
-        echo Removed previous 'PackageManagement' module.
-
-        %%p -Command "& {Install-Module -Name PackageManagement -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue}" > nul 2>&1
-        echo Installed 'PackageManagement' module.
-
         %%p -File "%~dp0powershell\Initialize-Environment.ps1"
     )
 
