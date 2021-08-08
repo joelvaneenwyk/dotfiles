@@ -178,6 +178,8 @@ Function Initialize-Environment {
         }
 
         try {
+            scoop update
+
             if (-not(Test-CommandExists "git")) {
                 scoop install "git"
             }
