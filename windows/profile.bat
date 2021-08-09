@@ -79,7 +79,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 
 endlocal & (
     set DOT_AUTORUN_INITIALIZED=1
-    set "PATH=%~dp0;%~dp0..;%~dp0..\.tmp;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
+    set "PATH=C:\Program Files (x86)\GnuPG\bin;%~dp0;%~dp0..;%~dp0..\.tmp;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
 )
 
 :: Check to see if 'doskey' is valid first as some versions

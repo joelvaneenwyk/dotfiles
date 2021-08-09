@@ -9,9 +9,11 @@ _dot_windows_script_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null 
 echo "[stow] Script directory: '$_dot_windows_script_root'"
 source "$_dot_windows_script_root/../bash/.bashrc"
 
-if [ -x "$(command -v pacman)" ]; then
+if command -v pacman >/dev/null 2>&1; then
     echo "[stow] Downloading minimal packages to build 'stow' on Windows using MSYS2..."
     pacman -S --noconfirm --needed make perl autoconf automake1.16 git 2>&1 | awk '{ print "[stow.pacman]", $0 }'
+else
+    echo "[stow] WARNING: Package manager 'pacman' not found. There will likely be missing dependencies."
 fi
 
 # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because

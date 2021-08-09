@@ -3,41 +3,56 @@
 chcp 65001 >NUL 2>&1
 
 setlocal EnableExtensions EnableDelayedExpansion
+    set "_dot_profile_root=%~dp0"
 
-    set STOW=%~dp0stow\bin\stow
-    set NAME=mycelio
-    set "COMMENT=echo #"
-    set "SCRIPT=%~nx0"                              &:# Script name
-    set "SNAME=%~n0"                                &:# Script name, without its extension
-    set "SPATH=%~dp0" & set "SPATH=!SPATH:~0,-1!"   &:# Script path, without the trailing \
-    set "SPROFILE=%~dp0windows\profile.bat"         &:# Full path to profile script
-    set ^"ARG0=%0^"                                 &:# Script invokation name
-    set ^"ARGS=%*^"                                 &:# Argument line
-    set _profile_initialized=%DOT_PROFILE_INITIALIZED%
+    :: Local variable to track whether or not we should run initialization
+    :: routines based on current state of environment e.g. what commands exist
+    set _initialize=0
+
+    set "DOT_PROFILE_NAME=mycelio"
+    set "DOT_PROFILE_ROOT=!_dot_profile_root:~0,-1!"         &:# Script path, without the trailing \
     set "USER[HKLM]=all users"
     set "USER[HKCU]=%USERNAME%"
     set "HIVE="
+    set "COMMENT=echo"
+    set "SCRIPT=%~nx0"                                          &:# Script name
+    set "SNAME=%~n0"                                            &:# Script name, without its extension
+    set ^"ARG0=%0^"                                             &:# Script invokation name
+    set ^"ARGS=%*^"                                             &:# Argument line
+    set "SPROFILE=%DOT_PROFILE_ROOT%\windows\profile.bat"       &:# Full path to profile script
+    set "STOW=%DOT_PROFILE_ROOT%\stow\bin\stow"
 
-    if "%~1"=="cls" goto:$SetProfile
-    if "%DOT_PROFILE_INITIALIZED%"=="1" goto:$StartInitialize
+    set "COMMAND=%~1"
+    if "%COMMAND%"=="cls" set DOT_PROFILE_INITIALIZED=
 
-    :$SetProfile
-    call "%~dp0windows\profile.bat"
-    set _profile_initialized=1
-    set "PATH=C:\Program Files (x86)\GnuPG\bin;%~dp0windows;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
+    set _arg_remainder=
+    shift
 
-    set _initialize=0
+    :: Keep appending arguments until there are none left
+    :$ArgumentParse
+    if "%~1"=="-f" set _initialize=1
+    set "_arg_remainder=!_arg_remainder! %1"
+    shift
+    if not "%~1"=="" goto :$ArgumentParse
 
-    :$StartInitialize
-    if "%~1"=="clean" (
+    echo ##[cmd] %ARG0% %COMMAND%!_arg_remainder!
+
+    if "%COMMAND%"=="clean" (
+        set DOT_PROFILE_INITIALIZED=
         set _initialize=1
-        if exist "%~dp0.tmp" rmdir /s /q "%~dp0.tmp"
-        if exist "%~dp0stow\bin\stow" del "%~dp0stow\bin\stow"
-        if exist "%~dp0stow\bin\chkstow" del "%~dp0stow\bin\chkstow"
-        if exist "%USERPROFILE%\%~1\Documents\WindowsPowerShell" rmdir /q /s "%USERPROFILE%\%~1\Documents\WindowsPowerShell"
+        if exist "%DOT_PROFILE_ROOT%\.tmp" rmdir /s /q "%DOT_PROFILE_ROOT%\.tmp" > nul 2>&1
+        if exist "%DOT_PROFILE_ROOT%\stow\bin\stow" del "%DOT_PROFILE_ROOT%\stow\bin\stow" > nul 2>&1
+        if exist "%DOT_PROFILE_ROOT%\stow\bin\chkstow" del "%DOT_PROFILE_ROOT%\stow\bin\chkstow" > nul 2>&1
+        if exist "%USERPROFILE%\Documents\PowerShell" rmdir /q /s "%USERPROFILE%\Documents\PowerShell" > nul 2>&1
+        if exist "%USERPROFILE%\Documents\WindowsPowerShell" rmdir /q /s "%USERPROFILE%\Documents\WindowsPowerShell" > nul 2>&1
         echo Cleared out temporary files and reinitializing environment.
     )
 
+    call "%DOT_PROFILE_ROOT%\windows\profile.bat"
+
+    :: These files are missing from Windows Nano Server instances in Docker so either
+    :: copy them to local temp folder if running in host or copy them to system folder
+    :: if running in a container.
     call :CheckSystemFile "Robocopy.exe"
     call :CheckSystemFile "msiexec.exe"
     call :CheckSystemFile "msi.dll"
@@ -48,15 +63,13 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     :: https://docs.microsoft.com/en-us/windows/wsl/reference
     ::
-    if "%~1"=="wsl" (
-        wsl %~2 %~3 %~4 %~5 %~6 %~7 %~8 %~9 -- bash -c ./init.sh
+    if "%COMMAND%"=="wsl" (
+        wsl !_arg_remainder! -- bash -c ./init.sh
         exit /b %ERRORLEVEL%
     )
 
     set _container_platform=%~2
-    if "%_container_platform%"=="" (
-        set _container_platform=linux
-    )
+    if "%_container_platform%"=="" set _container_platform=linux
 
     set _container_name=menv:!_container_platform!
     set _container_instance=menv_!_container_platform!
@@ -64,13 +77,13 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     :: Initialize an Ubuntu container for testing.
     ::
-    if "%~1"=="docker" (
+    if "%COMMAND%"=="docker" (
         docker rm --force "!_container_name!" > nul 2>&1
         docker stop "!_container_instance!" > nul 2>&1
 
-        docker build --rm -t "!_container_name!" -f "%~dp0docker\Dockerfile.!_container_platform!" .
+        docker build --rm -t "!_container_name!" -f "%DOT_PROFILE_ROOT%\docker\Dockerfile.!_container_platform!" .
         if errorlevel 1 (
-            echo Docker '!_container_name!' container build failed: '%~dp0docker\Dockerfile.!_container_platform!'
+            echo Docker '!_container_name!' container build failed: '%DOT_PROFILE_ROOT%\docker\Dockerfile.!_container_platform!'
         ) else (
             docker run --name "!_container_instance!" -it --rm "!_container_name!"
         )
@@ -81,36 +94,25 @@ setlocal EnableExtensions EnableDelayedExpansion
     call :InstallAutoRun
 
     call msys2 --version > nul 2>&1
-    if errorlevel 1 (
-        set _initialize=1
-    )
+    if errorlevel 1 set _initialize=1
+
     call perl --version > nul 2>&1
-    if errorlevel 1 (
-        set _initialize=1
-    )
-    if "%~1"=="-f" (
-        set _initialize=1
-    )
+    if errorlevel 1 set _initialize=1
 
     set _stow=!_initialize!
-    if "%~1"=="stow" (
-        set _stow=1
-    )
+    if "%COMMAND%"=="stow" set _stow=1
 
     if "!_stow!"=="1" (
         set _gitConfig=.gitconfig
         call :WriteGitConfig "%USERPROFILE%"
-        call :WriteGitConfig "%USERPROFILE%\scoop\persist\msys2\home"
-        call :StowProfile "%~dp0bash\git" ".gitignore_global"
+        call :WriteGitConfig "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%"
+        call :StowProfile "%DOT_PROFILE_ROOT%\bash\git" ".gitignore_global"
 
-        call :CreateLink "%USERPROFILE%" "%~nx1" "%~1"
-        call :CreateLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%" "%~nx1" "%~1"
-
-        call :StowProfile "%~dp0bash\.gnupg" "gpg.conf"
-        call :StowProfile "%~dp0bash" ".bash_aliases"
-        call :StowProfile "%~dp0bash" ".bashrc"
-        call :StowProfile "%~dp0bash" ".profile"
-        call :StowProfile "%~dp0bash" ".ctags"
+        call :StowProfile "%DOT_PROFILE_ROOT%\bash\.gnupg" "gpg.conf"
+        call :StowProfile "%DOT_PROFILE_ROOT%\bash" ".bash_aliases"
+        call :StowProfile "%DOT_PROFILE_ROOT%\bash" ".bashrc"
+        call :StowProfile "%DOT_PROFILE_ROOT%\bash" ".profile"
+        call :StowProfile "%DOT_PROFILE_ROOT%\bash" ".ctags"
 
         call :StowPowerShell "Documents\WindowsPowerShell" "Profile.ps1"
         call :StowPowerShell "Documents\WindowsPowerShell" "powershell.config.json"
@@ -123,25 +125,23 @@ setlocal EnableExtensions EnableDelayedExpansion
     )
 
     ::
-    :: Initialize every installed PowerShell we can find.
+    :: Initialize each installed PowerShell we find
     ::
 
-    set _pwsh=
+    set _powershell=
     set _pwshs=
     if exist "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwshs=!_pwshs! "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
     if exist "C:\Program Files\PowerShell\pwsh.exe" set _pwshs=!_pwshs! "C:\Program Files\PowerShell\pwsh.exe"
     if exist "C:\Program Files\PowerShell\7\pwsh.exe" set _pwshs=!_pwshs! "C:\Program Files\PowerShell\7\pwsh.exe"
 
     for %%p in (!_pwshs!) do (
+        set _powershell=%%p
         echo.
         echo ======-------
-        echo Initializing PowerShell: '%%p'
+        echo Initializing PowerShell: !_powershell!
         echo ======-------
         echo.
-
-        set _pwsh=%%p
-
-        %%p -File "%~dp0powershell\Initialize-Environment.ps1"
+        !_powershell! -NoLogo -NoProfile -File "%DOT_PROFILE_ROOT%\powershell\Initialize-Environment.ps1"
     )
 
     ::
@@ -149,25 +149,26 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
 
     if "!_initialize!"=="1" (
-        call msys2 -where "%~dp0" -shell bash -no-start -c ./init.sh
+        call msys2 -where "%DOT_PROFILE_ROOT%" -shell bash -no-start -c ./init.sh
     )
 endlocal & (
-    set "DOT_INITIALIZED=1"
-    set "DOT_PROFILE_INITIALIZED=%_profile_initialized%"
+    set "DOT_PROFILE_ROOT=%DOT_PROFILE_ROOT%"
+    set "DOT_PROFILE_INITIALIZED=%DOT_PROFILE_INITIALIZED%"
     set "PATH=%PATH%"
     set "POWERSHELL=%_pwsh%"
 )
 
+echo Completed execution of `dotfiles` initialization.
 exit /b %ERRORLEVEL%
 
 :CheckSystemFile %1=SystemFilename
     setlocal EnableExtensions EnableDelayedExpansion
 
-    set _deploy="%~dp0.tmp\windows"
+    set _deploy="%DOT_PROFILE_ROOT%\.tmp\windows"
 
     if exist "%_deploy%\%~1" goto:$SystemDeploy
 
-    if not exist "%~dp0.tmp" mkdir "%~dp0.tmp"
+    if not exist "%DOT_PROFILE_ROOT%\.tmp" mkdir "%DOT_PROFILE_ROOT%\.tmp"
     if not exist "%_deploy%" mkdir "%_deploy%"
 
     if exist "C:\Windows\System32\%~1" (
@@ -190,7 +191,7 @@ endlocal & exit /b
 :WriteGitConfig %1=TargetFolder
     setlocal EnableExtensions EnableDelayedExpansion
     set _gitConfig=.gitconfig
-    set _gitRoot=%~dp0git
+    set _gitRoot=%DOT_PROFILE_ROOT%\git
     set "_gitRoot=!_gitRoot:\=/!"
     if exist "%~1" (
         echo.[include] > "%~1\%_gitConfig%"
@@ -235,8 +236,8 @@ exit /b
 
                 :# Delete the key otherwise next will display an error
                 set "KEY=%%h\Software\Microsoft\Command Processor"
-                %COMMENT% Deleting "!KEY!\AutoRun"
                 %EXEC% reg delete "!KEY!" /v "AutoRun" /f
+                %COMMENT% Delete existing key: "!KEY!\AutoRun"
             ) else (
                 %COMMENT% Skipped AutoRun installed. Key already exists.
                 endlocal & exit /b 0
@@ -260,8 +261,8 @@ exit /b
 endlocal & exit /b 0
 
 :StowProfile %1=RelativeRoot %2=Filename
-    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%~dp0%~1%~2"
-    call :CreateLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%\%~1" "%~2" "%~dp0%~1%~2"
+    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%DOT_PROFILE_ROOT%\%~1%~2"
+    call :CreateLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%\%~1" "%~2" "%DOT_PROFILE_ROOT%\%~1%~2"
 exit /b 0
 
 :StowPowerShell
@@ -273,7 +274,7 @@ exit /b 0
         echo Removed '%OneDrive%\%~1' as modules should not be in OneDrive. See https://stackoverflow.com/a/67531193
     )
 
-    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%~dp0powershell\%~2"
+    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%DOT_PROFILE_ROOT%\powershell\%~2"
 exit /b 0
 
 :CreateLink %1=LinkDirectory %2=LinkFilename %3=TargetPath

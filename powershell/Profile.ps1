@@ -1,10 +1,17 @@
-#
-# Author: Joel Van Eenwyk
-# Installation: Copy to default documents profile for user e.g.
-#
-#   - C:\Users\jovaneen\Documents\PowerShell\Profile.ps1
-#   - C:\Users\jovaneen\OneDrive - Microsoft\Documents\PowerShell\Profile.ps1
-#
+<#
+.NOTES
+    ===========================================================================
+    Created on:   August 2021
+    Created by:   Joel Van Eenwyk
+    Filename:     Profile.ps1
+    ===========================================================================
+.DESCRIPTION
+    Set the font and theme. This file should have been been linked to the
+    following paths:
+
+        - C:\Users\jovaneen\Documents\PowerShell\Profile.ps1
+        - C:\Users\jovaneen\OneDrive - Microsoft\Documents\PowerShell\Profile.ps1
+#>
 
 # WARNING: You appear to have an unsupported Git distribution; setting
 # $GitPromptSettings.AnsiConsole = $false. posh-git recommends Git for Windows.
@@ -24,20 +31,25 @@ try {
     Set-PoshPrompt -Theme stelbent.minimal
 }
 catch {
-    Write-Host "Failed to setup 'oh-my-posh' prompt."
+    Write-Host "Failed to set 'oh-my-posh' prompt."
 }
 
 try {
     $fontName = "JetBrainsMono NF"
-    Import-Module WindowsConsoleFonts >$null
-    Import-Module Terminal-Icons >$null
-
-    $currentFont = Get-ConsoleFont
-    if (($null -ne $currentFont) -and ($currentFont.Name -ne $fontName)) {
-        Set-ConsoleFont "$fontName" >$null
+    Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue >$null
+    if ($?) {
+        $currentFont = Get-ConsoleFont
+        if (($null -ne $currentFont) -and ($currentFont.Name -ne $fontName)) {
+            Set-ConsoleFont "$fontName" >$null
+            Write-Host "Previous font: '$currentFont.Name'"
+            Write-Host "Updated font: '$fontName'"
+        }
     }
 
-    Set-TerminalIconsTheme -ColorTheme DevBlackOps -IconTheme DevBlackOps
+    Import-Module Terminal-Icons -ErrorAction SilentlyContinue >$null
+    if ($?) {
+        Set-TerminalIconsTheme -ColorTheme DevBlackOps -IconTheme DevBlackOps
+    }
 }
 catch [Exception] {
     Write-Host "Failed to set console font and theme.", $_.Exception.Message

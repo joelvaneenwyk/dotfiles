@@ -1,4 +1,27 @@
 <#
+.NOTES
+    ===========================================================================
+    Created on:   August 2021
+    Created by:   Joel Van Eenwyk
+    Filename:     Initialize-Environment.ps1
+    ===========================================================================
+
+.DESCRIPTION
+    Provision the environment with basic set of tools and utilities for common use
+    including 'git', 'perl', 'sudo', 'micro', etc. These are mostly installed with
+    the 'scoop' package manager, but we also use PowerShell to install a few modules
+    for setting up the console e.g., 'oh-my-posh' module.
+
+.NOTES
+    We intentionally hide a lot of error output while installing PowerShell modules
+    because depending on the version of PowerShell and current state of the environment
+    you can easily get false warnings/errors. See any of the following for more details
+    on existing or past issues:
+
+        - https://github.com/PowerShell/PowerShell/issues/12777
+#>
+
+<#
 .SYNOPSIS
     Returns true if the given command can be executed from the shell.
 .INPUTS
@@ -214,6 +237,8 @@ Function Initialize-Environment {
             if (-not(Test-CommandExists "perl")) {
                 scoop install "perl"
             }
+
+            Write-Host "Verified that dependencies were installed with 'scoop' package manager."
         }
         catch {
             Write-Host "Failed to install packages with 'scoop' manager."
@@ -225,17 +250,19 @@ Function Initialize-Environment {
     finally {
         try {
             if ($null -eq (Get-InstalledModule -Name "WindowsConsoleFonts" -ErrorAction SilentlyContinue)) {
-                Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -SkipPublisherCheck
-                Write-Host "Installed 'WindowsConsoleFonts' module."
+                Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -ErrorAction SilentlyContinue >$null
+                if ($?) {
+                    Write-Host "Installed 'WindowsConsoleFonts' module."
+                }
             }
 
             # This can fail in containers as 'GetCurrentConsoleFont' will fail during build
             # so we just ignore the error here and continue.
-            Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue | Out-Null
-
-            # Try to remove the old font if we can
-            if (Test-Path -Path "$targetTempFontPath" -PathType Leaf) {
-                Remove-Font "$targetTempFontPath" -ErrorAction SilentlyContinue | Out-Null
+            Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue >$null
+            if ($? -and (Test-Path -Path "$targetTempFontPath" -PathType Leaf)) {
+                # Try to remove the old font if we can
+                Remove-Font "$targetTempFontPath" -ErrorAction SilentlyContinue >$null
+                Write-Host "Removed previously installed font: '$targetTempFontPath'"
             }
         }
         catch [Exception] {
@@ -322,12 +349,15 @@ Function Initialize-Environment {
         }
 
         try {
-            Import-Module WindowsConsoleFonts
+            Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue >$null
+            if ($?) {
+                # We do NOT want to add the temporary font because it makes it impossible to remove
+                # Add-Font "$targetTempFontPath"
 
-            # We do NOT want to add the temporary font because it makes it impossible to remove
-            # Add-Font "$targetTempFontPath"
+                Set-ConsoleFont "$fontName" | Out-Null
 
-            Set-ConsoleFont "$fontName" | Out-Null
+                Write-Host "Updated current console font: '$fontName'"
+            }
         }
         catch [Exception] {
             Write-Host "Failed to install WindowsConsoleFonts.", $_.Exception.Message
@@ -346,8 +376,10 @@ Function Initialize-Environment {
 
         try {
             if ($null -eq (Get-InstalledModule -Name "PSReadLine" -ErrorAction SilentlyContinue)) {
-                Write-Host "Installing 'PSReadLine' module..."
-                Install-Module -Name PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck
+                Install-Module -Name PSReadLine -Scope CurrentUser -ErrorAction SilentlyContinue -Force -SkipPublisherCheck >$null
+                if ($?) {
+                    Write-Host "Installed 'PSReadLine' module."
+                }
             }
         }
         catch {
@@ -357,8 +389,10 @@ Function Initialize-Environment {
         # https://ohmyposh.dev/
         try {
             if ($null -eq (Get-InstalledModule -Name "oh-my-posh" -ErrorAction SilentlyContinue)) {
-                Install-Module oh-my-posh -Scope CurrentUser -Force -AllowPrerelease -SkipPublisherCheck >$null
-                Write-Host "Installed 'oh-my-posh' module."
+                Install-Module oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck >$null
+                if ($?) {
+                    Write-Host "Installed 'oh-my-posh' module."
+                }
             }
         }
         catch [Exception] {
@@ -368,7 +402,9 @@ Function Initialize-Environment {
         try {
             if ($null -eq (Get-InstalledModule -Name "posh-git" -ErrorAction SilentlyContinue)) {
                 Install-Module posh-git -Scope CurrentUser -Force -SkipPublisherCheck
-                Write-Host "Installed 'posh-git' module."
+                if ($?) {
+                    Write-Host "Installed 'posh-git' module."
+                }
             }
         }
         catch [Exception] {

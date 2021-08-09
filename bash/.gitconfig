@@ -1,0 +1,3 @@
+[include] 
+    path = "D:/Projects/dotfiles/git/.gitconfig_common"
+    path = "D:/Projects/dotfiles/git/.gitconfig_windows"
