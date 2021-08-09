@@ -148,9 +148,13 @@ setlocal EnableExtensions EnableDelayedExpansion
     :: Initialize 'msys2' environment with bash script.
     ::
 
-    if "!_initialize!"=="1" (
-        call msys2 -where "%DOT_PROFILE_ROOT%" -shell bash -no-start -c ./init.sh
-    )
+    if not "!_initialize!"=="1" goto:$InitializeDone
+
+    :: Initialize 'msys2' environment with bash script. We call the shim directly because environment
+    :: may not read path properly after it has just been installed.
+    call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%DOT_PROFILE_ROOT%" -shell bash -no-start -c ./init.sh
+
+    :$InitializeDone
 endlocal & (
     set "DOT_PROFILE_ROOT=%DOT_PROFILE_ROOT%"
     set "DOT_PROFILE_INITIALIZED=%DOT_PROFILE_INITIALIZED%"
