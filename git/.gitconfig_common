@@ -1,4 +1,6 @@
 # This is Git's per-user configuration file.
+[advice]
+	fetchShowForcedUpdates = false
 [push]
 	default = simple
 [alias]
@@ -8,8 +10,6 @@
 	st = status
 	pr = pull --rebase
 	df = diff
-[fetch]
-	fetchShowForcedUpdates = true
 [pull]
 	rebase = true
 [commit]

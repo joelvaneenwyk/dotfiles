@@ -56,7 +56,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::    - git clone https://github.com/xero/figlet-fonts
     ::    - find figlet-fonts/ -printf "%f\n" | xargs -n 1 -I % figlet -d ./figlet-fonts/ -f % myceli0
     ::
-    :: These fonts all display the logo quite well:
+    :: These fonts all display the logo quite well, see https://www.programmingfonts.org
     ::
     ::    - fire code (good but 'I' doesn't align)
     ::    - gintronic (very nice)

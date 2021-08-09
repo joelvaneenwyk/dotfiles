@@ -6,7 +6,6 @@
 #   - C:\Users\jovaneen\OneDrive - Microsoft\Documents\PowerShell\Profile.ps1
 #
 
-#
 # WARNING: You appear to have an unsupported Git distribution; setting
 # $GitPromptSettings.AnsiConsole = $false. posh-git recommends Git for Windows.
 #
@@ -14,7 +13,14 @@
 $Env:POSHGIT_CYGWIN_WARNING = 'off'
 
 try {
-    Import-Module oh-my-posh -ErrorAction 'silentlycontinue' | Out-Null
+    Import-Module posh-git -ErrorAction SilentlyContinue >$null
+}
+catch {
+    Write-Host "Failed to import 'posh-git' module."
+}
+
+try {
+    Import-Module oh-my-posh -ErrorAction SilentlyContinue >$null
     Set-PoshPrompt -Theme stelbent.minimal
 }
 catch {
@@ -22,10 +28,19 @@ catch {
 }
 
 try {
-    Import-Module posh-git -ErrorAction 'SilentlyContinue' | Out-Null
+    $fontName = "JetBrainsMono NF"
+    Import-Module WindowsConsoleFonts >$null
+    Import-Module Terminal-Icons >$null
+
+    $currentFont = Get-ConsoleFont
+    if (($null -ne $currentFont) -and ($currentFont.Name -ne $fontName)) {
+        Set-ConsoleFont "$fontName" >$null
+    }
+
+    Set-TerminalIconsTheme -ColorTheme DevBlackOps -IconTheme DevBlackOps
 }
-catch {
-    Write-Host "Failed to import 'posh-git' module."
+catch [Exception] {
+    Write-Host "Failed to set console font and theme.", $_.Exception.Message
 }
 
 #

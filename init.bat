@@ -13,7 +13,6 @@ setlocal EnableExtensions EnableDelayedExpansion
     set "SPROFILE=%~dp0windows\profile.bat"         &:# Full path to profile script
     set ^"ARG0=%0^"                                 &:# Script invokation name
     set ^"ARGS=%*^"                                 &:# Argument line
-    set _path=%PATH%
     set _profile_initialized=%DOT_PROFILE_INITIALIZED%
     set "USER[HKLM]=all users"
     set "USER[HKCU]=%USERNAME%"
@@ -25,7 +24,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     :$SetProfile
     call "%~dp0windows\profile.bat"
     set _profile_initialized=1
-    set "_path=C:\Program Files (x86)\GnuPG\bin;%~dp0windows;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
+    set "PATH=C:\Program Files (x86)\GnuPG\bin;%~dp0windows;%USERPROFILE%\scoop\shims;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%PATH%"
 
     set _initialize=0
 
@@ -98,32 +97,6 @@ setlocal EnableExtensions EnableDelayedExpansion
         set _stow=1
     )
 
-    :$InitializePowerShell
-    set _pwsh=
-    set _pwshs=
-    if exist "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwshs=!_pwshs! "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-    if exist "C:\Program Files\PowerShell\pwsh.exe" set _pwshs=!_pwshs! "C:\Program Files\PowerShell\pwsh.exe"
-    if exist "C:\Program Files\PowerShell\7\pwsh.exe" set _pwshs=!_pwshs! "C:\Program Files\PowerShell\7\pwsh.exe"
-
-    for %%p in (!_pwshs!) do (
-        echo.
-        echo ======-------
-        echo Initializing PowerShell: '%%p'
-        echo ======-------
-        echo.
-
-        set _pwsh=%%p
-
-        %%p -Command "& {Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Force -Scope CurrentUser}"
-        echo Updated PowerShell execution policy.
-
-        %%p -File "%~dp0powershell\Initialize-Environment.ps1"
-    )
-
-    if "!_initialize!"=="1" (
-        call msys2 -where "%~dp0" -shell bash -no-start -c ./init.sh
-    )
-
     if "!_stow!"=="1" (
         set _gitConfig=.gitconfig
         call :WriteGitConfig "%USERPROFILE%"
@@ -139,17 +112,49 @@ setlocal EnableExtensions EnableDelayedExpansion
         call :StowProfile "%~dp0bash" ".profile"
         call :StowProfile "%~dp0bash" ".ctags"
 
-        call :StowPowerShell "Documents\WindowsPowerShell" "Microsoft.PowerShell_profile.ps1"
+        call :StowPowerShell "Documents\WindowsPowerShell" "Profile.ps1"
+        call :StowPowerShell "Documents\WindowsPowerShell" "powershell.config.json"
         call :StowPowerShell "Documents\PowerShell" "Profile.ps1"
+        call :StowPowerShell "Documents\PowerShell" "powershell.config.json"
 
         echo Initialized profile settings into local directories for user.
     ) else (
         echo Profile for '%USERNAME%' already initialized.
     )
+
+    ::
+    :: Initialize every installed PowerShell we can find.
+    ::
+
+    set _pwsh=
+    set _pwshs=
+    if exist "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwshs=!_pwshs! "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    if exist "C:\Program Files\PowerShell\pwsh.exe" set _pwshs=!_pwshs! "C:\Program Files\PowerShell\pwsh.exe"
+    if exist "C:\Program Files\PowerShell\7\pwsh.exe" set _pwshs=!_pwshs! "C:\Program Files\PowerShell\7\pwsh.exe"
+
+    for %%p in (!_pwshs!) do (
+        echo.
+        echo ======-------
+        echo Initializing PowerShell: '%%p'
+        echo ======-------
+        echo.
+
+        set _pwsh=%%p
+
+        %%p -File "%~dp0powershell\Initialize-Environment.ps1"
+    )
+
+    ::
+    :: Initialize 'msys2' environment with bash script.
+    ::
+
+    if "!_initialize!"=="1" (
+        call msys2 -where "%~dp0" -shell bash -no-start -c ./init.sh
+    )
 endlocal & (
     set "DOT_INITIALIZED=1"
     set "DOT_PROFILE_INITIALIZED=%_profile_initialized%"
-    set "PATH=%_path%"
+    set "PATH=%PATH%"
     set "POWERSHELL=%_pwsh%"
 )
 
@@ -268,8 +273,7 @@ exit /b 0
         echo Removed '%OneDrive%\%~1' as modules should not be in OneDrive. See https://stackoverflow.com/a/67531193
     )
 
-    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%~dp0powershell\Profile.ps1"
-    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%~dp0powershell\powershell.config.json"
+    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%~dp0powershell\%~2"
 exit /b 0
 
 :CreateLink %1=LinkDirectory %2=LinkFilename %3=TargetPath

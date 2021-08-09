@@ -160,12 +160,17 @@ Function Initialize-Environment {
     $root = Resolve-Path -Path "$PSScriptRoot\.."
     $tempFolder = "$root\.tmp"
 
-    $fontUrl = 'https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/JetBrainsMono.zip'
-    $fontNameOriginal = "JetBrains Mono Regular Nerd Font Complete Mono Windows Compatible"
-    $fontName = "JetBrainsMono NF"
+    $fontBaseName = "JetBrains Mono"
+    $fontBaseFilename = $fontBaseName -replace '\s', ''
+
+    $fontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$fontBaseFilename.zip"
+    $fontNameOriginal = "$fontBaseName Regular Nerd Font Complete Windows Compatible"
+    $fontName = "$fontBaseFilename NF"
     $tempFontFolder = "$tempFolder\fonts"
-    $targetFontPath = "C:\Windows\Fonts\$fontName.ttf"
     $targetTempFontPath = "$tempFontFolder\$fontName.ttf"
+
+    # We save it to system directory with same path it's the name that needs to be short
+    $targetFontPath = "C:\Windows\Fonts\$fontNameOriginal.ttf"
 
     if ( -not(Test-Path -Path "$tempFolder") ) {
         New-Item -ItemType directory -Path "$tempFolder" | Out-Null
@@ -219,7 +224,7 @@ Function Initialize-Environment {
     }
     finally {
         try {
-            if (-not(Get-InstalledModule -Name "WindowsConsoleFonts" -ErrorAction SilentlyContinue)) {
+            if ($null -eq (Get-InstalledModule -Name "WindowsConsoleFonts" -ErrorAction SilentlyContinue)) {
                 Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -SkipPublisherCheck
                 Write-Host "Installed 'WindowsConsoleFonts' module."
             }
@@ -237,6 +242,7 @@ Function Initialize-Environment {
             Write-Host "Failed to install WindowsConsoleFonts.", $_.Exception.Message
         }
 
+        # https://www.hanselman.com/blog/how-to-make-a-pretty-prompt-in-windows-terminal-with-powerline-nerd-fonts-cascadia-code-wsl-and-ohmyposh
         # https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/install.ps1
         try {
             if ( -not(Test-Path -Path "$targetTempFontPath" -PathType Leaf) ) {
@@ -260,19 +266,31 @@ Function Initialize-Environment {
                 Write-Host "Downloaded font: '$tempFontFolder\$fontNameOriginal.ttf'"
                 Write-Host "Renamed font: '$targetTempFontPath'"
 
-                Move-Item -Path "$tempFontFolder\$fontNameOriginal.ttf" -Destination "$targetTempFontPath"
+                Copy-Item -Path "$tempFontFolder\$fontNameOriginal.ttf" -Destination "$targetTempFontPath"
             }
 
             # Remove the existing font first
             If (Test-Path "$targetFontPath" -PathType Any) {
-                Remove-Item "$targetFontPath" -Recurse -Force
+                # Very likely for this to fail so do not print errors
+                Remove-Item "$targetFontPath" -Recurse -Force -ErrorAction SilentlyContinue >$null
             }
 
-            # Must use Namespace part or will not install properly
+            # By using a 'special folder' namespace here we can get around the need to run
+            # as administrator to install files. Related:
+            #
+            #    - https://richardspowershellblog.wordpress.com/2008/03/20/special-folders/
+            #    - https://gist.github.com/anthonyeden/0088b07de8951403a643a8485af2709b
             $fontsFolder = (New-Object -ComObject Shell.Application).Namespace(0x14)
             If (-not(Test-Path "$targetFontPath" -PathType Container)) {
-                # Following action performs the install, requires user to click on yes
-                $fontsFolder.CopyHere("$targetFontPath", 16)
+                # Following action performs the install and hides confirmation
+                #    - FOF_SILENT            0x0004
+                #    - FOF_NOCONFIRMATION    0x0010
+                #    - FOF_NOERRORUI         0x0400
+                $fontsFolder.CopyHere("$targetFontPath", 0x0004 -bor 0x0010 -bor 0x0400)
+                Write-Host "Copied font to system: '$targetFontPath'"
+            }
+            else {
+                Write-Host "Skipped font copy since font path is container type: '$targetFontPath'"
             }
         }
         catch [Exception] {
@@ -288,6 +306,11 @@ Function Initialize-Environment {
             Write-Host "Failed to update font registry. Requires administrator access."
         }
 
+        # TODO Add to local local data
+        #    - Computer\HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts
+        #    - JetBrains Mono ExtraLight (TrueType)
+        #    - C:\Users\jovaneen\AppData\Local\Microsoft\Windows\Fonts\JetBrainsMono-BoldItalic.ttf
+
         try {
             if ($null -eq (Get-InstalledModule -Name "Terminal-Icons" -ErrorAction SilentlyContinue)) {
                 Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck -Repository PSGallery
@@ -295,7 +318,7 @@ Function Initialize-Environment {
             }
         }
         catch [Exception] {
-            Write-Host "Failed to install Terminal-Icons.", $_.Exception.Message
+            Write-Host "Failed to install 'Terminal-Icons' module.", $_.Exception.Message
         }
 
         try {
@@ -331,9 +354,10 @@ Function Initialize-Environment {
             Write-Host "Failed to install 'PSReadLine' module.", $_.Exception.Message
         }
 
+        # https://ohmyposh.dev/
         try {
             if ($null -eq (Get-InstalledModule -Name "oh-my-posh" -ErrorAction SilentlyContinue)) {
-                Install-Module oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck | Out-Null
+                Install-Module oh-my-posh -Scope CurrentUser -Force -AllowPrerelease -SkipPublisherCheck >$null
                 Write-Host "Installed 'oh-my-posh' module."
             }
         }
@@ -352,9 +376,9 @@ Function Initialize-Environment {
         }
 
         try {
-            if (-not(Get-InstalledModule -Name "PSDotFiles" -ErrorAction SilentlyContinue)) {
-                Write-Host "Installing 'PSDotFiles' module..."
+            if ($null -eq (Get-InstalledModule -Name "PSDotFiles" -ErrorAction SilentlyContinue)) {
                 Install-Module -Name PSDotFiles -Scope CurrentUser -Force -SkipPublisherCheck
+                Write-Host "Installed 'PSDotFiles' module."
             }
 
             Install-DotFiles -Path "$root" | Out-Null
