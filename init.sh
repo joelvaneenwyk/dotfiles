@@ -57,8 +57,36 @@ function initialize_gitconfig() {
 
 function initialize_linux() {
     sudo apt-get update
-    DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y git stow sudo micro neofetch fish
+
+    DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y \
+        software-properties-common \
+        git stow sudo micro tmux neofetch fish \
+        wget curl unzip \
+        python3 python3-pip xclip
+
     DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
+
+    if [ -x "$(command -v pip3)" ]; then
+        pip3 install --upgrade pip
+
+        # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
+        # consistency between platforms and not install hacks we just use 'pip3' instead. For
+        # details on the issue, see https://github.com/microsoft/WSL/issues/5126
+        pip3 install pre-commit
+    fi
+
+    if [ ! -x "$(command -v oh-my-posh)" ]; then
+        sudo wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/posh-linux-amd64" -O "/usr/local/bin/oh-my-posh"
+        sudo chmod +x "/usr/local/bin/oh-my-posh"
+    fi
+
+    if [ ! -d "$HOME/.poshthemes" ]; then
+        mkdir -p "$HOME/.poshthemes"
+        wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$HOME/.poshthemes/themes.zip"
+        unzip -o "$HOME/.poshthemes/themes.zip" -d "$HOME/.poshthemes"
+        sudo chmod u+rw ~/.poshthemes/*.json
+        rm -f "$HOME/.poshthemes/themes.zip"
+    fi
 
     stow bash
     stow vim

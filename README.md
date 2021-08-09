@@ -74,6 +74,21 @@ Most versions of MacOS will already have Git installed, and you can activate it 
 4. Install [xmonad](https://xmonad.org/) configs
       > `stow xmonad`
 
+### Secrets
+
+These are optional steps to setup SSH to sync to private GitHub repositories.
+
+1. `ssh-keygen -t ed25519 -C "joel.vaneenwyk@gmail.com"`
+    * **NOTE:** Some older systems do not support `Ed25519` algorithm. In those cases, use the following instead: `ssh-keygen -t rsa -b 4096 -C "joel.vaneenwyk@gmail.com"`
+2. `eval "$(ssh-agent -s)"`
+3. `ssh-add ~/.ssh/id_rsa`
+5. `xclip -sel clip < ~/.ssh/id_rsa.pub`
+    * WSL: `cat ~/.ssh/id_rsa.pub | /mnt/c/Windows/System32/clip.exe`
+6. From [GitHub SSH and GPG keys](https://github.com/settings/keys), press **New SSH Key**
+7. Paste in the key on the clipboard
+
+If all worked, you should be able to clone one of your private repositories e.g. `git clone git@github.com:joelvaneenwyk/secrets.git`
+
 ## Introduction
 
 In the unix world programs are commonly configured in two different ways, via shell arguments or text based configuration files. programs with many options like window managers or text editors are configured on a per-user basis with files in your home directory `~`. in unix like operating systems any file or directory name that starts with a period or full stop character is considered hidden, and in a default view will not be displayed. thus the name dotfiles.

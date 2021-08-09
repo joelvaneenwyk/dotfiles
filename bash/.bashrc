@@ -133,15 +133,15 @@ if [ -x /usr/bin/dircolors ]; then
     fi
 fi
 
-# colored GCC warnings and errors
-#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+# Colored GCC warnings and errors
+export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 if [ -f "$HOME/.bash_aliases" ]; then
-    . "$HOME/.bash_aliases"
+    source "$HOME/.bash_aliases"
 fi
 
 # enable programmable completion features (you don't need to enable
@@ -150,18 +150,26 @@ fi
 if ! shopt -oq posix; then
     if [ -f /usr/share/bash-completion/bash_completion ]; then
         # shellcheck disable=SC1091
-        . "/usr/share/bash-completion/bash_completion"
+        source "/usr/share/bash-completion/bash_completion"
     elif [ -f /etc/bash_completion ]; then
         # shellcheck disable=SC1091
-        . "/etc/bash_completion"
+        source "/etc/bash_completion"
     fi
 fi
 
 # shellcheck disable=SC1091
-[ -f "$HOME/.fzf.bash" ] && source "$HOME/.fzf.bash"
+if [ -f "$HOME/.fzf.bash" ]; then
+    source "$HOME/.fzf.bash"
+fi
 
 # shellcheck disable=SC1091
-[ -x "$(command -v asdf)" ] && source "$(brew --prefix asdf)/asdf.sh"
+if [ -x "$(command -v asdf)" ]; then
+    source "$(brew --prefix asdf)/asdf.sh"
+fi
+
+if [ -x "$(command -v oh-my-posh)" ]; then
+    eval "$(oh-my-posh --init --shell bash --config ~/.poshthemes/stelbent.minimal.omp.json)"
+fi
 
 echo "▓▓░░"
 echo "▓▓░░   ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓"

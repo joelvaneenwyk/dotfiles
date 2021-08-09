@@ -84,6 +84,8 @@
         "beaners",
         "dotfile",
         "dotfiles",
+        "eval",
+        "joelvaneenwyk",
         "kleopatra",
         "noconfirm",
         "pacman",
@@ -91,6 +93,7 @@
         "symlinking",
         "symlinks",
         "tldr",
+        "xclip",
         "xmonad"
     ]
 }
