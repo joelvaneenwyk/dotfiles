@@ -80,6 +80,8 @@
     // "Use correct casing for cmdlets."
     "powershell.codeFormatting.useCorrectCasing": true,
 
+    "git.requireGitUserConfig": false,
+
     "cSpell.words": [
         "beaners",
         "dotfile",

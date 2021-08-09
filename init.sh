@@ -88,8 +88,8 @@ function initialize_linux() {
         rm -f "$HOME/.poshthemes/themes.zip"
     fi
 
-    stow bash
-    stow vim
+    stow bash "$@"
+    stow vim "$@"
 
     initialize_gitconfig
 
