@@ -103,7 +103,9 @@ function initialize_windows() {
     mkdir --parents "$_dot_script_root/.tmp/"
 
     if [ ! -x "$(command -v micro)" ]; then
-        (cd "$_dot_script_root/.tmp/" && curl "https://getmic.ro" | bash)
+        (
+            cd "$_dot_script_root/.tmp/" && bash <(curl -s https://getmic.ro)
+        )
     fi
 
     source "$_dot_script_root/windows/build-stow.sh"
