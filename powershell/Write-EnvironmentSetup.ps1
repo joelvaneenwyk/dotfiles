@@ -84,6 +84,7 @@ Try {
         $fileStream.WriteLine("@echo off")
         $fileStream.WriteLine("")
         $fileStream.WriteLine("set ""PATH=$($environmentPaths -join ";")""")
+        $fileStream.WriteLine("set ""DOT_PROFILE_ROOT=$root""")
         $fileStream.WriteLine("echo Initialized path from generated script.")
         $fileStream.WriteLine("")
         $fileStream.WriteLine("exit /b 0")

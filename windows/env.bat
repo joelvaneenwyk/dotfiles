@@ -21,5 +21,5 @@ if exist "C:\Program Files\PowerShell\7\pwsh.exe" (
 exit /b 1
 
 :$BuildEnvironment
-!_powershell! -NoLogo -NoProfile -File "%DOT_PROFILE_ROOT%\powershell\Write-EnvironmentSetup.ps1"
+!_powershell! -NoLogo -NoProfile -File "%~dp0..\powershell\Write-EnvironmentSetup.ps1"
 exit /b

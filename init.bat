@@ -106,13 +106,15 @@ setlocal EnableExtensions EnableDelayedExpansion
         set _gitConfig=.gitconfig
         call :WriteGitConfig "%USERPROFILE%"
         call :WriteGitConfig "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%"
-        call :StowProfile "%DOT_PROFILE_ROOT%\bash\git" ".gitignore_global"
 
-        call :StowProfile "%DOT_PROFILE_ROOT%\bash\.gnupg" "gpg.conf"
-        call :StowProfile "%DOT_PROFILE_ROOT%\bash" ".bash_aliases"
-        call :StowProfile "%DOT_PROFILE_ROOT%\bash" ".bashrc"
-        call :StowProfile "%DOT_PROFILE_ROOT%\bash" ".profile"
-        call :StowProfile "%DOT_PROFILE_ROOT%\bash" ".ctags"
+        call :StowProfile "bash" ".config\micro\settings.json"
+        call :StowProfile "bash" ".config\micro\init.lua"
+        call :StowProfile "bash" ".gnupg\gpg.conf"
+        call :StowProfile "bash" ".gitignore_global"
+        call :StowProfile "bash" ".bash_aliases"
+        call :StowProfile "bash" ".bashrc"
+        call :StowProfile "bash" ".profile"
+        call :StowProfile "bash" ".ctags"
 
         call :StowPowerShell "Documents\WindowsPowerShell" "Profile.ps1"
         call :StowPowerShell "Documents\WindowsPowerShell" "powershell.config.json"
@@ -123,6 +125,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     ) else (
         echo Profile for '%USERNAME%' already initialized.
     )
+    if "%COMMAND%"=="stow" goto:$InitializeDone
 
     ::
     :: Initialize each installed PowerShell we find
@@ -271,8 +274,8 @@ exit /b
 endlocal & exit /b 0
 
 :StowProfile %1=RelativeRoot %2=Filename
-    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%DOT_PROFILE_ROOT%\%~1%~2"
-    call :CreateLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%\%~1" "%~2" "%DOT_PROFILE_ROOT%\%~1%~2"
+    call :CreateLink "%USERPROFILE%" "%~2" "%DOT_PROFILE_ROOT%\%~1\%~2"
+    call :CreateLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%\" "%~2" "%DOT_PROFILE_ROOT%\%~1\%~2"
 exit /b 0
 
 :StowPowerShell
