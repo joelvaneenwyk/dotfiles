@@ -43,7 +43,7 @@ Function Test-CommandExists {
         }
     }
     Catch {
-        Write-Host "$command does not exist"
+        Write-Host "Command '$command' does not exist."
     }
     Finally {
         $ErrorActionPreference = $oldPreference
@@ -250,7 +250,7 @@ Function Initialize-Environment {
     finally {
         try {
             if ($null -eq (Get-InstalledModule -Name "WindowsConsoleFonts" -ErrorAction SilentlyContinue)) {
-                Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -ErrorAction SilentlyContinue >$null
+                Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -ErrorAction SilentlyContinue >$null
                 if ($?) {
                     Write-Host "Installed 'WindowsConsoleFonts' module."
                 }
@@ -389,7 +389,7 @@ Function Initialize-Environment {
         # https://ohmyposh.dev/
         try {
             if ($null -eq (Get-InstalledModule -Name "oh-my-posh" -ErrorAction SilentlyContinue)) {
-                Install-Module oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck >$null
+                Install-Module -Name oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck >$null
                 if ($?) {
                     Write-Host "Installed 'oh-my-posh' module."
                 }
@@ -401,7 +401,7 @@ Function Initialize-Environment {
 
         try {
             if ($null -eq (Get-InstalledModule -Name "posh-git" -ErrorAction SilentlyContinue)) {
-                Install-Module posh-git -Scope CurrentUser -Force -SkipPublisherCheck
+                Install-Module -Name posh-git -Scope CurrentUser -Force -SkipPublisherCheck
                 if ($?) {
                     Write-Host "Installed 'posh-git' module."
                 }

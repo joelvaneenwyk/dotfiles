@@ -9,6 +9,12 @@ setlocal EnableExtensions EnableDelayedExpansion
     :: routines based on current state of environment e.g. what commands exist
     set _initialize=0
 
+    :: Setup Docker arguments before we parse out arguments
+    set _container_platform=%~2
+    if "%_container_platform%"=="" set _container_platform=linux
+    set _container_name=menv:!_container_platform!
+    set _container_instance=menv_!_container_platform!
+
     set "DOT_PROFILE_NAME=mycelio"
     set "DOT_PROFILE_ROOT=!_dot_profile_root:~0,-1!"         &:# Script path, without the trailing \
     set "USER[HKLM]=all users"
@@ -67,12 +73,6 @@ setlocal EnableExtensions EnableDelayedExpansion
         wsl !_arg_remainder! -- bash -c ./init.sh
         exit /b %ERRORLEVEL%
     )
-
-    set _container_platform=%~2
-    if "%_container_platform%"=="" set _container_platform=linux
-
-    set _container_name=menv:!_container_platform!
-    set _container_instance=menv_!_container_platform!
 
     ::
     :: Initialize an Ubuntu container for testing.
@@ -159,7 +159,7 @@ endlocal & (
 )
 
 echo Completed execution of `dotfiles` initialization.
-exit /b %ERRORLEVEL%
+exit /b 0
 
 :CheckSystemFile %1=SystemFilename
     setlocal EnableExtensions EnableDelayedExpansion
