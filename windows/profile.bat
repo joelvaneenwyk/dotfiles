@@ -17,7 +17,6 @@
 ::
 
 setlocal EnableExtensions EnableDelayedExpansion
-
     if "%~1"=="--refresh" goto:$InitializeProfile
 
     set "CMD=!CMDCMDLINE!"
@@ -48,6 +47,9 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     :$InitializeProfile
 
+    :: Generate the environment batch script
+    call "%~dp0env.bat"
+
     chcp 65001 >NUL 2>&1
 
     ::
@@ -77,11 +79,19 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo ▓│  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
     echo ▓│
     echo ▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-
+    echo.
+    if exist "%~dp0..\.tmp\setupEnvironment.bat" call "%~dp0..\.tmp\setupEnvironment.bat"
+    echo Initialized 'Windows' environment: '%DOT_PROFILE_ROOT%'
+    echo.
+    echo Commands:
+    echo.
+    echo   gpgtest     Validate that git commit signing will work with secret key
+    echo   refresh     Try to pull latest 'dotfiles' and reload profile
+    echo   micro       Default text editor. Press 'F2' to save and 'F4' to exit.
 endlocal & (
-    set DOT_PROFILE_INITIALIZED=1
-    set DOT_AUTORUN_INITIALIZED=1
-    set "PATH=C:\Program Files (x86)\GnuPG\bin;%~dp0;%~dp0..;%~dp0..\.tmp;%USERPROFILE%\scoop\apps\perl\current\perl\bin;%USERPROFILE%\scoop\shims;%PATH%"
+    set "DOT_PROFILE_INITIALIZED=1"
+    set "DOT_AUTORUN_INITIALIZED=1"
+    set "PATH=%PATH%"
 )
 
 :: Check to see if 'doskey' is valid first as some versions

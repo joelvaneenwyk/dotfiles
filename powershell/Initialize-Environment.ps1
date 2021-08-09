@@ -58,47 +58,6 @@ Function Test-CommandExists {
     return $IsValid
 } #end function test-CommandExists
 
-Function Get-EnvironmentPathFolders {
-    #.Synopsis Split $env:Path into an array
-    #.Notes
-    #  - Handle
-    #       1) Folders ending in a backslash
-    #       2) Double-quoted folders
-    #       3) Folders with semicolons
-    #       4) Folders with spaces
-    #       5) Double-semicolons I.e. blanks
-    #  - Example path:
-    #       - 'C:WINDOWS;"C:Path with semicolon; in the middle";"E:Path with semicolon at the end;";;C:Program Files;'
-    #  - 2018/01/30 by Chad.Simmons@CatapultSystems.com - Created
-    $PathArray = @()
-
-    # Remove a trailing semicolon from the path then split it into an array using a double-quote
-    # as the delimiter keeping the delimiter
-    $env:Path.ToString().TrimEnd(';') -split '(?=["])' | ForEach-Object {
-        If ($_ -eq '";') {
-            # throw away a blank line
-        }
-        ElseIf ($_.ToString().StartsWith('";')) {
-            # if line starts with "; remove the "; and any trailing backslash
-            $PathArray += ($_.ToString().TrimStart('";')).TrimEnd('')
-        }
-        ElseIf ($_.ToString().StartsWith('"')) {
-            # if line starts with " remove the " and any trailing backslash
-            $PathArray += ($_.ToString().TrimStart('"')).TrimEnd('') #$_ + '"'
-        }
-        Else {
-            # split by semicolon and remove any trailing backslash
-            $_.ToString().Split(';') | ForEach-Object {
-                If ($_.Length -gt 0) {
-                    $PathArray += $_.TrimEnd('')
-                }
-            }
-        }
-    }
-
-    Return $PathArray
-}
-
 Function Get-File {
     <#
 .SYNOPSIS
@@ -168,6 +127,25 @@ Function Get-File {
 Function Initialize-Environment {
     Write-Host "PowerShell v$($host.Version)"
 
+    $root = Resolve-Path -Path "$PSScriptRoot\.."
+    $tempFolder = "$root\.tmp"
+
+    $fontBaseName = "JetBrains Mono"
+    $fontBaseFilename = $fontBaseName -replace '\s', ''
+
+    $fontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$fontBaseFilename.zip"
+    $fontNameOriginal = "$fontBaseName Regular Nerd Font Complete Windows Compatible"
+    $fontName = "$fontBaseFilename NF"
+    $tempFontFolder = "$tempFolder\fonts"
+    $targetTempFontPath = "$tempFontFolder\$fontName.ttf"
+
+    # We save it to system directory with same path it's the name that needs to be short
+    $targetFontPath = "C:\Windows\Fonts\$fontNameOriginal.ttf"
+
+    if ( -not(Test-Path -Path "$tempFolder") ) {
+        New-Item -ItemType directory -Path "$tempFolder" | Out-Null
+    }
+
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     try {
@@ -225,25 +203,6 @@ Function Initialize-Environment {
     }
     catch [Exception] {
         Write-Host "Failed to add repository.", $_.Exception.Message
-    }
-
-    $root = Resolve-Path -Path "$PSScriptRoot\.."
-    $tempFolder = "$root\.tmp"
-
-    $fontBaseName = "JetBrains Mono"
-    $fontBaseFilename = $fontBaseName -replace '\s', ''
-
-    $fontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$fontBaseFilename.zip"
-    $fontNameOriginal = "$fontBaseName Regular Nerd Font Complete Windows Compatible"
-    $fontName = "$fontBaseFilename NF"
-    $tempFontFolder = "$tempFolder\fonts"
-    $targetTempFontPath = "$tempFontFolder\$fontName.ttf"
-
-    # We save it to system directory with same path it's the name that needs to be short
-    $targetFontPath = "C:\Windows\Fonts\$fontNameOriginal.ttf"
-
-    if ( -not(Test-Path -Path "$tempFolder") ) {
-        New-Item -ItemType directory -Path "$tempFolder" | Out-Null
     }
 
     try {

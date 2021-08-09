@@ -57,7 +57,7 @@ function initialize_gitconfig() {
 
 function initialize_linux() {
     sudo apt-get update
-    DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y git stow sudo micro neofetch
+    DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y git stow sudo micro neofetch fish
     DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
 
     stow bash
@@ -73,42 +73,85 @@ function initialize_linux() {
     neofetch
 }
 
+#
+# This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
+#
+function build_stow() {
+    _dot_windows_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+    echo "[stow] Script directory: '$_dot_windows_script_root'"
+
+    if [ -x "$(command -v cpan)" ]; then
+        # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because
+        # it is faster but also because tests in 'Test::Output' causes consistent hangs
+        # in MSYS2, see https://rt-cpan.github.io/Public/Bug/Display/64319/
+        cpan -i -T YAML Test::Output CPAN::DistnameInfo 2>&1 | awk '{ print "[stow.cpan]", $0 }'
+    else
+        echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
+    fi
+
+    # Move to source directory and start install.
+    (
+        cd "$_dot_windows_script_root/stow" || true
+        autoreconf --install --verbose 2>&1 | awk '{ print "[stow.autoreconf]", $0 }'
+
+        # We want a local install
+        ./configure --prefix="" 2>&1 | awk '{ print "[stow.configure]", $0 }'
+
+        # Documentation part is expected to fail but we can ignore that
+        make --keep-going --ignore-errors 2>&1 | awk '{ print "[stow.make]", $0 }'
+
+        rm -f "./configure~"
+        git checkout -- "./aclocal.m4" || true
+    ) || true
+}
+
 function initialize_windows() {
     _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
     _dot_initialized="$_dot_script_root/.tmp/.initialized"
 
     if [ "$1" == "clean" ]; then
         rm -rf "${_dot_script_root}/.tmp"
-        echo "Removed workspace temporary files to force a rebuild."
+        echo "[init.sh] Removed workspace temporary files to force a rebuild."
     fi
 
     # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
-    if [ -x "$(command -v pacman)" ] && [ ! -f "$_dot_initialized" ]; then
-        rm -f /var/lib/pacman/db.lck
-        pacman -Syu --noconfirm
-        pacman -S --noconfirm --needed msys2-keyring curl unzip
+    if [ -x "$(command -v pacman)" ]; then
+        if [ -f "$_dot_initialized" ]; then
+            echo "[init.sh] Skipped package install. Already initialized."
+        else
+            # Primary driver for these dependencies is 'stow' but they are generally useful as well
+            echo "[init.sh] Installing minimal packages to build dependencies on Windows using MSYS2."
 
-        if [ -f /etc/pacman.d/gnupg/ ]; then
-            rm -r /etc/pacman.d/gnupg/
+            rm -f /var/lib/pacman/db.lck
+            pacman -Syu --noconfirm
+            pacman -S --noconfirm --needed msys2-keyring curl unzip make perl autoconf automake1.16 git gawk
+
+            if [ -f /etc/pacman.d/gnupg/ ]; then
+                rm -r /etc/pacman.d/gnupg/
+            fi
+
+            pacman-key --init
+            pacman-key --populate msys2
+
+            # Long version of '-Syuu' gets fresh package databases from server and
+            # upgrades the packages while allowing downgrades '-uu' as well if needed.
+            pacman --sync --refresh -uu --noconfirm
         fi
-
-        pacman-key --init
-        pacman-key --populate msys2
-
-        # Long version of '-Syuu' gets fresh package databases from server and
-        # upgrades the packages while allowing downgrades '-uu' as well if needed.
-        pacman --sync --refresh -uu --noconfirm
+    else
+        echo "[init.sh] WARNING: Package manager 'pacman' not found. There will likely be missing dependencies."
     fi
 
-    mkdir --parents "$_dot_script_root/.tmp/"
-
+    # Install micro text editor. It is optional so ignore failures
     if [ ! -x "$(command -v micro)" ]; then
-        (
-            cd "$_dot_script_root/.tmp/" && bash <(curl -s https://getmic.ro)
-        )
+        if (cd "$_dot_script_root/.tmp/" && bash <(curl -s https://getmic.ro)); then
+            echo "[init.sh] Successfully installed 'micro' text editor."
+        else
+            echo "[init.sh] WARNING: Failed to install 'micro' text editor."
+        fi
     fi
 
-    source "$_dot_script_root/windows/build-stow.sh"
+    build_stow
 
     touch "$_dot_initialized"
 }

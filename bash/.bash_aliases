@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 unameOut="$(uname -s)"
+
 case "${unameOut}" in
 Darwin*)
     alias dir='dir -G'
@@ -27,6 +28,7 @@ Darwin*)
     alias ls='ls -alF --color=always'
     alias la='ls -A --color=always'
     alias l='ls -CF --color=always'
+    ;;
 esac
 
 alias less='less -r'

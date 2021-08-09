@@ -142,6 +142,9 @@ setlocal EnableExtensions EnableDelayedExpansion
         echo ======-------
         echo.
         !_powershell! -NoLogo -NoProfile -File "%DOT_PROFILE_ROOT%\powershell\Initialize-Environment.ps1"
+
+        :# This is the command used by VSCode extension to install package management so we use it here as well
+        !_powershell! -NoLogo -NoProfile -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Install-Module -Name PackageManagement -Force -MinimumVersion 1.4.6 -Scope CurrentUser -AllowClobber -Repository PSGallery'
     )
 
     ::
@@ -149,6 +152,9 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
 
     if not "!_initialize!"=="1" goto:$InitializeDone
+
+    call "%~dp0windows\env.bat"
+    if exist "%~dp0..\.tmp\setupEnvironment.bat" call "%~dp0..\.tmp\setupEnvironment.bat"
 
     :: Initialize 'msys2' environment with bash script. We call the shim directly because environment
     :: may not read path properly after it has just been installed.

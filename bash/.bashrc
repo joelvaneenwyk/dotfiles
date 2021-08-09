@@ -22,7 +22,7 @@ case "${unameOut}" in
 Linux*)
     machine=Linux
 
-    if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null ; then
+    if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
         variant=WSL
     else
         variant=$(uname -mrs)
@@ -49,13 +49,16 @@ MSYS*)
     ;;
 *)
     machine="UNKNOWN"
-    variant=${unameOut};;
+    variant=${unameOut}
+    ;;
 esac
 
 # If not running interactively, don't do anything else.
 case $- in
 *i*) ;;
-*) return ;;
+*)
+    return
+    ;;
 esac
 
 # don't put duplicate lines or lines starting with space in the history.

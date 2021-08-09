@@ -1,3 +1,19 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+insert_final_newline = true
+
+[*.{json,cjson}]
+indent_style = space
+indent_size = 4
+
+[*.{bat,cmd,ps1,psd1}]
+indent_style = space
+indent_size = 4
+
 [*.{sh,bash,bats,conf,fish,profile}]
 indent_style = space
 indent_size = 4
