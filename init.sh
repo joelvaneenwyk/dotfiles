@@ -167,7 +167,9 @@ function initialize_windows() {
 
             rm -f /var/lib/pacman/db.lck
             pacman -Syu --noconfirm
-            pacman -S --noconfirm --needed msys2-keyring curl unzip make perl autoconf automake1.16 git gawk
+            pacman -S --noconfirm --needed msys2-keyring curl unzip make \
+                perl autoconf automake1.16 automake-wrapper libtool \
+                git gawk
 
             if [ -f /etc/pacman.d/gnupg/ ]; then
                 rm -r /etc/pacman.d/gnupg/
