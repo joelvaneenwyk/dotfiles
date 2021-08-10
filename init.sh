@@ -56,6 +56,8 @@ function initialize_gitconfig() {
 }
 
 function initialize_linux() {
+    _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
     sudo apt-get update
 
     DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y \
@@ -98,17 +100,17 @@ function initialize_linux() {
     curl -s https://sks-keyservers.net/sks-keyservers.netCA.pem | sudo tee /usr/local/share/ca-certificates/sks-keyservers.netCA.crt
     sudo update-ca-certificates
 
-    _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
     _gpg_agent_config="$HOME/.gnupg/gpg-agent.conf"
-
     rm -f "$_gpg_agent_config"
     unlink "$_gpg_agent_config" >/dev/null 2>&1 || true
-    echo "default-cache-ttl 34560000" >"$_gpg_agent_config"
+    mkdir -p "$HOME/.gnupg"
+    touch "$_gpg_agent_config"
+    echo "default-cache-ttl 34560000" >>"$_gpg_agent_config"
     echo "max-cache-ttl 34560000" >>"$_gpg_agent_config"
-
     if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
         echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gpg_agent_config"
     fi
+    echo "Created custom gpg agent configuration: '$_gpg_agent_config'"
 
     neofetch
 }

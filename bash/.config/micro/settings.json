@@ -20,6 +20,7 @@
     "ignorecase": false,
     "indentchar": " ",
     "infobar": true,
+    "initlua": true,
     "keepautoindent": false,
     "keymenu": false,
     "linter": true,
