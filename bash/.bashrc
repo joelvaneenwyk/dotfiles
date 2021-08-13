@@ -10,6 +10,22 @@ export GPG_TTY
 DOTFILE_CONFIG_ROOT="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 export DOTFILE_CONFIG_ROOT
 
+if [ -d "/usr/local/go/bin" ]; then
+    PATH="/usr/local/go/bin:$PATH"
+fi
+
+if [ -x "$(command -v go)" ] && [ -f "/usr/local/go/bin/go" ]; then
+    export GOROOT="/usr/local/go"
+    export GOBIN="$GOROOT/bin"
+    export PATH="$GOBIN:$PATH"
+
+    GOPATH="$(go env GOPATH)"
+    export GOPATH
+
+    go env -w GOROOT="$GOROOT"
+    go env -w GOBIN="$GOROOT/bin"
+fi
+
 function _initialize_windows() {
     export STOW_ROOT=$DOTFILE_CONFIG_ROOT/../stow
     export PERL5LIB=$PERL5LIB:$DOTFILE_CONFIG_ROOT/../stow/lib

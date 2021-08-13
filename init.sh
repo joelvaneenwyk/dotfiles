@@ -55,16 +55,59 @@ function initialize_gitconfig() {
     echo "Created custom '.gitconfig' with include directives."
 }
 
+function install_hugo {
+    if [ ! -x "$(command -v hugo)" ] && [ -x "$(command -v git)" ] && [ -f "/usr/local/go/bin/go" ]; then
+        rm -rf "/tmp/hugo"
+        git -c advice.detachedHead=false clone -b "v0.87.0" "https://github.com/gohugoio/hugo.git" "/tmp/hugo"
+        cd "/tmp/hugo" && sudo /usr/local/go/bin/go install --tags extended
+    fi
+
+    if [ -x "$(command -v hugo)" ]; then
+        hugo version
+    else
+        echo "Failed to install 'hugo' static site builder."
+    fi
+}
+
+function install_go {
+    if [ -x "$(command -v go)" ]; then
+        version=$(go version | {
+            read -r _ _ v _
+            echo "${v#go}"
+        })
+        minor=$(echo "$version" | cut -d. -f2)
+    fi
+
+    if [ ! -x "$(command -v go)" ] || ((minor < 16)); then
+        # Install Golang
+        if [ ! -f "/tmp/go1.16.7.linux-amd64.tar.gz" ]; then
+            wget https://dl.google.com/go/go1.16.7.linux-amd64.tar.gz --directory-prefix=/tmp/
+        fi
+
+        sudo rm -rf "/tmp/go"
+        sudo tar -xvf "/tmp/go1.16.7.linux-amd64.tar.gz" --directory "/tmp/"
+        sudo rm -rf "/usr/local/go"
+        sudo mv "/tmp/go" "/usr/local"
+        echo "Updated 'go' install: '/usr/local/go'"
+    fi
+
+    if [ -x "$(command -v go)" ]; then
+        go version
+    else
+        echo "Failed to install 'go' language."
+    fi
+}
+
 function initialize_linux() {
     _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
     sudo apt-get update
 
     DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y \
-        software-properties-common \
-        git stow sudo micro tmux neofetch fish \
-        wget curl unzip \
-        python3 python3-pip xclip
+        sudo git wget curl unzip xclip \
+        software-properties-common build-essential gcc g++ make \
+        stow micro tmux neofetch fish \
+        python3 python3-pip
 
     DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
 
@@ -89,6 +132,9 @@ function initialize_linux() {
         sudo chmod u+rw ~/.poshthemes/*.json
         rm -f "$HOME/.poshthemes/themes.zip"
     fi
+
+    install_go
+    install_hugo
 
     stow bash "$@"
     stow vim "$@"
