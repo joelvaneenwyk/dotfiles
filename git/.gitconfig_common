@@ -1,8 +1,19 @@
 # This is Git's per-user configuration file.
-[advice]
-	fetchShowForcedUpdates = false
+[user]
+	name = Joel Van Eenwyk
+	email = joel.vaneenwyk@gmail.com
+	signingkey = F7B61CE9EF223B20
+[init]
+	defaultBranch = main
 [push]
 	default = simple
+[pull]
+	rebase = true
+[diff]
+	renamelimit = 10000
+[commit]
+	verbose = true
+	gpgsign = true
 [alias]
 	co = checkout
 	br = branch
@@ -10,18 +21,5 @@
 	st = status
 	pr = pull --rebase
 	df = diff
-[pull]
-	rebase = true
-[commit]
-	verbose = true
-	gpgsign = true
-[core]
-	excludesfile = ~/.gitignore_global
-[user]
-	name = Joel Van Eenwyk
-	email = joel.vaneenwyk@gmail.com
-	signingkey = F7B61CE9EF223B20
-[init]
-	defaultBranch = main
-[tag]
-	gpgsign = true
+[advice]
+	fetchShowForcedUpdates = false

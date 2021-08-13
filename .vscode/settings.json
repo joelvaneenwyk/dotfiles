@@ -1,6 +1,9 @@
 {
     "shellcheck.enable": true,
     "shellcheck.enableQuickFix": true,
+    "shellcheck.exclude": [
+        "stow/**"
+    ],
 
     "perl.enable": false,
 
@@ -20,7 +23,8 @@
         ".gitconfig_common": "properties",
         ".gitconfig_linux": "properties",
         ".gitconfig_windows": "properties",
-        ".gitconfig_wsl": "properties"
+        ".gitconfig_wsl": "properties",
+        "*.json.git": "cjson"
     },
 
     "[json]": {
@@ -95,6 +99,7 @@
         "symlink",
         "symlinking",
         "symlinks",
+        "synoservicectl",
         "tldr",
         "xclip",
         "xmonad"

@@ -207,8 +207,25 @@ Function Initialize-Environment {
 
     try {
         if (-not(Test-CommandExists "scoop")) {
-            Write-Host "Initializing 'scoop' package manager..."
+            Write-Host "Installing 'scoop' package manager..."
             Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+
+            # For running commands as administrator
+            scoop install "sudo"
+
+            # It's required for unpacking InnoSetup files.
+            scoop install "innounp"
+
+            # It's required for unpacking installers created with the WiX Toolset.
+            scoop install "dark"
+
+            # SSH
+            # https://stackoverflow.com/a/58029292
+            #Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+
+            # Windows Defender may slow down or disrupt installs with realtime scanning.
+            #sudo Add-MpPreference -ExclusionPath "C:\Users\$env:USERNAME\scoop"
+            #sudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
         }
 
         try {
@@ -235,7 +252,13 @@ Function Initialize-Environment {
                 scoop install "clink"
             }
 
-            # https://micro-editor.github.io/
+            # Static site builder
+            if (-not(Test-CommandExists "hugo")) {
+                scoop install hugo-extended
+            }
+
+            # We do not install 'micro' (https://micro-editor.github.io/) here because we install
+            # it later using the bash environment for windows
             # if (-not(Test-CommandExists "micro")) {
             #     scoop install "micro"
             # }

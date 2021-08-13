@@ -136,6 +136,7 @@ function initialize_linux() {
     install_go
     install_hugo
 
+    stow linux "$@"
     stow bash "$@"
     stow vim "$@"
 
@@ -217,8 +218,8 @@ function initialize_windows() {
                 perl autoconf automake1.16 automake-wrapper libtool \
                 git gawk
 
-            if [ -f /etc/pacman.d/gnupg/ ]; then
-                rm -r /etc/pacman.d/gnupg/
+            if [ -f "/etc/pacman.d/gnupg/" ]; then
+                rm -rf "/etc/pacman.d/gnupg/"
             fi
 
             pacman-key --init
@@ -296,13 +297,16 @@ function configure_apps() {
     mkdir -p ~/.ssh
     mkdir -p ~/Library/Application\ Support/Code
 
-    stow bash
-    stow fish
-    stow fonts
     stow macos
+    stow linux
+
+    stow bash
+    stow zsh
+    stow fish
+
+    stow fonts
     stow ruby
     stow vim
-    stow zsh
 
     # We use built-in VSCode syncing so disabled the stow operation
     #stow vscode

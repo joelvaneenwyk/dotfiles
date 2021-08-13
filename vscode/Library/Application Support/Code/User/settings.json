@@ -1,36 +1,71 @@
 {
     "files.trimTrailingWhitespace": true,
+
+    "editor.tabSize": 4,
+    "editor.suggestSelection": "first",
+    "editor.fontFamily": "JetBrains Mono, Hack, Menlo, Monaco, 'Courier New', monospace",
+    "editor.fontLigatures": true,
+    "editor.fontSize": 11,
+
     "scssLint.runOnTextChange": true,
-    "terminal.external.osxExec": "iTerm.app",
-    "terminal.integrated.copyOnSelection": true,
-    "terminal.integrated.automationShell.osx": "/bin/bash",
     "vscode-neovim.neovimPath": "/usr/local/bin/nvim",
     "git.autofetch": true,
     "ruby.useBundler": true,
     "window.zoomLevel": 0,
     "diffEditor.ignoreTrimWhitespace": true,
-    "editor.tabSize": 2,
+
     "workbench.colorTheme": "Monokai",
-    "terminal.integrated.shell.osx": "/usr/local/bin/fish",
-    "terminal.integrated.shellArgs.osx": [
-        "-l"
-    ],
+
+    "terminal.integrated.fontSize": 11,
+    "terminal.external.osxExec": "iTerm.app",
+    "terminal.integrated.copyOnSelection": true,
+    "terminal.integrated.automationShell.osx": "/bin/bash",
+    "terminal.integrated.tabs.enabled": false,
+    "terminal.integrated.defaultProfile.osx": "fish",
+    "terminal.integrated.profiles.osx": {
+        "bash": {
+            "path": "bash",
+            "args": [
+                "-l"
+            ],
+            "icon": "terminal-bash"
+        },
+        "zsh": {
+            "path": "zsh",
+            "args": [
+                "-l"
+            ]
+        },
+        "fish": {
+            "path": "fish",
+            "args": [
+                "-l"
+            ]
+        },
+        "tmux": {
+            "path": "tmux",
+            "icon": "terminal-tmux"
+        },
+        "pwsh": {
+            "path": "pwsh",
+            "icon": "terminal-powershell"
+        }
+    },
+
     "diffEditor.renderSideBySide": false,
+
     "dart.debugExternalLibraries": true,
     "dart.debugSdkLibraries": true,
     "dart.openDevTools": "flutter",
+
     "files.exclude": {
         "**/.classpath": true,
         "**/.project": true,
         "**/.settings": true,
         "**/.factorypath": true
     },
-    "editor.suggestSelection": "first",
+
     "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
-    "editor.fontFamily": "JetBrains Mono, Hack, Menlo, Monaco, 'Courier New', monospace",
-    "editor.fontLigatures": true,
-    "editor.fontSize": 11,
-    "terminal.integrated.fontSize": 11,
-    "workbench.startupEditor": "none",
-    "terminal.integrated.tabs.enabled": false
+
+    "workbench.startupEditor": "none"
 }
