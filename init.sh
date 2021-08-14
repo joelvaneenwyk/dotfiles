@@ -8,6 +8,19 @@
 
 set -e
 
+_script="${BASH_SOURCE[0]}"
+_script_path="$(realpath "$_script")"
+_script_home="$(cd "$(dirname "$_script_path")" &>/dev/null && cd ../ && pwd)"
+_home=$HOME
+_logs="$_home/.logs"
+
+# We use 'whoami' as $USER is not set for scheduled tasks
+echo "User: '$(whoami)'"
+echo "User Home: '$_home'"
+echo "Script: '$_script_path'"
+echo "Script Home: '$_script_home'"
+echo "=---------------------"
+
 main() {
     unameOut="$(uname -s)"
     case "${unameOut}" in
@@ -37,6 +50,82 @@ main() {
     echo "Initialized '${machine}' machine."
 }
 
+_command_exists() {
+    if command -v "$@" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    return 1
+}
+
+#
+# Some platforms (e.g. MacOS) do not come with 'timeout' command so
+# this is a cross-platform implementation that optionally uses perl.
+#
+_timeout() {
+    _seconds="${1:-}"
+    shift
+
+    if ! "$_seconds" = ""; then
+        if _command_exists "gtimeout"; then
+            gtimeout "$_seconds" "$@"
+        elif _command_exists "perl"; then
+            perl -e "alarm $_seconds; exec @ARGV" "$@"
+        else
+            eval "$@"
+        fi
+    fi
+}
+
+#
+# Get system permission status to help determine if we are able to
+# do package installs.
+#
+#   - https://superuser.com/questions/553932/how-to-check-if-i-have-sudo-access
+#
+__has_admin_rights() {
+    if ! _command_exists "sudo"; then
+        #_printDebug "$@" "[sudo] Not found."
+        #_status="no_sudo"
+        return 2
+    else
+        # -n -> 'non-interactive'
+        # -v -> 'validate'
+        if _prompt="$(sudo -nv 2>&1)"; then
+            #_printDebug "$@" "[sudo] Password set. Output: '${_prompt:-}'"
+            #_status="has_sudo__pass_set"
+            return 0
+        fi
+
+        if echo "${_prompt:-}" | grep -q '^sudo:'; then
+            #  Password needed for access.
+            return 1
+        fi
+
+        # Initial attempt failed
+        if _sudo_machine_output="$(uname -s 2>/dev/null)"; then
+            case "${_sudo_machine_output:-}" in
+            Darwin*)
+                if dscl . -authonly "$(whoami)" "" >/dev/null 2>&1; then
+                    # Password is empty string.
+                    return 0
+                else
+                    # Authority check failed
+                    if _timeout 2 sudo id >/dev/null 2>&1; then
+                        # If this passes then we do have a password set
+                        return 0
+                    fi
+                fi
+                ;;
+            *) ;;
+            esac
+        fi
+    fi
+
+    # No status discovered, assuming password needed.
+    return 1
+}
+
 function initialize_gitconfig() {
     _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
     _gitConfig="$HOME/.gitconfig"
@@ -56,96 +145,180 @@ function initialize_gitconfig() {
 }
 
 function install_hugo {
-    if [ ! -x "$(command -v hugo)" ] && [ -x "$(command -v git)" ] && [ -f "/usr/local/go/bin/go" ]; then
-        rm -rf "/tmp/hugo"
-        git -c advice.detachedHead=false clone -b "v0.87.0" "https://github.com/gohugoio/hugo.git" "/tmp/hugo"
-        cd "/tmp/hugo" && sudo /usr/local/go/bin/go install --tags extended
+    _local_bin="$HOME/.local/bin"
+    _go_root="$_local_bin/go"
+    _go_bin="$_go_root/bin/go"
+    _hugo_bin="$_go_root/bin/hugo"
+
+    if [ ! -f "$_hugo_bin" ] && [ -x "$(command -v git)" ] && [ -f "$_go_bin" ]; then
+        _tmp="$HOME/.tmp"
+        _tmp_hugo="$_tmp/hugo"
+        mkdir -p "$_tmp_hugo"
+
+        rm -rf "$_tmp_hugo"
+        git -c advice.detachedHead=false clone -b "v0.87.0" "https://github.com/gohugoio/hugo.git" "$_tmp_hugo"
+
+        _goPath="$("$_go_bin" env GOPATH)"
+        _goRoot="$_go_root"
+        _goBin="$_goRoot/bin"
+        _path="$_goBin:$PATH"
+
+        if uname -a | grep -q "synology"; then
+            # No support for GCC on Synology
+            echo "Building 'hugo' with go without extended features..."
+            (cd "$_tmp_hugo" && GOPATH=$_goPath GOROOT=$_goRoot GOBIN=$_goBin PATH=$_path CGO_ENABLED=0 "$_go_bin" install)
+        else
+            echo "Building 'hugo' with CGO and extended features..."
+            (cd "$_tmp_hugo" && GOPATH=$_goPath GOROOT=$_goRoot GOBIN=$_goBin PATH=$_path CGO_ENABLED=1 "$_go_bin" install --tags extended)
+        fi
     fi
 
-    if [ -x "$(command -v hugo)" ]; then
-        hugo version
+    if [ -f "$_hugo_bin" ]; then
+        "$_hugo_bin" version
     else
         echo "Failed to install 'hugo' static site builder."
     fi
 }
 
 function install_go {
-    if [ -x "$(command -v go)" ]; then
-        version=$(go version | {
+    _local_bin="$HOME/.local/bin"
+    _go_bin="$HOME/.local/bin/go/bin/go"
+
+    if [ -f "$_go_bin" ]; then
+        version=$("$_go_bin" version | {
             read -r _ _ v _
             echo "${v#go}"
         })
         minor=$(echo "$version" | cut -d. -f2)
     fi
 
-    if [ ! -x "$(command -v go)" ] || ((minor < 16)); then
+    if [ ! -f "$_go_bin" ] && ((minor < 16)); then
+        _tmp="$HOME/.tmp"
+        mkdir -p "$_tmp"
+
         # Install Golang
-        if [ ! -f "/tmp/go1.16.7.linux-amd64.tar.gz" ]; then
-            wget https://dl.google.com/go/go1.16.7.linux-amd64.tar.gz --directory-prefix=/tmp/
+        if [ ! -f "$_tmp/go1.16.7.linux-amd64.tar.gz" ]; then
+            wget https://dl.google.com/go/go1.16.7.linux-amd64.tar.gz --directory-prefix="$_tmp"
         fi
 
-        sudo rm -rf "/tmp/go"
-        sudo tar -xvf "/tmp/go1.16.7.linux-amd64.tar.gz" --directory "/tmp/"
-        sudo rm -rf "/usr/local/go"
-        sudo mv "/tmp/go" "/usr/local"
-        echo "Updated 'go' install: '/usr/local/go'"
+        _go_tmp="$_tmp/go"
+        rm -rf "$_go_tmp"
+        mkdir -p "$_go_tmp"
+        tar -xvf "$_tmp/go1.16.7.linux-amd64.tar.gz" --directory "$_tmp"
+
+        mkdir -p "$_local_bin"
+        mv "$_go_tmp" "$_local_bin"
+        echo "Updated 'go' install: '$_local_bin'"
+
+        rm -rf "$_go_tmp"
     fi
 
-    if [ -x "$(command -v go)" ]; then
-        go version
+    if _version=$("$_go_bin" version); then
+        echo "$_version"
     else
         echo "Failed to install 'go' language."
+    fi
+}
+
+function _stow() {
+    if [ -x "$(command -v stow)" ]; then
+        stow "$@"
+    elif uname -a | grep -q "synology"; then
+        _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+        _root_dir="$_dot_script_root/$1/"
+        _root="$_dot_script_root/$1"
+
+        find "$_root" -maxdepth 2 -type f -print0 | while IFS= read -r -d $'\0' file; do
+            _offset="${file//$_root_dir/}"
+            _source="$file"
+            _target="$HOME/$_offset"
+            if [ -f "$_source" ]; then
+                rm -f "$_target"
+                mkdir -p "$(dirname "$_target")"
+                ln -s "$_source" "$_target"
+                echo "Stowed '$1' target: '$_target'"
+            fi
+        done
+    else
+        echo "Unsupported 'stow' command. Skipped: 'stow $@'"
     fi
 }
 
 function initialize_linux() {
     _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-    sudo apt-get update
+    if uname -a | grep -q "synology"; then
+        echo "No package installs supported on Synology."
+    else
+        sudo apt-get update
 
-    DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y \
-        sudo git wget curl unzip xclip \
-        software-properties-common build-essential gcc g++ make \
-        stow micro tmux neofetch fish \
-        python3 python3-pip
+        DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y \
+            sudo git wget curl unzip xclip \
+            software-properties-common build-essential gcc g++ make \
+            stow micro tmux neofetch fish \
+            python3 python3-pip
 
-    DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
+        DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
+    fi
 
     if [ -x "$(command -v pip3)" ]; then
-        pip3 install --upgrade pip
+        pip3 install --user --upgrade pip
 
         # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
         # consistency between platforms and not install hacks we just use 'pip3' instead. For
         # details on the issue, see https://github.com/microsoft/WSL/issues/5126
-        pip3 install pre-commit
+        pip3 install --user pre-commit
+
+        echo "Upgraded 'pip3' and installed 'pre-commit' package."
     fi
 
-    if [ ! -x "$(command -v oh-my-posh)" ]; then
-        sudo wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/posh-linux-amd64" -O "/usr/local/bin/oh-my-posh"
-        sudo chmod +x "/usr/local/bin/oh-my-posh"
+    if [ "$(whoami)" == "root" ]; then
+        echo "Skipping install of 'oh-my-posh' for root user."
+    else
+        if [ ! -x "$(command -v oh-my-posh)" ]; then
+            _local_bin="$HOME/.local/bin"
+            mkdir -p "$_local_bin"
+            wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/posh-linux-amd64" -O "$_local_bin/oh-my-posh"
+            chmod +x "$_local_bin/oh-my-posh"
+        fi
+
+        if [ ! -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
+            _posh_themes="$HOME/.poshthemes"
+            mkdir -p "$_posh_themes"
+            wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
+
+            if [ -x "$(command -v unzip)" ]; then
+                unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
+            elif [ -x "$(command -v 7z)" ]; then
+                7z e "$_posh_themes/themes.zip" -o"$_posh_themes" -r
+            else
+                echo "Neither 'unzip' nor '7z' commands available to extract oh-my-posh themes."
+            fi
+
+            chmod u+rw ~/.poshthemes/*.json
+            rm -f "$_posh_themes/themes.zip"
+        fi
     fi
 
-    if [ ! -d "$HOME/.poshthemes" ]; then
-        mkdir -p "$HOME/.poshthemes"
-        wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$HOME/.poshthemes/themes.zip"
-        unzip -o "$HOME/.poshthemes/themes.zip" -d "$HOME/.poshthemes"
-        sudo chmod u+rw ~/.poshthemes/*.json
-        rm -f "$HOME/.poshthemes/themes.zip"
+    if [ "$(whoami)" == "root" ]; then
+        echo "Skipping install of 'go' and 'hugo' for root user."
+    else
+        install_go
+        install_hugo
     fi
 
-    install_go
-    install_hugo
-
-    stow linux "$@"
-    stow bash "$@"
-    stow vim "$@"
+    _stow linux "$@"
+    _stow bash "$@"
+    _stow vim "$@"
 
     initialize_gitconfig
 
     # Install the secure key-server certificate (Ubuntu/Debian)
-    mkdir -p /usr/local/share/ca-certificates/
-    curl -s https://sks-keyservers.net/sks-keyservers.netCA.pem | sudo tee /usr/local/share/ca-certificates/sks-keyservers.netCA.crt
-    sudo update-ca-certificates
+    if uname -a | grep -q "Ubuntu"; then
+        mkdir -p /usr/local/share/ca-certificates/
+        curl -s https://sks-keyservers.net/sks-keyservers.netCA.pem | sudo tee /usr/local/share/ca-certificates/sks-keyservers.netCA.crt
+        sudo update-ca-certificates
+    fi
 
     _gpg_agent_config="$HOME/.gnupg/gpg-agent.conf"
     rm -f "$_gpg_agent_config"
@@ -157,42 +330,54 @@ function initialize_linux() {
     if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
         echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gpg_agent_config"
     fi
+
+    # Make sure permissions are correct otherwise we'll get "unsafe permissions on homedir"
+    chown -R $(whoami) "$HOME/.gnupg"
+    chmod 600 ~/.gnupg/*
+    chmod 700 "$HOME/.gnupg"
+
     echo "Created custom gpg agent configuration: '$_gpg_agent_config'"
 
-    neofetch
+    if [ -x "$(command -v neofetch)" ]; then
+        neofetch
+    fi
 }
 
 #
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
 function build_stow() {
-    _dot_windows_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+    _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-    echo "[stow] Script directory: '$_dot_windows_script_root'"
-
-    if [ -x "$(command -v cpan)" ]; then
-        # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because
-        # it is faster but also because tests in 'Test::Output' causes consistent hangs
-        # in MSYS2, see https://rt-cpan.github.io/Public/Bug/Display/64319/
-        cpan -i -T YAML Test::Output CPAN::DistnameInfo 2>&1 | awk '{ print "[stow.cpan]", $0 }'
+    if [ -x "$(command -v stow)" ]; then
+        echo "Command 'stow' already available. Skipping build."
     else
-        echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
+        echo "[stow] Script directory: '$_dot_script_root'"
+
+        if [ -x "$(command -v cpan)" ]; then
+            # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because
+            # it is faster but also because tests in 'Test::Output' causes consistent hangs
+            # in MSYS2, see https://rt-cpan.github.io/Public/Bug/Display/64319/
+            cpan -i -T YAML Test::Output CPAN::DistnameInfo 2>&1 | awk '{ print "[stow.cpan]", $0 }'
+        else
+            echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
+        fi
+
+        # Move to source directory and start install.
+        (
+            cd "$_dot_script_root/stow" || true
+            autoreconf --install --verbose 2>&1 | awk '{ print "[stow.autoreconf]", $0 }'
+
+            # We want a local install
+            ./configure --prefix="" 2>&1 | awk '{ print "[stow.configure]", $0 }'
+
+            # Documentation part is expected to fail but we can ignore that
+            make --keep-going --ignore-errors 2>&1 | awk '{ print "[stow.make]", $0 }'
+
+            rm -f "./configure~"
+            git checkout -- "./aclocal.m4" || true
+        ) || true
     fi
-
-    # Move to source directory and start install.
-    (
-        cd "$_dot_windows_script_root/stow" || true
-        autoreconf --install --verbose 2>&1 | awk '{ print "[stow.autoreconf]", $0 }'
-
-        # We want a local install
-        ./configure --prefix="" 2>&1 | awk '{ print "[stow.configure]", $0 }'
-
-        # Documentation part is expected to fail but we can ignore that
-        make --keep-going --ignore-errors 2>&1 | awk '{ print "[stow.make]", $0 }'
-
-        rm -f "./configure~"
-        git checkout -- "./aclocal.m4" || true
-    ) || true
 }
 
 function initialize_windows() {
@@ -250,15 +435,15 @@ function initialize_windows() {
 function initialize_macos() {
     initialize_gitconfig
 
-    install_apps
+    install_macos_apps
 
-    configure_dock
-    configure_finder
-    configure_apps
-    configure_system
+    configure_macos_dock
+    configure_macos_finder
+    configure_macos_apps
+    configure_macos_system
 }
 
-function install_apps() {
+function install_macos_apps() {
     if ! [ -x "$(command -v brew)" ]; then
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
     fi
@@ -292,24 +477,24 @@ function install_apps() {
     echo "Installed dependencies with 'brew' package manager."
 }
 
-function configure_apps() {
+function configure_macos_apps() {
     mkdir -p ~/.config/fish
     mkdir -p ~/.ssh
     mkdir -p ~/Library/Application\ Support/Code
 
-    stow macos
-    stow linux
+    _stow macos
+    _stow linux
 
-    stow bash
-    stow zsh
-    stow fish
+    _stow bash
+    _stow zsh
+    _stow fish
 
-    stow fonts
-    stow ruby
-    stow vim
+    _stow fonts
+    _stow ruby
+    _stow vim
 
-    # We use built-in VSCode syncing so disabled the stow operation
-    #stow vscode
+    # We use built-in VSCode syncing so disabled the stow operation for VSCode
+    # _stow vscode
 
     fish -c "./fish/.config/fish/config.fish || fundle install" || true
 
@@ -325,7 +510,7 @@ function configure_apps() {
     echo "Configured applications with settings."
 }
 
-function configure_dock() {
+function configure_macos_dock() {
     # Set the icon size of Dock items to 36 pixels
     defaults write com.apple.dock tilesize -int 36
     # Wipe all (default) app icons from the Dock
@@ -360,7 +545,7 @@ function configure_dock() {
     echo "Configured Dock."
 }
 
-function configure_finder() {
+function configure_macos_finder() {
     # Save screenshots to Downloads folder
     defaults write com.apple.screencapture location -string "${HOME}/Downloads"
     # Require password immediately after sleep or screen saver begins
@@ -382,7 +567,7 @@ function configure_finder() {
     echo "Configured Finder."
 }
 
-function configure_system() {
+function configure_macos_system() {
     # Disable Gatekeeper entirely to get rid of "Are you sure you want to open this application?" dialog
     echo "Type password to disable Gatekeeper questions (are you sure you want to open this application?)"
     sudo spctl --master-disable

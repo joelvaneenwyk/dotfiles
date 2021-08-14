@@ -10,31 +10,36 @@
 # for ssh logins, install and configure the libpam-umask package.
 #umask 022
 
-# if running bash
+# Add extra things to the PATH
+if [ -d "$HOME/.local/bin" ]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+if [ -d "$HOME/.local/sbin" ]; then
+    export PATH="$HOME/.local/sbin:$PATH"
+fi
+
+if [ -d "$HOME/.config/git-fuzzy" ]; then
+    export PATH="$HOME/.config/git-fuzzy/bin:$PATH"
+fi
+
+if [ -d "/mnt/c/Program Files/Microsoft VS Code/bin" ]; then
+    export PATH="/mnt/c/Program Files/Microsoft VS Code/bin:$PATH"
+fi
+
+# Add extra things to the PATH
+if [ -d "/usr/local/gnupg/bin" ]; then
+    export PATH="/usr/local/gnupg/bin:$PATH"
+fi
+
+# set some defaults
+export EDITOR="micro"
+export PAGER="less -r"
+
+# If running bash
 if [ -n "$BASH_VERSION" ]; then
     # include .bashrc if it exists
     if [ -f "$HOME/.bashrc" ]; then
         . "$HOME/.bashrc"
     fi
 fi
-
-# add extra things to the PATH
-if [ -d "$HOME/.local/bin" ]; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
-
-if [ -d "$HOME/.local/sbin" ]; then
-    PATH="$HOME/.local/sbin:$PATH"
-fi
-
-if [ -d "$HOME/.config/git-fuzzy" ]; then
-    PATH="$HOME/.config/git-fuzzy/bin:$PATH"
-fi
-
-if [ -d "/mnt/c/Program Files/Microsoft VS Code/bin" ]; then
-    PATH="/mnt/c/Program Files/Microsoft VS Code/bin:$PATH"
-fi
-
-# set some defaults
-export EDITOR="micro"
-export PAGER="less -r"
