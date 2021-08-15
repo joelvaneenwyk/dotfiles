@@ -7,13 +7,13 @@
 GPG_TTY=$(tty)
 export GPG_TTY
 
-DOTFILE_CONFIG_ROOT="$0:A"
-export DOTFILE_CONFIG_ROOT
+MYCELIO_ROOT="$(cd $0:A && cd .. && pwd)"
+export MYCELIO_ROOT
 
 function _initialize_windows() {
-    export STOW_ROOT=$DOTFILE_CONFIG_ROOT/../stow
-    export PERL5LIB=$PERL5LIB:$DOTFILE_CONFIG_ROOT/../stow/lib
-    export PATH=$DOTFILE_CONFIG_ROOT/../stow/bin:$DOTFILE_CONFIG_ROOT/../.tmp/texlive/bin/win32:$PATH
+    export STOW_ROOT=$MYCELIO_ROOT/stow
+    export PERL5LIB=$PERL5LIB:$MYCELIO_ROOT/stow/lib
+    export PATH=$MYCELIO_ROOT/stow/bin:$MYCELIO_ROOT/.tmp/texlive/bin/win32:$PATH
     alias stow='perl -I "$STOW_ROOT/lib" "$STOW_ROOT/bin/stow"'
 }
 
@@ -22,7 +22,7 @@ case "${unameOut}" in
 Linux*)
     machine=Linux
 
-    if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null ; then
+    if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
         variant=WSL
     else
         variant=$(uname -mrs)
@@ -49,7 +49,8 @@ MSYS*)
     ;;
 *)
     machine="UNKNOWN"
-    variant=${unameOut};;
+    variant=${unameOut}
+    ;;
 esac
 
 # If not running interactively, don't do anything else.
@@ -110,7 +111,6 @@ xterm* | rxvt*)
 esac
 unset color_prompt force_color_prompt
 
-
 # enable color support of ls
 if [ -x /usr/bin/dircolors ]; then
     if [ -r "$HOME/.dircolors" ]; then
@@ -141,7 +141,7 @@ echo "▓▓░░   ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛"
 echo "▓▓░░"
 echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
 echo ""
-echo "Initialized '${machine}:${variant}' environment: '$DOTFILE_CONFIG_ROOT'"
+echo "Initialized '${machine}:${variant}' environment: '$MYCELIO_ROOT'"
 echo ""
 echo "Commands:"
 echo ""

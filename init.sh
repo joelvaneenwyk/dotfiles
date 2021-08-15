@@ -356,15 +356,6 @@ function initialize_linux() {
     cp "$_gnupg_templates_root/gpg.conf" "$_gnupg_config_root/gpg.conf"
     echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
 
-    # Make sure permissions are correct otherwise we'll get "unsafe permissions on homedir"
-    if chown -R $(whoami) "$HOME/.gnupg" >/dev/null 2>&1; then
-        find "$HOME/.gnupg" -type f -exec chmod 600 {} \; >/dev/null 2>&1
-        chmod 700 "$HOME/.gnupg" >/dev/null 2>&1
-        echo "Updated gnupg permissions: '$_gnupg_config_root'"
-    else
-        echo "Failed to update gnupg permissions: '$_gnupg_config_root'"
-    fi
-
     if [ -x "$(command -v neofetch)" ]; then
         neofetch
     fi

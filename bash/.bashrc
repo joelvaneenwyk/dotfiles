@@ -4,11 +4,34 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
+# Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
+# so we define our own version here.
+realpath() {
+    _pwd=$PWD
+    _input_path="$1"
+
+    cd "$(dirname "$_input_path")"
+
+    _link=$(readlink "$(basename "$_input_path")")
+    while [ "$_link" ]; do
+        cd "$(dirname "$_link")"
+        _link=$(readlink "$(basename "$_input_path")")
+    done
+
+    _real_path="$PWD/$(basename "$_input_path")"
+    cd "$_pwd"
+
+    echo "$_real_path"
+}
+
+export EDITOR="micro"
+export PAGER="less -r"
+
 GPG_TTY=$(tty)
 export GPG_TTY
 
-DOTFILE_CONFIG_ROOT="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-export DOTFILE_CONFIG_ROOT
+MYCELIO_ROOT="$(cd "$(dirname "$(realpath ${BASH_SOURCE[0]})")" &>/dev/null && cd .. && pwd)"
+export MYCELIO_ROOT
 
 function _path_prepend() {
     if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
@@ -49,11 +72,11 @@ function _initialize_go_paths() {
 }
 
 function _initialize_windows() {
-    export STOW_ROOT=$DOTFILE_CONFIG_ROOT/../stow
-    export PERL5LIB=$PERL5LIB:$DOTFILE_CONFIG_ROOT/../stow/lib
+    export STOW_ROOT=$MYCELIO_ROOT/stow
+    export PERL5LIB=$PERL5LIB:$MYCELIO_ROOT/stow/lib
 
-    _path_prepend "$DOTFILE_CONFIG_ROOT/../stow/bin"
-    _path_prepend "$DOTFILE_CONFIG_ROOT/../.tmp/texlive/bin/win32"
+    _path_prepend "$MYCELIO_ROOT/stow/bin"
+    _path_prepend "$MYCELIO_ROOT/.tmp/texlive/bin/win32"
 
     alias stow='perl -I "$STOW_ROOT/lib" "$STOW_ROOT/bin/stow"'
 }
@@ -190,10 +213,6 @@ HISTFILESIZE=2000
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
-# If set, the pattern "**" used in a pathname expansion context will
-# match all files and zero or more directories and subdirectories.
-#shopt -s globstar
-
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
@@ -285,7 +304,9 @@ if [ -x "$(command -v oh-my-posh)" ] && [ -f "$HOME/.poshthemes/stelbent.minimal
     eval "$(oh-my-posh --init --shell bash --config "$HOME/.poshthemes/stelbent.minimal.omp.json")"
 fi
 
-_parent="$(ps -o args= $PPID)"
+if ! _parent="$(ps -o args= $PPID)"; then
+    _parent="UNKNOWN"
+fi
 
 echo "▓▓░░"
 echo "▓▓░░   ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓"
@@ -294,7 +315,7 @@ echo "▓▓░░   ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛"
 echo "▓▓░░"
 echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
 echo ""
-echo "Initialized '${machine}:${variant}' environment: '$DOTFILE_CONFIG_ROOT'"
+echo "Initialized '${machine}:${variant}' environment: '$MYCELIO_ROOT'"
 echo ""
 echo "Parent: $_parent"
 echo ""

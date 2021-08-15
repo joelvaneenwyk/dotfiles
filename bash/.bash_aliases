@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-alias pgptest='echo "test" | gpg --clearsign'
-alias gpgtest='echo "test" | gpg --clearsign'
+alias gpgreset='gpg-connect-agent updatestartuptty /bye'
+alias pgptest='source "$MYCELIO_ROOT/source/shell/pgptest.sh"'
+alias gpgtest='source "$MYCELIO_ROOT/source/shell/pgptest.sh"'
 alias cls='clear'
 
 ## Common typos
@@ -16,7 +17,7 @@ alias .....='cd ../../../../'
 alias .4='cd ../../../../'
 alias .5='cd ../../../../..'
 
-alias refresh='git -C "$DOTFILE_CONFIG_ROOT/../" pull || source "$DOTFILE_CONFIG_ROOT/.bashrc"'
+alias refresh='git -C "$MYCELIO_ROOT" pull || source "$MYCELIO_ROOT/bash/.bashrc"'
 
 alias less='less -r'
 alias more='less -r'
