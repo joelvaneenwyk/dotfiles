@@ -40,10 +40,17 @@
         }
     },
 
+    "terminal.integrated.confirmOnExit": "always",
+    "terminal.integrated.showExitAlert": true,
+    "terminal.integrated.cwd": "${workspaceFolder}",
     "terminal.integrated.defaultProfile.linux": "bash",
     "terminal.integrated.profiles.linux": {
         "bash": {
-            "path": "bash",
+            "path": "sh",
+            "args": [
+                "-c",
+                "bash"
+            ],
             "icon": "terminal-bash"
         },
         "zsh": {
@@ -156,5 +163,6 @@
         "tldr",
         "xclip",
         "xmonad"
-    ]
+    ],
+    "terminal.integrated.environmentChangesRelaunch": false
 }

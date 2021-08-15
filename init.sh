@@ -8,17 +8,34 @@
 
 set -e
 
-_script="${BASH_SOURCE[0]}"
-_script_path="$(realpath "$_script")"
-_script_home="$(cd "$(dirname "$_script_path")" &>/dev/null && cd ../ && pwd)"
-_home=$HOME
+# Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
+# so we define our own version here.
+realpath() {
+    _pwd=$PWD
+    _input_path="$1"
+
+    cd "$(dirname "$_input_path")"
+
+    _link=$(readlink "$(basename "$_input_path")")
+    while [ "$_link" ]; do
+        cd "$(dirname "$_link")"
+        _link=$(readlink "$(basename "$_input_path")")
+    done
+
+    _real_path="$PWD/$(basename "$_input_path")"
+    cd "$_pwd"
+
+    echo "$_real_path"
+}
+
+MYCELIO_ROOT="$(cd "$(dirname "$(realpath ${BASH_SOURCE[0]})")" &>/dev/null && pwd)"
+_home=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
 _logs="$_home/.logs"
 
 # We use 'whoami' as $USER is not set for scheduled tasks
 echo "User: '$(whoami)'"
 echo "User Home: '$_home'"
-echo "Script: '$_script_path'"
-echo "Script Home: '$_script_home'"
+echo "Dotfiles Root: '$MYCELIO_ROOT'"
 echo "=---------------------"
 
 main() {
@@ -248,7 +265,7 @@ function initialize_linux() {
     _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
     if uname -a | grep -q "synology"; then
-        echo "No package installs supported on Synology."
+        echo "Skipped installing dependencies. Not supported on Synology platform."
     else
         sudo apt-get update
 

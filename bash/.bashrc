@@ -68,11 +68,14 @@ function _initialize_synology() {
         HOME=/root
         export HOME
 
+        USERNAME=root
+        export USERNAME
+
         # Only for console (ssh/telnet works w/o resize)
         isTTY=$(ps | grep $$ | grep tty)
 
         # Only for bash (bash needs to resize and can support these commands)
-        isBash=$(echo $BASH_VERSION)
+        isBash=$(echo ${BASH_VERSION:-})
 
         # Only for interactive (not necessary for "su -")
         isInteractive=$(echo $- | grep i)
@@ -278,8 +281,8 @@ if [ -x "$(command -v asdf)" ]; then
     source "$(brew --prefix asdf)/asdf.sh"
 fi
 
-if [ -x "$(command -v oh-my-posh)" ]; then
-    eval "$(oh-my-posh --init --shell bash --config ~/.poshthemes/stelbent.minimal.omp.json)"
+if [ -x "$(command -v oh-my-posh)" ] && [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
+    eval "$(oh-my-posh --init --shell bash --config "$HOME/.poshthemes/stelbent.minimal.omp.json")"
 fi
 
 _parent="$(ps -o args= $PPID)"
