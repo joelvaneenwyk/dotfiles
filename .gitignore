@@ -1,8 +1,6 @@
 .tmp
 
 bash/.gitconfig
-bash/.gnupg/
-!bash/.gnupg/gpg.conf
 
 Brewfile.lock.json
 

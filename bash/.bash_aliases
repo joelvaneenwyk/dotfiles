@@ -1,7 +1,20 @@
 #!/usr/bin/env bash
 
-alias pgptest='echo "test" | gpg --clearsign --homedir "$HOME/.gnupg"'
-alias gpgtest='echo "test" | gpg --clearsign --homedir "$HOME/.gnupg"'
+alias pgptest='echo "test" | gpg --clearsign'
+alias gpgtest='echo "test" | gpg --clearsign'
+alias cls='clear'
+
+## Common typos
+alias cd..='cd ..'
+alias cd~='cd ~'
+
+## Faster way to move around
+alias ..='cd ..'
+alias ...='cd ../../../'
+alias ....='cd ../../../../'
+alias .....='cd ../../../../'
+alias .4='cd ../../../../'
+alias .5='cd ../../../../..'
 
 alias refresh='git -C "$DOTFILE_CONFIG_ROOT/../" pull || source "$DOTFILE_CONFIG_ROOT/.bashrc"'
 

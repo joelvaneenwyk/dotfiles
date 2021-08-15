@@ -109,12 +109,12 @@ setlocal EnableExtensions EnableDelayedExpansion
 
         call :StowProfile "linux" ".config\micro\settings.json"
         call :StowProfile "linux" ".config\micro\init.lua"
-        call :StowProfile "linux" ".gnupg\gpg.conf"
         call :StowProfile "linux" ".gitignore_global"
         call :StowProfile "linux" ".profile"
         call :StowProfile "linux" ".ctags"
         call :StowProfile "bash" ".bash_aliases"
         call :StowProfile "bash" ".bashrc"
+        call :StowProfile "templates" ".gnupg\gpg.conf"
 
         call :StowPowerShell "Documents\WindowsPowerShell" "Profile.ps1"
         call :StowPowerShell "Documents\WindowsPowerShell" "powershell.config.json"

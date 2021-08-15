@@ -278,15 +278,19 @@ function initialize_linux() {
         DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
     fi
 
-    if [ -x "$(command -v pip3)" ]; then
-        pip3 install --user --upgrade pip
+    if [ "$(whoami)" == "root" ]; then
+        echo "Skipping install of Python setup for root user."
+    else
+        if [ -x "$(command -v pip3)" ]; then
+            pip3 install --user --upgrade pip
 
-        # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
-        # consistency between platforms and not install hacks we just use 'pip3' instead. For
-        # details on the issue, see https://github.com/microsoft/WSL/issues/5126
-        pip3 install --user pre-commit
+            # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
+            # consistency between platforms and not install hacks we just use 'pip3' instead. For
+            # details on the issue, see https://github.com/microsoft/WSL/issues/5126
+            pip3 install --user pre-commit
 
-        echo "Upgraded 'pip3' and installed 'pre-commit' package."
+            echo "Upgraded 'pip3' and installed 'pre-commit' package."
+        fi
     fi
 
     if [ "$(whoami)" == "root" ]; then
@@ -338,23 +342,28 @@ function initialize_linux() {
     fi
 
     _gnupg_config_root="$HOME/.gnupg"
-    _gpg_agent_config="$_gnupg_config_root/gpg-agent.conf"
-    rm -f "$_gpg_agent_config"
-    unlink "$_gpg_agent_config" >/dev/null 2>&1 || true
+    _gnupg_templates_root="$_dot_script_root/templates/.gnupg"
     mkdir -p "$_gnupg_config_root"
-    touch "$_gpg_agent_config"
-    echo "default-cache-ttl 34560000" >>"$_gpg_agent_config"
-    echo "max-cache-ttl 34560000" >>"$_gpg_agent_config"
+
+    rm -f "$_gnupg_config_root/gpg-agent.conf"
+    cp "$_gnupg_templates_root/gpg-agent.conf" "$_gnupg_config_root/gpg-agent.conf"
     if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-        echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gpg_agent_config"
+        echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gnupg_config_root/gpg-agent.conf"
     fi
+    echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"
+
+    rm -f "$_gnupg_config_root/gpg.conf"
+    cp "$_gnupg_templates_root/gpg.conf" "$_gnupg_config_root/gpg.conf"
+    echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
 
     # Make sure permissions are correct otherwise we'll get "unsafe permissions on homedir"
-    chown -R $(whoami) "$HOME/.gnupg"
-    chmod 600 ~/.gnupg/*
-    chmod 700 "$HOME/.gnupg"
-
-    echo "Created custom gpg agent configuration: '$_gpg_agent_config'"
+    if chown -R $(whoami) "$HOME/.gnupg" >/dev/null 2>&1; then
+        find "$HOME/.gnupg" -type f -exec chmod 600 {} \; >/dev/null 2>&1
+        chmod 700 "$HOME/.gnupg" >/dev/null 2>&1
+        echo "Updated gnupg permissions: '$_gnupg_config_root'"
+    else
+        echo "Failed to update gnupg permissions: '$_gnupg_config_root'"
+    fi
 
     if [ -x "$(command -v neofetch)" ]; then
         neofetch

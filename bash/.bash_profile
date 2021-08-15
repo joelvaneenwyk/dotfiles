@@ -9,6 +9,7 @@
 #
 
 if [ -f "$HOME/.profile" ]; then
+    # This will load bashrc as well
     . "$HOME/.profile"
 else
     # If running bash

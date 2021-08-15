@@ -27,11 +27,6 @@ if [ -d "/mnt/c/Program Files/Microsoft VS Code/bin" ]; then
     export PATH="/mnt/c/Program Files/Microsoft VS Code/bin:$PATH"
 fi
 
-# Add extra things to the PATH
-if [ -d "/usr/local/gnupg/bin" ]; then
-    export PATH="/usr/local/gnupg/bin:$PATH"
-fi
-
 # set some defaults
 export EDITOR="micro"
 export PAGER="less -r"
