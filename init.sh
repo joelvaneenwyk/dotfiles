@@ -337,10 +337,11 @@ function initialize_linux() {
         sudo update-ca-certificates
     fi
 
-    _gpg_agent_config="$HOME/.gnupg/gpg-agent.conf"
+    _gnupg_config_root="$HOME/.gnupg"
+    _gpg_agent_config="$_gnupg_config_root/gpg-agent.conf"
     rm -f "$_gpg_agent_config"
     unlink "$_gpg_agent_config" >/dev/null 2>&1 || true
-    mkdir -p "$HOME/.gnupg"
+    mkdir -p "$_gnupg_config_root"
     touch "$_gpg_agent_config"
     echo "default-cache-ttl 34560000" >>"$_gpg_agent_config"
     echo "max-cache-ttl 34560000" >>"$_gpg_agent_config"

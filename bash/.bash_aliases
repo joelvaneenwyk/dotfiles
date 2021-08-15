@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-alias pgptest='echo "test" | gpg --clearsign'
-alias gpgtest='echo "test" | gpg --clearsign'
+alias pgptest='echo "test" | gpg --clearsign --homedir "$HOME/.gnupg"'
+alias gpgtest='echo "test" | gpg --clearsign --homedir "$HOME/.gnupg"'
 
 alias refresh='git -C "$DOTFILE_CONFIG_ROOT/../" pull || source "$DOTFILE_CONFIG_ROOT/.bashrc"'
 
