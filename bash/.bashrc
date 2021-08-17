@@ -26,6 +26,8 @@ realpath() {
 
 export EDITOR="micro"
 export PAGER="less -r"
+export LC_ALL="C"
+export LC_COLLATE="C"
 
 GPG_TTY=$(tty)
 export GPG_TTY
