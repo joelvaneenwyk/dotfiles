@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Add extra things to the PATH to be accessible to dmenu.
 if [ -d "$HOME/.local/bin" ]; then
@@ -15,19 +15,19 @@ if [ -d "$HOME/.rbenv" ]; then
 fi
 
 xrandr --output GPU-0.DP-0 --auto \
-       --output GPU-0.DP-1 --auto --below GPU-0.DP-0 \
-       --output GPU-1.DP-0 --auto --right-of GPU-0.DP-1
+   --output GPU-0.DP-1 --auto --below GPU-0.DP-0 \
+   --output GPU-1.DP-0 --auto --right-of GPU-0.DP-1
 
-xrdb -merge $HOME/.Xresources
+xrdb -merge "$HOME/.Xresources"
 
 # Add tray for icons.
 trayer --edge bottom --align right --SetDockType true --SetPartialStrut true --expand false --widthtype percent --width 10% --height 20 --transparent true --alpha 255 &
 
-if [ -x /usr/bin/nm-applet ] ; then
+if [ -x /usr/bin/nm-applet ]; then
    nm-applet --sm-disable &
 fi
 
-if [ -x /usr/bin/gnome-power-manager ] ; then
+if [ -x /usr/bin/gnome-power-manager ]; then
    gnome-power-manager &
 fi
 
@@ -52,9 +52,9 @@ xset m 5/2 0
 numlockx on
 
 # Switch to norman keyboard layout.
-setxkbmap -layout norman -option ctrl:nocaps; xset r 66
+setxkbmap -layout norman -option ctrl:nocaps
+xset r 66
 
 # Clear the background.
 xsetroot -solid black
 feh --bg-fill ~/Pictures/P1018702.JPG
-

@@ -1,11 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 FILENAME=/local/mnt/workspace/.screenshot.png
 
 rm $FILENAME
 shutter -C -s -e -n -o $FILENAME
 url=$(curl --form imagedata=@$FILENAME http://ahye.qualcomm.com/upload)
-echo $url | xclip -selection primary
-echo $url | xclip -selection clipboard
-xdg-open $url
-
+echo "$url" | xclip -selection primary
+echo "$url" | xclip -selection clipboard
+xdg-open "$url"

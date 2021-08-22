@@ -1,3 +1,3 @@
-#!/bin/bash
-exec xmonad
+#!/usr/bin/env bash
 
+exec xmonad

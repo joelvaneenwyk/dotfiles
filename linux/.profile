@@ -118,7 +118,7 @@ _initialize_interactive_profile() {
     force_color_prompt=yes
 
     if [ -n "$force_color_prompt" ]; then
-        if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+        if [ -x /usr/bin/tput ] && tput setaf 1 >/dev/null 2>&1; then
             # We have color support; assume it's compliant with Ecma-48
             # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
             # a case would tend to support setf rather than setaf.)
@@ -170,7 +170,7 @@ _initialize_interactive_profile() {
             machine=Linux
         fi
 
-        if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
+        if grep -qEi "(Microsoft|WSL)" /proc/version >/dev/null 2>&1; then
             variant=WSL
         else
             variant=$(uname -mrs)
@@ -210,7 +210,7 @@ _initialize_interactive_profile() {
     echo ""
 }
 
-function _start_tmux() {
+_start_tmux() {
     if ! { [ "$TERM" = "screen" ] && [ -n "$TMUX" ]; }; then
         tmux new-session -d -s mycelio -n mycowin
         tmux send-keys -t mycelio:mycowin "cd ~/workspace" Enter
@@ -234,9 +234,7 @@ _initialize_go_paths() {
     _add_path "prepend" "$GOBIN"
 
     if [ -f "$_go_bin" ]; then
-        GOPATH="$("$_go_bin" env GOPATH)"
-        export GOPATH
-
+        unset GOPATH
         "$_go_bin" env -w GOROOT="$GOROOT"
         "$_go_bin" env -w GOBIN="$GOROOT/bin"
     fi
@@ -244,10 +242,10 @@ _initialize_go_paths() {
 
 _initialize_windows() {
     if [ -d "${MYCELIO_ROOT:-}" ]; then
-        export STOW_ROOT=$MYCELIO_ROOT/stow
-        export PERL5LIB=$PERL5LIB:$MYCELIO_ROOT/stow/lib
+        export STOW_ROOT=$MYCELIO_ROOT/source/stow
+        export PERL5LIB=$PERL5LIB:$STOW_ROOT/lib
 
-        _add_path "prepend" "$MYCELIO_ROOT/stow/bin"
+        _add_path "prepend" "$STOW_ROOT/bin"
         _add_path "prepend" "$MYCELIO_ROOT/.tmp/texlive/bin/win32"
 
         alias stow='perl -I "$STOW_ROOT/lib" "$STOW_ROOT/bin/stow"'
@@ -260,7 +258,7 @@ _initialize_synology() {
     #        stty erase
     #fi
 
-    if [ "$(whoami)" == "root" ]; then
+    if [ "$(whoami)" = "root" ]; then
         HOME=/root
         export HOME
 

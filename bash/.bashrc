@@ -10,16 +10,16 @@ function _get_real_path() {
     _pwd=$PWD
     _input_path="$1"
 
-    cd "$(dirname "$_input_path")"
+    cd "$(dirname "$_input_path")" || true
 
     _link=$(readlink "$(basename "$_input_path")")
     while [ "$_link" ]; do
-        cd "$(dirname "$_link")"
+        cd "$(dirname "$_link")" || true
         _link=$(readlink "$(basename "$_input_path")")
     done
 
     _real_path="$PWD/$(basename "$_input_path")"
-    cd "$_pwd"
+    cd "$_pwd" || true
 
     echo "$_real_path"
 }
@@ -41,29 +41,41 @@ function _start_tmux() {
 function _initialize_synology() {
     if [ "$(whoami)" == "root" ]; then
         # Only for console (ssh/telnet works w/o resize)
+        # shellcheck disable=SC2009
         isTTY=$(ps | grep $$ | grep tty)
 
         # Only for bash (bash needs to resize and can support these commands)
-        isBash=$(echo ${BASH_VERSION:-})
+        # shellcheck disable=SC2116
+        isBash=$(echo "${BASH_VERSION:-}")
 
         # Only for interactive (not necessary for "su -")
         isInteractive=$(echo $- | grep i)
 
-        if [ -n "$isTTY" -a -n "$isBash" -a -n "$isInteractive" ]; then
+        if [ -n "$isTTY" ] && [ -n "$isBash" ] && [ -n "$isInteractive" ]; then
             shopt -s checkwinsize
 
+            # shellcheck disable=SC2016
             checksize='echo -en "\E7 \E[r \E[999;999H \E[6n"; read -sdR CURPOS;CURPOS=${CURPOS#*[}; IFS="?; \t\n"; read lines columns <<< "$(echo $CURPOS)"; unset IFS'
 
+            # shellcheck disable=SC2086
             eval $checksize
 
-            # columns is 1 in Procomm ANSI-BBS
+            # Columns is 1 in Procomm ANSI-BBS
+            # shellcheck disable=SC2154
             if [ 1 != "$columns" ]; then
+                # shellcheck disable=SC2016
                 export_stty='export COLUMNS=$columns; export LINES=$lines; stty columns $columns; stty rows $lines'
+
+                # shellcheck disable=SC2139
                 alias resize="$checksize; columns=\$((\$columns - 1)); $export_stty"
+
+                # shellcheck disable=SC2004
                 eval "$checksize; columns=$(($columns - 1)); $export_stty"
 
+                # shellcheck disable=SC2142
                 alias vim='function _vim(){ eval resize; TERM=xterm vi $@; }; _vim'
             else
+                # shellcheck disable=SC2142
                 alias vim='TERM=xterm vi $@'
             fi
 
@@ -117,11 +129,14 @@ function _initialize_interactive_bash_profile() {
 
     if [ -x "$(command -v asdf)" ]; then
         if [ -x "$(command -v brew)" ]; then
+            # shellcheck disable=SC1091
             source "$(brew --prefix asdf)/asdf.sh"
         elif [ -f "$HOME/.asdf/asdf.sh" ]; then
+            # shellcheck disable=SC1091
             . "$HOME/.asdf/asdf.sh"
 
             if [ -f "$HOME/.asdf/completions/asdf.bash" ]; then
+                # shellcheck disable=SC1091
                 . "$HOME/.asdf/completions/asdf.bash"
             fi
         fi
@@ -133,7 +148,7 @@ function _initialize_interactive_bash_profile() {
 }
 
 function _initialize_bash_profile() {
-    MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path ${BASH_SOURCE[0]})")" &>/dev/null && cd .. && pwd)"
+    MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd .. && pwd)"
     export MYCELIO_ROOT
 
     if uname -a | grep -q "synology"; then
@@ -148,6 +163,7 @@ function _initialize_bash_profile() {
     # Generic POSIX shell profile setup. This will print the logo if
     # we are not running interactively.
     if [ -f "$HOME/.profile" ]; then
+        # shellcheck disable=SC1091
         . "$HOME/.profile"
     fi
 

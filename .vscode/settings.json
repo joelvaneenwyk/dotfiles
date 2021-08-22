@@ -1,8 +1,25 @@
 {
     "shellcheck.enable": true,
+    "shellcheck.run": "onSave",
     "shellcheck.enableQuickFix": true,
-    "shellcheck.exclude": [
-        "stow/**"
+    "shellcheck.ignorePatterns": {
+        "source/stow/**": true
+    },
+    "[shellscript]": {
+        "editor.formatOnSave": true,
+        "files.eol": "\n"
+    },
+
+    "Lua.workspace.ignoreDir": [
+        ".vscode",
+        "linux/.config/micro",
+        "windows/clink"
+    ],
+    "Lua.workspace.library": [
+        "windows/clink-completions",
+        "windows/clink",
+        "macos/.hammerspoon",
+        "linux/.config"
     ],
 
     "perl.enable": false,
@@ -105,11 +122,6 @@
     },
     "json.format.enable": true,
 
-    "[shellscript]": {
-        "editor.formatOnSave": true,
-        "files.eol": "\n"
-    },
-
     "[powershell]": {
         "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
         "editor.semanticHighlighting.enabled": false,
@@ -118,44 +130,39 @@
     },
     "powershell.scriptAnalysis.enable": true,
     "powershell.scriptAnalysis.settingsPath": "powershell/PSScriptAnalyzerSettings.psd1",
-
-    // "Adds a space between a keyword and its associated scriptblock expression."
     "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
-
-    // "Adds a space between a keyword (if, elseif, while, switch, etc) and its associated conditional expression."
     "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
-
-    // "Adds spaces before and after an operator ('=', '+', '-', etc.)."
     "powershell.codeFormatting.whitespaceAroundOperator": true,
-
-    // "Adds a space after a separator (',' and ';')."
     "powershell.codeFormatting.whitespaceAfterSeparator": true,
-
-    // "Adds a space after an opening brace ('{') and before a closing brace ('}')."
     "powershell.codeFormatting.whitespaceInsideBrace": true,
-
-    // "Removes redundant whitespace between parameters."
     "powershell.codeFormatting.whitespaceBetweenParameters": true,
-
-    // "Adds a space before and after the pipeline operator ('|') if it is missing."
     "powershell.codeFormatting.addWhitespaceAroundPipe": true,
-
-    // "Trims extraneous whitespace (more than 1 character) before and after the pipeline operator ('|')."
     "powershell.codeFormatting.trimWhitespaceAroundPipe": false,
-
-    // "Does not reformat one-line code blocks, such as \"if (...) {...} else {...}\"."
     "powershell.codeFormatting.ignoreOneLineBlock": false,
-
-    // "Align assignment statements in a hashtable or a DSC Configuration."
     "powershell.codeFormatting.alignPropertyValuePairs": true,
-
-    // "Use correct casing for cmdlets."
     "powershell.codeFormatting.useCorrectCasing": true,
 
     "git.requireGitUserConfig": false,
 
+    "terminal.integrated.environmentChangesRelaunch": false,
+
+    "cSpell.ignorePaths": [
+        "**/package-lock.json",
+        "**/node_modules/**",
+        "**/vscode-extension/**",
+        "**/.git/objects/**",
+        ".vscode",
+        ".vscode-insiders",
+        "source/stow/**",
+        ".Xresources",
+        ".xmobarrc",
+        "windows/clink-completions/**",
+        "linux/.config/micro/settings.json"
+    ],
     "cSpell.words": [
         "beaners",
+        "buildx",
+        "dockerhub",
         "dotfile",
         "dotfiles",
         "eval",
@@ -163,6 +170,9 @@
         "kleopatra",
         "noconfirm",
         "pacman",
+        "qemu",
+        "rlespinasse",
+        "semver",
         "submodules",
         "symlink",
         "symlinking",
@@ -171,6 +181,5 @@
         "tldr",
         "xclip",
         "xmonad"
-    ],
-    "terminal.integrated.environmentChangesRelaunch": false
+    ]
 }
