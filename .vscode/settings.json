@@ -1,6 +1,6 @@
 {
     "shellcheck.enable": true,
-    "shellcheck.run": "onSave",
+    "shellcheck.run": "onType",
     "shellcheck.enableQuickFix": true,
     "shellcheck.ignorePatterns": {
         "source/stow/**": true
@@ -171,6 +171,7 @@
         "noconfirm",
         "pacman",
         "qemu",
+        "restow",
         "rlespinasse",
         "semver",
         "submodules",
