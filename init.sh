@@ -142,7 +142,12 @@ function install_hugo {
 
         if (
             cd "$_tmp_hugo"
+
+            # We only modify the environment for this subshell and that is the expectation
+            # so we ignore the warnings here.
+            # shellcheck disable=SC2030
             export GOROOT="$_go_env_root"
+            # shellcheck disable=SC2030
             export GOBIN="$_go_env_bin"
 
             # No support for GCC on Synology so not able to build extended features

@@ -273,8 +273,10 @@ _initialize_profile() {
     export LC_ALL="C"
     export LC_COLLATE="C"
 
-    GPG_TTY=$(tty)
-    export GPG_TTY
+    if _tty="$(tty)"; then
+        GPG_TTY="$_tty"
+        export GPG_TTY
+    fi
 
     _add_path "prepend" "/usr/local/gnupg/bin"
     _add_path "prepend" "$HOME/.local/bin"
