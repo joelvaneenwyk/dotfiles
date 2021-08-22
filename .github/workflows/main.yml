@@ -46,7 +46,7 @@ jobs:
       # Runs a single command using the runners shell
       - name: Initialize environment
         working-directory: ${{ github.workspace }}
-        run: ${{ matrix.launch }} --delete --restow
+        run: ${{ matrix.launch }} -c --restow
 
   docker_build:
     runs-on: ubuntu-latest

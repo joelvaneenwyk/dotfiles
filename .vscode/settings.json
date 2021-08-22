@@ -2,6 +2,7 @@
     "shellcheck.enable": true,
     "shellcheck.run": "onType",
     "shellcheck.enableQuickFix": true,
+    "shellcheck.customArgs": ["-x"],
     "shellcheck.ignorePatterns": {
         "source/stow/**": true
     },

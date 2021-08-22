@@ -394,10 +394,10 @@ function initialize_linux() {
         install_hugo
     fi
 
-    _stow linux "$@"
-    _stow bash "$@"
-    _stow zsh "$@"
-    _stow vim "$@"
+    _stow "$@" linux
+    _stow "$@" bash
+    _stow "$@" zsh
+    _stow "$@" vim
 
     initialize_gitconfig
 
@@ -422,10 +422,6 @@ function initialize_linux() {
     rm -f "$_gnupg_config_root/gpg.conf"
     cp "$_gnupg_templates_root/gpg.conf" "$_gnupg_config_root/gpg.conf"
     echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
-
-    if [ -x "$(command -v neofetch)" ]; then
-        neofetch
-    fi
 }
 
 #
@@ -524,7 +520,10 @@ function initialize_macos() {
 
     configure_macos_dock
     configure_macos_finder
-    configure_macos_apps
+
+    # We pass in 'stow' arguments
+    configure_macos_apps "$@"
+
     configure_macos_system
 }
 
@@ -567,16 +566,16 @@ function configure_macos_apps() {
     mkdir -p ~/.ssh
     mkdir -p ~/Library/Application\ Support/Code
 
-    _stow macos
-    _stow linux
+    _stow "$@" macos
+    _stow "$@" linux
 
-    _stow bash
-    _stow zsh
-    _stow fish
+    _stow "$@" bash
+    _stow "$@" zsh
+    _stow "$@" fish
 
-    _stow fonts
-    _stow ruby
-    _stow vim
+    _stow "$@" fonts
+    _stow "$@" ruby
+    _stow "$@" vim
 
     # We use built-in VSCode syncing so disabled the stow operation for VSCode
     # _stow vscode
@@ -694,6 +693,24 @@ function main() {
     echo "Dotfiles Root: '$MYCELIO_ROOT'"
     echo "=---------------------"
 
+    # Reset in case getopts has been used previously in the shell.
+    OPTIND=1
+    while getopts "c" opt >/dev/null 2>&1; do
+        case "$opt" in
+        c)
+            rm -f "$HOME/.profile"
+            rm -f "$HOME/.bash_profile"
+            rm -f "$HOME/.bashrc"
+            echo "Removed existing profile data."
+            ;;
+        *)
+            # We simply ignore invalid options
+            ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+    [ "${1:-}" = "--" ] && shift
+
     uname_system="$(uname -s)"
     case "${uname_system}" in
     Linux*)
@@ -720,6 +737,16 @@ function main() {
     esac
 
     echo "Initialized '${machine}' machine."
+
+    if [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
+        # shellcheck source=linux/.profile
+        . "$MYCELIO_ROOT/linux/.profile"
+        echo "Refreshed profile data."
+    fi
+
+    if [ -x "$(command -v neofetch)" ]; then
+        neofetch
+    fi
 }
 
 main "$@"

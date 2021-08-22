@@ -10,8 +10,6 @@
 # Generated files that may be used in Docker
 artifacts/
 
-bash/.gitconfig
-
 Brewfile.lock.json
 
 fish/.local/share
