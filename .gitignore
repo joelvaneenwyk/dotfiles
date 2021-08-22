@@ -5,6 +5,8 @@
 # Local temporary files not intended to be committed or used in Docker instances
 .tmp
 
+/stow/
+
 # Generated files that may be used in Docker
 artifacts/
 

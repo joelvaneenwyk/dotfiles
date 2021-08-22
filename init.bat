@@ -81,9 +81,9 @@ setlocal EnableExtensions EnableDelayedExpansion
         docker rm --force "!_container_name!" > nul 2>&1
         docker stop "!_container_instance!" > nul 2>&1
 
-        docker build --rm -t "!_container_name!" -f "%DOT_PROFILE_ROOT%\docker\Dockerfile.!_container_platform!" .
+        docker build --rm -t "!_container_name!" -f "%DOT_PROFILE_ROOT%\source\docker\Dockerfile.!_container_platform!" .
         if errorlevel 1 (
-            echo Docker '!_container_name!' container build failed: '%DOT_PROFILE_ROOT%\docker\Dockerfile.!_container_platform!'
+            echo Docker '!_container_name!' container build failed: '%DOT_PROFILE_ROOT%\source\docker\Dockerfile.!_container_platform!'
         ) else (
             docker run --name "!_container_instance!" -it --rm "!_container_name!"
         )
