@@ -7,10 +7,10 @@ RUN apt-get update && apt-get install -y sudo
 
 # Create new user and disable password and gecos for later. See '--gecos' explained
 # well here: https://askubuntu.com/a/1195288/635348
-RUN adduser --home /home/${USERNAME} --disabled-password --gecos '' ${USERNAME}
+RUN adduser --home "/home/${USERNAME}" --disabled-password --gecos "" ${USERNAME}
 
 #  Add new user to sudo group
-RUN usermod -aG sudo ${USERNAME}
+RUN usermod -aG sudo "${USERNAME}"
 
 # Ensure sudo group users are not asked for a password when using
 # the sudo command by ammending sudoers file.
@@ -24,9 +24,9 @@ WORKDIR /home/${USERNAME}
 
 RUN sudo apt-get update
 
-COPY --chown=${USERNAME} ./ ./
+COPY --chown=${USERNAME} ./ ./dotfiles/
 
-RUN ./init.sh
+RUN ./dotfiles/init.sh --adopt
 
 ENTRYPOINT [ "/bin/bash", "-c" ]
 CMD ["neofetch && bash"]

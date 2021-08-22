@@ -247,10 +247,11 @@ function install_go {
 }
 
 function _stow() {
+    _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
     if [ -x "$(command -v stow)" ]; then
-        stow "$@"
+        stow --dir="$_dot_script_root" --target="$HOME" --verbose "$@"
     elif uname -a | grep -q "synology"; then
-        _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
         _root_dir="$_dot_script_root/$1/"
         _root="$_dot_script_root/$1"
 
@@ -695,8 +696,8 @@ function main() {
     echo "Dotfiles Root: '$MYCELIO_ROOT'"
     echo "=---------------------"
 
-    unameOut="$(uname -s)"
-    case "${unameOut}" in
+    uname_system="$(uname -s)"
+    case "${uname_system}" in
     Linux*)
         machine=Linux
         initialize_linux "$@"
@@ -717,7 +718,7 @@ function main() {
         machine=MSYS
         initialize_windows "$@"
         ;;
-    *) machine="UNKNOWN:${unameOut}" ;;
+    *) machine="UNKNOWN:${uname_system}" ;;
     esac
 
     echo "Initialized '${machine}' machine."
