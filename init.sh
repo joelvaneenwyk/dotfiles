@@ -2,15 +2,16 @@
 #
 # Usage: ./init.sh
 #
-# - Install commonly used apps using "brew bundle" (see Brewfile).
-# - Uses "stow" to link config files into home directory.
-# - Sets some app settings (derived from https://github.com/Sajjadhosn/dotfiles).
+#   - Install commonly used apps using "brew bundle" (see Brewfile).
+#   - Uses "stow" to link config files into home directory.
+#   - Sets some app settings (derived from https://github.com/Sajjadhosn/dotfiles).
+#
 
 set -e
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
 # so we define our own version here.
-realpath() {
+function realpath() {
     _pwd=$PWD
     _input_path="$1"
 
@@ -28,46 +29,7 @@ realpath() {
     echo "$_real_path"
 }
 
-MYCELIO_ROOT="$(cd "$(dirname "$(realpath ${BASH_SOURCE[0]})")" &>/dev/null && pwd)"
-_home=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
-_logs="$_home/.logs"
-
-# We use 'whoami' as $USER is not set for scheduled tasks
-echo "User: '$(whoami)'"
-echo "User Home: '$_home'"
-echo "Dotfiles Root: '$MYCELIO_ROOT'"
-echo "=---------------------"
-
-main() {
-    unameOut="$(uname -s)"
-    case "${unameOut}" in
-    Linux*)
-        machine=Linux
-        initialize_linux "$@"
-        ;;
-    Darwin*)
-        machine=Mac
-        initialize_macos "$@"
-        ;;
-    CYGWIN*)
-        machine=Cygwin
-        initialize_windows "$@"
-        ;;
-    MINGW*)
-        machine=MinGw
-        initialize_windows "$@"
-        ;;
-    MSYS*)
-        machine=MSYS
-        initialize_windows "$@"
-        ;;
-    *) machine="UNKNOWN:${unameOut}" ;;
-    esac
-
-    echo "Initialized '${machine}' machine."
-}
-
-_command_exists() {
+function _command_exists() {
     if command -v "$@" >/dev/null 2>&1; then
         return 0
     fi
@@ -79,7 +41,7 @@ _command_exists() {
 # Some platforms (e.g. MacOS) do not come with 'timeout' command so
 # this is a cross-platform implementation that optionally uses perl.
 #
-_timeout() {
+function _timeout() {
     _seconds="${1:-}"
     shift
 
@@ -100,7 +62,7 @@ _timeout() {
 #
 #   - https://superuser.com/questions/553932/how-to-check-if-i-have-sudo-access
 #
-__has_admin_rights() {
+function _has_admin_rights() {
     if ! _command_exists "sudo"; then
         #_printDebug "$@" "[sudo] Not found."
         #_status="no_sudo"
@@ -175,19 +137,33 @@ function install_hugo {
         rm -rf "$_tmp_hugo"
         git -c advice.detachedHead=false clone -b "v0.87.0" "https://github.com/gohugoio/hugo.git" "$_tmp_hugo"
 
-        _goPath="$("$_go_bin" env GOPATH)"
-        _goRoot="$_go_root"
-        _goBin="$_goRoot/bin"
-        _path="$_goBin:$PATH"
+        _go_env_path="$("$_go_bin" env GOPATH)"
+        _go_env_root="$_go_root"
+        _go_env_bin="$_go_env_root/bin"
+        _path="$_go_env_bin:$PATH"
+
+        _cd="$(pwd)"
+        cd "$_tmp_hugo"
+
+        _options=""
+        _cgo=0
 
         if uname -a | grep -q "synology"; then
             # No support for GCC on Synology
             echo "Building 'hugo' with go without extended features..."
-            (cd "$_tmp_hugo" && GOPATH=$_goPath GOROOT=$_goRoot GOBIN=$_goBin PATH=$_path CGO_ENABLED=0 "$_go_bin" install)
         else
             echo "Building 'hugo' with CGO and extended features..."
-            (cd "$_tmp_hugo" && GOPATH=$_goPath GOROOT=$_goRoot GOBIN=$_goBin PATH=$_path CGO_ENABLED=1 "$_go_bin" install --tags extended)
+            _options="--tags extended"
+            _cgo=1
         fi
+
+        if GOPATH=$_go_env_path GOROOT=$_go_env_root GOBIN=$_go_env_bin PATH=$_path CGO_ENABLED=$_cgo "$_go_bin" install $_options; then
+            echo "Successfully installed 'go' compiler."
+        else
+            echo "Failed to install 'go' compiler."
+        fi
+
+        cd "$_cd"
     fi
 
     if [ -f "$_hugo_bin" ]; then
@@ -199,7 +175,7 @@ function install_hugo {
 
 function install_go {
     _local_bin="$HOME/.local/bin"
-    _go_bin="$HOME/.local/bin/go/bin/go"
+    _go_bin="$_local_bin/go/bin/go"
 
     if [ -f "$_go_bin" ]; then
         version=$("$_go_bin" version | {
@@ -209,25 +185,57 @@ function install_go {
         minor=$(echo "$version" | cut -d. -f2)
     fi
 
-    if [ ! -f "$_go_bin" ] && ((minor < 16)); then
+    if [ ! -f "$_go_bin" ] || ((minor < 17)); then
         _tmp="$HOME/.tmp"
         mkdir -p "$_tmp"
 
-        # Install Golang
-        if [ ! -f "$_tmp/go1.16.7.linux-amd64.tar.gz" ]; then
-            wget https://dl.google.com/go/go1.16.7.linux-amd64.tar.gz --directory-prefix="$_tmp"
+        _go_version="1.17"
+        _arch_name="$(uname -m)"
+        _go_arch=""
+
+        if [ "${_arch_name}" = "x86_64" ]; then
+            if [ "$(sysctl -in sysctl.proc_translated 2>&1)" = "1" ]; then
+                # Running on Rosetta 2
+                _go_arch="amd64"
+            else
+                # Running on native Intel
+                _go_arch="amd64"
+            fi
+        elif [ "${_arch_name}" = "x86" ]; then
+            _go_arch="386"
+        elif [ "${_arch_name}" = "arm64" ]; then
+            _go_arch="arm64"
         fi
 
-        _go_tmp="$_tmp/go"
-        rm -rf "$_go_tmp"
-        mkdir -p "$_go_tmp"
-        tar -xvf "$_tmp/go1.16.7.linux-amd64.tar.gz" --directory "$_tmp"
+        if _uname_output="$(uname -s 2>/dev/null)"; then
+            case "${_uname_output}" in
+            Linux*)
+                _go_archive="go$_go_version.linux-$_go_arch.tar.gz"
+                ;;
+            Darwin*)
+                _go_archive="go$_go_version.darwin-$_go_arch.tar.gz"
+                ;;
+            esac
+        fi
 
-        mkdir -p "$_local_bin"
-        mv "$_go_tmp" "$_local_bin"
-        echo "Updated 'go' install: '$_local_bin'"
+        # Install Golang
+        if [ -z "$_go_archive" ]; then
+            echo "Unsupported platform for installing 'go' language."
+        else
+            wget "https://dl.google.com/go/$_go_archive" -O "$_tmp/$_go_archive"
 
-        rm -rf "$_go_tmp"
+            _go_tmp="$_tmp/go"
+            rm -rf "$_go_tmp"
+            mkdir -p "$_go_tmp"
+            tar -xf "$_tmp/$_go_archive" --directory "$_tmp"
+
+            mkdir -p "$_local_bin"
+            rm -rf "$_local_bin/go"
+            mv "$_go_tmp" "$_local_bin"
+            echo "Updated 'go' install: '$_local_bin'"
+
+            rm -rf "$_go_tmp"
+        fi
     fi
 
     if _version=$("$_go_bin" version); then
@@ -303,6 +311,29 @@ function initialize_linux() {
             chmod +x "$_local_bin/oh-my-posh"
         fi
 
+        font_base_name="JetBrains Mono"
+        font_base_filename=$(echo "$font_base_name" | sed 's/ //g')
+        font_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$font_base_filename.zip"
+        _fonts_path="$HOME/.fonts"
+
+        if [ ! -f "$_fonts_path/JetBrains Mono Regular Nerd Font Complete.ttf" ]; then
+            mkdir -p "$_fonts_path"
+            wget "$font_url" -O "$_fonts_path/$font_base_filename.zip"
+
+            if [ -x "$(command -v unzip)" ]; then
+                unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
+            elif [ -x "$(command -v 7z)" ]; then
+                7z e "$_fonts_path/$font_base_filename.zip" -o"$_fonts_path" -r
+            else
+                echo "Neither 'unzip' nor '7z' commands available to extract fonts."
+            fi
+
+            chmod u+rw ~/.fonts
+            rm -f "$_fonts_path/$font_base_filename.zip"
+
+            fc-cache -fv >/dev/null 2>&1
+        fi
+
         if [ ! -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
             _posh_themes="$HOME/.poshthemes"
             mkdir -p "$_posh_themes"
@@ -321,6 +352,10 @@ function initialize_linux() {
         fi
     fi
 
+    if [ ! -d "$HOME/.asdf" ]; then
+        git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$HOME/.asdf" --branch v0.8.1
+    fi
+
     if [ "$(whoami)" == "root" ]; then
         echo "Skipping install of 'go' and 'hugo' for root user."
     else
@@ -330,6 +365,7 @@ function initialize_linux() {
 
     _stow linux "$@"
     _stow bash "$@"
+    _stow zsh "$@"
     _stow vim "$@"
 
     initialize_gitconfig
@@ -597,6 +633,47 @@ function configure_macos_system() {
     defaults write -g ApplePressAndHoldEnabled -bool false                     # repeat keys on hold
 
     echo "Configured system settings."
+}
+
+function main() {
+    MYCELIO_ROOT="$(cd "$(dirname "$(realpath ${BASH_SOURCE[0]})")" &>/dev/null && pwd)"
+    export MYCELIO_ROOT
+
+    _home=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
+    _logs="$_home/.logs"
+
+    # We use 'whoami' as $USER is not set for scheduled tasks
+    echo "User: '$(whoami)'"
+    echo "User Home: '$_home'"
+    echo "Dotfiles Root: '$MYCELIO_ROOT'"
+    echo "=---------------------"
+
+    unameOut="$(uname -s)"
+    case "${unameOut}" in
+    Linux*)
+        machine=Linux
+        initialize_linux "$@"
+        ;;
+    Darwin*)
+        machine=Mac
+        initialize_macos "$@"
+        ;;
+    CYGWIN*)
+        machine=Cygwin
+        initialize_windows "$@"
+        ;;
+    MINGW*)
+        machine=MinGw
+        initialize_windows "$@"
+        ;;
+    MSYS*)
+        machine=MSYS
+        initialize_windows "$@"
+        ;;
+    *) machine="UNKNOWN:${unameOut}" ;;
+    esac
+
+    echo "Initialized '${machine}' machine."
 }
 
 main "$@"

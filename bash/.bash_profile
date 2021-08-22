@@ -8,12 +8,8 @@
 # the first one that exists and is readable.
 #
 
-if [ -f "$HOME/.profile" ]; then
-    # This will load bashrc as well
-    . "$HOME/.profile"
+if [ -n "$BASH_VERSION" ] && [ -f "$HOME/.bashrc" ]; then
+    . "$HOME/.bashrc"
 else
-    # If running bash
-    if [ -n "$BASH_VERSION" ] && [ -f "$HOME/.bashrc" ]; then
-        . "$HOME/.bashrc"
-    fi
+    echo "Failed to load both '.profile' and '.bashrc' files."
 fi

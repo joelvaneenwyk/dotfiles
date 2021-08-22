@@ -11,6 +11,10 @@
 
     "terminal.integrated.defaultProfile.osx": "fish",
     "terminal.integrated.profiles.osx": {
+        "sh": {
+            "path": "sh",
+            "args": []
+        },
         "bash": {
             "path": "bash",
             "args": [
@@ -45,6 +49,10 @@
     "terminal.integrated.cwd": "${workspaceFolder}",
     "terminal.integrated.defaultProfile.linux": "bash",
     "terminal.integrated.profiles.linux": {
+        "sh": {
+            "path": "sh",
+            "args": []
+        },
         "bash": {
             "path": "sh",
             "args": [
