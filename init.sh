@@ -289,7 +289,7 @@ function initialize_linux() {
 
     if uname -a | grep -q "synology"; then
         echo "Skipped installing dependencies. Not supported on Synology platform."
-    elif [ -x "$(command -v apt)" ]; then
+    elif [ -x "$(command -v apt-get)" ]; then
         if [ ! -x "$(command -v sudo)" ]; then
             apt-get update
             apt-get install -y sudo
@@ -739,7 +739,7 @@ function main() {
     *) machine="UNKNOWN:${uname_system}" ;;
     esac
 
-    if [ -x "$(command -v apt)" ] && [ -x "$(command -v sudo)" ]; then
+    if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
         DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
 
         # Remove intermediate files here to reduce size of Docker container layer
