@@ -7,7 +7,7 @@
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
 # so we define our own version here.
 function _get_real_path() {
-    _pwd=$PWD
+    _pwd="$(pwd)"
     _input_path="$1"
 
     cd "$(dirname "$_input_path")" || true
@@ -18,7 +18,7 @@ function _get_real_path() {
         _link=$(readlink "$(basename "$_input_path")")
     done
 
-    _real_path="$PWD/$(basename "$_input_path")"
+    _real_path="$(pwd)/$(basename "$_input_path")"
     cd "$_pwd" || true
 
     echo "$_real_path"

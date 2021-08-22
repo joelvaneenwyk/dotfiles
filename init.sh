@@ -7,27 +7,27 @@
 #   - Sets some app settings which were derived from https://github.com/Sajjadhosn/dotfiles
 #
 
-set -e
+set -o errexit
 set -o errtrace
 set -T
 shopt -s extdebug
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
 # so we define our own version here.
-function realpath() {
+function _get_real_path() {
     _pwd="$(pwd)"
     _input_path="$1"
 
-    cd "$(dirname "$_input_path")"
+    cd "$(dirname "$_input_path")" || true
 
     _link=$(readlink "$(basename "$_input_path")")
     while [ "$_link" ]; do
-        cd "$(dirname "$_link")"
+        cd "$(dirname "$_link")" || true
         _link=$(readlink "$(basename "$_input_path")")
     done
 
     _real_path="$(pwd)/$(basename "$_input_path")"
-    cd "$_pwd"
+    cd "$_pwd" || true
 
     echo "$_real_path"
 }
@@ -310,8 +310,6 @@ function initialize_linux() {
         if [ -x "$(command -v dpkg-reconfigure)" ]; then
             sudo dpkg-reconfigure --frontend noninteractive tzdata
         fi
-
-        DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
     fi
 
     if [ "$(whoami)" == "root" ]; then
@@ -687,7 +685,7 @@ function _callstack() {
 function main() {
     trap '$(_callstack)' ERR
 
-    MYCELIO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
+    MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
     export MYCELIO_ROOT
 
     _home=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
@@ -740,6 +738,18 @@ function main() {
         ;;
     *) machine="UNKNOWN:${uname_system}" ;;
     esac
+
+    if [ -x "$(command -v apt)" ] && [ -x "$(command -v sudo)" ]; then
+        DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
+
+        # Remove intermediate files here to reduce size of Docker container layer
+        rm -rf "$HOME/.tmp" || true
+        sudo rm -rf /var/lib/apt/lists/*
+
+        if [ -f "/.dockerenv" ]; then
+            sudo rm -rf "/tmp"
+        fi
+    fi
 
     echo "Initialized '${machine}' machine."
 
