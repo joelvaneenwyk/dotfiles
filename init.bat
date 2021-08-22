@@ -26,7 +26,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     set ^"ARG0=%0^"                                             &:# Script invokation name
     set ^"ARGS=%*^"                                             &:# Argument line
     set "SPROFILE=%DOT_PROFILE_ROOT%\windows\profile.bat"       &:# Full path to profile script
-    set "STOW=%DOT_PROFILE_ROOT%\stow\bin\stow"
+    set "STOW=%DOT_PROFILE_ROOT%\source\stow\bin\stow"
 
     set "COMMAND=%~1"
     if "%COMMAND%"=="cls" set DOT_PROFILE_INITIALIZED=
@@ -47,8 +47,8 @@ setlocal EnableExtensions EnableDelayedExpansion
         set DOT_PROFILE_INITIALIZED=
         set _initialize=1
         if exist "%DOT_PROFILE_ROOT%\.tmp" rmdir /s /q "%DOT_PROFILE_ROOT%\.tmp" > nul 2>&1
-        if exist "%DOT_PROFILE_ROOT%\stow\bin\stow" del "%DOT_PROFILE_ROOT%\stow\bin\stow" > nul 2>&1
-        if exist "%DOT_PROFILE_ROOT%\stow\bin\chkstow" del "%DOT_PROFILE_ROOT%\stow\bin\chkstow" > nul 2>&1
+        if exist "%DOT_PROFILE_ROOT%\source\stow\bin\stow" del "%DOT_PROFILE_ROOT%\source\stow\bin\stow" > nul 2>&1
+        if exist "%DOT_PROFILE_ROOT%\source\stow\bin\chkstow" del "%DOT_PROFILE_ROOT%\source\stow\bin\chkstow" > nul 2>&1
         if exist "%USERPROFILE%\Documents\PowerShell" rmdir /q /s "%USERPROFILE%\Documents\PowerShell" > nul 2>&1
         if exist "%USERPROFILE%\Documents\WindowsPowerShell" rmdir /q /s "%USERPROFILE%\Documents\WindowsPowerShell" > nul 2>&1
         echo Cleared out temporary files and reinitializing environment.
@@ -177,11 +177,11 @@ exit /b 0
 :CheckSystemFile %1=SystemFilename
     setlocal EnableExtensions EnableDelayedExpansion
 
-    set _deploy="%DOT_PROFILE_ROOT%\.tmp\windows"
+    set _deploy="%DOT_PROFILE_ROOT%\artifacts\windows"
 
     if exist "%_deploy%\%~1" goto:$SystemDeploy
 
-    if not exist "%DOT_PROFILE_ROOT%\.tmp" mkdir "%DOT_PROFILE_ROOT%\.tmp"
+    if not exist "%DOT_PROFILE_ROOT%\artifacts" mkdir "%DOT_PROFILE_ROOT%\artifacts"
     if not exist "%_deploy%" mkdir "%_deploy%"
 
     if exist "C:\Windows\System32\%~1" (

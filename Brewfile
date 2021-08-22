@@ -21,7 +21,6 @@ brew "ripgrep"
 brew "stow"
 
 cask "dropbox"
-
 cask "fsnotes"
 cask "hiddenbar"
 cask "iterm2"

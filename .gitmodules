@@ -1,18 +1,18 @@
 [submodule "vim/.vim/bundle/vundle"]
-	path = vim/.vim/bundle/vundle
-	url = https://github.com/VundleVim/Vundle.vim.git
+path = vim/.vim/bundle/vundle
+url = https://github.com/VundleVim/Vundle.vim.git
 [submodule "fish/.config/base16-shell"]
-	path = fish/.config/base16-shell
-	url = https://github.com/chriskempson/base16-shell.git
+path = fish/.config/base16-shell
+url = https://github.com/chriskempson/base16-shell.git
 [submodule "fish/.config/base16-fzf"]
-	path = fish/.config/base16-fzf
-	url = https://github.com/nicodebo/base16-fzf.git
+path = fish/.config/base16-fzf
+url = https://github.com/nicodebo/base16-fzf.git
 [submodule "macos/Library/Application Support/Resources"]
-	path = macos/Library/Application Support/Resources
-	url = https://github.com/chauncey-garrett/mailmate.git
+path = macos/Library/Application Support/Resources
+url = https://github.com/chauncey-garrett/mailmate.git
 [submodule "fish/.config/git-fuzzy"]
-	path = fish/.config/git-fuzzy
-	url = https://github.com/bigH/git-fuzzy.git
+path = fish/.config/git-fuzzy
+url = https://github.com/bigH/git-fuzzy.git
 [submodule "stow"]
-	path = stow
-	url = https://github.com/aspiers/stow
+path = source/stow
+url = https://github.com/aspiers/stow

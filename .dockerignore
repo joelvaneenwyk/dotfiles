@@ -1,6 +1,7 @@
 .git
 .osx
 .tmp
-!.tmp/windows
+artifacts
+!artifacts/windows
 .vscode
 dev

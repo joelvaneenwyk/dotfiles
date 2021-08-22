@@ -2,12 +2,15 @@
 #
 # Usage: ./init.sh
 #
-#   - Install commonly used apps using "brew bundle" (see Brewfile).
+#   - Install commonly used apps using "brew bundle" (see Brewfile) or apt-get (on Ubunutu/Debian).
 #   - Uses "stow" to link config files into home directory.
-#   - Sets some app settings (derived from https://github.com/Sajjadhosn/dotfiles).
+#   - Sets some app settings which were derived from https://github.com/Sajjadhosn/dotfiles
 #
 
 set -e
+set -o errtrace
+set -T
+shopt -s extdebug
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
 # so we define our own version here.
@@ -45,7 +48,7 @@ function _timeout() {
     _seconds="${1:-}"
     shift
 
-    if ! "$_seconds" = ""; then
+    if [ ! "$_seconds" = "" ]; then
         if _command_exists "gtimeout"; then
             gtimeout "$_seconds" "$@"
         elif _command_exists "perl"; then
@@ -64,20 +67,17 @@ function _timeout() {
 #
 function _has_admin_rights() {
     if ! _command_exists "sudo"; then
-        #_printDebug "$@" "[sudo] Not found."
-        #_status="no_sudo"
         return 2
     else
         # -n -> 'non-interactive'
         # -v -> 'validate'
         if _prompt="$(sudo -nv 2>&1)"; then
-            #_printDebug "$@" "[sudo] Password set. Output: '${_prompt:-}'"
-            #_status="has_sudo__pass_set"
+            # Has sudo password set
             return 0
         fi
 
         if echo "${_prompt:-}" | grep -q '^sudo:'; then
-            #  Password needed for access.
+            # Password needed for access.
             return 1
         fi
 
@@ -137,33 +137,32 @@ function install_hugo {
         rm -rf "$_tmp_hugo"
         git -c advice.detachedHead=false clone -b "v0.87.0" "https://github.com/gohugoio/hugo.git" "$_tmp_hugo"
 
-        _go_env_path="$("$_go_bin" env GOPATH)"
         _go_env_root="$_go_root"
         _go_env_bin="$_go_env_root/bin"
-        _path="$_go_env_bin:$PATH"
 
-        _cd="$(pwd)"
-        cd "$_tmp_hugo"
-
-        _options=""
         _cgo=0
 
-        if uname -a | grep -q "synology"; then
-            # No support for GCC on Synology
-            echo "Building 'hugo' with go without extended features..."
-        else
-            echo "Building 'hugo' with CGO and extended features..."
-            _options="--tags extended"
+        # Clear positional parameters
+        set --
+
+        # No support for GCC on Synology so not able to build extended features
+        if ! uname -a | grep -q "synology"; then
+            set -- --tags extended
             _cgo=1
         fi
 
-        if GOPATH=$_go_env_path GOROOT=$_go_env_root GOBIN=$_go_env_bin PATH=$_path CGO_ENABLED=$_cgo "$_go_bin" install $_options; then
+        if (
+            cd "$_tmp_hugo"
+            export GOROOT="$_go_env_root"
+            export GOBIN="$_go_env_bin"
+            export CGO_ENABLED="$_cgo"
+            echo "##[cmd] $_go_bin install $*"
+            "$_go_bin" install "$@"
+        ); then
             echo "Successfully installed 'go' compiler."
         else
             echo "Failed to install 'go' compiler."
         fi
-
-        cd "$_cd"
     fi
 
     if [ -f "$_hugo_bin" ]; then
@@ -174,33 +173,29 @@ function install_hugo {
 }
 
 function install_go {
-    _local_bin="$HOME/.local/bin"
-    _go_bin="$_local_bin/go/bin/go"
+    _local_go_root="$HOME/.local/bin/go"
+    _go_bin="$_local_go_root/bin/go"
+    _go_requires_update=0
 
-    if [ -f "$_go_bin" ]; then
-        version=$("$_go_bin" version | {
-            read -r _ _ v _
-            echo "${v#go}"
-        })
-        minor=$(echo "$version" | cut -d. -f2)
+    if [ -f "$_go_bin" ] && _go_version="$("$_go_bin" version 2>&1 | (
+        read -r _ _ v _
+        echo "${v#go}"
+    ))"; then
+        _go_version_minor=$(echo "$_go_version" | cut -d. -f2)
+        if [ "$_go_version_minor" -lt 17 ]; then
+            _go_requires_update=1
+        fi
+    else
+        _go_requires_update=1
     fi
 
-    if [ ! -f "$_go_bin" ] || ((minor < 17)); then
-        _tmp="$HOME/.tmp"
-        mkdir -p "$_tmp"
-
+    if [ "$_go_requires_update" = "1" ]; then
         _go_version="1.17"
         _arch_name="$(uname -m)"
         _go_arch=""
 
         if [ "${_arch_name}" = "x86_64" ]; then
-            if [ "$(sysctl -in sysctl.proc_translated 2>&1)" = "1" ]; then
-                # Running on Rosetta 2
-                _go_arch="amd64"
-            else
-                # Running on native Intel
-                _go_arch="amd64"
-            fi
+            _go_arch="amd64"
         elif [ "${_arch_name}" = "x86" ]; then
             _go_arch="386"
         elif [ "${_arch_name}" = "arm64" ]; then
@@ -222,19 +217,25 @@ function install_go {
         if [ -z "$_go_archive" ]; then
             echo "Unsupported platform for installing 'go' language."
         else
-            wget "https://dl.google.com/go/$_go_archive" -O "$_tmp/$_go_archive"
+            _tmp="$HOME/.tmp"
+            mkdir -p "$_tmp/"
+            echo "Downloading archive: 'https://dl.google.com/go/$_go_archive'"
+            touch "$_tmp/$_go_archive"
+            curl -o "$_tmp/$_go_archive" "https://dl.google.com/go/$_go_archive"
+            echo "Downloaded archive: '$_go_archive'"
 
             _go_tmp="$_tmp/go"
-            rm -rf "$_go_tmp"
-            mkdir -p "$_go_tmp"
+            rm -rf "${_go_tmp:?}/"
             tar -xf "$_tmp/$_go_archive" --directory "$_tmp"
+            echo "Extracted 'go' archive: '$_go_tmp'"
 
-            mkdir -p "$_local_bin"
-            rm -rf "$_local_bin/go"
-            mv "$_go_tmp" "$_local_bin"
-            echo "Updated 'go' install: '$_local_bin'"
+            mkdir -p "$_local_go_root/"
+            rm -rf "${_local_go_root:?}/"
+            cp -rf "$_go_tmp" "$_local_go_root"
+            echo "Updated 'go' install: '$_local_go_root'"
 
             rm -rf "$_go_tmp"
+            echo "Removed temporary 'go' files: '$_go_tmp'"
         fi
     fi
 
@@ -265,23 +266,46 @@ function _stow() {
             fi
         done
     else
-        echo "Unsupported 'stow' command. Skipped: 'stow $@'"
+        echo "Unsupported 'stow' command. Skipped: 'stow $*'"
     fi
 }
 
 function initialize_linux() {
     _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
+    # Make sure we have the appropriate permissions to write to home temporary folder
+    # otherwise much of this initialization will fail.
+    _tmp="$HOME/.tmp"
+    mkdir -p "$_tmp/"
+    if ! touch "$_tmp/.test"; then
+        echo "ERROR: Missing permissions to write to temp folder: '$_tmp'"
+    else
+        rm "$_tmp/.test"
+    fi
+
     if uname -a | grep -q "synology"; then
         echo "Skipped installing dependencies. Not supported on Synology platform."
-    else
-        sudo apt-get update
+    elif [ -x "$(command -v apt)" ]; then
+        if [ ! -x "$(command -v sudo)" ]; then
+            apt-get update
+            apt-get install -y sudo
+        else
+            sudo apt-get update
+        fi
 
-        DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y \
-            sudo git wget curl unzip xclip \
+        # Needed to prevent interactive questions during 'tzdata' install, see https://stackoverflow.com/a/44333806
+        sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
+
+        DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y --no-install-recommends \
+            tzdata git wget curl unzip xclip \
             software-properties-common build-essential gcc g++ make \
             stow micro tmux neofetch fish \
-            python3 python3-pip
+            python3 python3-pip \
+            fontconfig
+
+        if [ -x "$(command -v dpkg-reconfigure)" ]; then
+            sudo dpkg-reconfigure --frontend noninteractive tzdata
+        fi
 
         DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
     fi
@@ -312,7 +336,7 @@ function initialize_linux() {
         fi
 
         font_base_name="JetBrains Mono"
-        font_base_filename=$(echo "$font_base_name" | sed 's/ //g')
+        font_base_filename=${font_base_name// /}
         font_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$font_base_filename.zip"
         _fonts_path="$HOME/.fonts"
 
@@ -331,7 +355,15 @@ function initialize_linux() {
             chmod u+rw ~/.fonts
             rm -f "$_fonts_path/$font_base_filename.zip"
 
-            fc-cache -fv >/dev/null 2>&1
+            if [ -x "$(command -v fc-cache)" ]; then
+                if fc-cache -fv >/dev/null 2>&1; then
+                    echo "Flushed font cache."
+                else
+                    echo "Failed to flush font cache."
+                fi
+            else
+                echo "Unable to flush font cache as 'fc-cache' is not installed"
+            fi
         fi
 
         if [ ! -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
@@ -419,7 +451,7 @@ function build_stow() {
 
         # Move to source directory and start install.
         (
-            cd "$_dot_script_root/stow" || true
+            cd "$_dot_script_root/source/stow" || true
             autoreconf --install --verbose 2>&1 | awk '{ print "[stow.autoreconf]", $0 }'
 
             # We want a local install
@@ -615,7 +647,7 @@ function configure_macos_finder() {
     # When performing a search, search the current folder by default
     defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
     # Use list view in all Finder windows by default
-    # Four-letter codes for the other view modes: `icnv`, `clmv`, `Flwv`
+    # Four-letter codes for the other view modes: 'icnv', 'clmv', 'Flwv'
     defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 
     echo "Configured Finder."
@@ -635,12 +667,27 @@ function configure_macos_system() {
     echo "Configured system settings."
 }
 
+function _callstack() {
+    callstack_end=${#FUNCNAME[@]}
+    index=0
+
+    local callstack=""
+    while ((index < callstack_end)); do
+        callstack+=$(printf '> %s:%d: %s()\\n' "${BASH_SOURCE[$index]}" "${BASH_LINENO[$index]}" "${FUNCNAME[$((index + 1))]}")
+        ((++index))
+    done
+
+    echo "--------------------------------------" >&2
+    printf "%b\n" "$callstack" >&2
+}
+
 function main() {
-    MYCELIO_ROOT="$(cd "$(dirname "$(realpath ${BASH_SOURCE[0]})")" &>/dev/null && pwd)"
+    trap '$(_callstack)' ERR
+
+    MYCELIO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
     export MYCELIO_ROOT
 
     _home=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
-    _logs="$_home/.logs"
 
     # We use 'whoami' as $USER is not set for scheduled tasks
     echo "User: '$(whoami)'"
