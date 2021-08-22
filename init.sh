@@ -140,24 +140,21 @@ function install_hugo {
         _go_env_root="$_go_root"
         _go_env_bin="$_go_env_root/bin"
 
-        _cgo=0
-
-        # Clear positional parameters
-        set --
-
-        # No support for GCC on Synology so not able to build extended features
-        if ! uname -a | grep -q "synology"; then
-            set -- --tags extended
-            _cgo=1
-        fi
-
         if (
             cd "$_tmp_hugo"
             export GOROOT="$_go_env_root"
             export GOBIN="$_go_env_bin"
-            export CGO_ENABLED="$_cgo"
-            echo "##[cmd] $_go_bin install $*"
-            "$_go_bin" install "$@"
+
+            # No support for GCC on Synology so not able to build extended features
+            if ! uname -a | grep -q "synology"; then
+                export CGO_ENABLED="1"
+                echo "##[cmd] $_go_bin install --tags extended"
+                "$_go_bin" install --tags extended
+            else
+                export CGO_ENABLED="0"
+                echo "##[cmd] $_go_bin install"
+                "$_go_bin" install
+            fi
         ); then
             echo "Successfully installed 'go' compiler."
         else
@@ -250,6 +247,7 @@ function _stow() {
     _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
     if [ -x "$(command -v stow)" ]; then
+        echo "##[cmd] stow --dir='$_dot_script_root' --target='$HOME' --verbose $*"
         stow --dir="$_dot_script_root" --target="$HOME" --verbose "$@"
     elif uname -a | grep -q "synology"; then
         _root_dir="$_dot_script_root/$1/"
