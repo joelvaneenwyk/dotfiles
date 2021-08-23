@@ -581,14 +581,20 @@ function configure_linux_common() {
         chmod a+x "./fish/.config/fish/functions/fundle.fish"
     fi
 
-    if [ -x "$(command -v fish)" ]; then
-        fish -c "./fish/.config/fish/config.fish" || true
-    fi
-
-    # Intentionally stow fish configuration after initial setup otherwise we get superfluous
-    # warning messages about tools lie "fisherman/getopts" not yet being installed since it
-    # tries to use our profile settings before installation is done.
+    # After getting fundle, we now stow the configuration so that it populates the
+    # home directory ('~/.config/fish') which allows the rest of the initialization
+    # to work, see https://github.com/danhper/fundle
     _stow "$@" fish
+
+    if [ -x "$(command -v fish)" ]; then
+        if fish -c "fundle install"; then
+            echo "✔ Installed 'fundle' package manager for fish."
+        else
+            echo "❌ Failed to install 'fundle' package manager for fish."
+        fi
+    else
+        echo "Skipped fish shell initialization as it is not installed."
+    fi
 }
 
 function configure_macos_apps() {
