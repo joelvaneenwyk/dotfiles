@@ -1,7 +1,6 @@
 #!/usr/bin/env fish
 
 function fish_prompt --description 'Write out the prompt'
-
     set -l last_status $status
 
     # Just calculate these once, to save a few cycles when displaying the prompt

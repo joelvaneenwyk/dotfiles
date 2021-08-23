@@ -561,7 +561,6 @@ function configure_linux_common() {
     _stow "$@" linux
     _stow "$@" bash
     _stow "$@" zsh
-    _stow "$@" fish
     _stow "$@" fonts
     _stow "$@" ruby
     _stow "$@" vim
@@ -569,8 +568,23 @@ function configure_linux_common() {
     # We use built-in VSCode syncing so disabled the stow operation for VSCode
     # _stow vscode
 
+    _stow "$@" fish
+
+    # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to
+    # install it.
+    _binding_link="./fish/.config/fish/functions/fzf_key_bindings.fish"
+    _binding_file="/usr/local/opt/fzf/shell/key-bindings.fish"
+    if [ -f "$_binding_file" ] && [ ! -f "$_binding_link" ]; then
+        ln -s "$_binding_file" "$_binding_link"
+    fi
+
+    wget "https://git.io/fundle" -O "./fish/.config/fish/functions/fundle.fish" || true
+    if [ -f "./fish/.config/fish/functions/fundle.fish" ]; then
+        chmod a+x "./fish/.config/fish/functions/fundle.fish"
+    fi
+
     if [ -x "$(command -v fish)" ]; then
-        fish -c "./fish/.config/fish/config.fish || fundle install" || true
+        fish -c "./fish/.config/fish/config.fish" || true
     fi
 }
 

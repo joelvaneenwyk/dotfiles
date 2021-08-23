@@ -1,6 +1,7 @@
 #!/usr/bin/env fish
 
-# install plugins
+# It should already be installed by './init.sh' but just in case we do it here
+# as well.
 if not functions -q fundle
     eval (curl -sfL https://git.io/fundle-install)
 end
@@ -10,10 +11,13 @@ fundle plugin fisherman/fzf
 fundle plugin fisherman/z
 fundle init
 
-# suppress fish greeting
+# Suppress fish greeting
 set -x fish_greeting ""
 
-# update path
+#
+# Update paths
+#
+
 if test -d $HOME/.local/bin
     set -gx PATH $HOME/.local/bin $PATH
 end
@@ -31,7 +35,7 @@ set -gx PATH ./node_modules/.bin $PATH
 # color stderr in red
 set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
 
-# use java 1.8 by default
+# Use java 1.8 by default if it exists
 if test -d /usr/libexec/java_home
     set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
 end
@@ -53,14 +57,24 @@ if type -q exa
     alias ls="exa --git --time-style=iso"
     alias lt="ll --tree"
 else
-    echo "Pro Tip: brew install exa"
+    switch (uname)
+    case Darwin
+        echo "Pro tip: brew install exa"
+    case '*'
+        ;
+    end
 end
 
 # use hub if available
 if type -q hub
     alias git="hub"
 else
-    echo "Pro Tip: brew install hub"
+    switch (uname)
+    case Darwin
+        echo "Pro tip: brew install hub"
+    case '*'
+        ;
+    end
 end
 
 # set editor
@@ -72,15 +86,31 @@ if type -q nvim
 else
     set -gx EDITOR /usr/bin/vim
 
-    echo "Pro Tip: brew install neovim"
+    switch (uname)
+    case Darwin
+        echo "Pro tip: brew install neovim"
+    case '*'
+        ;
+    end
 end
 
 # set color scheme
-if status --is-interactive
-    source $HOME/.config/base16-shell/profile_helper.fish
+set profile_helper $HOME/.config/base16-shell/profile_helper.fish
+if status --is-interactive && test -e $profile_helper
+    source $profile_helper
 end
 
-source $HOME/.config/base16-fzf/fish/(basename (readlink $HOME/(readlink $HOME/.base16_theme)) .sh).fish
+set theme (echo $HOME/.config/base16-fzf/fish/(basename (readlink $HOME/(readlink $HOME/.base16_theme)) .sh).fish)
+if test -e $theme
+    source $theme
+else
+    echo "❌ Theme not found: '$theme'"
+end
+
+if test -d $HOME/anaconda3/bin
+    set -gx PATH $HOME/anaconda3/bin $PATH
+end
+
 set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
 
 # enable activating anaconda environments
@@ -89,6 +119,6 @@ if type -q conda
 end
 
 # Enable asdf for managing runtimes.
-if type -q asdf
+if type -q asdf && test -e /usr/local/opt/asdf/asdf.fish
     source /usr/local/opt/asdf/asdf.fish
 end
