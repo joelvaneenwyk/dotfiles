@@ -193,6 +193,58 @@ _initialize_interactive_profile() {
         ;;
     esac
 
+    alias gpgreset='gpg-connect-agent updatestartuptty /bye'
+    alias pgptest='source "$MYCELIO_ROOT/source/shell/pgptest.sh"'
+    alias gpgtest='source "$MYCELIO_ROOT/source/shell/pgptest.sh"'
+    alias cls='clear'
+
+    ## Common typos
+    alias cd..='cd ..'
+    alias cd~='cd ~'
+
+    ## Faster way to move around
+    alias ..='cd ..'
+    alias ...='cd ../../../'
+    alias ....='cd ../../../../'
+    alias .....='cd ../../../../'
+    alias .4='cd ../../../../'
+    alias .5='cd ../../../../..'
+
+    alias refresh='git -C "$MYCELIO_ROOT" pull >/dev/null 2>&1 || source "$MYCELIO_ROOT/linux/.profile"'
+
+    alias less='less -r'
+    alias more='less -r'
+
+    # Add an "alert" alias for long running commands.  Use like so:
+    #   sleep 10; alert
+    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+
+    if [ "$machine" = "macOS" ]; then
+        alias dir='dir -G'
+        alias vdir='vdir -G'
+
+        alias grep='grep -G'
+        alias fgrep='fgrep -G'
+        alias egrep='egrep -G'
+
+        alias ll='ls -alF -G'
+        alias ls='ls -alF -G'
+        alias la='ls -A -G'
+        alias l='ls -CF -G'
+    else
+        alias dir='dir --color=auto'
+        alias vdir='vdir --color=auto'
+
+        alias grep='grep --color=auto'
+        alias fgrep='fgrep --color=auto'
+        alias egrep='egrep --color=auto'
+
+        alias ll='ls -alF --color=always'
+        alias ls='ls -alF --color=always'
+        alias la='ls -A --color=always'
+        alias l='ls -CF --color=always'
+    fi
+
     echo "▓▓░░"
     echo "▓▓░░   ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓"
     echo "▓▓░░   ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃"
@@ -278,15 +330,37 @@ _initialize_profile() {
         export GPG_TTY
     fi
 
+    # We do this near the beginning because Synology may not even define "HOME" variable
+    # which we rely heavily on.
+    if uname -a | grep -q "synology"; then
+        _initialize_synology
+    fi
+
+    # Import environment varaibles from dotenv file. Primarily used to grab
+    # the 'MYCELIO_ROOT' path as it is sometimes hard (if not impossible) to calculate
+    # on some shells/platforms. If needed, this could be replaced with something
+    # more advanced e.g., https://github.com/ko1nksm/shdotenv
+    dotenv="$HOME/.env"
+    if [ -f "$dotenv" ]; then
+        OLD_IFS=$IFS
+        IFS="$(printf '\n ')"
+        IFS="${IFS% }"
+
+        # shellcheck disable=SC2013
+        for _line in $(grep -v '^#.*' "$dotenv"); do
+            if [ -n "${_line:-}" ]; then
+                eval "export $_line"
+            fi
+        done
+
+        IFS=$OLD_IFS
+    fi
+
     _add_path "prepend" "/usr/local/gnupg/bin"
     _add_path "prepend" "$HOME/.local/bin"
     _add_path "prepend" "$HOME/.local/sbin"
     _add_path "prepend" "$HOME/.config/git-fuzzy/bin"
     _add_path "prepend" "/mnt/c/Program Files/Microsoft VS Code/bin"
-
-    if uname -a | grep -q "synology"; then
-        _initialize_synology
-    fi
 
     _initialize_go_paths
 

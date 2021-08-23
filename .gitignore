@@ -12,11 +12,15 @@ artifacts/
 
 Brewfile.lock.json
 
+fonts/.fonts/JetBrains*
+
 fish/.local/share
 fish/.config/fish/fishd.*
 fish/.config/fish/fish_history
 fish/.config/fish/functions/fundle.fish
+fish/.config/fish/functions/fzf_key_bindings.fish
 fish/.config/fish/fundle/
+
 vim/.vim/plugged/
 
 xmonad/.xmonad/xmonad-x86_64-linux
@@ -34,3 +38,6 @@ log.txt
 *.gpg
 *.kbx*
 *.key
+.gnugp/
+!.gnugp/gpg-agent.conf
+!.gnugp/gpg.conf

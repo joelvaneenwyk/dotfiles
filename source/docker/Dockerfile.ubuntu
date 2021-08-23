@@ -27,7 +27,7 @@ RUN sudo apt-get update
 COPY --chown=${USERNAME} ./ ./dotfiles/
 
 # This will delete existing '.profile' or other configuration files when stowing
-RUN ./dotfiles/init.sh -c --restow
+RUN ./dotfiles/init.sh -c -y
 
 ENTRYPOINT [ "/bin/bash", "-c" ]
 CMD ["neofetch && bash"]

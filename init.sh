@@ -7,10 +7,154 @@
 #   - Sets some app settings which were derived from https://github.com/Sajjadhosn/dotfiles
 #
 
-set -o errexit
-set -o errtrace
-set -T
-shopt -s extdebug
+function _to_integer() {
+    expr "${1:-}" : '[^0-9]*\([0-9]*\)' 2>/dev/null || :
+}
+
+function __print_stack() {
+    if [ -n "${BASH:-}" ]; then
+        callstack_end=${#FUNCNAME[@]}
+        index=0
+
+        local callstack=""
+        while ((index < callstack_end)); do
+            callstack+=$(printf '  >    %s:%d: %s()\\n' "${BASH_SOURCE[$index]}" "${BASH_LINENO[$index]}" "${FUNCNAME[$((index + 1))]}")
+            ((++index))
+        done
+
+        echo "  > Callstack:"
+        printf "%b\n" "$callstack" >&2
+    fi
+
+    return 0
+}
+
+function __safe_exit() {
+    _value=$(_to_integer "${1:-}")
+
+    if [ -z "${_value:-}" ]; then
+        # Not a supported return value so provide a default
+        exit 199
+    fi
+
+    # We intentionally do not double quote this because we are expecting
+    # this to be a number and exit does not accept strings.
+    # shellcheck disable=SC2086
+    exit $_value
+}
+
+function __trap_error() {
+    _retval=$?
+
+    _line=${MYCELIO_DEBUG_LAST_LINE_NUMBER:-}
+
+    if [ "${_line:-}" = "" ]; then
+        _line="${1:-}"
+    fi
+
+    if [ "${_line:-}" = "" ]; then
+        _line="[undefined]"
+    fi
+
+    # First argument is always the line number even if unused
+    shift
+
+    echo "--------------------------------------"
+
+    if [ "${MYCELIO_DEBUG_TRAP_ENABLED:-}" = "1" ]; then
+        echo "Error on line #$_line:"
+    fi
+
+    # This only exists in a few shells e.g. bash
+    # shellcheck disable=SC2039,SC3044
+    if _caller="$(caller 2>&1)"; then
+        echo "  > Caller: '${_caller:-UNKNOWN}'"
+    fi
+
+    echo "  > Command: '${BASH_COMMAND:-UNKNOWN}'"
+    echo "  > Code: '${_retval:-}'"
+
+    __print_stack "$@"
+
+    # We always exit immediately on error
+    __safe_exit ${_retval:-1}
+}
+
+function _setup_error_handling() {
+    export MYCELIO_DEBUG_TRAP_ENABLED=0
+
+    # We only output command on Bash because by default "-x" will output to 'stderr' which
+    # results in an error on CI as it's used to make sure we have clean output. On Bash we
+    # can override to to go to a new file descriptor.
+    if [ -n "${BASH:-}" ]; then
+        set -o errexit
+
+        shopt -s extdebug
+
+        # aka. set -T
+        set -o functrace
+
+        # The return value of a pipeline is the status of
+        # the last command to exit with a non-zero status,
+        # or zero if no command exited with a non-zero status.
+        set -o pipefail
+
+        MYCELIO_DEBUG_LINE_NUMBER=
+        export MYCELIO_DEBUG_LINE_NUMBER
+
+        MYCELIO_DEBUG_LAST_LINE_NUMBER=
+        export MYCELIO_DEBUG_LAST_LINE_NUMBER
+
+        # 'ERR' is undefined in POSIX. We also use a somewhat strange looking expansion here
+        # for 'BASH_LINENO' to ensure it works if BASH_LINENO is not set. There is a 'gist' of
+        # at https://bit.ly/3cuHidf along with more details available at https://bit.ly/2AE2mAC.
+        trap '__trap_error "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
+
+        echo "Enabled 'pipefail' and additional error handling for Bash"
+
+        _major=$(echo "$BASH_VERSION" | cut -d. -f1)
+        _minor=$(echo "$BASH_VERSION" | cut -d. -f2)
+
+        # Redirect only supported in Bash versions after 4.1
+        if [ "$_major" -eq 4 ] && [ "$_minor" -ge 1 ]; then
+            _enable_trace=1
+        elif [ "$_major" -gt 4 ]; then
+            _enable_trace=1
+        else
+            _enable_trace=0
+        fi
+
+        _bash_debug=0
+
+        if [ "$_enable_trace" = "1" ]; then
+            trap '[[ ${FUNCNAME:-} = "__trap_error" ]] || {
+                    MYCELIO_DEBUG_LAST_LINE_NUMBER=${MYCELIO_DEBUG_LINE_NUMBER:-};
+                    MYCELIO_DEBUG_LINE_NUMBER=${LINENO:-};
+                }' DEBUG
+
+            _bash_debug=1
+
+            # Error tracing (sub shell errors) only work properly in version >=4.0 so
+            # we enable here as well. Otherwise errors in subshells can result in ERR
+            # trap being called e.g. _my_result="$(errorfunc test)"
+            set -o errtrace
+
+            echo "Initialized 'bash' debug trap and error tracing."
+
+            export MYCELIO_DEBUG_TRAP_ENABLED=1
+        fi
+
+        if [ -n "${_bash_debug:-}" ] && [ "$_enable_trace" = "1" ]; then
+            echo "Including error output ('set -x') and redirecting to different file descriptor."
+
+            # We output to file descriptor '4' here to not impact other output
+            exec 4>&1
+            BASH_XTRACEFD=4
+            export BASH_XTRACEFD
+            set -o xtrace
+        fi
+    fi
+}
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
 # so we define our own version here.
@@ -274,6 +418,68 @@ function _stow() {
     fi
 }
 
+function configure_linux() {
+    _stow "$@" linux
+    _stow "$@" bash
+    _stow "$@" zsh
+    _stow "$@" fonts
+    _stow "$@" ruby
+    _stow "$@" vim
+
+    # We use built-in VSCode syncing so disabled the stow operation for VSCode
+    # _stow vscode
+
+    # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to
+    # install it.
+    _binding_link="./fish/.config/fish/functions/fzf_key_bindings.fish"
+    _binding_file="/usr/local/opt/fzf/shell/key-bindings.fish"
+    if [ -f "$_binding_file" ] && [ ! -f "$_binding_link" ]; then
+        ln -s "$_binding_file" "$_binding_link"
+    fi
+
+    wget "https://git.io/fundle" -O "./fish/.config/fish/functions/fundle.fish" || true
+    if [ -f "./fish/.config/fish/functions/fundle.fish" ]; then
+        chmod a+x "./fish/.config/fish/functions/fundle.fish"
+    fi
+
+    # After getting fundle, we now stow the configuration so that it populates the
+    # home directory ('~/.config/fish') which allows the rest of the initialization
+    # to work, see https://github.com/danhper/fundle
+    _stow "$@" fish
+
+    if [ -x "$(command -v fish)" ]; then
+        if fish -c "fundle install"; then
+            echo "✔ Installed 'fundle' package manager for fish."
+        else
+            echo "❌ Failed to install 'fundle' package manager for fish."
+        fi
+    else
+        echo "Skipped fish shell initialization as it is not installed."
+    fi
+
+    # Install the secure key-server certificate (Ubuntu/Debian)
+    if uname -a | grep -q "Ubuntu"; then
+        mkdir -p /usr/local/share/ca-certificates/
+        curl -s https://sks-keyservers.net/sks-keyservers.netCA.pem | sudo tee /usr/local/share/ca-certificates/sks-keyservers.netCA.crt
+        sudo update-ca-certificates
+    fi
+
+    _gnupg_config_root="$HOME/.gnupg"
+    _gnupg_templates_root="$_dot_script_root/templates/.gnupg"
+    mkdir -p "$_gnupg_config_root"
+
+    rm -f "$_gnupg_config_root/gpg-agent.conf"
+    cp "$_gnupg_templates_root/gpg-agent.conf" "$_gnupg_config_root/gpg-agent.conf"
+    if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
+        echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gnupg_config_root/gpg-agent.conf"
+    fi
+    echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"
+
+    rm -f "$_gnupg_config_root/gpg.conf"
+    cp "$_gnupg_templates_root/gpg.conf" "$_gnupg_config_root/gpg.conf"
+    echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
+}
+
 function initialize_linux() {
     _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
@@ -285,6 +491,17 @@ function initialize_linux() {
         echo "ERROR: Missing permissions to write to temp folder: '$_tmp'"
     else
         rm "$_tmp/.test"
+    fi
+
+    dotenv="$HOME/.env"
+    if [ ! -f "$dotenv" ]; then
+        echo "# Generated by Mycelio dotfiles project." >"$dotenv"
+        echo "" >>"$dotenv"
+    fi
+
+    if ! grep -q "MYCELIO_ROOT" "$dotenv"; then
+        echo "MYCELIO_ROOT=$_dot_script_root" >>"$dotenv"
+        echo "Added 'MYCELIO_ROOT' to dotenv file: '$dotenv'"
     fi
 
     if uname -a | grep -q "synology"; then
@@ -333,8 +550,35 @@ function initialize_linux() {
         if [ ! -x "$(command -v oh-my-posh)" ]; then
             _local_bin="$HOME/.local/bin"
             mkdir -p "$_local_bin"
-            wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/posh-linux-amd64" -O "$_local_bin/oh-my-posh"
-            chmod +x "$_local_bin/oh-my-posh"
+
+            _arch_name="$(uname -m)"
+            _posh_arch=""
+
+            if [ "${_arch_name}" = "x86_64" ]; then
+                _posh_arch="amd64"
+            elif [ "${_arch_name}" = "x86" ]; then
+                _posh_arch="386"
+            elif [ "${_arch_name}" = "arm64" ]; then
+                _posh_arch="arm64"
+            fi
+
+            if _uname_output="$(uname -s 2>/dev/null)"; then
+                case "${_uname_output}" in
+                Linux*)
+                    _posh_archive="posh-linux-$_posh_arch"
+                    ;;
+                Darwin*)
+                    _posh_archive="posh-darwin-$_posh_arch"
+                    ;;
+                esac
+            fi
+
+            if [ -z "$_go_archive" ]; then
+                echo "Unsupported platform for installing 'oh-my-posh' extension."
+            else
+                wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive" -O "$_local_bin/oh-my-posh"
+                chmod +x "$_local_bin/oh-my-posh"
+            fi
         fi
 
         font_base_name="JetBrains Mono"
@@ -396,30 +640,6 @@ function initialize_linux() {
         install_go
         install_hugo
     fi
-
-    configure_linux_common "$@"
-
-    # Install the secure key-server certificate (Ubuntu/Debian)
-    if uname -a | grep -q "Ubuntu"; then
-        mkdir -p /usr/local/share/ca-certificates/
-        curl -s https://sks-keyservers.net/sks-keyservers.netCA.pem | sudo tee /usr/local/share/ca-certificates/sks-keyservers.netCA.crt
-        sudo update-ca-certificates
-    fi
-
-    _gnupg_config_root="$HOME/.gnupg"
-    _gnupg_templates_root="$_dot_script_root/templates/.gnupg"
-    mkdir -p "$_gnupg_config_root"
-
-    rm -f "$_gnupg_config_root/gpg-agent.conf"
-    cp "$_gnupg_templates_root/gpg-agent.conf" "$_gnupg_config_root/gpg-agent.conf"
-    if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-        echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gnupg_config_root/gpg-agent.conf"
-    fi
-    echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"
-
-    rm -f "$_gnupg_config_root/gpg.conf"
-    cp "$_gnupg_templates_root/gpg.conf" "$_gnupg_config_root/gpg.conf"
-    echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
 }
 
 #
@@ -514,11 +734,14 @@ function initialize_windows() {
 function initialize_macos() {
     install_macos_apps
 
+    initialize_linux
+
     configure_macos_dock
     configure_macos_finder
 
     # We pass in 'stow' arguments
     configure_macos_apps "$@"
+    configure_linux "$@"
 
     configure_macos_system
 }
@@ -536,14 +759,21 @@ function install_macos_apps() {
 
     cask upgrade
 
-    # The ones below are separate as they can fail if already installed.
-
-    brew install --cask "google-chrome" || true
+    #
+    # We install these seprately as they can fail if already installed.
+    #
+    if [ ! -d "/Applications/Google Chrome.app" ]; then
+        brew install --cask "google-chrome" || true
+    fi
 
     # https://github.com/JetBrains/JetBrainsMono
-    brew install --cask "font-jetbrains-mono" || true
+    if [ ! -f "/Users/$(whoami)/Library/Fonts/JetBrainsMono-BoldItalic.ttf" ]; then
+        brew install --cask "font-jetbrains-mono" || true
+    fi
 
-    brew install --cask "visual-studio-code" || true
+    if [ ! -d "/Applications/Visual Studio Code.app" ]; then
+        brew install --cask "visual-studio-code" || true
+    fi
 
     # If user is not signed into the Apple store, notify them and skip install
     if ! mas account >/dev/null; then
@@ -557,52 +787,10 @@ function install_macos_apps() {
     echo "Installed dependencies with 'brew' package manager."
 }
 
-function configure_linux_common() {
-    _stow "$@" linux
-    _stow "$@" bash
-    _stow "$@" zsh
-    _stow "$@" fonts
-    _stow "$@" ruby
-    _stow "$@" vim
-
-    # We use built-in VSCode syncing so disabled the stow operation for VSCode
-    # _stow vscode
-
-    # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to
-    # install it.
-    _binding_link="./fish/.config/fish/functions/fzf_key_bindings.fish"
-    _binding_file="/usr/local/opt/fzf/shell/key-bindings.fish"
-    if [ -f "$_binding_file" ] && [ ! -f "$_binding_link" ]; then
-        ln -s "$_binding_file" "$_binding_link"
-    fi
-
-    wget "https://git.io/fundle" -O "./fish/.config/fish/functions/fundle.fish" || true
-    if [ -f "./fish/.config/fish/functions/fundle.fish" ]; then
-        chmod a+x "./fish/.config/fish/functions/fundle.fish"
-    fi
-
-    # After getting fundle, we now stow the configuration so that it populates the
-    # home directory ('~/.config/fish') which allows the rest of the initialization
-    # to work, see https://github.com/danhper/fundle
-    _stow "$@" fish
-
-    if [ -x "$(command -v fish)" ]; then
-        if fish -c "fundle install"; then
-            echo "✔ Installed 'fundle' package manager for fish."
-        else
-            echo "❌ Failed to install 'fundle' package manager for fish."
-        fi
-    else
-        echo "Skipped fish shell initialization as it is not installed."
-    fi
-}
-
 function configure_macos_apps() {
     mkdir -p "$HOME/Library/Application\ Support/Code"
 
     _stow "$@" macos
-
-    configure_linux_common "$@"
 
     for f in .osx/*.plist; do
         [ -e "$f" ] || continue
@@ -675,8 +863,10 @@ function configure_macos_finder() {
 
 function configure_macos_system() {
     # Disable Gatekeeper entirely to get rid of "Are you sure you want to open this application?" dialog
-    echo "Type password to disable Gatekeeper questions (are you sure you want to open this application?)"
-    sudo spctl --master-disable
+    if [ "${MYCELIO_INTERACTIVE:-}" = "1" ]; then
+        echo "Type password to disable Gatekeeper questions (are you sure you want to open this application?)"
+        sudo spctl --master-disable
+    fi
 
     defaults write -g com.apple.mouse.scaling 3.0                              # mouse speed
     defaults write -g com.apple.trackpad.scaling 2                             # trackpad speed
@@ -687,22 +877,8 @@ function configure_macos_system() {
     echo "Configured system settings."
 }
 
-function _callstack() {
-    callstack_end=${#FUNCNAME[@]}
-    index=0
-
-    local callstack=""
-    while ((index < callstack_end)); do
-        callstack+=$(printf '> %s:%d: %s()\\n' "${BASH_SOURCE[$index]}" "${BASH_LINENO[$index]}" "${FUNCNAME[$((index + 1))]}")
-        ((++index))
-    done
-
-    echo "--------------------------------------" >&2
-    printf "%b\n" "$callstack" >&2
-}
-
 function main() {
-    trap '$(_callstack)' ERR
+    _setup_error_handling
 
     MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
     export MYCELIO_ROOT
@@ -715,15 +891,23 @@ function main() {
     echo "Dotfiles Root: '$MYCELIO_ROOT'"
     echo "=---------------------"
 
+    # Assume we are fine with interactive prompts if necessary
+    export MYCELIO_INTERACTIVE=1
+
     # Reset in case getopts has been used previously in the shell.
     OPTIND=1
-    while getopts "c" opt >/dev/null 2>&1; do
+    while getopts "cy" opt >/dev/null 2>&1; do
         case "$opt" in
         c)
             rm -f "$HOME/.profile"
             rm -f "$HOME/.bash_profile"
             rm -f "$HOME/.bashrc"
+            rm -f "$HOME/.config/micro/settings.json"
             echo "Removed existing profile data."
+            ;;
+        y)
+            # Equivalent to the apt-get "assume yes" of '-y'
+            export MYCELIO_INTERACTIVE=0
             ;;
         *)
             # We simply ignore invalid options
@@ -742,7 +926,8 @@ function main() {
     case "${uname_system}" in
     Linux*)
         machine=Linux
-        initialize_linux "$@"
+        initialize_linux
+        configure_linux "$@"
         ;;
     Darwin*)
         machine=Mac

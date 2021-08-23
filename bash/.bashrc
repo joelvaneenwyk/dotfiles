@@ -149,24 +149,27 @@ function _initialize_interactive_bash_profile() {
 }
 
 function _initialize_bash_profile() {
-    MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd .. && pwd)"
-    export MYCELIO_ROOT
-
+    # We alias 'grep' in '.profile' so initialize Synology first
     if uname -a | grep -q "synology"; then
         _initialize_synology
+    fi
+
+    # Generic POSIX shell profile setup. This will print the logo if
+    # we are not running interactively.
+    if [ -f "$HOME/.profile" ]; then
+        # shellcheck source=linux/.profile
+        . "$HOME/.profile" "$@"
+    fi
+
+    if [ -f "${MYCELIO_ROOT:-}/init.sh" ]; then
+        MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd .. && pwd)"
+        export MYCELIO_ROOT
     fi
 
     #if ! _start_tmux; then
     #    export WORKSPACE_ROOT=/volume1/homes/jvaneenwyk/workspace
     #    . "${WORKSPACE_ROOT:-}/entrypoint"
     #fi
-
-    # Generic POSIX shell profile setup. This will print the logo if
-    # we are not running interactively.
-    if [ -f "$HOME/.profile" ]; then
-        # shellcheck source=linux/.profile
-        . "$HOME/.profile"
-    fi
 
     # If not running interactively, don't do anything else.
     case $- in
