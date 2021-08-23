@@ -1,14 +1,5 @@
 #!/usr/bin/env sh
 
-if [ "${MYCELIO_LIBRARY_IMPORTED:-}" == "1" ]; then
-    echo "Re-importing Mycelio shell library: '$MYCELIO_ROOT'"
-else
-    echo "Imported Mycelio shell library: '$MYCELIO_ROOT'"
-fi
-
-MYCELIO_LIBRARY_IMPORTED="1"
-export MYCELIO_LIBRARY_IMPORTED
-
 is_synology() {
     if uname -a | grep -q "synology"; then
         return 0
@@ -17,13 +8,34 @@ is_synology() {
     return 1
 }
 
-_home="$(cd "$MYCELIO_ROOT" &>/dev/null && cd ../ && pwd)"
-_home=${_home:-/var/services/homes/jvaneenwyk}
-_logs="$_home/.logs"
-_script_log_path="$_logs/${MYCELIO_SCRIPT_NAME:-mycelio}.log"
-mkdir -p "$_logs"
+import() {
+    if [ "${MYCELIO_LIBRARY_IMPORTED:-}" = "1" ]; then
+        echo "Re-importing Mycelio shell library: '$MYCELIO_ROOT'"
+    else
+        echo "Imported Mycelio shell library: '$MYCELIO_ROOT'"
+    fi
 
-# We use 'whoami' as $USER is not set for scheduled tasks
-echo "User: '$(whoami)'" | tee "$_script_log_path"
-echo "Home: '$_home'" | tee "$_script_log_path"
-echo "Logs available here: '$_script_log_path'" | tee "$_script_log_path"
+    if [ -n "${MYCELIO_ROOT:-}" ]; then
+        _root_home="$(cd "${MYCELIO_ROOT:-}" >/dev/null 2>&1 && cd ../ && pwd)"
+    fi
+
+    _root_home=${_root_home:-/var/services/homes/$(whoami)}
+    _home=${HOME:-$_root_home}
+    _logs="$_home/.logs"
+    mkdir -p "$_logs"
+
+    MYCELIO_LOG_PATH="$_logs/${MYCELIO_SCRIPT_NAME:-mycelio}.log"
+    export MYCELIO_LOG_PATH
+
+    if [ ! "${MYCELIO_LIBRARY_IMPORTED:-}" = "1" ]; then
+        # We use 'whoami' as $USER is not set for scheduled tasks
+        echo "User: '$(whoami)'" | tee "$MYCELIO_LOG_PATH"
+        echo "Home: '$_home'" | tee "$MYCELIO_LOG_PATH"
+        echo "Logs available here: '$MYCELIO_LOG_PATH'" | tee "$MYCELIO_LOG_PATH"
+    fi
+
+    MYCELIO_LIBRARY_IMPORTED="1"
+    export MYCELIO_LIBRARY_IMPORTED
+}
+
+import

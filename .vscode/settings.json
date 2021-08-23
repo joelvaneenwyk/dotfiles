@@ -2,7 +2,8 @@
     "shellcheck.enable": true,
     "shellcheck.run": "onType",
     "shellcheck.enableQuickFix": true,
-    "shellcheck.customArgs": ["-x"],
+    "shellcheck.customArgs": ["--external-sources"],
+    "shellcheck.useWorkspaceRootAsCwd": true,
     "shellcheck.ignorePatterns": {
         "source/stow/**": true
     },

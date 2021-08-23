@@ -1,7 +1,9 @@
 #!/usr/bin/env sh
 
-GPG_TTY=$(tty)
-export GPG_TTY
+if _tty="$(tty)"; then
+    export GPG_TTY="$_tty"
+fi
+
 pkill -9 gpg-agent
 gpg-connect-agent updatestartuptty /bye
 echo "test" | gpg --clearsign

@@ -6,7 +6,10 @@
 #
 
 export MYCELIO_SCRIPT_NAME="synology_initialize_network_tunnel"
-export MYCELIO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
+
+MYCELIO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
+export MYCELIO_ROOT
+
 source "$MYCELIO_ROOT/source/shell/lib.sh"
 
 initialize_network() {
@@ -33,9 +36,9 @@ initialize_network() {
             echo "Tunnel module already loaded."
         fi
 
-        echo "Validated 'tun' status: $(date +"%T")" | tee "$_script_log_path"
+        echo "Validated 'tun' status: $(date +"%T")" | tee "$MYCELIO_LOG_PATH"
     else
-        echo "Skipping tunnel setup. This only works on Synology platform." | tee "$_script_log_path"
+        echo "Skipping tunnel setup. This only works on Synology platform." | tee "$MYCELIO_LOG_PATH"
     fi
 }
 

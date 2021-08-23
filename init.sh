@@ -107,16 +107,16 @@ function _has_admin_rights() {
 
 function initialize_gitconfig() {
     _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-    _gitConfig="$HOME/.gitconfig"
+    _git_config="$HOME/.gitconfig"
 
-    rm -f "$_gitConfig"
-    unlink "$_gitConfig" >/dev/null 2>&1 || true
-    echo "[include]" >"$_gitConfig"
-    echo "    path = $_dot_script_root/git/.gitconfig_common" >>"$_gitConfig"
-    echo "    path = $_dot_script_root/git/.gitconfig_linux" >>"$_gitConfig"
+    rm -f "$_git_config"
+    unlink "$_git_config" >/dev/null 2>&1 || true
+    echo "[include]" >"$_git_config"
+    echo "    path = $_dot_script_root/git/.gitconfig_common" >>"$_git_config"
+    echo "    path = $_dot_script_root/git/.gitconfig_linux" >>"$_git_config"
 
     if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-        echo "    path = $_dot_script_root/git/.gitconfig_wsl" >>"$_gitConfig"
+        echo "    path = $_dot_script_root/git/.gitconfig_wsl" >>"$_git_config"
         echo "Added WSL to '.gitconfig' include directives."
     fi
 
@@ -397,12 +397,7 @@ function initialize_linux() {
         install_hugo
     fi
 
-    _stow "$@" linux
-    _stow "$@" bash
-    _stow "$@" zsh
-    _stow "$@" vim
-
-    initialize_gitconfig
+    configure_linux_common "$@"
 
     # Install the secure key-server certificate (Ubuntu/Debian)
     if uname -a | grep -q "Ubuntu"; then
@@ -517,8 +512,6 @@ function initialize_windows() {
 }
 
 function initialize_macos() {
-    initialize_gitconfig
-
     install_macos_apps
 
     configure_macos_dock
@@ -564,18 +557,11 @@ function install_macos_apps() {
     echo "Installed dependencies with 'brew' package manager."
 }
 
-function configure_macos_apps() {
-    mkdir -p ~/.config/fish
-    mkdir -p ~/.ssh
-    mkdir -p ~/Library/Application\ Support/Code
-
-    _stow "$@" macos
+function configure_linux_common() {
     _stow "$@" linux
-
     _stow "$@" bash
     _stow "$@" zsh
     _stow "$@" fish
-
     _stow "$@" fonts
     _stow "$@" ruby
     _stow "$@" vim
@@ -583,7 +569,17 @@ function configure_macos_apps() {
     # We use built-in VSCode syncing so disabled the stow operation for VSCode
     # _stow vscode
 
-    fish -c "./fish/.config/fish/config.fish || fundle install" || true
+    if [ -x "$(command -v fish)" ]; then
+        fish -c "./fish/.config/fish/config.fish || fundle install" || true
+    fi
+}
+
+function configure_macos_apps() {
+    mkdir -p "$HOME/Library/Application\ Support/Code"
+
+    _stow "$@" macos
+
+    configure_linux_common "$@"
 
     for f in .osx/*.plist; do
         [ -e "$f" ] || continue
@@ -714,6 +710,11 @@ function main() {
     shift $((OPTIND - 1))
     [ "${1:-}" = "--" ] && shift
 
+    mkdir -p ~/.config/fish
+    mkdir -p ~/.ssh
+
+    initialize_gitconfig
+
     uname_system="$(uname -s)"
     case "${uname_system}" in
     Linux*)
@@ -747,7 +748,8 @@ function main() {
         sudo rm -rf /var/lib/apt/lists/*
 
         if [ -f "/.dockerenv" ]; then
-            sudo rm -rf "/tmp"
+            sudo rm -r "/tmp/*"
+            sudo rm -r "/usr/tmp/*"
         fi
     fi
 

@@ -106,6 +106,7 @@ function _initialize_interactive_bash_profile() {
     # ~/.bash_aliases, instead of adding them here directly.
     # See /usr/share/doc/bash-doc/examples in the bash-doc package.
     if [ -f "$HOME/.bash_aliases" ]; then
+        # shellcheck source=bash/.bash_aliases
         source "$HOME/.bash_aliases"
     fi
 
@@ -163,7 +164,7 @@ function _initialize_bash_profile() {
     # Generic POSIX shell profile setup. This will print the logo if
     # we are not running interactively.
     if [ -f "$HOME/.profile" ]; then
-        # shellcheck disable=SC1091
+        # shellcheck source=linux/.profile
         . "$HOME/.profile"
     fi
 
