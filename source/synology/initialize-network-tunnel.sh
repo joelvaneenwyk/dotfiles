@@ -13,7 +13,7 @@ export MYCELIO_ROOT
 source "$MYCELIO_ROOT/source/shell/lib.sh"
 
 initialize_network() {
-    mkdir -p "$_logs"
+    echo "Initiated network check: '$(date)'" | tee "$MYCELIO_LOG_PATH"
 
     if is_synology; then
         # Create the necessary file structure for /dev/net/tun
@@ -28,17 +28,17 @@ initialize_network() {
         # Load the tun module if not already loaded
         if ! lsmod | grep -q "^tun\s"; then
             if sudo insmod "/lib/modules/tun.ko"; then
-                echo "Loaded tunnel module."
+                echo "Loaded tunnel module." | tee -a "$MYCELIO_LOG_PATH"
             else
-                echo "Failed to load tunnel module."
+                echo "Failed to load tunnel module." | tee -a "$MYCELIO_LOG_PATH"
             fi
         else
-            echo "Tunnel module already loaded."
+            echo "Tunnel module already loaded." | tee -a "$MYCELIO_LOG_PATH"
         fi
 
-        echo "Validated 'tun' status: $(date +"%T")" | tee "$MYCELIO_LOG_PATH"
+        echo "Validated 'tun' status: $(date +"%T")" | tee -a "$MYCELIO_LOG_PATH"
     else
-        echo "Skipping tunnel setup. This only works on Synology platform." | tee "$MYCELIO_LOG_PATH"
+        echo "Skipping tunnel setup. This only works on Synology platform." | tee -a "$MYCELIO_LOG_PATH"
     fi
 }
 

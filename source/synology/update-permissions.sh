@@ -13,19 +13,32 @@ export MYCELIO_ROOT
 # shellcheck source=source/shell/lib.sh
 source "$MYCELIO_ROOT/source/shell/lib.sh"
 
-_media=/volume1/media/Downloads
-_media_completed="$_media/Completed"
+function _update_permissions() {
+    _target="$1"
 
-if is_synology; then
-    if [ -d "$_media_completed" ]; then
-        if sudo chmod -R 777 "$_media_completed"; then
-            echo "Updated permissions for downloads: '$_media_completed'" | tee "$MYCELIO_LOG_PATH"
+    if is_synology; then
+        if [ -d "$_target" ]; then
+            echo "Updating ownership: '$_target'" | tee -a "$MYCELIO_LOG_PATH"
+            sudo chown -R jvaneenwyk:users "$_target"
+
+            echo "Updating permissions: '$_target'" | tee -a "$MYCELIO_LOG_PATH"
+            if sudo chmod -R 777 "$_target"; then
+                echo "Updated permissions: '$_target'" | tee -a "$MYCELIO_LOG_PATH"
+            else
+                echo "❌ Unable to updated permissions '$_target'" | tee -a "$MYCELIO_LOG_PATH"
+            fi
         else
-            echo "❌ Unable to updated permissions '$_media_completed'" | tee "$MYCELIO_LOG_PATH"
+            echo "Skipped permission update. Target not found: '$_target'" | tee -a "$MYCELIO_LOG_PATH"
         fi
     else
-        echo "Downloads ('$_media_completed') not found. Skipping permission update." | tee "$MYCELIO_LOG_PATH"
+        echo "Skipped permission update. This process only works on Synology." | tee -a "$MYCELIO_LOG_PATH"
     fi
-else
-    echo "Skipped permission update. This process only works on Synology." | tee "$MYCELIO_LOG_PATH"
-fi
+}
+
+_media=/volume1/media
+
+echo "Initiated permission update: '$(date)'" | tee "$MYCELIO_LOG_PATH"
+_update_permissions "$_media/Downloads/Completed"
+_update_permissions "$_media/Downloads/Incomplete"
+_update_permissions "$_media/Shows"
+_update_permissions "$_media/Movies"
