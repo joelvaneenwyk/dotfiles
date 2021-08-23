@@ -28,15 +28,15 @@ initialize_network() {
         # Load the tun module if not already loaded
         if ! lsmod | grep -q "^tun\s"; then
             if sudo insmod "/lib/modules/tun.ko"; then
-                echo "Loaded tunnel module." | tee -a "$MYCELIO_LOG_PATH"
+                echo "✔ Loaded tunnel module." | tee -a "$MYCELIO_LOG_PATH"
             else
-                echo "Failed to load tunnel module." | tee -a "$MYCELIO_LOG_PATH"
+                echo "❌ Failed to load tunnel module." | tee -a "$MYCELIO_LOG_PATH"
             fi
         else
-            echo "Tunnel module already loaded." | tee -a "$MYCELIO_LOG_PATH"
+            echo "✔ Tunnel module already loaded." | tee -a "$MYCELIO_LOG_PATH"
         fi
 
-        echo "Validated 'tun' status: $(date +"%T")" | tee -a "$MYCELIO_LOG_PATH"
+        echo "✔ Validated 'tun' status: $(date +"%T")" | tee -a "$MYCELIO_LOG_PATH"
     else
         echo "Skipping tunnel setup. This only works on Synology platform." | tee -a "$MYCELIO_LOG_PATH"
     fi
