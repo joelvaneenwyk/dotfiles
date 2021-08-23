@@ -568,8 +568,6 @@ function configure_linux_common() {
     # We use built-in VSCode syncing so disabled the stow operation for VSCode
     # _stow vscode
 
-    _stow "$@" fish
-
     # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to
     # install it.
     _binding_link="./fish/.config/fish/functions/fzf_key_bindings.fish"
@@ -586,6 +584,11 @@ function configure_linux_common() {
     if [ -x "$(command -v fish)" ]; then
         fish -c "./fish/.config/fish/config.fish" || true
     fi
+
+    # Intentionally stow fish configuration after initial setup otherwise we get superfluous
+    # warning messages about tools lie "fisherman/getopts" not yet being installed since it
+    # tries to use our profile settings before installation is done.
+    _stow "$@" fish
 }
 
 function configure_macos_apps() {
