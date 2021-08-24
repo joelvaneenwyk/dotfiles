@@ -155,41 +155,41 @@ _initialize_interactive_profile() {
     # Colored GCC warnings and errors
     export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-    if ! _parent="$(ps -o args= ${PPID:-0} 2>&1)"; then
-        _parent="UNKNOWN"
+    if ! _parent="$(ps -o args= ${PPID:-0} 2>&1 | head -n 1)"; then
+        _parent="N/A"
     fi
 
-    machine="UNKNOWN"
-    variant="$(uname -s)"
+    MYCELIO_OS_NAME="UNKNOWN"
+    MYCELIO_OS_VARIANT="$(uname -s)"
 
-    case "${variant:-}" in
+    case "${MYCELIO_OS_VARIANT:-}" in
     Linux*)
         if uname -a | grep -q "synology"; then
-            machine=Synology
+            MYCELIO_OS_NAME=Synology
         else
-            machine=Linux
+            MYCELIO_OS_NAME=Linux
         fi
 
         if grep -qEi "(Microsoft|WSL)" /proc/version >/dev/null 2>&1; then
-            variant=WSL
+            MYCELIO_OS_VARIANT=WSL
         else
-            variant=$(uname -mrs)
+            MYCELIO_OS_VARIANT=$(uname -mrs)
         fi
         ;;
     Darwin*)
-        machine=macOS
+        MYCELIO_OS_NAME=macOS
         ;;
     CYGWIN*)
-        machine=Windows
-        variant=Cygwin
+        MYCELIO_OS_NAME=Windows
+        MYCELIO_OS_VARIANT=Cygwin
         ;;
     MINGW*)
-        machine=Windows
-        variant=MINGW
+        MYCELIO_OS_NAME=Windows
+        MYCELIO_OS_VARIANT=MINGW
         ;;
     MSYS*)
-        machine=Windows
-        variant=MSYS
+        MYCELIO_OS_NAME=Windows
+        MYCELIO_OS_VARIANT=MSYS
         ;;
     esac
 
@@ -219,7 +219,7 @@ _initialize_interactive_profile() {
     #   sleep 10; alert
     alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-    if [ "$machine" = "macOS" ]; then
+    if [ "$MYCELIO_OS_NAME" = "macOS" ]; then
         alias dir='dir -G'
         alias vdir='vdir -G'
 
@@ -252,13 +252,12 @@ _initialize_interactive_profile() {
     echo "▓▓░░"
     echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
     echo ""
-    echo "Initialized '${machine}:${variant}' environment: '$MYCELIO_ROOT'"
+    echo "Initialized '${MYCELIO_OS_NAME}:${MYCELIO_OS_VARIANT}' environment: '$MYCELIO_ROOT'"
+    echo "Parent Process: $_parent"
     echo ""
-    echo "Parent: $_parent"
-    echo ""
-    echo "  gpgtest     Validate that git commit signing will work with secret key"
     echo "  refresh     Try to pull latest 'dotfiles' and reload profile"
     echo "  micro       Default text editor. Press 'F2' to save and 'F4' to exit."
+    echo "  gpgtest     Validate that git commit signing will work with secret key"
     echo ""
 }
 
@@ -277,18 +276,19 @@ _start_tmux() {
 }
 
 _initialize_go_paths() {
-    _go_root="$HOME/.local/bin/go"
-    _go_bin="$_go_root/bin/go"
+    _go_root="$HOME/.local/go"
 
     export GOROOT="$_go_root"
     export GOBIN="$_go_root/bin"
+    mkdir -p "$GOBIN"
 
     _add_path "prepend" "$GOBIN"
 
-    if [ -f "$_go_bin" ]; then
+    _go_exe="$_go_root/bin/go"
+    if [ -f "$_go_exe" ]; then
         unset GOPATH
-        "$_go_bin" env -w GOROOT="$GOROOT"
-        "$_go_bin" env -w GOBIN="$GOROOT/bin"
+        "$_go_exe" env -w GOROOT="$GOROOT"
+        "$_go_exe" env -w GOBIN="$GOROOT/bin"
     fi
 }
 

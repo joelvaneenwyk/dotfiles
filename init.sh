@@ -7,10 +7,6 @@
 #   - Sets some app settings which were derived from https://github.com/Sajjadhosn/dotfiles
 #
 
-function _to_integer() {
-    expr "${1:-}" : '[^0-9]*\([0-9]*\)' 2>/dev/null || :
-}
-
 function __print_stack() {
     if [ -n "${BASH:-}" ]; then
         callstack_end=${#FUNCNAME[@]}
@@ -30,7 +26,7 @@ function __print_stack() {
 }
 
 function __safe_exit() {
-    _value=$(_to_integer "${1:-}")
+    _value=$(expr "${1:-}" : '[^0-9]*\([0-9]*\)' 2>/dev/null || :)
 
     if [ -z "${_value:-}" ]; then
         # Not a supported return value so provide a default
@@ -46,7 +42,10 @@ function __safe_exit() {
 function __trap_error() {
     _retval=$?
 
-    _line=${MYCELIO_DEBUG_LAST_LINE_NUMBER:-}
+    # Stop tracing once we hit the error
+    set +o xtrace || true
+
+    _line=${_mycelio_dbg_last_line:-}
 
     if [ "${_line:-}" = "" ]; then
         _line="${1:-}"
@@ -86,9 +85,13 @@ function _setup_error_handling() {
     # We only output command on Bash because by default "-x" will output to 'stderr' which
     # results in an error on CI as it's used to make sure we have clean output. On Bash we
     # can override to to go to a new file descriptor.
-    if [ -n "${BASH:-}" ]; then
-        set -o errexit
+    if [ -z "${BASH:-}" ]; then
+        echo "No error handling enabled. Only supported in bash shell."
+    else
+        # Disable xtrace and re-enable below if desired
+        set +o xtrace || true
 
+        set -o errexit
         shopt -s extdebug
 
         # aka. set -T
@@ -99,26 +102,21 @@ function _setup_error_handling() {
         # or zero if no command exited with a non-zero status.
         set -o pipefail
 
-        MYCELIO_DEBUG_LINE_NUMBER=
-        export MYCELIO_DEBUG_LINE_NUMBER
+        _mycelio_dbg_line=
+        export _mycelio_dbg_line
 
-        MYCELIO_DEBUG_LAST_LINE_NUMBER=
-        export MYCELIO_DEBUG_LAST_LINE_NUMBER
+        _mycelio_dbg_last_line=
+        export _mycelio_dbg_last_line
 
         # 'ERR' is undefined in POSIX. We also use a somewhat strange looking expansion here
         # for 'BASH_LINENO' to ensure it works if BASH_LINENO is not set. There is a 'gist' of
         # at https://bit.ly/3cuHidf along with more details available at https://bit.ly/2AE2mAC.
         trap '__trap_error "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
 
-        echo "Enabled 'pipefail' and additional error handling for Bash"
-
-        _major=$(echo "$BASH_VERSION" | cut -d. -f1)
-        _minor=$(echo "$BASH_VERSION" | cut -d. -f2)
-
         # Redirect only supported in Bash versions after 4.1
-        if [ "$_major" -eq 4 ] && [ "$_minor" -ge 1 ]; then
+        if [ "$BASH_VERSION_MAJOR" -eq 4 ] && [ "$BASH_VERSION_MINOR" -ge 1 ]; then
             _enable_trace=1
-        elif [ "$_major" -gt 4 ]; then
+        elif [ "$BASH_VERSION_MAJOR" -gt 4 ]; then
             _enable_trace=1
         else
             _enable_trace=0
@@ -128,8 +126,8 @@ function _setup_error_handling() {
 
         if [ "$_enable_trace" = "1" ]; then
             trap '[[ ${FUNCNAME:-} = "__trap_error" ]] || {
-                    MYCELIO_DEBUG_LAST_LINE_NUMBER=${MYCELIO_DEBUG_LINE_NUMBER:-};
-                    MYCELIO_DEBUG_LINE_NUMBER=${LINENO:-};
+                    _mycelio_dbg_last_line=${_mycelio_dbg_line:-};
+                    _mycelio_dbg_line=${LINENO:-};
                 }' DEBUG
 
             _bash_debug=1
@@ -139,19 +137,19 @@ function _setup_error_handling() {
             # trap being called e.g. _my_result="$(errorfunc test)"
             set -o errtrace
 
-            echo "Initialized 'bash' debug trap and error tracing."
-
             export MYCELIO_DEBUG_TRAP_ENABLED=1
         fi
 
-        if [ -n "${_bash_debug:-}" ] && [ "$_enable_trace" = "1" ]; then
-            echo "Including error output ('set -x') and redirecting to different file descriptor."
-
-            # We output to file descriptor '4' here to not impact other output
-            exec 4>&1
-            BASH_XTRACEFD=4
-            export BASH_XTRACEFD
+        if [ "$_bash_debug" = "1" ] && [ "$_enable_trace" = "1" ]; then
+            mkdir -p "$HOME/.logs"
+            exec 19>"$HOME/.logs/init.xtrace.log"
+            export BASH_XTRACEFD=19
             set -o xtrace
+            echo "Enabled trace error handling: '$HOME/.logs/init.xtrace.log'"
+        elif [ "$_enable_trace" = "1" ]; then
+            echo "Initialized debug trap and error tracing."
+        else
+            echo "Enabled custom debug trap."
         fi
     fi
 }
@@ -250,17 +248,15 @@ function _has_admin_rights() {
 }
 
 function initialize_gitconfig() {
-    _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
     _git_config="$HOME/.gitconfig"
-
     rm -f "$_git_config"
     unlink "$_git_config" >/dev/null 2>&1 || true
     echo "[include]" >"$_git_config"
-    echo "    path = $_dot_script_root/git/.gitconfig_common" >>"$_git_config"
-    echo "    path = $_dot_script_root/git/.gitconfig_linux" >>"$_git_config"
+    echo "    path = $MYCELIO_ROOT/git/.gitconfig_common" >>"$_git_config"
+    echo "    path = $MYCELIO_ROOT/git/.gitconfig_linux" >>"$_git_config"
 
     if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-        echo "    path = $_dot_script_root/git/.gitconfig_wsl" >>"$_git_config"
+        echo "    path = $MYCELIO_ROOT/git/.gitconfig_wsl" >>"$_git_config"
         echo "Added WSL to '.gitconfig' include directives."
     fi
 
@@ -269,11 +265,26 @@ function initialize_gitconfig() {
 
 function install_hugo {
     _local_bin="$HOME/.local/bin"
-    _go_root="$_local_bin/go"
-    _go_bin="$_go_root/bin/go"
-    _hugo_bin="$_go_root/bin/hugo"
+    _go_root="$HOME/.local/go"
+    _go_exe="$_go_root/bin/go"
+    _hugo_exe="$_go_root/bin/hugo"
 
-    if [ ! -f "$_hugo_bin" ] && [ -x "$(command -v git)" ] && [ -f "$_go_bin" ]; then
+    if [ -f "$_hugo_exe" ]; then
+        echo "✔ 'hugo' site builder already installed."
+        return 0
+    fi
+
+    if [ ! -x "$(command -v git)" ]; then
+        echo "❌ Failed to install 'hugo' site builder. Required 'git' tool missing."
+        return 1
+    fi
+
+    if [ ! -f "$_go_exe" ]; then
+        echo "❌ Failed to install 'hugo' site builder. Missing 'go' compiler: '$_go_exe'"
+        return 2
+    fi
+
+    if [ -f "$_go_exe" ]; then
         _tmp="$HOME/.tmp"
         _tmp_hugo="$_tmp/hugo"
         mkdir -p "$_tmp_hugo"
@@ -281,49 +292,50 @@ function install_hugo {
         rm -rf "$_tmp_hugo"
         git -c advice.detachedHead=false clone -b "v0.87.0" "https://github.com/gohugoio/hugo.git" "$_tmp_hugo"
 
-        _go_env_root="$_go_root"
-        _go_env_bin="$_go_env_root/bin"
-
         if (
             cd "$_tmp_hugo"
 
             # We only modify the environment for this subshell and that is the expectation
             # so we ignore the warnings here.
             # shellcheck disable=SC2030
-            export GOROOT="$_go_env_root"
+            export GOROOT="$_go_root"
             # shellcheck disable=SC2030
-            export GOBIN="$_go_env_bin"
+            export GOBIN="$_go_root/bin"
 
             # No support for GCC on Synology so not able to build extended features
             if ! uname -a | grep -q "synology"; then
                 export CGO_ENABLED="1"
-                echo "##[cmd] $_go_bin install --tags extended"
-                "$_go_bin" install --tags extended
+                echo "##[cmd] $_go_exe install --tags extended"
+                "$_go_exe" install --tags extended
             else
                 export CGO_ENABLED="0"
-                echo "##[cmd] $_go_bin install"
-                "$_go_bin" install
+                echo "##[cmd] $_go_exe install"
+                "$_go_exe" install
             fi
         ); then
-            echo "Successfully installed 'go' compiler."
+            echo "Successfully installed 'hugo' site builder."
         else
-            echo "Failed to install 'go' compiler."
+            echo "Failed to install 'hugo' site builder."
         fi
     fi
 
-    if [ -f "$_hugo_bin" ]; then
-        "$_hugo_bin" version
-    else
-        echo "Failed to install 'hugo' static site builder."
+    if [ ! -f "$_hugo_exe" ]; then
+        echo "❌ Failed to install 'hugo' static site builder."
+        return 3
     fi
+
+    "$_hugo_exe" version
+
+    return 0
 }
 
 function install_go {
-    _local_go_root="$HOME/.local/bin/go"
-    _go_bin="$_local_go_root/bin/go"
+    _local_root="$HOME/.local"
+    _local_go_root="$_local_root/go"
+    _go_exe="$_local_go_root/bin/go"
     _go_requires_update=0
 
-    if [ -f "$_go_bin" ] && _go_version="$("$_go_bin" version 2>&1 | (
+    if [ -f "$_go_exe" ] && _go_version="$("$_go_exe" version 2>&1 | (
         read -r _ _ v _
         echo "${v#go}"
     ))"; then
@@ -337,55 +349,86 @@ function install_go {
 
     if [ "$_go_requires_update" = "1" ]; then
         _go_version="1.17"
-        _arch_name="$(uname -m)"
-        _go_arch=""
+        _go_compiled=0
 
-        if [ "${_arch_name}" = "x86_64" ]; then
-            _go_arch="amd64"
-        elif [ "${_arch_name}" = "x86" ]; then
-            _go_arch="386"
-        elif [ "${_arch_name}" = "arm64" ]; then
-            _go_arch="arm64"
+        if [ -x "$(command -v go)" ] && [ -x "$(command -v gcc)" ] && [ -x "$(command -v make)" ]; then
+            # https://github.com/golang/go/issues/38536#issuecomment-616897960
+            url="https://dl.google.com/go/go$_go_version.src.tar.gz"
+            mkdir -p "$HOME/.tmp"
+            wget -O "$HOME/.tmp/go.tgz" "$url"
+            tar -C "$_local_root" -xzf "$HOME/.tmp/go.tgz"
+            rm "$HOME/.tmp/go.tgz"
+
+            if (
+                cd "$_local_go_root/src"
+
+                # set GOROOT_BOOTSTRAP + GOHOST* such that we can build Go successfully
+                GOROOT_BOOTSTRAP="$(go env GOROOT)"
+                export GOROOT_BOOTSTRAP
+
+                GOHOSTOS="$MYCELIO_OS"
+                export GOHOSTOS
+
+                GOHOSTARCH="$MYCELIO_ARCH"
+                export GOHOSTARCH
+
+                ./make.bash
+            ); then
+                # pre-compile the standard library, just like the official binary release tarballs do
+                go install std
+
+                _go_compiled=1
+            fi
+
+            # Remove a few intermediate / bootstrapping files the official binary release tarballs do not contain
+            rm -rf "$_local_go_root/pkg/*/cmd"
+            rm -rf "$_local_go_root/pkg/bootstrap"
+            rm -rf "$_local_go_root/pkg/obj"
+            rm -rf "$_local_go_root/pkg/tool/*/api"
+            rm -rf "$_local_go_root/pkg/tool/*/go_bootstrap "
+            rm -rf "$_local_go_root/src/cmd/dist/dist"
         fi
 
-        if _uname_output="$(uname -s 2>/dev/null)"; then
-            case "${_uname_output}" in
-            Linux*)
-                _go_archive="go$_go_version.linux-$_go_arch.tar.gz"
-                ;;
-            Darwin*)
-                _go_archive="go$_go_version.darwin-$_go_arch.tar.gz"
-                ;;
-            esac
-        fi
+        if [ "$_go_compiled" = "0" ]; then
+            if _uname_output="$(uname -s 2>/dev/null)"; then
+                case "${_uname_output}" in
+                Linux*)
+                    _go_archive="go$_go_version.linux-$MYCELIO_ARCH.tar.gz"
+                    ;;
+                Darwin*)
+                    _go_archive="go$_go_version.darwin-$MYCELIO_ARCH.tar.gz"
+                    ;;
+                esac
+            fi
 
-        # Install Golang
-        if [ -z "$_go_archive" ]; then
-            echo "Unsupported platform for installing 'go' language."
-        else
-            _tmp="$HOME/.tmp"
-            mkdir -p "$_tmp/"
-            echo "Downloading archive: 'https://dl.google.com/go/$_go_archive'"
-            touch "$_tmp/$_go_archive"
-            curl -o "$_tmp/$_go_archive" "https://dl.google.com/go/$_go_archive"
-            echo "Downloaded archive: '$_go_archive'"
+            # Install Golang
+            if [ -z "$_go_archive" ]; then
+                echo "Unsupported platform for installing 'go' language."
+            else
+                _tmp="$HOME/.tmp"
+                mkdir -p "$_tmp/"
+                echo "Downloading archive: 'https://dl.google.com/go/$_go_archive'"
+                touch "$_tmp/$_go_archive"
+                curl -o "$_tmp/$_go_archive" "https://dl.google.com/go/$_go_archive"
+                echo "Downloaded archive: '$_go_archive'"
 
-            _go_tmp="$_tmp/go"
-            rm -rf "${_go_tmp:?}/"
-            tar -xf "$_tmp/$_go_archive" --directory "$_tmp"
-            echo "Extracted 'go' archive: '$_go_tmp'"
+                _go_tmp="$_tmp/go"
+                rm -rf "${_go_tmp:?}/"
+                tar -xf "$_tmp/$_go_archive" --directory "$_tmp"
+                echo "Extracted 'go' archive: '$_go_tmp'"
 
-            mkdir -p "$_local_go_root/"
-            rm -rf "${_local_go_root:?}/"
-            cp -rf "$_go_tmp" "$_local_go_root"
-            echo "Updated 'go' install: '$_local_go_root'"
+                mkdir -p "$_local_go_root/"
+                rm -rf "${_local_go_root:?}/"
+                cp -rf "$_go_tmp" "$_local_go_root"
+                echo "Updated 'go' install: '$_local_go_root'"
 
-            rm -rf "$_go_tmp"
-            echo "Removed temporary 'go' files: '$_go_tmp'"
+                rm -rf "$_go_tmp"
+                echo "Removed temporary 'go' files: '$_go_tmp'"
+            fi
         fi
     fi
 
-    if _version=$("$_go_bin" version); then
+    if _version=$("$_go_exe" version); then
         echo "$_version"
     else
         echo "Failed to install 'go' language."
@@ -393,14 +436,12 @@ function install_go {
 }
 
 function _stow() {
-    _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-
     if [ -x "$(command -v stow)" ]; then
-        echo "##[cmd] stow --dir='$_dot_script_root' --target='$HOME' --verbose $*"
-        stow --dir="$_dot_script_root" --target="$HOME" --verbose "$@"
+        echo "##[cmd] stow --dir='$MYCELIO_ROOT' --target='$HOME' --verbose $*"
+        stow --dir="$MYCELIO_ROOT" --target="$HOME" --verbose "$@"
     elif uname -a | grep -q "synology"; then
-        _root_dir="$_dot_script_root/$1/"
-        _root="$_dot_script_root/$1"
+        _root_dir="$MYCELIO_ROOT/$1/"
+        _root="$MYCELIO_ROOT/$1"
 
         find "$_root" -maxdepth 2 -type f -print0 | while IFS= read -r -d $'\0' file; do
             _offset="${file//$_root_dir/}"
@@ -414,7 +455,7 @@ function _stow() {
             fi
         done
     else
-        echo "Unsupported 'stow' command. Skipped: 'stow $*'"
+        echo "Skipped unsupported command: 'stow $*'"
     fi
 }
 
@@ -460,12 +501,12 @@ function configure_linux() {
     # Install the secure key-server certificate (Ubuntu/Debian)
     if uname -a | grep -q "Ubuntu"; then
         mkdir -p /usr/local/share/ca-certificates/
-        curl -s https://sks-keyservers.net/sks-keyservers.netCA.pem | sudo tee /usr/local/share/ca-certificates/sks-keyservers.netCA.crt
+        curl -s "https://sks-keyservers.net/sks-keyservers.netCA.pem" | sudo tee "/usr/local/share/ca-certificates/sks-keyservers.netCA.crt"
         sudo update-ca-certificates
     fi
 
     _gnupg_config_root="$HOME/.gnupg"
-    _gnupg_templates_root="$_dot_script_root/templates/.gnupg"
+    _gnupg_templates_root="$MYCELIO_ROOT/templates/.gnupg"
     mkdir -p "$_gnupg_config_root"
 
     rm -f "$_gnupg_config_root/gpg-agent.conf"
@@ -480,9 +521,44 @@ function configure_linux() {
     echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
 }
 
-function initialize_linux() {
-    _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+function install_micro_text_editor() {
+    # Install micro text editor. It is optional so ignore failures
+    if [ -x "$(command -v micro)" ]; then
+        echo "✔ micro text editor already installed."
+        return 0
+    fi
 
+    mkdir -p "$HOME/.local/bin/"
+
+    _tmp="$HOME/.tmp"
+    _tmp_micro="$_tmp/micro"
+    mkdir -p "$_tmp_micro"
+
+    rm -rf "$_tmp_micro"
+    git -c advice.detachedHead=false clone -b "v2.0.10" "https://github.com/zyedidia/micro" "$_tmp_micro"
+
+    if (
+        cd "$_tmp_micro"
+        make build
+        mv micro "$HOME/.local/bin/"
+    ); then
+        echo "✔ Successfully compiled micro text editor."
+    else
+        if (
+            cd "$HOME/.local/bin/"
+            curl "https://getmic.ro" | bash
+        ); then
+            echo "[init.sh] Successfully installed 'micro' text editor."
+        else
+            echo "[init.sh] WARNING: Failed to install 'micro' text editor."
+            return 2
+        fi
+    fi
+
+    return 0
+}
+
+function initialize_linux() {
     # Make sure we have the appropriate permissions to write to home temporary folder
     # otherwise much of this initialization will fail.
     _tmp="$HOME/.tmp"
@@ -500,12 +576,53 @@ function initialize_linux() {
     fi
 
     if ! grep -q "MYCELIO_ROOT" "$dotenv"; then
-        echo "MYCELIO_ROOT=$_dot_script_root" >>"$dotenv"
+        echo "MYCELIO_ROOT=$MYCELIO_ROOT" >>"$dotenv"
         echo "Added 'MYCELIO_ROOT' to dotenv file: '$dotenv'"
     fi
 
     if uname -a | grep -q "synology"; then
         echo "Skipped installing dependencies. Not supported on Synology platform."
+    elif [ -x "$(command -v pacman)" ]; then
+        if [ -f "$_dot_initialized" ]; then
+            echo "[init.sh] Skipped package install. Already initialized."
+        else
+            # Primary driver for these dependencies is 'stow' but they are generally useful as well
+            echo "[init.sh] Installing minimal packages to build dependencies on Windows using MSYS2."
+
+            # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
+            rm -f /var/lib/pacman/db.lck
+
+            pacman -Syu --noconfirm
+            pacman -S --noconfirm --needed \
+                msys2-keyring curl unzip make \
+                perl autoconf automake1.16 automake-wrapper libtool \
+                git gawk
+
+            if [ -f "/etc/pacman.d/gnupg/" ]; then
+                rm -rf "/etc/pacman.d/gnupg/"
+            fi
+
+            pacman-key --init
+            pacman-key --populate msys2
+
+            # Long version of '-Syuu' gets fresh package databases from server and
+            # upgrades the packages while allowing downgrades '-uu' as well if needed.
+            pacman --sync --refresh -uu --noconfirm
+        fi
+    elif [ -x "$(command -v apk)" ]; then
+        if [ ! -x "$(command -v sudo)" ]; then
+            apk update
+            apk add sudo
+        else
+            sudo apk update
+        fi
+
+        sudo apk add \
+            tzdata git wget curl unzip xclip \
+            build-base gcc g++ make musl-dev go \
+            stow tmux neofetch fish \
+            python3 py3-pip \
+            fontconfig openssl gnupg
     elif [ -x "$(command -v apt-get)" ]; then
         if [ ! -x "$(command -v sudo)" ]; then
             apt-get update
@@ -529,8 +646,8 @@ function initialize_linux() {
         fi
     fi
 
-    if [ "$(whoami)" == "root" ]; then
-        echo "Skipping install of Python setup for root user."
+    if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
+        echo "Skipped install of Python setup for root user."
     else
         if [ -x "$(command -v pip3)" ]; then
             pip3 install --user --upgrade pip
@@ -544,8 +661,22 @@ function initialize_linux() {
         fi
     fi
 
-    if [ "$(whoami)" == "root" ]; then
-        echo "Skipping install of 'oh-my-posh' for root user."
+    if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
+        echo "Skipped install of 'go' and 'hugo' for root user."
+    else
+        install_go
+
+        # We are counting this as an optional dependency so ignore errors
+        install_hugo || true
+    fi
+
+    _build_stow
+
+    # Optional dependency so ignore errors
+    install_micro_text_editor || true
+
+    if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
+        echo "Skipped install of 'oh-my-posh' for root user."
     else
         if [ ! -x "$(command -v oh-my-posh)" ]; then
             _local_bin="$HOME/.local/bin"
@@ -631,27 +762,22 @@ function initialize_linux() {
     fi
 
     if [ ! -d "$HOME/.asdf" ]; then
-        git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$HOME/.asdf" --branch v0.8.1
-    fi
-
-    if [ "$(whoami)" == "root" ]; then
-        echo "Skipping install of 'go' and 'hugo' for root user."
-    else
-        install_go
-        install_hugo
+        if [ -x "$(command -v git)" ]; then
+            git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$HOME/.asdf" --branch v0.8.1
+        else
+            echo "Skipped install of 'asdf' as git is not installed."
+        fi
     fi
 }
 
 #
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
-function build_stow() {
-    _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-
+function _build_stow() {
     if [ -x "$(command -v stow)" ]; then
-        echo "Command 'stow' already available. Skipping build."
+        echo "Command 'stow' already available. Skipped build."
     else
-        echo "[stow] Script directory: '$_dot_script_root'"
+        echo "[stow] Script directory: '$MYCELIO_ROOT'"
 
         if [ -x "$(command -v cpan)" ]; then
             # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because
@@ -664,7 +790,7 @@ function build_stow() {
 
         # Move to source directory and start install.
         (
-            cd "$_dot_script_root/source/stow" || true
+            cd "$MYCELIO_ROOT/source/stow" || true
             autoreconf --install --verbose 2>&1 | awk '{ print "[stow.autoreconf]", $0 }'
 
             # We want a local install
@@ -680,54 +806,8 @@ function build_stow() {
 }
 
 function initialize_windows() {
-    _dot_script_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-    _dot_initialized="$_dot_script_root/.tmp/.initialized"
-
-    if [ "$1" == "clean" ]; then
-        rm -rf "${_dot_script_root}/.tmp"
-        echo "[init.sh] Removed workspace temporary files to force a rebuild."
-    fi
-
-    # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
-    if [ -x "$(command -v pacman)" ]; then
-        if [ -f "$_dot_initialized" ]; then
-            echo "[init.sh] Skipped package install. Already initialized."
-        else
-            # Primary driver for these dependencies is 'stow' but they are generally useful as well
-            echo "[init.sh] Installing minimal packages to build dependencies on Windows using MSYS2."
-
-            rm -f /var/lib/pacman/db.lck
-            pacman -Syu --noconfirm
-            pacman -S --noconfirm --needed msys2-keyring curl unzip make \
-                perl autoconf automake1.16 automake-wrapper libtool \
-                git gawk
-
-            if [ -f "/etc/pacman.d/gnupg/" ]; then
-                rm -rf "/etc/pacman.d/gnupg/"
-            fi
-
-            pacman-key --init
-            pacman-key --populate msys2
-
-            # Long version of '-Syuu' gets fresh package databases from server and
-            # upgrades the packages while allowing downgrades '-uu' as well if needed.
-            pacman --sync --refresh -uu --noconfirm
-        fi
-    else
-        echo "[init.sh] WARNING: Package manager 'pacman' not found. There will likely be missing dependencies."
-    fi
-
-    # Install micro text editor. It is optional so ignore failures
-    if [ ! -x "$(command -v micro)" ]; then
-        if (cd "$_dot_script_root/.tmp/" && bash <(curl -s https://getmic.ro)); then
-            echo "[init.sh] Successfully installed 'micro' text editor."
-        else
-            echo "[init.sh] WARNING: Failed to install 'micro' text editor."
-        fi
-    fi
-
-    build_stow
-
+    _dot_initialized="$MYCELIO_ROOT/.tmp/.initialized"
+    initialize_linux "$@"
     touch "$_dot_initialized"
 }
 
@@ -878,18 +958,96 @@ function configure_macos_system() {
 }
 
 function main() {
+    if [ -n "${BASH:-}" ]; then
+        BASH_VERSION_MAJOR=$(echo "$BASH_VERSION" | cut -d. -f1)
+        BASH_VERSION_MINOR=$(echo "$BASH_VERSION" | cut -d. -f2)
+    else
+        BASH_VERSION_MAJOR=0
+        BASH_VERSION_MINOR=0
+    fi
+
+    export BASH_VERSION_MAJOR
+    export BASH_VERSION_MINOR
+
     _setup_error_handling
 
     MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
     export MYCELIO_ROOT
 
-    _home=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
+    if [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
+        # shellcheck source=linux/.profile
+        . "$MYCELIO_ROOT/linux/.profile"
+    fi
+
+    if [ -x "$(command -v apk)" ]; then
+        _arch_name="$(apk --print-arch)"
+    else
+        _arch_name="$(uname -m)"
+    fi
+
+    MYCELIO_ARCH=""
+
+    case "$_arch_name" in
+    'x86_64')
+        export MYCELIO_ARCH='amd64' MYCELIO_OS='linux'
+        ;;
+    'armhf')
+        export MYCELIO_ARCH='arm' MYCELIO_ARM='6' MYCELIO_OS='linux'
+        ;;
+    'armv7')
+        export MYCELIO_ARCH='arm' MYCELIO_ARM='7' MYCELIO_OS='linux'
+        ;;
+    'aarch64')
+        export MYCELIO_ARCH='arm64' MYCELIO_OS='linux'
+        ;;
+    'x86')
+        export MYCELIO_386='softfloat' MYCELIO_ARCH='386' MYCELIO_OS='linux'
+        ;;
+    'ppc64le')
+        export MYCELIO_ARCH='ppc64le' MYCELIO_OS='linux'
+        ;;
+    's390x')
+        export MYCELIO_ARCH='s390x' MYCELIO_OS='linux'
+        ;;
+    *)
+        echo >&2 "ERROR: Unsupported architecture '$_arch_name'"
+        exit 1
+        ;;
+    esac
+
+    uname_system="$(uname -s)"
+    case "${uname_system}" in
+    Linux*)
+        export MYCELIO_OS='linux'
+        ;;
+    Darwin*)
+        export MYCELIO_OS='darwin'
+        ;;
+    CYGWIN*)
+        export MYCELIO_OS='windows'
+        ;;
+    MINGW*)
+        export MYCELIO_OS='windows'
+        ;;
+    MSYS*)
+        export MYCELIO_OS='windows'
+        ;;
+    *)
+        export MYCELIO_OS="UNKNOWN:${uname_system}"
+        ;;
+    esac
+
+    # Get home path which is hopefully in 'HOME' but if not we use the parent
+    # directory of this project as a backup.
+    HOME=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
+    export HOME
 
     # We use 'whoami' as $USER is not set for scheduled tasks
-    echo "User: '$(whoami)'"
-    echo "User Home: '$_home'"
-    echo "Dotfiles Root: '$MYCELIO_ROOT'"
-    echo "=---------------------"
+    echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
+    echo "▓▓░░ • Root: '$MYCELIO_ROOT'"
+    echo "▓▓░░   User: '$(whoami)'"
+    echo "▓▓░░   Home: '$HOME'"
+    echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
 
     # Assume we are fine with interactive prompts if necessary
     export MYCELIO_INTERACTIVE=1
@@ -917,51 +1075,41 @@ function main() {
     shift $((OPTIND - 1))
     [ "${1:-}" = "--" ] && shift
 
+    if [ "$1" == "clean" ]; then
+        rm -rf "$MYCELIO_ROOT/.tmp"
+        echo "[init.sh] Removed workspace temporary files to force a rebuild."
+    fi
+
     mkdir -p ~/.config/fish
     mkdir -p ~/.ssh
+    mkdir -p "$MYCELIO_ROOT/.tmp"
 
     initialize_gitconfig
 
-    uname_system="$(uname -s)"
-    case "${uname_system}" in
-    Linux*)
-        machine=Linux
+    if [ "$MYCELIO_OS" = "linux" ]; then
         initialize_linux
         configure_linux "$@"
-        ;;
-    Darwin*)
-        machine=Mac
+    elif [ "$MYCELIO_OS" = "darwin" ]; then
         initialize_macos "$@"
-        ;;
-    CYGWIN*)
-        machine=Cygwin
+    elif [ "$MYCELIO_OS" = "windows" ]; then
         initialize_windows "$@"
-        ;;
-    MINGW*)
-        machine=MinGw
-        initialize_windows "$@"
-        ;;
-    MSYS*)
-        machine=MSYS
-        initialize_windows "$@"
-        ;;
-    *) machine="UNKNOWN:${uname_system}" ;;
-    esac
+    fi
+
+    # Always remove temporary files from home directory
+    rm -rf "$HOME/.tmp" || true
 
     if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
         DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
 
         # Remove intermediate files here to reduce size of Docker container layer
-        rm -rf "$HOME/.tmp" || true
-        sudo rm -rf /var/lib/apt/lists/*
-
         if [ -f "/.dockerenv" ]; then
+            sudo rm -rf /var/lib/apt/lists/*
             sudo rm -r "/tmp/*"
             sudo rm -r "/usr/tmp/*"
         fi
     fi
 
-    echo "Initialized '${machine}' machine."
+    echo "Initialized '${MYCELIO_OS}' machine."
 
     if [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
         # shellcheck source=linux/.profile
@@ -969,7 +1117,7 @@ function main() {
         echo "Refreshed profile data."
     fi
 
-    if [ -x "$(command -v neofetch)" ]; then
+    if [ -x "$(command -v neofetch)" ] && [ "$BASH_VERSION_MAJOR" -ge 4 ]; then
         neofetch
     fi
 }
