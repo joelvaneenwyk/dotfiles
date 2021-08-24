@@ -461,7 +461,7 @@ function _stow() {
     if [ ! -x "$(command -v git)" ]; then
         echo "❌ Failed to stow '$1' as git is required."
         return 1
-    else
+    elif [ -d "$MYCELIO_ROOT/.git" ]; then
         git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$1" | while IFS= read -r line; do
             _source="${MYCELIO_ROOT%/}/$line"
             _target="${HOME%/}/${line/$1\//}"
