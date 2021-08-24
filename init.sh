@@ -357,52 +357,49 @@ function install_go {
             rm "$_go_src_archive"
 
             echo "Compiling 'go' from source: '$_local_go_root/src'"
-            _cd=$(pwd)
-            cd "$_local_go_root/src"
+            if (
+                cd "$_local_go_root/src"
 
-            # shellcheck disable=SC2031,SC2030
-            if [ -d "/mingw64/lib/go" ]; then
-                GOROOT="/mingw64/lib/go"
-                export GOROOT
-            fi
-
-            # set GOROOT_BOOTSTRAP + GOHOST* such that we can build Go successfully
-            GOROOT_BOOTSTRAP="$(go env GOROOT)"
-            if [ -x "$(command -v cygpath)" ]; then
-                GOROOT_BOOTSTRAP=$(cygpath --unix "$GOROOT_BOOTSTRAP")
-                export GO_LDSO=ld.so
-            fi
-            export GOROOT_BOOTSTRAP
-
-            GOHOSTOS="$MYCELIO_OS"
-            export GOHOSTOS
-
-            GOARCH="$MYCELIO_ARCH"
-            export GOARCH
-
-            GOHOSTARCH="$MYCELIO_ARCH"
-            export GOHOSTARCH
-
-            if [ -x "$(command -v cygpath)" ]; then
-                if cmd /c "make.bat"; then
-                    _go_compiled=1
+                # shellcheck disable=SC2031,SC2030
+                if [ -d "/mingw64/lib/go" ]; then
+                    GOROOT="/mingw64/lib/go"
+                    export GOROOT
                 fi
-            elif ./make.bash -v --dist-tool; then
-                _go_compiled=1
-            fi
 
-            if [ "$_go_compiled"="1" ]; then
-                echo "Successfully compiled 'go' from source."
+                # set GOROOT_BOOTSTRAP + GOHOST* such that we can build Go successfully
+                GOROOT_BOOTSTRAP="$(go env GOROOT)"
+                if [ -x "$(command -v cygpath)" ]; then
+                    GOROOT_BOOTSTRAP=$(cygpath --unix "$GOROOT_BOOTSTRAP")
+                    export GO_LDSO=ld.so
+                fi
+                export GOROOT_BOOTSTRAP
+
+                GOHOSTOS="$MYCELIO_OS"
+                export GOHOSTOS
+
+                GOARCH="$MYCELIO_ARCH"
+                export GOARCH
+
+                GOHOSTARCH="$MYCELIO_ARCH"
+                export GOHOSTARCH
+
+                if [ -x "$(command -v cygpath)" ]; then
+                    if ! cmd /c "make.bat"; then
+                        exit 1
+                    fi
+                elif ! ./make.bash -v --dist-tool; then
+                    exit 1
+                fi
 
                 # Pre-compile the standard library, just like the official binary release tarballs do
                 if go install std; then
                     echo "Pre-compiled 'go' standard library."
                 fi
+            ); then
+                echo "Successfully compiled 'go' from source."
             else
                 echo "Failed to compile 'go' from source."
             fi
-
-            cd "$_cd"
 
             # Remove a few intermediate / bootstrapping files the official binary release tarballs do not contain
             rm -rf "$_local_go_root/pkg/*/cmd"
@@ -577,8 +574,6 @@ function install_micro_text_editor() {
         return 0
     fi
 
-    mkdir -p "$HOME/.local/bin/"
-
     _tmp_micro="$MYCELIO_TEMP/micro"
     mkdir -p "$_tmp_micro"
 
@@ -588,11 +583,13 @@ function install_micro_text_editor() {
     if (
         cd "$_tmp_micro"
         make build
+        mkdir -p "$HOME/.local/bin/"
         mv micro "$HOME/.local/bin/"
     ); then
         echo "✔ Successfully compiled micro text editor."
     else
         if (
+            mkdir -p "$HOME/.local/bin/"
             cd "$HOME/.local/bin/"
             curl "https://getmic.ro" | bash
         ); then
