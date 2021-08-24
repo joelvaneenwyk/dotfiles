@@ -113,16 +113,15 @@ function _setup_error_handling() {
         # at https://bit.ly/3cuHidf along with more details available at https://bit.ly/2AE2mAC.
         trap '__trap_error "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
 
+        _enable_trace=0
+        _bash_debug=0
+
         # Redirect only supported in Bash versions after 4.1
         if [ "$BASH_VERSION_MAJOR" -eq 4 ] && [ "$BASH_VERSION_MINOR" -ge 1 ]; then
             _enable_trace=1
         elif [ "$BASH_VERSION_MAJOR" -gt 4 ]; then
             _enable_trace=1
-        else
-            _enable_trace=0
         fi
-
-        _bash_debug=0
 
         if [ "$_enable_trace" = "1" ]; then
             trap '[[ ${FUNCNAME:-} = "__trap_error" ]] || {
@@ -140,17 +139,17 @@ function _setup_error_handling() {
             export MYCELIO_DEBUG_TRAP_ENABLED=1
         fi
 
+        MYCELIO_DEBUG_TRACE_FILE=""
+
         if [ "$_bash_debug" = "1" ] && [ "$_enable_trace" = "1" ]; then
+            MYCELIO_DEBUG_TRACE_FILE="$HOME/.logs/init.xtrace.log"
             mkdir -p "$HOME/.logs"
-            exec 19>"$HOME/.logs/init.xtrace.log"
+            exec 19>"$MYCELIO_DEBUG_TRACE_FILE"
             export BASH_XTRACEFD=19
             set -o xtrace
-            echo "Enabled trace error handling: '$HOME/.logs/init.xtrace.log'"
-        elif [ "$_enable_trace" = "1" ]; then
-            echo "Initialized debug trap and error tracing."
-        else
-            echo "Enabled custom debug trap."
         fi
+
+        export MYCELIO_DEBUG_TRACE_FILE
     fi
 }
 
@@ -285,8 +284,7 @@ function install_hugo {
     fi
 
     if [ -f "$_go_exe" ]; then
-        _tmp="$HOME/.tmp"
-        _tmp_hugo="$_tmp/hugo"
+        _tmp_hugo="$MYCELIO_TEMP/hugo"
         mkdir -p "$_tmp_hugo"
 
         rm -rf "$_tmp_hugo"
@@ -354,10 +352,9 @@ function install_go {
         if [ -x "$(command -v go)" ] && [ -x "$(command -v gcc)" ] && [ -x "$(command -v make)" ]; then
             # https://github.com/golang/go/issues/38536#issuecomment-616897960
             url="https://dl.google.com/go/go$_go_version.src.tar.gz"
-            mkdir -p "$HOME/.tmp"
-            wget -O "$HOME/.tmp/go.tgz" "$url"
-            tar -C "$_local_root" -xzf "$HOME/.tmp/go.tgz"
-            rm "$HOME/.tmp/go.tgz"
+            wget -O "$MYCELIO_TEMP/go.tgz" "$url"
+            tar -C "$_local_root" -xzf "$MYCELIO_TEMP/go.tgz"
+            rm "$MYCELIO_TEMP/go.tgz"
 
             if (
                 cd "$_local_go_root/src"
@@ -405,11 +402,8 @@ function install_go {
             if [ -z "$_go_archive" ]; then
                 echo "Unsupported platform for installing 'go' language."
             else
-                _tmp="$HOME/.tmp"
-                mkdir -p "$_tmp/"
                 echo "Downloading archive: 'https://dl.google.com/go/$_go_archive'"
-                touch "$_tmp/$_go_archive"
-                curl -o "$_tmp/$_go_archive" "https://dl.google.com/go/$_go_archive"
+                curl -o "$MYCELIO_TEMP/$_go_archive" "https://dl.google.com/go/$_go_archive"
                 echo "Downloaded archive: '$_go_archive'"
 
                 _go_tmp="$_tmp/go"
@@ -478,9 +472,11 @@ function configure_linux() {
         ln -s "$_binding_file" "$_binding_link"
     fi
 
-    wget "https://git.io/fundle" -O "./fish/.config/fish/functions/fundle.fish" || true
-    if [ -f "./fish/.config/fish/functions/fundle.fish" ]; then
-        chmod a+x "./fish/.config/fish/functions/fundle.fish"
+    if [ ! -f "./fish/.config/fish/functions/fundle.fish" ]; then
+        wget "https://git.io/fundle" -O "./fish/.config/fish/functions/fundle.fish" || true
+        if [ -f "./fish/.config/fish/functions/fundle.fish" ]; then
+            chmod a+x "./fish/.config/fish/functions/fundle.fish"
+        fi
     fi
 
     # After getting fundle, we now stow the configuration so that it populates the
@@ -496,13 +492,6 @@ function configure_linux() {
         fi
     else
         echo "Skipped fish shell initialization as it is not installed."
-    fi
-
-    # Install the secure key-server certificate (Ubuntu/Debian)
-    if uname -a | grep -q "Ubuntu"; then
-        mkdir -p /usr/local/share/ca-certificates/
-        curl -s "https://sks-keyservers.net/sks-keyservers.netCA.pem" | sudo tee "/usr/local/share/ca-certificates/sks-keyservers.netCA.crt"
-        sudo update-ca-certificates
     fi
 
     _gnupg_config_root="$HOME/.gnupg"
@@ -530,8 +519,7 @@ function install_micro_text_editor() {
 
     mkdir -p "$HOME/.local/bin/"
 
-    _tmp="$HOME/.tmp"
-    _tmp_micro="$_tmp/micro"
+    _tmp_micro="$MYCELIO_TEMP/micro"
     mkdir -p "$_tmp_micro"
 
     rm -rf "$_tmp_micro"
@@ -559,16 +547,6 @@ function install_micro_text_editor() {
 }
 
 function initialize_linux() {
-    # Make sure we have the appropriate permissions to write to home temporary folder
-    # otherwise much of this initialization will fail.
-    _tmp="$HOME/.tmp"
-    mkdir -p "$_tmp/"
-    if ! touch "$_tmp/.test"; then
-        echo "ERROR: Missing permissions to write to temp folder: '$_tmp'"
-    else
-        rm "$_tmp/.test"
-    fi
-
     dotenv="$HOME/.env"
     if [ ! -f "$dotenv" ]; then
         echo "# Generated by Mycelio dotfiles project." >"$dotenv"
@@ -583,32 +561,28 @@ function initialize_linux() {
     if uname -a | grep -q "synology"; then
         echo "Skipped installing dependencies. Not supported on Synology platform."
     elif [ -x "$(command -v pacman)" ]; then
-        if [ -f "$_dot_initialized" ]; then
-            echo "[init.sh] Skipped package install. Already initialized."
-        else
-            # Primary driver for these dependencies is 'stow' but they are generally useful as well
-            echo "[init.sh] Installing minimal packages to build dependencies on Windows using MSYS2."
+        # Primary driver for these dependencies is 'stow' but they are generally useful as well
+        echo "[init.sh] Installing minimal packages to build dependencies on Windows using MSYS2."
 
-            # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
-            rm -f /var/lib/pacman/db.lck
+        # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
+        rm -f /var/lib/pacman/db.lck
 
-            pacman -Syu --noconfirm
-            pacman -S --noconfirm --needed \
-                msys2-keyring curl unzip make \
-                perl autoconf automake1.16 automake-wrapper libtool \
-                git gawk
+        pacman -Syu --noconfirm
+        pacman -S --noconfirm --needed \
+            msys2-keyring curl unzip make \
+            perl autoconf automake1.16 automake-wrapper libtool \
+            git gawk
 
-            if [ -f "/etc/pacman.d/gnupg/" ]; then
-                rm -rf "/etc/pacman.d/gnupg/"
-            fi
-
-            pacman-key --init
-            pacman-key --populate msys2
-
-            # Long version of '-Syuu' gets fresh package databases from server and
-            # upgrades the packages while allowing downgrades '-uu' as well if needed.
-            pacman --sync --refresh -uu --noconfirm
+        if [ -f "/etc/pacman.d/gnupg/" ]; then
+            rm -rf "/etc/pacman.d/gnupg/"
         fi
+
+        pacman-key --init
+        pacman-key --populate msys2
+
+        # Long version of '-Syuu' gets fresh package databases from server and
+        # upgrades the packages while allowing downgrades '-uu' as well if needed.
+        pacman --sync --refresh -uu --noconfirm
     elif [ -x "$(command -v apk)" ]; then
         if [ ! -x "$(command -v sudo)" ]; then
             apk update
@@ -803,12 +777,6 @@ function _build_stow() {
             git checkout -- "./aclocal.m4" || true
         ) || true
     fi
-}
-
-function initialize_windows() {
-    _dot_initialized="$MYCELIO_ROOT/.tmp/.initialized"
-    initialize_linux "$@"
-    touch "$_dot_initialized"
 }
 
 function initialize_macos() {
@@ -1043,11 +1011,12 @@ function main() {
     export HOME
 
     # We use 'whoami' as $USER is not set for scheduled tasks
-    echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
-    echo "▓▓░░ • Root: '$MYCELIO_ROOT'"
-    echo "▓▓░░   User: '$(whoami)'"
-    echo "▓▓░░   Home: '$HOME'"
-    echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
+    echo "╔▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀"
+    echo "║       • Root: '$MYCELIO_ROOT'"
+    echo "║         User: '$(whoami)'"
+    echo "║         Home: '$HOME'"
+    echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
+    echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
 
     # Assume we are fine with interactive prompts if necessary
     export MYCELIO_INTERACTIVE=1
@@ -1075,28 +1044,40 @@ function main() {
     shift $((OPTIND - 1))
     [ "${1:-}" = "--" ] && shift
 
+    MYCELIO_TEMP="$MYCELIO_ROOT/.tmp"
+    export MYCELIO_TEMP
+
+    # Make sure we have the appropriate permissions to write to home temporary folder
+    # otherwise much of this initialization will fail.
+    mkdir -p "$MYCELIO_TEMP"
+    if ! touch "$MYCELIO_TEMP/.test"; then
+        echo "ERROR: Missing permissions to write to temp folder: '$MYCELIO_TEMP'"
+        return 1
+    else
+        rm "$MYCELIO_TEMP/.test"
+    fi
+
     if [ "$1" == "clean" ]; then
-        rm -rf "$MYCELIO_ROOT/.tmp"
+        rm -rf "$MYCELIO_TEMP"
         echo "[init.sh] Removed workspace temporary files to force a rebuild."
     fi
 
-    mkdir -p ~/.config/fish
-    mkdir -p ~/.ssh
-    mkdir -p "$MYCELIO_ROOT/.tmp"
+    mkdir -p "$HOME/.config/fish"
+    mkdir -p "$HOME/.ssh"
+    mkdir -p "$MYCELIO_ROOT/fish/.local/share"
+    mkdir -p "$MYCELIO_TEMP"
 
     initialize_gitconfig
 
-    if [ "$MYCELIO_OS" = "linux" ]; then
+    if [ "$MYCELIO_OS" = "linux" ] || [ "$MYCELIO_OS" = "windows" ]; then
         initialize_linux
         configure_linux "$@"
     elif [ "$MYCELIO_OS" = "darwin" ]; then
         initialize_macos "$@"
-    elif [ "$MYCELIO_OS" = "windows" ]; then
-        initialize_windows "$@"
     fi
 
     # Always remove temporary files from home directory
-    rm -rf "$HOME/.tmp" || true
+    rm -rf "$MYCELIO_TEMP" || true
 
     if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
         DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
