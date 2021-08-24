@@ -350,11 +350,10 @@ function install_go {
         _go_compiled=0
 
         if [ -x "$(command -v go)" ] && [ -x "$(command -v gcc)" ] && [ -x "$(command -v make)" ]; then
-            # https://github.com/golang/go/issues/38536#issuecomment-616897960
-            url="https://dl.google.com/go/go$_go_version.src.tar.gz"
-            wget -O "$MYCELIO_TEMP/go.tgz" "$url"
-            tar -C "$_local_root" -xzf "$MYCELIO_TEMP/go.tgz"
-            rm "$MYCELIO_TEMP/go.tgz"
+            _go_src_archive="$MYCELIO_TEMP/go.tgz"
+            wget -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
+            tar -C "$_local_root" -xzf "$_go_src_archive"
+            rm "$_go_src_archive"
 
             if (
                 cd "$_local_go_root/src"
@@ -373,7 +372,6 @@ function install_go {
             ); then
                 # pre-compile the standard library, just like the official binary release tarballs do
                 go install std
-
                 _go_compiled=1
             fi
 
@@ -406,9 +404,9 @@ function install_go {
                 curl -o "$MYCELIO_TEMP/$_go_archive" "https://dl.google.com/go/$_go_archive"
                 echo "Downloaded archive: '$_go_archive'"
 
-                _go_tmp="$_tmp/go"
+                _go_tmp="$MYCELIO_TEMP/go"
                 rm -rf "${_go_tmp:?}/"
-                tar -xf "$_tmp/$_go_archive" --directory "$_tmp"
+                tar -xf "$MYCELIO_TEMP/$_go_archive" --directory "$MYCELIO_TEMP"
                 echo "Extracted 'go' archive: '$_go_tmp'"
 
                 mkdir -p "$_local_go_root/"
@@ -610,7 +608,7 @@ function initialize_linux() {
 
         DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y --no-install-recommends \
             tzdata git wget curl unzip xclip \
-            software-properties-common build-essential gcc g++ make \
+            software-properties-common build-essential gcc g++ make golang \
             stow micro tmux neofetch fish \
             python3 python3-pip \
             fontconfig
@@ -1044,8 +1042,7 @@ function main() {
     shift $((OPTIND - 1))
     [ "${1:-}" = "--" ] && shift
 
-    MYCELIO_TEMP="$MYCELIO_ROOT/.tmp"
-    export MYCELIO_TEMP
+    export MYCELIO_TEMP="$MYCELIO_ROOT/.tmp"
 
     # Make sure we have the appropriate permissions to write to home temporary folder
     # otherwise much of this initialization will fail.
@@ -1085,8 +1082,8 @@ function main() {
         # Remove intermediate files here to reduce size of Docker container layer
         if [ -f "/.dockerenv" ]; then
             sudo rm -rf /var/lib/apt/lists/*
-            sudo rm -r "/tmp/*"
-            sudo rm -r "/usr/tmp/*"
+            sudo rm -rf "/tmp/*"
+            sudo rm -rf "/usr/tmp/*"
         fi
     fi
 
