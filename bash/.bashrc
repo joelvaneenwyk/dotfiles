@@ -142,10 +142,6 @@ function _initialize_interactive_bash_profile() {
             fi
         fi
     fi
-
-    if [ -x "$(command -v oh-my-posh)" ] && [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
-        eval "$(oh-my-posh --init --shell bash --config "$HOME/.poshthemes/stelbent.minimal.omp.json")"
-    fi
 }
 
 function _initialize_bash_profile() {

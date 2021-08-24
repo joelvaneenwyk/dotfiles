@@ -162,6 +162,9 @@ _initialize_interactive_profile() {
     MYCELIO_OS_NAME="UNKNOWN"
     MYCELIO_OS_VARIANT="$(uname -s)"
 
+    # We intentionally disable on some Windows variants due to corruption e.g. MSYS, Cygwin
+    _use_oh_my_posh=1
+
     case "${MYCELIO_OS_VARIANT:-}" in
     Linux*)
         if uname -a | grep -q "synology"; then
@@ -182,16 +185,24 @@ _initialize_interactive_profile() {
     CYGWIN*)
         MYCELIO_OS_NAME=Windows
         MYCELIO_OS_VARIANT=Cygwin
+        _use_oh_my_posh=0
         ;;
     MINGW*)
         MYCELIO_OS_NAME=Windows
         MYCELIO_OS_VARIANT=MINGW
+        _use_oh_my_posh=0
         ;;
     MSYS*)
         MYCELIO_OS_NAME=Windows
         MYCELIO_OS_VARIANT=MSYS
+        _use_oh_my_posh=0
         ;;
     esac
+
+    if [ -x "$(command -v oh-my-posh)" ] && [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ] && [ "$_use_oh_my_posh" = "1" ]; then
+        _shell=$(oh-my-posh --print-shell)
+        eval "$(oh-my-posh --init --shell "$_shell" --config "$HOME/.poshthemes/stelbent.minimal.omp.json")"
+    fi
 
     alias gpgreset='gpg-connect-agent updatestartuptty /bye'
     alias pgptest='source "$MYCELIO_ROOT/source/shell/pgptest.sh"'
@@ -367,14 +378,15 @@ _initialize_profile() {
 
     export LD_PRELOAD=
 
+    _add_path "prepend" "/mingw64/bin"
+    _add_path "prepend" "/clang64/bin"
+    _add_path "prepend" "/mnt/c/Program Files/Microsoft VS Code/bin"
+
+    _add_path "prepend" "/usr/bin"
     _add_path "prepend" "/usr/local/gnupg/bin"
     _add_path "prepend" "$HOME/.local/bin"
     _add_path "prepend" "$HOME/.local/sbin"
     _add_path "prepend" "$HOME/.config/git-fuzzy/bin"
-
-    _add_path "prepend" "/mingw64/bin"
-    _add_path "prepend" "/clang64/bin"
-    _add_path "prepend" "/mnt/c/Program Files/Microsoft VS Code/bin"
 
     _initialize_go_paths
 

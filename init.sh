@@ -351,41 +351,58 @@ function install_go {
         if [ -x "$(command -v go)" ] && [ -x "$(command -v gcc)" ] && [ -x "$(command -v make)" ]; then
             _go_src_archive="$MYCELIO_TEMP/go.tgz"
             wget -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
+
+            echo "Extracting 'go' source: '$_go_src_archive'"
             tar -C "$_local_root" -xzf "$_go_src_archive"
             rm "$_go_src_archive"
 
-            if (
-                cd "$_local_go_root/src"
+            echo "Compiling 'go' from source: '$_local_go_root/src'"
+            _cd=$(pwd)
+            cd "$_local_go_root/src"
 
-                # set GOROOT_BOOTSTRAP + GOHOST* such that we can build Go successfully
-                GOROOT_BOOTSTRAP="$(go env GOROOT)"
-                if [ -x "$(command -v cygpath)" ]; then
-                    GOROOT_BOOTSTRAP=$(cygpath --unix "$GOROOT_BOOTSTRAP")
-                    export GO_LDSO=ld.so
+            # shellcheck disable=SC2031,SC2030
+            if [ -d "/mingw64/lib/go" ]; then
+                GOROOT="/mingw64/lib/go"
+                export GOROOT
+            fi
+
+            # set GOROOT_BOOTSTRAP + GOHOST* such that we can build Go successfully
+            GOROOT_BOOTSTRAP="$(go env GOROOT)"
+            if [ -x "$(command -v cygpath)" ]; then
+                GOROOT_BOOTSTRAP=$(cygpath --unix "$GOROOT_BOOTSTRAP")
+                export GO_LDSO=ld.so
+            fi
+            export GOROOT_BOOTSTRAP
+
+            GOHOSTOS="$MYCELIO_OS"
+            export GOHOSTOS
+
+            GOARCH="$MYCELIO_ARCH"
+            export GOARCH
+
+            GOHOSTARCH="$MYCELIO_ARCH"
+            export GOHOSTARCH
+
+            if [ -x "$(command -v cygpath)" ]; then
+                if cmd /c "make.bat"; then
+                    _go_compiled=1
                 fi
-                export GOROOT_BOOTSTRAP
+            elif ./make.bash -v --dist-tool; then
+                _go_compiled=1
+            fi
 
-                GOHOSTOS="$MYCELIO_OS"
-                export GOHOSTOS
-
-                GOARCH="$MYCELIO_ARCH"
-                export GOARCH
-
-                GOHOSTARCH="$MYCELIO_ARCH"
-                export GOHOSTARCH
-
-                ./make.bash
-            ); then
+            if [ "$_go_compiled"="1" ]; then
                 echo "Successfully compiled 'go' from source."
 
                 # Pre-compile the standard library, just like the official binary release tarballs do
                 if go install std; then
                     echo "Pre-compiled 'go' standard library."
-                    _go_compiled=1
                 fi
             else
                 echo "Failed to compile 'go' from source."
             fi
+
+            cd "$_cd"
 
             # Remove a few intermediate / bootstrapping files the official binary release tarballs do not contain
             rm -rf "$_local_go_root/pkg/*/cmd"
@@ -443,28 +460,28 @@ function install_go {
 
 function _stow() {
     _stow_bin="$MYCELIO_ROOT/source/stow/bin/stow"
-    _dotfiles="$HOME/dotfiles"
-
-    if ! echo "$MYCELIO_ROOT" | grep -qEi "$HOME" && [ ! -d "$_dotfiles" ]; then
-        ln -s "$MYCELIO_ROOT" "$_dotfiles"
-        echo "Created home link to Mycelio root: '$_dotfiles'"
-    fi
 
     if [ ! -x "$(command -v git)" ]; then
         echo "❌ Failed to stow '$1' as git is required."
         return 1
     else
         git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$1" | while IFS= read -r line; do
-            _source="$MYCELIO_ROOT/$line"
-            _target="$HOME/$line"
+            _source="${MYCELIO_ROOT%/}/$line"
+            _target="${HOME%/}/${line/$1\//}"
 
-            if [ -f "$_source" ]; then
-                if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
-                    rm -f "$_target"
+            if [ -f "$_source" ] || [ -d "$_source" ]; then
+                if [ -f "$_target" ] || [ -d "$_target" ]; then
+                    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+                        rm -rf "$_target"
+                        echo "REMOVED: '$_target'"
+                    fi
                 fi
 
                 if [ ! -f "$_stow_bin" ]; then
-                    mkdir -p "$(dirname "$_target")"
+                    if [ -f "$_source" ]; then
+                        mkdir -p "$(dirname "$_target")"
+                    fi
+
                     ln -s "$_source" "$_target"
                     echo "✔ Stowed '$1' target: '$_target'"
                 fi
@@ -473,29 +490,20 @@ function _stow() {
     fi
 
     if [ -f "$_stow_bin" ]; then
-        _stowed=0
+        # NOTE: We filter out spurious 'find_stowed_path' error due to https://github.com/aspiers/stow/issues/65
+        _stow_args=(--dir="$MYCELIO_ROOT" --target="$HOME" --verbose)
 
         if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
-            echo "##[cmd] stow --dir='$_dotfiles' --target='$HOME' --verbose --restow $*"
-            if "$_stow_bin" --dir="$_dotfiles" --target="$HOME" --verbose --restow "$@"; then
-                echo "✔ Re-stowed : '$1'"
-                _stowed=1
-            fi
-        else
-            echo "##[cmd] stow --dir='$_dotfiles' --target='$HOME' --verbose $*"
-            if "$_stow_bin" --dir="$_dotfiles" --target="$HOME" --verbose "$@"; then
-                echo "✔ Stowed: '$1'"
-                _stowed=1
-            fi
+            _stow_args+=(--restow)
         fi
 
-        if [ ! "$_stowed" = "1" ]; then
+        echo "##[cmd] stow ${_stow_args[*]} $*"
+        if "$_stow_bin" "${_stow_args[@]}" "$@" 2>&1 | grep -v "BUG in find_stowed_path"; then
+            echo "✔ Stowed : '$1'"
+        else
             echo "❌ Stow failed: '$1'"
             return 3
         fi
-    else
-        echo "❌ Stow '$1' failed. Missing binary: '$_stow_bin'"
-        return 2
     fi
 
     return 0
@@ -1101,7 +1109,7 @@ function main() {
 
     mkdir -p "$HOME/.config/fish"
     mkdir -p "$HOME/.ssh"
-    mkdir -p "$MYCELIO_ROOT/fish/.local/share"
+    mkdir -p "$HOME/.local/share"
     mkdir -p "$MYCELIO_TEMP"
 
     initialize_gitconfig
