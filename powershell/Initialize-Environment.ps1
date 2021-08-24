@@ -9,22 +9,7 @@
 .DESCRIPTION
     Provision the environment with basic set of tools and utilities for common use
     including 'git', 'perl', 'sudo', 'micro', etc. These are mostly installed with
-    the 'scoop' package manager, but we also use PowerShell to install a few modules
-    for setting up the console e.g., 'oh-my-posh' module.
-
-.NOTES
-    We intentionally hide a lot of error output while installing PowerShell modules
-    because depending on the version of PowerShell and current state of the environment
-    you can easily get false warnings/errors. See any of the following for more details
-    on existing or past issues:
-
-        - https://github.com/PowerShell/PowerShell/issues/12777
-        - https://stackoverflow.com/q/66305351
-        - https://stackoverflow.com/a/67531193
-        - https://github.com/PowerShell/PowerShellGetv2/issues/599
-        - https://docs.microsoft.com/en-us/powershell/scripting/gallery/installing-psget
-        - https://github.com/OneGet/oneget/issues/344
-        - https://office365itpros.com/2020/05/04/onedrive-known-folders-powershell-module-installations/
+    the 'scoop' package manager.
 #>
 
 <#
@@ -125,8 +110,6 @@ Function Get-File {
     }
 }
 Function Initialize-Environment {
-    Write-Host "PowerShell v$($host.Version)"
-
     $root = Resolve-Path -Path "$PSScriptRoot\.."
     $tempFolder = "$root\.tmp"
 
@@ -147,63 +130,6 @@ Function Initialize-Environment {
     }
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-    try {
-        # Now install the NuGet package provider if possible.
-        $NugetPackage = Get-PackageProvider -Name "NuGet" -ForceBootstrap >$null
-        if ($?) {
-            Write-Host "Installed NuGet package provider."
-        }
-        else {
-            Write-Host "Failed to install NuGet package source. $NugetPackage"
-        }
-
-        # We do not check if module is installed because 'Get-Package' may not exist yet.
-        Install-Module -Name PowerShellGet -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue >$null
-        if ($?) {
-            Write-Host "Installed 'PowerShellGet' module."
-
-            Update-Module -Name PowerShellGet -Force -ErrorAction SilentlyContinue >$null
-            Write-Host "Updated 'PowerShellGet' module to latest version."
-        }
-        else {
-            Write-Host "Failed to install and update 'PowerShellGet' module."
-        }
-
-        Import-Module PowerShellGet
-
-        #
-        # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
-        #
-        # Error it is attempting to mitigate: "The term 'PackageManagement\Get-PackageSource' is not recognized as the name
-        # of a cmdlet, function, script file, or operable program."
-        #
-        Import-Module PackageManagement
-    }
-    catch [Exception] {
-        Write-Host "Failed to install NuGet package provider", $_.Exception.Message
-    }
-
-    # Set Microsoft PowerShell Gallery to 'Trusted' as this is needed for packages
-    # like 'WindowsConsoleFonts' and 'PSReadLine' installed below.
-    try {
-        $psGallery = Get-PSRepository -Name "*PSGallery*"
-        if ($null -eq $psGallery) {
-            if ($host.Version.Major -ge 5) {
-                Register-PSRepository -Default -InstallationPolicy Trusted
-            }
-            else {
-                Register-PSRepository -Name PSGallery -SourceLocation "https://www.powershellgallery.com/api/v2/" -InstallationPolicy Trusted
-            }
-            Write-Host "Registered 'PSGallery' repository."
-        }
-        else {
-            Write-Host "Already registered 'PSGallery' repository."
-        }
-    }
-    catch [Exception] {
-        Write-Host "Failed to add repository.", $_.Exception.Message
-    }
 
     try {
         if (-not(Test-CommandExists "scoop")) {
@@ -278,13 +204,6 @@ Function Initialize-Environment {
     }
     finally {
         try {
-            if ($null -eq (Get-InstalledModule -Name "WindowsConsoleFonts" -ErrorAction SilentlyContinue)) {
-                Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -ErrorAction SilentlyContinue >$null
-                if ($?) {
-                    Write-Host "Installed 'WindowsConsoleFonts' module."
-                }
-            }
-
             # This can fail in containers as 'GetCurrentConsoleFont' will fail during build
             # so we just ignore the error here and continue.
             Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue >$null
@@ -295,7 +214,7 @@ Function Initialize-Environment {
             }
         }
         catch [Exception] {
-            Write-Host "Failed to install WindowsConsoleFonts.", $_.Exception.Message
+            Write-Host "Failed to remove old font.", $_.Exception.Message
         }
 
         # https://www.hanselman.com/blog/how-to-make-a-pretty-prompt-in-windows-terminal-with-powerline-nerd-fonts-cascadia-code-wsl-and-ohmyposh
@@ -368,16 +287,6 @@ Function Initialize-Environment {
         #    - C:\Users\jovaneen\AppData\Local\Microsoft\Windows\Fonts\JetBrainsMono-BoldItalic.ttf
 
         try {
-            if ($null -eq (Get-InstalledModule -Name "Terminal-Icons" -ErrorAction SilentlyContinue)) {
-                Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck -Repository PSGallery
-                Write-Host "Installed 'Terminal-Icons' module."
-            }
-        }
-        catch [Exception] {
-            Write-Host "Failed to install 'Terminal-Icons' module.", $_.Exception.Message
-        }
-
-        try {
             Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue >$null
             if ($?) {
                 # We do NOT want to add the temporary font because it makes it impossible to remove
@@ -403,57 +312,7 @@ Function Initialize-Environment {
             Write-Host "Failed to update console to '$fontName' font.", $_.Exception.Message
         }
 
-        try {
-            if ($null -eq (Get-InstalledModule -Name "PSReadLine" -ErrorAction SilentlyContinue)) {
-                Install-Module -Name PSReadLine -Scope CurrentUser -ErrorAction SilentlyContinue -Force -SkipPublisherCheck >$null
-                if ($?) {
-                    Write-Host "Installed 'PSReadLine' module."
-                }
-            }
-        }
-        catch {
-            Write-Host "Failed to install 'PSReadLine' module.", $_.Exception.Message
-        }
-
-        # https://ohmyposh.dev/
-        try {
-            if ($null -eq (Get-InstalledModule -Name "oh-my-posh" -ErrorAction SilentlyContinue)) {
-                Install-Module -Name oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck >$null
-                if ($?) {
-                    Write-Host "Installed 'oh-my-posh' module."
-                }
-            }
-        }
-        catch [Exception] {
-            Write-Host "Failed to install 'oh-my-posh' module.", $_.Exception.Message
-        }
-
-        try {
-            if ($null -eq (Get-InstalledModule -Name "posh-git" -ErrorAction SilentlyContinue)) {
-                Install-Module -Name posh-git -Scope CurrentUser -Force -SkipPublisherCheck
-                if ($?) {
-                    Write-Host "Installed 'posh-git' module."
-                }
-            }
-        }
-        catch [Exception] {
-            Write-Host "Failed to install 'posh-git' module.", $_.Exception.Message
-        }
-
-        try {
-            if ($null -eq (Get-InstalledModule -Name "PSDotFiles" -ErrorAction SilentlyContinue)) {
-                Install-Module -Name PSDotFiles -Scope CurrentUser -Force -SkipPublisherCheck
-                Write-Host "Installed 'PSDotFiles' module."
-            }
-
-            Install-DotFiles -Path "$root" | Out-Null
-            Write-Host "Installed 'DotFiles' from: '$root'"
-        }
-        catch [Exception] {
-            Write-Host "Failed to install 'PSDotFiles' module.", $_.Exception.Message
-        }
-
-        Write-Host "Initialized PowerShell environment."
+        Write-Host "Initialized Mycelio environment for Windows."
     }
 }
 

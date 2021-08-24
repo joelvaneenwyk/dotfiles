@@ -9,6 +9,7 @@
 #
 
 if [ -n "$BASH_VERSION" ] && [ -f "$HOME/.bashrc" ]; then
+    # shellcheck source=bash/.bashrc
     . "$HOME/.bashrc"
 else
     echo "Failed to load both '.profile' and '.bashrc' files."

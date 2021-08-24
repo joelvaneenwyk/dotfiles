@@ -41,3 +41,6 @@ log.txt
 .gnugp/
 !.gnugp/gpg-agent.conf
 !.gnugp/gpg.conf
+
+# Generated files
+*.stackdump

@@ -5,10 +5,6 @@ chcp 65001 >NUL 2>&1
 setlocal EnableExtensions EnableDelayedExpansion
     set "_dot_profile_root=%~dp0"
 
-    :: Local variable to track whether or not we should run initialization
-    :: routines based on current state of environment e.g. what commands exist
-    set _initialize=0
-
     :: Setup Docker arguments before we parse out arguments
     set _container_platform=%~2
     if "%_container_platform%"=="" set _container_platform=linux
@@ -16,7 +12,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     set _container_instance=menv_!_container_platform!
 
     set "DOT_PROFILE_NAME=mycelio"
-    set "DOT_PROFILE_ROOT=!_dot_profile_root:~0,-1!"         &:# Script path, without the trailing \
+    set "MYCELIO_ROOT=!_dot_profile_root:~0,-1!"         &:# Script path, without the trailing \
     set "USER[HKLM]=all users"
     set "USER[HKCU]=%USERNAME%"
     set "HIVE="
@@ -25,36 +21,40 @@ setlocal EnableExtensions EnableDelayedExpansion
     set "SNAME=%~n0"                                            &:# Script name, without its extension
     set ^"ARG0=%0^"                                             &:# Script invokation name
     set ^"ARGS=%*^"                                             &:# Argument line
-    set "SPROFILE=%DOT_PROFILE_ROOT%\windows\profile.bat"       &:# Full path to profile script
-    set "STOW=%DOT_PROFILE_ROOT%\source\stow\bin\stow"
+    set "SPROFILE=%MYCELIO_ROOT%\windows\profile.bat"       &:# Full path to profile script
+    set "STOW=%MYCELIO_ROOT%\source\stow\bin\stow"
 
     set "COMMAND=%~1"
-    if "%COMMAND%"=="cls" set DOT_PROFILE_INITIALIZED=
-
+    set "_args=%1"
     set _arg_remainder=
     shift
 
+    set _clean=0
+
     :: Keep appending arguments until there are none left
     :$ArgumentParse
-    if "%~1"=="-f" set _initialize=1
+    if "%~1"=="-c" set _clean=1
+    if "%~1"=="--clean" set _clean=1
+    if "%~1"=="clean" set _clean=1
+    if "%~1"=="cls" set _clean=1
+    set "_args=!_args! %1"
     set "_arg_remainder=!_arg_remainder! %1"
     shift
     if not "%~1"=="" goto :$ArgumentParse
 
     echo ##[cmd] %ARG0% %COMMAND%!_arg_remainder!
 
-    if "%COMMAND%"=="clean" (
-        set DOT_PROFILE_INITIALIZED=
-        set _initialize=1
-        if exist "%DOT_PROFILE_ROOT%\.tmp" rmdir /s /q "%DOT_PROFILE_ROOT%\.tmp" > nul 2>&1
-        if exist "%DOT_PROFILE_ROOT%\source\stow\bin\stow" del "%DOT_PROFILE_ROOT%\source\stow\bin\stow" > nul 2>&1
-        if exist "%DOT_PROFILE_ROOT%\source\stow\bin\chkstow" del "%DOT_PROFILE_ROOT%\source\stow\bin\chkstow" > nul 2>&1
+    if "!_clean!"=="1" (
+        set MYCELIO_PROFILE_INITIALIZED=
+        if exist "%MYCELIO_ROOT%\.tmp" rmdir /s /q "%MYCELIO_ROOT%\.tmp" > nul 2>&1
+        if exist "%MYCELIO_ROOT%\source\stow\bin\stow" del "%MYCELIO_ROOT%\source\stow\bin\stow" > nul 2>&1
+        if exist "%MYCELIO_ROOT%\source\stow\bin\chkstow" del "%MYCELIO_ROOT%\source\stow\bin\chkstow" > nul 2>&1
         if exist "%USERPROFILE%\Documents\PowerShell" rmdir /q /s "%USERPROFILE%\Documents\PowerShell" > nul 2>&1
         if exist "%USERPROFILE%\Documents\WindowsPowerShell" rmdir /q /s "%USERPROFILE%\Documents\WindowsPowerShell" > nul 2>&1
         echo Cleared out temporary files and reinitializing environment.
     )
 
-    call "%DOT_PROFILE_ROOT%\windows\profile.bat"
+    call "%MYCELIO_ROOT%\windows\profile.bat"
 
     :: These files are missing from Windows Nano Server instances in Docker so either
     :: copy them to local temp folder if running in host or copy them to system folder
@@ -81,9 +81,9 @@ setlocal EnableExtensions EnableDelayedExpansion
         docker rm --force "!_container_name!" > nul 2>&1
         docker stop "!_container_instance!" > nul 2>&1
 
-        docker build --rm -t "!_container_name!" -f "%DOT_PROFILE_ROOT%\source\docker\Dockerfile.!_container_platform!" .
+        docker build --rm -t "!_container_name!" -f "%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!" !_arg_remainder! .
         if errorlevel 1 (
-            echo Docker '!_container_name!' container build failed: '%DOT_PROFILE_ROOT%\source\docker\Dockerfile.!_container_platform!'
+            echo Docker '!_container_name!' container build failed: '%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!'
         ) else (
             docker run --name "!_container_instance!" -it --rm "!_container_name!"
         )
@@ -93,39 +93,23 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     call :InstallAutoRun
 
-    call msys2 --version > nul 2>&1
-    if errorlevel 1 set _initialize=1
+    set _gitConfig=.gitconfig
+    call :WriteGitConfig "%USERPROFILE%"
 
-    call perl --version > nul 2>&1
-    if errorlevel 1 set _initialize=1
+    call :StowProfile "linux" ".config\micro\settings.json"
+    call :StowProfile "linux" ".config\micro\init.lua"
+    call :StowProfile "linux" ".gitignore_global"
+    call :StowProfile "linux" ".profile"
+    call :StowProfile "linux" ".ctags"
+    call :StowProfile "bash" ".bash_profile"
+    call :StowProfile "bash" ".bash_aliases"
+    call :StowProfile "bash" ".bashrc"
+    call :StowProfile "templates" ".gnupg\gpg.conf"
 
-    set _stow=!_initialize!
-    if "%COMMAND%"=="stow" set _stow=1
+    call :StowPowerShell "Documents\WindowsPowerShell" "Profile.ps1"
+    call :StowPowerShell "Documents\PowerShell" "Profile.ps1"
 
-    if "!_stow!"=="1" (
-        set _gitConfig=.gitconfig
-        call :WriteGitConfig "%USERPROFILE%"
-        call :WriteGitConfig "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%"
-
-        call :StowProfile "linux" ".config\micro\settings.json"
-        call :StowProfile "linux" ".config\micro\init.lua"
-        call :StowProfile "linux" ".gitignore_global"
-        call :StowProfile "linux" ".profile"
-        call :StowProfile "linux" ".ctags"
-        call :StowProfile "bash" ".bash_aliases"
-        call :StowProfile "bash" ".bashrc"
-        call :StowProfile "templates" ".gnupg\gpg.conf"
-
-        call :StowPowerShell "Documents\WindowsPowerShell" "Profile.ps1"
-        call :StowPowerShell "Documents\WindowsPowerShell" "powershell.config.json"
-        call :StowPowerShell "Documents\PowerShell" "Profile.ps1"
-        call :StowPowerShell "Documents\PowerShell" "powershell.config.json"
-
-        echo Initialized profile settings into local directories for user.
-    ) else (
-        echo Profile for '%USERNAME%' already initialized.
-    )
-    if "%COMMAND%"=="stow" goto:$InitializeDone
+    echo Initialized profile settings into '%USERNAME%' user directories.
 
     ::
     :: Initialize each installed PowerShell we find
@@ -144,29 +128,39 @@ setlocal EnableExtensions EnableDelayedExpansion
         echo Initializing PowerShell: !_powershell!
         echo ======-------
         echo.
-        !_powershell! -NoLogo -NoProfile -File "%DOT_PROFILE_ROOT%\powershell\Initialize-Environment.ps1"
+        !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\powershell\Initialize-PowerShell.ps1"
 
         :# This is the command used by VSCode extension to install package management so we use it here as well
         !_powershell! -NoLogo -NoProfile -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Install-Module -Name PackageManagement -Force -MinimumVersion 1.4.6 -Scope CurrentUser -AllowClobber -Repository PSGallery'
     )
 
+    echo.
+    echo ======-------
+    echo Installing Windows Dependencies
+    echo ======-------
+    echo.
+    !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\powershell\Initialize-Environment.ps1"
+
     ::
     :: Initialize 'msys2' environment with bash script.
     ::
-
-    if not "!_initialize!"=="1" goto:$InitializeDone
 
     call "%~dp0windows\env.bat"
     if exist "%~dp0..\.tmp\setupEnvironment.bat" call "%~dp0..\.tmp\setupEnvironment.bat"
 
     :: Initialize 'msys2' environment with bash script. We call the shim directly because environment
     :: may not read path properly after it has just been installed.
-    call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%DOT_PROFILE_ROOT%" -shell bash -no-start -c ./init.sh
+    echo.
+    echo ======-------
+    echo Mycelio Environment Setup
+    echo ======-------
+    echo.
+    call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./init.sh !_args!"
 
     :$InitializeDone
 endlocal & (
-    set "DOT_PROFILE_ROOT=%DOT_PROFILE_ROOT%"
-    set "DOT_PROFILE_INITIALIZED=%DOT_PROFILE_INITIALIZED%"
+    set "MYCELIO_ROOT=%MYCELIO_ROOT%"
+    set "MYCELIO_PROFILE_INITIALIZED=%MYCELIO_PROFILE_INITIALIZED%"
     set "PATH=%PATH%"
     set "POWERSHELL=%_pwsh%"
 )
@@ -177,11 +171,11 @@ exit /b 0
 :CheckSystemFile %1=SystemFilename
     setlocal EnableExtensions EnableDelayedExpansion
 
-    set _deploy="%DOT_PROFILE_ROOT%\artifacts\windows"
+    set _deploy="%MYCELIO_ROOT%\artifacts\windows"
 
     if exist "%_deploy%\%~1" goto:$SystemDeploy
 
-    if not exist "%DOT_PROFILE_ROOT%\artifacts" mkdir "%DOT_PROFILE_ROOT%\artifacts"
+    if not exist "%MYCELIO_ROOT%\artifacts" mkdir "%MYCELIO_ROOT%\artifacts"
     if not exist "%_deploy%" mkdir "%_deploy%"
 
     if exist "C:\Windows\System32\%~1" (
@@ -204,10 +198,10 @@ endlocal & exit /b
 :WriteGitConfig %1=TargetFolder
     setlocal EnableExtensions EnableDelayedExpansion
     set _gitConfig=.gitconfig
-    set _gitRoot=%DOT_PROFILE_ROOT%\git
+    set _gitRoot=%MYCELIO_ROOT%\git
     set "_gitRoot=!_gitRoot:\=/!"
     if exist "%~1" (
-        echo.[include] > "%~1\%_gitConfig%"
+        echo.[include]> "%~1\%_gitConfig%"
         echo.    path = "!_gitRoot!/.gitconfig_common">> "%~1\%_gitConfig%"
         echo.    path = "!_gitRoot!/.gitconfig_windows">> "%~1\%_gitConfig%"
 
@@ -274,8 +268,13 @@ exit /b
 endlocal & exit /b 0
 
 :StowProfile %1=RelativeRoot %2=Filename
-    call :CreateLink "%USERPROFILE%" "%~2" "%DOT_PROFILE_ROOT%\%~1\%~2"
-    call :CreateLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%\" "%~2" "%DOT_PROFILE_ROOT%\%~1\%~2"
+    call :StowProfileRemove "%~1" "%~2"
+    call :CreateLink "%USERPROFILE%" "%~2" "%MYCELIO_ROOT%\%~1\%~2"
+exit /b 0
+
+:StowProfileRemove %1=RelativeRoot %2=Filename
+    call :DeleteLink "%USERPROFILE%" "%~2" "%MYCELIO_ROOT%\%~1\%~2"
+    call :DeleteLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%\" "%~2" "%MYCELIO_ROOT%\%~1\%~2"
 exit /b 0
 
 :StowPowerShell
@@ -287,7 +286,7 @@ exit /b 0
         echo Removed '%OneDrive%\%~1' as modules should not be in OneDrive. See https://stackoverflow.com/a/67531193
     )
 
-    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%DOT_PROFILE_ROOT%\powershell\%~2"
+    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%MYCELIO_ROOT%\powershell\%~2"
 exit /b 0
 
 :CreateLink %1=LinkDirectory %2=LinkFilename %3=TargetPath
@@ -300,5 +299,16 @@ exit /b 0
         if exist "%_linkDir%\%_linkFilename%" del "%_linkDir%\%_linkFilename%"
         mklink "%_linkDir%\%_linkFilename%" "%_linkTarget%" > nul 2>&1
         echo Created symbolic link: '%_linkTarget%' to '%_linkDir%'
+    )
+exit /b 0
+
+:DeleteLink %1=LinkDirectory %2=LinkFilename %3=TargetPath
+    setlocal EnableExtensions EnableDelayedExpansion
+    set _linkDir=%~1
+    set _linkFilename=%~2
+    set _linkTarget=%~3
+    if not exist "%_linkDir%" mkdir "%_linkDir%" > nul 2>&1
+    if exist "%_linkDir%" (
+        if exist "%_linkDir%\%_linkFilename%" del "%_linkDir%\%_linkFilename%"
     )
 exit /b 0

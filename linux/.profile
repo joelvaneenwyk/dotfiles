@@ -276,16 +276,17 @@ _start_tmux() {
 }
 
 _initialize_go_paths() {
-    _go_root="$HOME/.local/go"
+    export MYCELIO_GOROOT="$HOME/.local/go"
+    export MYCELIO_GOBIN="$MYCELIO_GOROOT/bin"
+    mkdir -p "$MYCELIO_GOROOT"
 
-    export GOROOT="$_go_root"
-    export GOBIN="$_go_root/bin"
-    mkdir -p "$GOBIN"
+    _add_path "prepend" "${GOBIN:-}"
+    _add_path "prepend" "${MYCELIO_GOBIN:-}"
 
-    _add_path "prepend" "$GOBIN"
-
-    _go_exe="$_go_root/bin/go"
+    _go_exe="$MYCELIO_GOBIN/bin/go"
     if [ -f "$_go_exe" ]; then
+        export GOROOT="$MYCELIO_GOROOT"
+        export GOBIN="$MYCELIO_GOBIN"
         unset GOPATH
         "$_go_exe" env -w GOROOT="$GOROOT"
         "$_go_exe" env -w GOBIN="$GOROOT/bin"
@@ -325,6 +326,10 @@ _initialize_profile() {
     export LC_ALL="C"
     export LC_COLLATE="C"
 
+    # This is critically important on Windows (MSYS) otherwise we are not able to
+    # create symbolic links which is the entire point of 'stow'
+    export MSYS=winsymlinks:nativestrict
+
     if _tty="$(tty)"; then
         GPG_TTY="$_tty"
         export GPG_TTY
@@ -356,10 +361,19 @@ _initialize_profile() {
         IFS=$OLD_IFS
     fi
 
+    if [ -z "${MYCELIO_ROOT:-}" ]; then
+        export MYCELIO_ROOT="$HOME/dotfiles"
+    fi
+
+    export LD_PRELOAD=
+
     _add_path "prepend" "/usr/local/gnupg/bin"
     _add_path "prepend" "$HOME/.local/bin"
     _add_path "prepend" "$HOME/.local/sbin"
     _add_path "prepend" "$HOME/.config/git-fuzzy/bin"
+
+    _add_path "prepend" "/mingw64/bin"
+    _add_path "prepend" "/clang64/bin"
     _add_path "prepend" "/mnt/c/Program Files/Microsoft VS Code/bin"
 
     _initialize_go_paths

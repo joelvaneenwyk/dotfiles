@@ -42,8 +42,8 @@ setlocal EnableExtensions EnableDelayedExpansion
     :: This is a new top 'cmd.exe' instance so initialize it.
     ::
 
-    if "%DOT_AUTORUN_INITIALIZED%"=="1" exit /b 0
-    if "%DOT_PROFILE_INITIALIZED%"=="1" exit /b 0
+    if "%MYCELIO_AUTORUN_INITIALIZED%"=="1" exit /b 0
+    if "%MYCELIO_PROFILE_INITIALIZED%"=="1" exit /b 0
 
     :$InitializeProfile
 
@@ -81,7 +81,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo ▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
     echo.
     if exist "%~dp0..\.tmp\setupEnvironment.bat" call "%~dp0..\.tmp\setupEnvironment.bat"
-    echo Initialized 'Windows' environment: '%DOT_PROFILE_ROOT%'
+    echo Initialized 'Windows' environment: '%MYCELIO_ROOT%'
     echo.
     echo Commands:
     echo.
@@ -89,8 +89,8 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo   refresh     Try to pull latest 'dotfiles' and reload profile
     echo   micro       Default text editor. Press 'F2' to save and 'F4' to exit.
 endlocal & (
-    set "DOT_PROFILE_INITIALIZED=1"
-    set "DOT_AUTORUN_INITIALIZED=1"
+    set "MYCELIO_PROFILE_INITIALIZED=1"
+    set "MYCELIO_AUTORUN_INITIALIZED=1"
     set "PATH=%PATH%"
 )
 

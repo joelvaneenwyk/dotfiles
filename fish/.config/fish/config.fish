@@ -1,16 +1,5 @@
 #!/usr/bin/env fish
 
-# It should already be installed by './init.sh' but just in case we do it here
-# as well.
-if not functions -q fundle
-    eval (curl -sfL https://git.io/fundle-install)
-end
-
-fundle plugin fisherman/getopts
-fundle plugin fisherman/fzf
-fundle plugin fisherman/z
-fundle init
-
 # Suppress fish greeting
 set -x fish_greeting ""
 
@@ -33,12 +22,23 @@ end
 set -gx PATH ./node_modules/.bin $PATH
 
 # color stderr in red
-set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
+set -e LD_PRELOAD
 
 # Use java 1.8 by default if it exists
 if test -d /usr/libexec/java_home
     set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
 end
+
+# It should already be installed by './init.sh' but just in case we do it here
+# as well.
+if not functions -q fundle
+    eval (curl -sfL https://git.io/fundle-install)
+end
+
+fundle plugin fisherman/getopts
+fundle plugin fisherman/fzf
+fundle plugin fisherman/z
+fundle init
 
 # aliases
 alias more="less -r"

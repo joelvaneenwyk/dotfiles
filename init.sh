@@ -264,9 +264,8 @@ function initialize_gitconfig() {
 
 function install_hugo {
     _local_bin="$HOME/.local/bin"
-    _go_root="$HOME/.local/go"
-    _go_exe="$_go_root/bin/go"
-    _hugo_exe="$_go_root/bin/hugo"
+    _go_exe="$MYCELIO_GOBIN/go"
+    _hugo_exe="$MYCELIO_GOBIN/hugo"
 
     if [ -f "$_hugo_exe" ]; then
         echo "✔ 'hugo' site builder already installed."
@@ -296,9 +295,9 @@ function install_hugo {
             # We only modify the environment for this subshell and that is the expectation
             # so we ignore the warnings here.
             # shellcheck disable=SC2030
-            export GOROOT="$_go_root"
+            export GOROOT="$MYCELIO_GOROOT"
             # shellcheck disable=SC2030
-            export GOBIN="$_go_root/bin"
+            export GOBIN="$MYCELIO_GOBIN"
 
             # No support for GCC on Synology so not able to build extended features
             if ! uname -a | grep -q "synology"; then
@@ -360,19 +359,32 @@ function install_go {
 
                 # set GOROOT_BOOTSTRAP + GOHOST* such that we can build Go successfully
                 GOROOT_BOOTSTRAP="$(go env GOROOT)"
+                if [ -x "$(command -v cygpath)" ]; then
+                    GOROOT_BOOTSTRAP=$(cygpath --unix "$GOROOT_BOOTSTRAP")
+                    export GO_LDSO=ld.so
+                fi
                 export GOROOT_BOOTSTRAP
 
                 GOHOSTOS="$MYCELIO_OS"
                 export GOHOSTOS
+
+                GOARCH="$MYCELIO_ARCH"
+                export GOARCH
 
                 GOHOSTARCH="$MYCELIO_ARCH"
                 export GOHOSTARCH
 
                 ./make.bash
             ); then
-                # pre-compile the standard library, just like the official binary release tarballs do
-                go install std
-                _go_compiled=1
+                echo "Successfully compiled 'go' from source."
+
+                # Pre-compile the standard library, just like the official binary release tarballs do
+                if go install std; then
+                    echo "Pre-compiled 'go' standard library."
+                    _go_compiled=1
+                fi
+            else
+                echo "Failed to compile 'go' from source."
             fi
 
             # Remove a few intermediate / bootstrapping files the official binary release tarballs do not contain
@@ -382,6 +394,8 @@ function install_go {
             rm -rf "$_local_go_root/pkg/tool/*/api"
             rm -rf "$_local_go_root/pkg/tool/*/go_bootstrap "
             rm -rf "$_local_go_root/src/cmd/dist/dist"
+        else
+            echo "Missing required tools to compile 'go' from source."
         fi
 
         if [ "$_go_compiled" = "0" ]; then
@@ -420,7 +434,7 @@ function install_go {
         fi
     fi
 
-    if _version=$("$_go_exe" version); then
+    if [ -f "$_go_exe" ] && _version=$("$_go_exe" version); then
         echo "$_version"
     else
         echo "Failed to install 'go' language."
@@ -428,27 +442,63 @@ function install_go {
 }
 
 function _stow() {
-    if [ -x "$(command -v stow)" ]; then
-        echo "##[cmd] stow --dir='$MYCELIO_ROOT' --target='$HOME' --verbose $*"
-        stow --dir="$MYCELIO_ROOT" --target="$HOME" --verbose "$@"
-    elif uname -a | grep -q "synology"; then
-        _root_dir="$MYCELIO_ROOT/$1/"
-        _root="$MYCELIO_ROOT/$1"
+    _stow_bin="$MYCELIO_ROOT/source/stow/bin/stow"
+    _dotfiles="$HOME/dotfiles"
 
-        find "$_root" -maxdepth 2 -type f -print0 | while IFS= read -r -d $'\0' file; do
-            _offset="${file//$_root_dir/}"
-            _source="$file"
-            _target="$HOME/$_offset"
+    if ! echo "$MYCELIO_ROOT" | grep -qEi "$HOME" && [ ! -d "$_dotfiles" ]; then
+        ln -s "$MYCELIO_ROOT" "$_dotfiles"
+        echo "Created home link to Mycelio root: '$_dotfiles'"
+    fi
+
+    if [ ! -x "$(command -v git)" ]; then
+        echo "❌ Failed to stow '$1' as git is required."
+        return 1
+    else
+        git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$1" | while IFS= read -r line; do
+            _source="$MYCELIO_ROOT/$line"
+            _target="$HOME/$line"
+
             if [ -f "$_source" ]; then
-                rm -f "$_target"
-                mkdir -p "$(dirname "$_target")"
-                ln -s "$_source" "$_target"
-                echo "Stowed '$1' target: '$_target'"
+                if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+                    rm -f "$_target"
+                fi
+
+                if [ ! -f "$_stow_bin" ]; then
+                    mkdir -p "$(dirname "$_target")"
+                    ln -s "$_source" "$_target"
+                    echo "✔ Stowed '$1' target: '$_target'"
+                fi
             fi
         done
-    else
-        echo "Skipped unsupported command: 'stow $*'"
     fi
+
+    if [ -f "$_stow_bin" ]; then
+        _stowed=0
+
+        if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+            echo "##[cmd] stow --dir='$_dotfiles' --target='$HOME' --verbose --restow $*"
+            if "$_stow_bin" --dir="$_dotfiles" --target="$HOME" --verbose --restow "$@"; then
+                echo "✔ Re-stowed : '$1'"
+                _stowed=1
+            fi
+        else
+            echo "##[cmd] stow --dir='$_dotfiles' --target='$HOME' --verbose $*"
+            if "$_stow_bin" --dir="$_dotfiles" --target="$HOME" --verbose "$@"; then
+                echo "✔ Stowed: '$1'"
+                _stowed=1
+            fi
+        fi
+
+        if [ ! "$_stowed" = "1" ]; then
+            echo "❌ Stow failed: '$1'"
+            return 3
+        fi
+    else
+        echo "❌ Stow '$1' failed. Missing binary: '$_stow_bin'"
+        return 2
+    fi
+
+    return 0
 }
 
 function configure_linux() {
@@ -483,10 +533,14 @@ function configure_linux() {
     _stow "$@" fish
 
     if [ -x "$(command -v fish)" ]; then
-        if fish -c "fundle install"; then
-            echo "✔ Installed 'fundle' package manager for fish."
+        if [ ! -f "$HOME/.config/fish/functions/fundle.fish" ]; then
+            echo "❌ Fundle not installed in home directory: '$HOME/.config/fish/functions/fundle.fish'"
         else
-            echo "❌ Failed to install 'fundle' package manager for fish."
+            if fish -c "fundle install"; then
+                echo "✔ Installed 'fundle' package manager for fish."
+            else
+                echo "❌ Failed to install 'fundle' package manager for fish."
+            fi
         fi
     else
         echo "Skipped fish shell initialization as it is not installed."
@@ -567,9 +621,11 @@ function initialize_linux() {
 
         pacman -Syu --noconfirm
         pacman -S --noconfirm --needed \
-            msys2-keyring curl unzip make \
-            perl autoconf automake1.16 automake-wrapper libtool \
-            git gawk
+            msys2-keyring curl wget unzip \
+            git gawk \
+            fish tmux \
+            base-devel mingw-w64-x86_64-gcc make autoconf automake1.16 automake-wrapper libtool \
+            perl mingw-w64-x86_64-go
 
         if [ -f "/etc/pacman.d/gnupg/" ]; then
             rm -rf "/etc/pacman.d/gnupg/"
@@ -654,33 +710,19 @@ function initialize_linux() {
             _local_bin="$HOME/.local/bin"
             mkdir -p "$_local_bin"
 
-            _arch_name="$(uname -m)"
-            _posh_arch=""
-
-            if [ "${_arch_name}" = "x86_64" ]; then
-                _posh_arch="amd64"
-            elif [ "${_arch_name}" = "x86" ]; then
-                _posh_arch="386"
-            elif [ "${_arch_name}" = "arm64" ]; then
-                _posh_arch="arm64"
-            fi
-
-            if _uname_output="$(uname -s 2>/dev/null)"; then
-                case "${_uname_output}" in
-                Linux*)
-                    _posh_archive="posh-linux-$_posh_arch"
-                    ;;
-                Darwin*)
-                    _posh_archive="posh-darwin-$_posh_arch"
-                    ;;
-                esac
-            fi
-
-            if [ -z "$_go_archive" ]; then
-                echo "Unsupported platform for installing 'oh-my-posh' extension."
+            if [ "$MYCELIO_OS" = "windows" ]; then
+                _posh_extension=".exe"
             else
-                wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive" -O "$_local_bin/oh-my-posh"
-                chmod +x "$_local_bin/oh-my-posh"
+                _posh_extension=""
+            fi
+
+            _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$_posh_extension"
+            _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
+
+            if wget "$_posh_url" -O "$_local_bin/oh-my-posh$_posh_extension"; then
+                chmod +x "$_local_bin/oh-my-posh$_posh_extension"
+            else
+                echo "Unsupported platform for installing 'oh-my-posh' extension."
             fi
         fi
 
@@ -746,40 +788,42 @@ function initialize_linux() {
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
 function _build_stow() {
-    if [ -x "$(command -v stow)" ]; then
-        echo "Command 'stow' already available. Skipped build."
+    if [ -x "$(command -v cpan)" ]; then
+        # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because
+        # it is faster but also because tests in 'Test::Output' causes consistent hangs
+        # in MSYS2, see https://rt-cpan.github.io/Public/Bug/Display/64319/
+        cpan -i -T YAML Test::Output CPAN::DistnameInfo 2>&1 | awk '{ print "[stow.cpan]", $0 }'
     else
-        echo "[stow] Script directory: '$MYCELIO_ROOT'"
+        echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
+    fi
 
-        if [ -x "$(command -v cpan)" ]; then
-            # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because
-            # it is faster but also because tests in 'Test::Output' causes consistent hangs
-            # in MSYS2, see https://rt-cpan.github.io/Public/Bug/Display/64319/
-            cpan -i -T YAML Test::Output CPAN::DistnameInfo 2>&1 | awk '{ print "[stow.cpan]", $0 }'
-        else
-            echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
-        fi
-
+    if [ -f "$MYCELIO_ROOT/source/stow/bin/stow" ]; then
+        echo "✔ Custom 'stow' binary already built from source."
+    elif (
         # Move to source directory and start install.
-        (
-            cd "$MYCELIO_ROOT/source/stow" || true
-            autoreconf --install --verbose 2>&1 | awk '{ print "[stow.autoreconf]", $0 }'
+        cd "$MYCELIO_ROOT/source/stow" || true
+        autoreconf --install --verbose 2>&1 | awk '{ print "[stow.autoreconf]", $0 }'
 
-            # We want a local install
-            ./configure --prefix="" 2>&1 | awk '{ print "[stow.configure]", $0 }'
+        # We want a local install
+        ./configure --prefix="" 2>&1 | awk '{ print "[stow.configure]", $0 }'
 
-            # Documentation part is expected to fail but we can ignore that
-            make --keep-going --ignore-errors 2>&1 | awk '{ print "[stow.make]", $0 }'
+        # Documentation part is expected to fail but we can ignore that
+        make --keep-going --ignore-errors 2>&1 | awk '{ print "[stow.make]", $0 }'
 
-            rm -f "./configure~"
-            git checkout -- "./aclocal.m4" || true
-        ) || true
+        rm -f "./configure~"
+        git checkout -- "./aclocal.m4" || true
+    ); then
+        echo "✔ Successfully build 'stow' from source."
+    else
+        echo "❌ Failed to build 'stow' from source."
     fi
 }
 
 function initialize_macos() {
     install_macos_apps
 
+    # We need to do this after we install macOS apps as it installs some
+    # dependencies needed for this step.
     initialize_linux
 
     configure_macos_dock
@@ -787,8 +831,6 @@ function initialize_macos() {
 
     # We pass in 'stow' arguments
     configure_macos_apps "$@"
-    configure_linux "$@"
-
     configure_macos_system
 }
 
@@ -955,25 +997,25 @@ function main() {
 
     case "$_arch_name" in
     'x86_64')
-        export MYCELIO_ARCH='amd64' MYCELIO_OS='linux'
+        export MYCELIO_ARCH='amd64'
         ;;
     'armhf')
-        export MYCELIO_ARCH='arm' MYCELIO_ARM='6' MYCELIO_OS='linux'
+        export MYCELIO_ARCH='arm' MYCELIO_ARM='6'
         ;;
     'armv7')
-        export MYCELIO_ARCH='arm' MYCELIO_ARM='7' MYCELIO_OS='linux'
+        export MYCELIO_ARCH='arm' MYCELIO_ARM='7'
         ;;
     'aarch64')
-        export MYCELIO_ARCH='arm64' MYCELIO_OS='linux'
+        export MYCELIO_ARCH='arm64'
         ;;
     'x86')
-        export MYCELIO_386='softfloat' MYCELIO_ARCH='386' MYCELIO_OS='linux'
+        export MYCELIO_386='softfloat' MYCELIO_ARCH='386'
         ;;
     'ppc64le')
-        export MYCELIO_ARCH='ppc64le' MYCELIO_OS='linux'
+        export MYCELIO_ARCH='ppc64le'
         ;;
     's390x')
-        export MYCELIO_ARCH='s390x' MYCELIO_OS='linux'
+        export MYCELIO_ARCH='s390x'
         ;;
     *)
         echo >&2 "ERROR: Unsupported architecture '$_arch_name'"
@@ -1013,22 +1055,20 @@ function main() {
     echo "║       • Root: '$MYCELIO_ROOT'"
     echo "║         User: '$(whoami)'"
     echo "║         Home: '$HOME'"
+    echo "║           OS: '$MYCELIO_OS' ($MYCELIO_ARCH)"
     echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
     echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
 
     # Assume we are fine with interactive prompts if necessary
     export MYCELIO_INTERACTIVE=1
+    export MYCELIO_REFRESH_ENVIRONMENT=0
 
     # Reset in case getopts has been used previously in the shell.
     OPTIND=1
     while getopts "cy" opt >/dev/null 2>&1; do
         case "$opt" in
         c)
-            rm -f "$HOME/.profile"
-            rm -f "$HOME/.bash_profile"
-            rm -f "$HOME/.bashrc"
-            rm -f "$HOME/.config/micro/settings.json"
-            echo "Removed existing profile data."
+            export MYCELIO_REFRESH_ENVIRONMENT=1
             ;;
         y)
             # Equivalent to the apt-get "assume yes" of '-y'
@@ -1067,11 +1107,18 @@ function main() {
     initialize_gitconfig
 
     if [ "$MYCELIO_OS" = "linux" ] || [ "$MYCELIO_OS" = "windows" ]; then
-        initialize_linux
-        configure_linux "$@"
+        if ! initialize_linux "$@"; then
+            echo "Failed to initialize environment."
+        fi
     elif [ "$MYCELIO_OS" = "darwin" ]; then
-        initialize_macos "$@"
+        if ! initialize_macos "$@"; then
+            echo "Failed to initialize macOS environment."
+        fi
     fi
+
+    # Always run configure step as it creates links ('stows') important profile
+    # setup scripts to home directory.
+    configure_linux "$@"
 
     # Always remove temporary files from home directory
     rm -rf "$MYCELIO_TEMP" || true
@@ -1087,16 +1134,18 @@ function main() {
         fi
     fi
 
-    echo "Initialized '${MYCELIO_OS}' machine."
-
     if [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
         # shellcheck source=linux/.profile
         . "$MYCELIO_ROOT/linux/.profile"
-        echo "Refreshed profile data."
+        echo "Refreshed '${MYCELIO_OS}' profile data."
     fi
 
     if [ -x "$(command -v neofetch)" ] && [ "$BASH_VERSION_MAJOR" -ge 4 ]; then
-        neofetch
+        if ! neofetch; then
+            echo "Failed to display platform information with 'neofetch' utility."
+        fi
+    else
+        echo "Initialized '${MYCELIO_OS}' machine."
     fi
 }
 

@@ -5,7 +5,8 @@
     "shellcheck.customArgs": ["--external-sources"],
     "shellcheck.useWorkspaceRootAsCwd": true,
     "shellcheck.ignorePatterns": {
-        "source/stow/**": true
+        "source/stow/**": true,
+        "fish/.config/**": true
     },
     "[shellscript]": {
         "editor.formatOnSave": true,
