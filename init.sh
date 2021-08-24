@@ -794,6 +794,17 @@ function initialize_linux() {
 #
 function _build_stow() {
     if [ -x "$(command -v cpan)" ]; then
+        # If configuration file does not exist yet then we automate configuration with
+        # answers to standard questions. These may become invalid with newer versions.
+        if [ ! -f "$HOME/.cpan/CPAN/MyConfig.pm" ]; then
+            (
+                echo "yes"
+                echo "local::lib"
+                echo "no"
+                echo "exit"
+            ) | cpan
+        fi
+
         # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because
         # it is faster but also because tests in 'Test::Output' causes consistent hangs
         # in MSYS2, see https://rt-cpan.github.io/Public/Bug/Display/64319/

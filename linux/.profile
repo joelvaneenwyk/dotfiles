@@ -376,12 +376,23 @@ _initialize_profile() {
 
     # Need library path for 'stow' to work from compiled version
     PERL5LIB="$(_add_to_list "$PERL5LIB" "$MYCELIO_STOW_ROOT/lib")"
+    PERL5LIB="$(_add_to_list "$PERL5LIB" "$HOME/perl5/lib/perl5")"
     export PERL5LIB
+
+    PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
+    export PERL_LOCAL_LIB_ROOT
+
+    PERL_MB_OPT=$(echo "--install_base \"$HOME\"")
+    export PERL_MB_OPT
+
+    PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"
+    export PERL_MM_OPT
 
     _add_path "prepend" "/mingw64/bin"
     _add_path "prepend" "/clang64/bin"
     _add_path "prepend" "/mnt/c/Program Files/Microsoft VS Code/bin"
 
+    _add_path "prepend" "$HOME/perl5/bin"
     _add_path "prepend" "/usr/bin"
     _add_path "prepend" "/usr/local/gnupg/bin"
     _add_path "prepend" "$HOME/.local/bin"
