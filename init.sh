@@ -278,7 +278,6 @@ function initialize_gitconfig() {
         {
             echo "    path = $MYCELIO_ROOT/git/.gitconfig_common"
             echo "    path = $MYCELIO_ROOT/git/.gitconfig_linux"
-            echo "    path = $MYCELIO_ROOT/git/.gitconfig_windows"
         } >>"$_git_config"
     fi
 
@@ -294,6 +293,11 @@ function install_hugo {
     _local_bin="$MYCELIO_HOME/.local/bin"
     _go_exe="$MYCELIO_GOBIN/go"
     _hugo_exe="$MYCELIO_GOBIN/hugo"
+    _hugo_tmp="$MYCELIO_TEMP/hugo"
+
+    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+        rm -rf "$_hugo_tmp"
+    fi
 
     if [ -f "$_hugo_exe" ]; then
         echo "✔ 'hugo' site builder already installed."
@@ -311,14 +315,12 @@ function install_hugo {
     fi
 
     if [ -f "$_go_exe" ]; then
-        _tmp_hugo="$MYCELIO_TEMP/hugo"
-        mkdir -p "$_tmp_hugo"
-
-        rm -rf "$_tmp_hugo"
-        git -c advice.detachedHead=false clone -b "v0.87.0" "https://github.com/gohugoio/hugo.git" "$_tmp_hugo"
+        mkdir -p "$_hugo_tmp"
+        rm -rf "$_hugo_tmp"
+        git -c advice.detachedHead=false clone -b "v0.87.0" "https://github.com/gohugoio/hugo.git" "$_hugo_tmp"
 
         if (
-            cd "$_tmp_hugo"
+            cd "$_hugo_tmp"
 
             # We only modify the environment for this subshell and that is the expectation
             # so we ignore the warnings here.
@@ -359,6 +361,10 @@ function install_go {
     _local_go_root="$_local_root/go"
     _go_exe="$_local_go_root/bin/go"
     _go_requires_update=0
+
+    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+        rm -rf "$_local_go_root"
+    fi
 
     if [ -f "$_go_exe" ] && _go_version="$("$_go_exe" version 2>&1 | (
         read -r _ _ v _
@@ -451,7 +457,7 @@ function install_go {
                 echo "Unsupported platform for installing 'go' language."
             else
                 echo "Downloading archive: 'https://dl.google.com/go/$_go_archive'"
-                curl -o "$MYCELIO_TEMP/$_go_archive" "https://dl.google.com/go/$_go_archive"
+                curl -sSL -o "$MYCELIO_TEMP/$_go_archive" "https://dl.google.com/go/$_go_archive"
                 if [ ! -f "$MYCELIO_TEMP/$_go_archive" ]; then
                     echo "Failed to download 'go' archive."
                 else
@@ -492,11 +498,20 @@ function _stow_internal() {
     if [ -f "$_source" ] || [ -d "$_source" ]; then
         if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
             _remove=0
+            _parent=""
 
             if [ -f "$_target" ]; then
                 _remove=1
+                _parent="$(dirname "$(dirname "$_target")")"
             elif [ -L "$_target" ] && [ -d "$_target" ]; then
                 _remove=1
+                _parent="$(dirname "$_target")"
+            fi
+
+            # Do not remove the target if the parent is a link because that
+            # means we are removing files in a target location.
+            if [ -L "$_parent" ]; then
+                _remove=0
             fi
 
             if [ "$_remove" = "1" ]; then
@@ -522,19 +537,17 @@ function _stow() {
     _package="$1"
     _target_path="$MYCELIO_HOME"
 
-    if [ ! -x "$(command -v git)" ]; then
-        echo "❌ Failed to stow '$_package' as git is required."
-        return 1
-    elif [ -d "$MYCELIO_ROOT/.git" ]; then
-        git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$_package" | while IFS= read -r line; do
-            _source="${MYCELIO_ROOT%/}/$line"
-            _target="${_target_path%/}/${line/$_package\//}"
+    if [ ! -x "$(command -v git)" ] || [ ! -d "$MYCELIO_ROOT/.git" ]; then
+        _root="$MYCELIO_ROOT/$_package"
+        find "$_root" -maxdepth 1 -type f -print0 | while IFS= read -r -d $'\0' file; do
+            _source="$file"
+            _target="$HOME/${file//$_root\//}"
             _stow_internal "$_package" "$_source" "$_target"
         done
     else
-        find "$MYCELIO_ROOT" -maxdepth 1 -type f -print0 | while IFS= read -r -d $'\0' file; do
-            _source="$file"
-            _target="$HOME/${file//$_root_dir/}"
+        git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$_package" | while IFS= read -r line; do
+            _source="${MYCELIO_ROOT%/}/$line"
+            _target="${_target_path%/}/${line/$_package\//}"
             _stow_internal "$_package" "$_source" "$_target"
         done
     fi
@@ -646,20 +659,24 @@ function install_micro_text_editor() {
     if (
         cd "$_tmp_micro"
         make build
-        mv "$_micro_exe" "$MYCELIO_HOME/.local/bin/"
     ); then
         echo "✔ Successfully compiled micro text editor."
     else
         if (
             mkdir -p "$MYCELIO_HOME/.local/bin/"
             cd "$MYCELIO_HOME/.local/bin/"
-            curl "https://getmic.ro" | bash
+            curl -sSL "https://getmic.ro" | bash
         ); then
             echo "[mycelio] Successfully installed 'micro' text editor."
         else
             echo "[mycelio] WARNING: Failed to install 'micro' text editor."
             return 2
         fi
+    fi
+
+    if [ -f "$_tmp_micro/$_micro_exe" ]; then
+        rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
+        mv "$_micro_exe" "$MYCELIO_HOME/.local/bin/"
     fi
 
     return 0
@@ -1252,24 +1269,22 @@ function main() {
     # setup scripts to home directory.
     configure_linux "$@"
 
-    # Always remove temporary files from home directory
-    rm -rf "$MYCELIO_TEMP" || true
-
-    if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
-        DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
-
-        # Remove intermediate files here to reduce size of Docker container layer
-        if [ -f "/.dockerenv" ]; then
-            sudo rm -rf /var/lib/apt/lists/*
-            sudo rm -rf "/tmp/*"
-            sudo rm -rf "/usr/tmp/*"
-        fi
-    fi
-
     if [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
         # shellcheck source=linux/.profile
         . "$MYCELIO_ROOT/linux/.profile"
         echo "Refreshed '${MYCELIO_OS}' profile data."
+    fi
+
+    if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
+        DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
+    fi
+
+    # Remove intermediate files here to reduce size of Docker container layer
+    if [ -f "/.dockerenv" ]; then
+        rm -rf "$MYCELIO_TEMP" || true
+        sudo rm -rf "/tmp/*" || true
+        sudo rm -rf "/usr/tmp/*" || true
+        sudo rm -rf "/var/lib/apt/lists/*" || true
     fi
 
     _supports_neofetch=0

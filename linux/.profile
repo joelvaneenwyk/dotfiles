@@ -296,11 +296,10 @@ _initialize_go_paths() {
 
     _go_exe="$MYCELIO_GOBIN/bin/go"
     if [ -f "$_go_exe" ]; then
-        export GOROOT="$MYCELIO_GOROOT"
-        export GOBIN="$MYCELIO_GOBIN"
-        unset GOPATH
-        "$_go_exe" env -w GOROOT="$GOROOT"
-        "$_go_exe" env -w GOBIN="$GOROOT/bin"
+        export GOROOT="" GOBIN="" GOPATH=""
+        "$_go_exe" env -u GOPATH
+        "$_go_exe" env -u GOROOT
+        "$_go_exe" env -u GOBIN
     fi
 }
 
@@ -395,6 +394,7 @@ _initialize_profile() {
     _add_path "prepend" "$HOME/perl5/bin"
     _add_path "prepend" "/usr/bin"
     _add_path "prepend" "/usr/local/gnupg/bin"
+    _add_path "prepend" "$HOME/.local/go/bin"
     _add_path "prepend" "$HOME/.local/bin"
     _add_path "prepend" "$HOME/.local/sbin"
     _add_path "prepend" "$HOME/.config/git-fuzzy/bin"
