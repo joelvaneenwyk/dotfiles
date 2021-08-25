@@ -164,7 +164,7 @@ function _get_real_path() {
     while :; do
         _base="$(basename "$_path")"
 
-        if ! cd "$(dirname "$_path")"; then
+        if ! cd "$(dirname "$_path")" >/dev/null 2>&1; then
             break
         fi
 
@@ -175,6 +175,8 @@ function _get_real_path() {
             if [ -f "$_path" ]; then
                 _real_path=$(_get_real_path "$_link")
                 break
+            elif [ -f "$_link" ] || [ -d "$_link" ]; then
+                _path="$_link"
             else
                 _path="$_path/$_link"
             fi
@@ -519,7 +521,7 @@ function _stow_internal() {
     _target="$3"
 
     if [ -f "$_source" ] || [ -d "$_source" ]; then
-        if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+        if [ "$MYCELIO_REFRESH_ENVIRONMENT" = "1" ] || [ "$MYCELIO_FORCE" = "1" ]; then
             _remove=0
             _real="$(_get_real_path "$_target")"
 
@@ -568,7 +570,10 @@ function _stow() {
             _stow_internal "$_package" "$_source" "$_target"
         done
     else
-        git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$_package" | while IFS= read -r line; do
+        {
+            git -C "$MYCELIO_ROOT" ls-tree -d --name-only -r HEAD "$_package"
+            git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$_package"
+        } | while IFS= read -r line; do
             _source="${MYCELIO_ROOT%/}/$line"
             _target="${_target_path%/}/${line/$_package\//}"
             _stow_internal "$_package" "$_source" "$_target"
@@ -1212,6 +1217,7 @@ function main() {
     # Assume we are fine with interactive prompts if necessary
     export MYCELIO_INTERACTIVE=1
     export MYCELIO_REFRESH_ENVIRONMENT=0
+    export MYCELIO_FORCE=0
 
     POSITIONAL=()
     while [[ $# -gt 0 ]]; do
@@ -1222,10 +1228,14 @@ function main() {
             export MYCELIO_REFRESH_ENVIRONMENT=1
             shift # past argument
             ;;
+        -f | --force)
+            export MYCELIO_FORCE=1
+            shift # past argument
+            ;;
         -y | --yes)
             # Equivalent to the apt-get "assume yes" of '-y'
             export MYCELIO_INTERACTIVE=0
-            shift # past value
+            shift # past argument
             ;;
         -h | --home)
             export MYCELIO_HOME="$2"
