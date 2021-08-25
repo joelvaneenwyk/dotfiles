@@ -77,6 +77,7 @@ Function Get-EnvironmentPathFolders {
 $root = Resolve-Path -Path "$PSScriptRoot\.."
 
 $environmentVariables = @()
+$environmentVariables += "C:\Program Files\Git\bin"
 $environmentVariables += "$root"
 $environmentVariables += "$root\windows"
 $environmentVariables += "$ENV:UserProfile\.local\bin"

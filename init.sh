@@ -267,11 +267,19 @@ function initialize_gitconfig() {
     rm -f "$_git_config"
     unlink "$_git_config" >/dev/null 2>&1 || true
     echo "[include]" >"$_git_config"
-    echo "    path = $MYCELIO_ROOT/git/.gitconfig_common" >>"$_git_config"
-    echo "    path = $MYCELIO_ROOT/git/.gitconfig_linux" >>"$_git_config"
 
     if _is_windows; then
-        echo "    path = $MYCELIO_ROOT/git/.gitconfig_linux" >>"$_git_config"
+        {
+            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/git/.gitconfig_common")"
+            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/git/.gitconfig_linux")"
+            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/git/.gitconfig_windows")"
+        } >>"$_git_config"
+    else
+        {
+            echo "    path = $MYCELIO_ROOT/git/.gitconfig_common"
+            echo "    path = $MYCELIO_ROOT/git/.gitconfig_linux"
+            echo "    path = $MYCELIO_ROOT/git/.gitconfig_windows"
+        } >>"$_git_config"
     fi
 
     if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
@@ -690,8 +698,8 @@ function initialize_linux() {
             rm -rf "/etc/pacman.d/gnupg/"
         fi
 
-        pacman-key --quiet --init
-        pacman-key --quiet --populate msys2
+        pacman-key --init
+        pacman-key --populate msys2
 
         # Long version of '-Syuu' gets fresh package databases from server and
         # upgrades the packages while allowing downgrades '-uu' as well if needed.
@@ -738,6 +746,12 @@ function initialize_linux() {
         echo "Skipped install of Python setup for root user."
     else
         if [ -x "$(command -v python3)" ]; then
+            if ! python3 -m pip --version >/dev/null 2>&1; then
+                curl -sSL "https://bootstrap.pypa.io/get-pip.py" -o "$MYCELIO_TEMP/get-pip.py"
+                chmod a+x "$MYCELIO_TEMP/get-pip.py"
+                python3 "$MYCELIO_TEMP/get-pip.py"
+            fi
+
             python3 -m pip install --user --upgrade pip
 
             # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
