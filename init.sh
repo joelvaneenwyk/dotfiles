@@ -368,6 +368,7 @@ function install_go {
         _go_version="1.17"
         _go_compiled=0
 
+        # https://golang.org/doc/install/source
         if [ -x "$(command -v go)" ] && [ -x "$(command -v gcc)" ] && [ -x "$(command -v make)" ]; then
             _go_src_archive="$MYCELIO_TEMP/go.tgz"
             wget -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
@@ -380,25 +381,14 @@ function install_go {
             if (
                 cd "$_local_go_root/src"
 
-                # shellcheck disable=SC2031,SC2030
-                if [ -d "/mingw64/lib/go" ]; then
-                    GOROOT="/mingw64/lib/go"
-                    export GOROOT
-                fi
-
-                # set GOROOT_BOOTSTRAP + GOHOST* such that we can build Go successfully
-                GOROOT_BOOTSTRAP="$(go env GOROOT)"
-                if [ -x "$(command -v cygpath)" ]; then
-                    GOROOT_BOOTSTRAP=$(cygpath --unix "$GOROOT_BOOTSTRAP")
-                    export GO_LDSO=ld.so
-                fi
-                export GOROOT_BOOTSTRAP
-
                 GOHOSTOS="$MYCELIO_OS"
                 export GOHOSTOS
 
                 GOARCH="$MYCELIO_ARCH"
                 export GOARCH
+
+                GOARM="$MYCELIO_ARM"
+                export GOARM
 
                 GOHOSTARCH="$MYCELIO_ARCH"
                 export GOHOSTARCH
@@ -407,12 +397,16 @@ function install_go {
                     if ! cmd /c "make.bat"; then
                         exit 1
                     fi
-                elif ! ./make.bash -v --dist-tool; then
+                elif ! ./make.bash; then
                     exit 1
                 fi
 
+                if [ ! -f "$_go_exe" ]; then
+                    exit 2
+                fi
+
                 # Pre-compile the standard library, just like the official binary release tarballs do
-                if go install std; then
+                if "$_go_exe" install std; then
                     echo "Pre-compiled 'go' standard library."
                 fi
             ); then
@@ -450,28 +444,35 @@ function install_go {
             else
                 echo "Downloading archive: 'https://dl.google.com/go/$_go_archive'"
                 curl -o "$MYCELIO_TEMP/$_go_archive" "https://dl.google.com/go/$_go_archive"
-                echo "Downloaded archive: '$_go_archive'"
+                if [ ! -f "$MYCELIO_TEMP/$_go_archive" ]; then
+                    echo "Failed to download 'go' archive."
+                else
+                    echo "Downloaded archive: '$_go_archive'"
 
-                _go_tmp="$MYCELIO_TEMP/go"
-                rm -rf "${_go_tmp:?}/"
-                tar -xf "$MYCELIO_TEMP/$_go_archive" --directory "$MYCELIO_TEMP"
-                echo "Extracted 'go' archive: '$_go_tmp'"
+                    _go_tmp="$MYCELIO_TEMP/go"
+                    rm -rf "${_go_tmp:?}/"
+                    if tar -xf "$MYCELIO_TEMP/$_go_archive" --directory "$MYCELIO_TEMP"; then
+                        echo "Extracted 'go' archive: '$_go_tmp'"
 
-                mkdir -p "$_local_go_root/"
-                rm -rf "${_local_go_root:?}/"
-                cp -rf "$_go_tmp" "$_local_go_root"
-                echo "Updated 'go' install: '$_local_go_root'"
+                        mkdir -p "$_local_go_root/"
+                        rm -rf "${_local_go_root:?}/"
+                        cp -rf "$_go_tmp" "$_local_go_root"
+                        echo "Updated 'go' install: '$_local_go_root'"
+                    else
+                        echo "❌ Failed to update 'go' install."
+                    fi
 
-                rm -rf "$_go_tmp"
-                echo "Removed temporary 'go' files: '$_go_tmp'"
+                    rm -rf "$_go_tmp"
+                    echo "Removed temporary 'go' files: '$_go_tmp'"
+                fi
             fi
         fi
     fi
 
     if [ -f "$_go_exe" ] && _version=$("$_go_exe" version); then
-        echo "$_version"
+        echo "✔ $_version"
     else
-        echo "Failed to install 'go' language."
+        echo "❌ Failed to install 'go' language."
     fi
 }
 
@@ -490,8 +491,16 @@ function _stow() {
             _target="${_target_path%/}/${line/$_package\//}"
 
             if [ -f "$_source" ] || [ -d "$_source" ]; then
-                if [ -f "$_target" ] || [ -d "$_target" ]; then
-                    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+                if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+                    _remove=0
+
+                    if [ -f "$_target" ]; then
+                        _remove=1
+                    elif [ -L "$_target" ] && [ -d "$_target" ]; then
+                        _remove=1
+                    fi
+
+                    if [ "$_remove" = "1" ]; then
                         rm -rf "$_target"
                         echo "REMOVED: '$_target'"
                     fi
@@ -702,8 +711,9 @@ function initialize_linux() {
 
         DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y --no-install-recommends \
             tzdata git wget curl unzip xclip \
-            software-properties-common build-essential gcc g++ make golang \
-            stow micro tmux neofetch fish \
+            software-properties-common build-essential gcc g++ make automake autoconf golang \
+            texinfo \
+            stow tmux neofetch fish \
             python3 python3-pip \
             fontconfig
 
@@ -715,13 +725,13 @@ function initialize_linux() {
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped install of Python setup for root user."
     else
-        if [ -x "$(command -v pip3)" ]; then
-            pip3 install --user --upgrade pip
+        if [ -x "$(command -v python3)" ]; then
+            python3 -m pip install --user --upgrade pip
 
             # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
             # consistency between platforms and not install hacks we just use 'pip3' instead. For
             # details on the issue, see https://github.com/microsoft/WSL/issues/5126
-            pip3 install --user pre-commit
+            python3 -m pip install --user pre-commit
 
             echo "Upgraded 'pip3' and installed 'pre-commit' package."
         fi
@@ -851,7 +861,14 @@ function _build_stow() {
         echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
     fi
 
-    if [ -f "$MYCELIO_ROOT/source/stow/bin/stow" ]; then
+    if [ ! -f "$MYCELIO_ROOT/source/stow/configure.ac" ] && [ -x "$(command -v git)" ]; then
+        git -C "$MYCELIO_ROOT" submodule update --init --recursive
+        echo "Updated submodules due to missing 'stow' source."
+    fi
+
+    if [ ! -f "$MYCELIO_ROOT/source/stow/configure.ac" ]; then
+        echo "❌ 'stow' source not available: '$MYCELIO_ROOT/source/stow'"
+    elif [ -f "$MYCELIO_ROOT/source/stow/bin/stow" ]; then
         echo "✔ Custom 'stow' binary already built from source."
     elif (
         # Move to source directory and start install.
@@ -1006,7 +1023,8 @@ function configure_macos_finder() {
 function configure_macos_system() {
     # Disable Gatekeeper entirely to get rid of "Are you sure you want to open this application?" dialog
     if [ "${MYCELIO_INTERACTIVE:-}" = "1" ]; then
-        echo "Type password to disable Gatekeeper questions (are you sure you want to open this application?)"
+        echo "[mycelio] This will disable Gatekeeper questions (e.g., are you sure you want"
+        echo "          to open this application?). Enter system password:"
         sudo spctl --master-disable
     fi
 
@@ -1066,34 +1084,42 @@ function main() {
     fi
 
     MYCELIO_ARCH=""
+    MYCELIO_ARM=""
+    MYCELIO_386=""
 
     case "$_arch_name" in
     'x86_64')
-        export MYCELIO_ARCH='amd64'
+        MYCELIO_ARCH='amd64'
         ;;
     'armhf')
-        export MYCELIO_ARCH='arm' MYCELIO_ARM='6'
+        MYCELIO_ARCH='arm' MYCELIO_ARM='6'
         ;;
     'armv7')
-        export MYCELIO_ARCH='arm' MYCELIO_ARM='7'
+        MYCELIO_ARCH='arm' MYCELIO_ARM='7'
+        ;;
+    'armv7l')
+        # Raspberry PI
+        MYCELIO_ARCH='arm' MYCELIO_ARM='7'
         ;;
     'aarch64')
-        export MYCELIO_ARCH='arm64'
+        MYCELIO_ARCH='arm64'
         ;;
     'x86')
-        export MYCELIO_386='softfloat' MYCELIO_ARCH='386'
+        MYCELIO_ARCH='386' MYCELIO_386='softfloat'
         ;;
     'ppc64le')
-        export MYCELIO_ARCH='ppc64le'
+        MYCELIO_ARCH='ppc64le'
         ;;
     's390x')
-        export MYCELIO_ARCH='s390x'
+        MYCELIO_ARCH='s390x'
         ;;
     *)
-        echo >&2 "ERROR: Unsupported architecture '$_arch_name'"
+        echo >&2 "[mycelio] ERROR: Unsupported architecture '$_arch_name'"
         exit 1
         ;;
     esac
+
+    export MYCELIO_ARCH MYCELIO_386 MYCELIO_ARM
 
     uname_system="$(uname -s)"
     case "${uname_system}" in
@@ -1147,7 +1173,7 @@ function main() {
         esac
     done
 
-    export MYCELIO_TEMP="$MYCELIO_ROOT/.tmp"
+    export MYCELIO_TEMP="$MYCELIO_HOME/.tmp"
 
     # Note below that we use 'whoami' since $USER variable is not set for
     # scheduled tasks on Synology.
@@ -1164,13 +1190,13 @@ function main() {
     # otherwise much of this initialization will fail.
     mkdir -p "$MYCELIO_TEMP"
     if ! touch "$MYCELIO_TEMP/.test"; then
-        echo "ERROR: Missing permissions to write to temp folder: '$MYCELIO_TEMP'"
+        echo "[mycelio] ERROR: Missing permissions to write to temp folder: '$MYCELIO_TEMP'"
         return 1
     else
         rm "$MYCELIO_TEMP/.test"
     fi
 
-    if [ "$1" == "clean" ]; then
+    if [ "$MYCELIO_REFRESH_ENVIRONMENT" = "1" ]; then
         rm -rf "$MYCELIO_TEMP"
         echo "[mycelio] Removed workspace temporary files to force a rebuild."
     fi
@@ -1220,11 +1246,20 @@ function main() {
         echo "Refreshed '${MYCELIO_OS}' profile data."
     fi
 
-    if [ -x "$(command -v neofetch)" ] && [ "$BASH_VERSION_MAJOR" -ge 4 ]; then
-        if ! neofetch; then
-            echo "Failed to display platform information with 'neofetch' utility."
-        fi
-    else
+    _supports_neofetch=0
+    if [ "$BASH_VERSION_MAJOR" -ge 4 ]; then
+        _supports_neofetch=1
+    elif [ "$BASH_VERSION_MAJOR" -ge 3 ] && [ "$BASH_VERSION_MAJOR" -ge 2 ]; then
+        _supports_neofetch=1
+    fi
+
+    _displayed_details=0
+
+    if [ -x "$(command -v neofetch)" ] && [ "$_supports_neofetch" = "1" ] && neofetch; then
+        _displayed_details=1
+    fi
+
+    if [ "$_displayed_details" = "1" ]; then
         echo "Initialized '${MYCELIO_OS}' machine."
     fi
 }
