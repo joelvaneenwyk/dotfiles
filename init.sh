@@ -524,7 +524,7 @@ function _stow() {
             _stow_internal "$_package" "$_source" "$_target"
         done
     else
-        find "$MYCELIO_ROOT" -maxdepth 1-type f -print0 | while IFS= read -r -d $'\0' file; do
+        find "$MYCELIO_ROOT" -maxdepth 1 -type f -print0 | while IFS= read -r -d $'\0' file; do
             _source="$file"
             _target="$HOME/${file//$_root_dir/}"
             _stow_internal "$_package" "$_source" "$_target"
@@ -558,9 +558,6 @@ function configure_linux() {
     _stow "$@" fonts
     _stow "$@" ruby
     _stow "$@" vim
-
-    # We use built-in VSCode syncing so disabled the stow operation for VSCode
-    # _stow vscode
 
     # We intentionally stow 'fish' config first to populate the directories
     # and then we create additional links (e.g. keybindings) and download
