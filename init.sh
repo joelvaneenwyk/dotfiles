@@ -1019,7 +1019,13 @@ function configure_macos_system() {
     echo "Configured system settings."
 }
 
-function main() {
+#
+# Minimal set of required environment variables that the rest of the script relies
+# on heavily to operate including setting up error handling. It is therefore critical
+# that this function is error free and handles all edge cases for all supported
+# platforms.
+#
+function _setup_environment() {
     if [ -n "${BASH:-}" ]; then
         BASH_VERSION_MAJOR=$(echo "$BASH_VERSION" | cut -d. -f1)
         BASH_VERSION_MINOR=$(echo "$BASH_VERSION" | cut -d. -f2)
@@ -1031,10 +1037,22 @@ function main() {
     export BASH_VERSION_MAJOR
     export BASH_VERSION_MINOR
 
-    _setup_error_handling
-
     MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
     export MYCELIO_ROOT
+
+    # Get home path which is hopefully in 'HOME' but if not we use the parent
+    # directory of this project as a backup.
+    HOME=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
+    export HOME
+
+    export MYCELIO_HOME="$HOME"
+}
+
+function main() {
+    # Need to setup environment variables before anything else
+    _setup_environment
+
+    _setup_error_handling
 
     if [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
         # shellcheck source=linux/.profile
@@ -1099,13 +1117,6 @@ function main() {
         ;;
     esac
 
-    # Get home path which is hopefully in 'HOME' but if not we use the parent
-    # directory of this project as a backup.
-    HOME=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
-    export HOME
-
-    export MYCELIO_HOME="$HOME"
-
     # Assume we are fine with interactive prompts if necessary
     export MYCELIO_INTERACTIVE=1
     export MYCELIO_REFRESH_ENVIRONMENT=0
@@ -1138,7 +1149,9 @@ function main() {
 
     export MYCELIO_TEMP="$MYCELIO_ROOT/.tmp"
 
-    # We use 'whoami' as $USER is not set for scheduled tasks
+    # Note below that we use 'whoami' since $USER variable is not set for
+    # scheduled tasks on Synology.
+
     echo "╔▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀"
     echo "║       • Root: '$MYCELIO_ROOT'"
     echo "║         User: '$(whoami)'"

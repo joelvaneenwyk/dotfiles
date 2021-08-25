@@ -44,56 +44,54 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     if "%MYCELIO_AUTORUN_INITIALIZED%"=="1" exit /b 0
     if "%MYCELIO_PROFILE_INITIALIZED%"=="1" exit /b 0
-
     :$InitializeProfile
-
-    :: Generate the environment batch script
-    call "%~dp0env.bat"
-
-    chcp 65001 >NUL 2>&1
-
-    ::
-    :: This logo was generated with figlet after testing with selection of fonts.
-    ::
-    ::    - apt install figlet
-    ::    - git clone https://github.com/xero/figlet-fonts
-    ::    - find figlet-fonts/ -printf "%f\n" | xargs -n 1 -I % figlet -d ./figlet-fonts/ -f % myceli0
-    ::
-    :: These fonts all display the logo quite well, see https://www.programmingfonts.org
-    ::
-    ::    - fire code (good but 'I' doesn't align)
-    ::    - gintronic (very nice)
-    ::    - hasklig (pretty good)
-    ::    - jetbrains mono (better than most)
-    ::    - julia-mono (amazing)
-    ::    - mensch
-    ::    - luculent
-    ::    - victor mono (quite good)
-    ::    - source code pro (bars have spaces)
-    ::
-
-    echo █├═════════════════════════════════
-    echo ▓│
-    echo ▓│  ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓
-    echo ▓│  ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃
-    echo ▓│  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
-    echo ▓│
-    echo ▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-    echo.
-    if exist "%MYCELIO_ENV%" call "%MYCELIO_ENV%"
-    echo Initialized 'Windows' environment: '%MYCELIO_ROOT%'
-    echo.
-    echo Commands:
-    echo.
-    echo   gpgtest     Validate that git commit signing will work with secret key
-    echo   refresh     Try to pull latest 'dotfiles' and reload profile
-    echo   micro       Default text editor. Press 'F2' to save and 'F4' to exit.
 endlocal & (
-    set "MYCELIO_ROOT=%~dp0"
+    set "MYCELIO_ROOT=%MYCELIO_ROOT%"
     set "MYCELIO_PROFILE_INITIALIZED=1"
     set "MYCELIO_AUTORUN_INITIALIZED=1"
-    set "PATH=%PATH%"
 )
+
+:: Generate the environment batch script
+call "%~dp0env.bat"
+
+chcp 65001 >NUL 2>&1
+
+::
+:: This logo was generated with figlet after testing with selection of fonts.
+::
+::    - apt install figlet
+::    - git clone https://github.com/xero/figlet-fonts
+::    - find figlet-fonts/ -printf "%f\n" | xargs -n 1 -I % figlet -d ./figlet-fonts/ -f % myceli0
+::
+:: These fonts all display the logo quite well, see https://www.programmingfonts.org
+::
+::    - fire code (good but 'I' doesn't align)
+::    - gintronic (very nice)
+::    - hasklig (pretty good)
+::    - jetbrains mono (better than most)
+::    - julia-mono (amazing)
+::    - mensch
+::    - luculent
+::    - victor mono (quite good)
+::    - source code pro (bars have spaces)
+::
+
+echo █├═════════════════════════════════
+echo ▓│
+echo ▓│  ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓
+echo ▓│  ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃
+echo ▓│  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
+echo ▓│
+echo ▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+echo.
+if exist "%MYCELIO_ENV%" call "%MYCELIO_ENV%"
+echo Initialized 'Windows' environment: '%MYCELIO_ROOT%'
+echo.
+echo Commands:
+echo.
+echo   gpgtest     Validate that git commit signing will work with secret key
+echo   refresh     Try to pull latest 'dotfiles' and reload profile
+echo   micro       Default text editor. Press 'F2' to save and 'F4' to exit.
 
 :: Check to see if 'doskey' is valid first as some versions
 :: of Windows (e.g. nanoserver) do not have 'doskey' support.
@@ -102,11 +100,13 @@ if "%USERNAME%"=="ContainerAdministrator" goto:$StartClink
 doskey /? >NUL 2>&1
 if errorlevel 1 goto:$StartClink
 
+doskey cd.=cd /d "%MYCELIO_ROOT%"
+doskey cd~ =cd /d "%HOME%"
 doskey cp=copy $*
 doskey mv=move $*
 doskey h=doskey /HISTORY
 doskey edit=%HOME%\.local\bin\micro.exe $*
-doskey refresh=%MYCELIO_ROOT%\profile.bat --refresh
+doskey refresh=%MYCELIO_ROOT%\windows\profile.bat --refresh
 doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
 
 :$StartClink

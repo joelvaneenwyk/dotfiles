@@ -77,15 +77,13 @@ Function Get-EnvironmentPathFolders {
 $root = Resolve-Path -Path "$PSScriptRoot\.."
 
 $environmentVariables = @()
-$environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
 $environmentVariables += "$root"
 $environmentVariables += "$root\windows"
-$environmentVariables += "$root\.tmp"
 $environmentVariables += "$ENV:UserProfile\.local\bin"
+$environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\mingw64"
 $environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\clang64"
 $environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\usr\bin"
-$environmentVariables += "$ENV:UserProfile\scoop\apps\perl\current\perl\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\shims"
 $environmentVariables += $(Get-EnvironmentPathFolders)
 

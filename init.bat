@@ -3,7 +3,7 @@
 chcp 65001 >NUL 2>&1
 
 setlocal EnableExtensions EnableDelayedExpansion
-    set "_dot_profile_root=%~dp0"
+    set "_mycelio_root=%~dp0"
 
     :: Setup Docker arguments before we parse out arguments
     set _container_platform=%~2
@@ -12,7 +12,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     set _container_instance=menv_!_container_platform!
 
     set "DOT_PROFILE_NAME=mycelio"
-    set "MYCELIO_ROOT=!_dot_profile_root:~0,-1!"         &:# Script path, without the trailing \
+    set "MYCELIO_ROOT=!_mycelio_root:~0,-1!"                    &:# Script path, without the trailing \
     set "USER[HKLM]=all users"
     set "USER[HKCU]=%USERNAME%"
     set "HIVE="
@@ -21,7 +21,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     set "SNAME=%~n0"                                            &:# Script name, without its extension
     set ^"ARG0=%0^"                                             &:# Script invokation name
     set ^"ARGS=%*^"                                             &:# Argument line
-    set "SPROFILE=%MYCELIO_ROOT%\windows\profile.bat"       &:# Full path to profile script
+    set "SPROFILE=%MYCELIO_ROOT%\windows\profile.bat"           &:# Full path to profile script
     set "STOW=%MYCELIO_ROOT%\source\stow\bin\stow"
 
     set "COMMAND=%~1"
@@ -130,7 +130,6 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
 
     call "%~dp0windows\env.bat"
-    if exist "%MYCELIO_ENV%" call "%MYCELIO_ENV%"
 
     :: Initialize 'msys2' environment with bash script. We call the shim directly because environment
     :: may not read path properly after it has just been installed.

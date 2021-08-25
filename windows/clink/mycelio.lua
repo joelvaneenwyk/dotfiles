@@ -15,7 +15,7 @@ local parser = clink.arg.new_parser
 
 clink.argmatcher("init")
 :addflags(
-    "-f")
+    "-f", "-c", "--clean")
 :addarg(
-    { "wsl", "clean", "docker" }
+    { "--home", "clean", "docker" }
 )

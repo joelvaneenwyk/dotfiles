@@ -31,4 +31,5 @@ endlocal & (
 if not exist "%MYCELIO_POWERSHELL%" exit /b 2
 if not exist "%MYCELIO_ENV%" exit /b 3
 
-exit /b 0
+call "%MYCELIO_ENV%"
+exit /b
