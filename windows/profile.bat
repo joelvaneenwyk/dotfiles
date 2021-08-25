@@ -80,7 +80,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo ▓│
     echo ▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
     echo.
-    if exist "%~dp0..\.tmp\setupEnvironment.bat" call "%~dp0..\.tmp\setupEnvironment.bat"
+    if exist "%MYCELIO_ENV%" call "%MYCELIO_ENV%"
     echo Initialized 'Windows' environment: '%MYCELIO_ROOT%'
     echo.
     echo Commands:
@@ -89,6 +89,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo   refresh     Try to pull latest 'dotfiles' and reload profile
     echo   micro       Default text editor. Press 'F2' to save and 'F4' to exit.
 endlocal & (
+    set "MYCELIO_ROOT=%~dp0"
     set "MYCELIO_PROFILE_INITIALIZED=1"
     set "MYCELIO_AUTORUN_INITIALIZED=1"
     set "PATH=%PATH%"
@@ -101,13 +102,11 @@ if "%USERNAME%"=="ContainerAdministrator" goto:$StartClink
 doskey /? >NUL 2>&1
 if errorlevel 1 goto:$StartClink
 
-doskey ls=dir /Q
-doskey ll=dir /Q
 doskey cp=copy $*
 doskey mv=move $*
 doskey h=doskey /HISTORY
-doskey edit=%~dp0..\.tmp\micro.exe $*
-doskey refresh=%~dp0profile.bat --refresh
+doskey edit=%HOME%\.local\bin\micro.exe $*
+doskey refresh=%MYCELIO_ROOT%\profile.bat --refresh
 doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
 
 :$StartClink

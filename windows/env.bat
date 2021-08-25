@@ -1,25 +1,34 @@
 @echo off
 
 setlocal EnableDelayedExpansion
+    set _powershell=
+    set _mycelio_env=%USERPROFILE%\.local\bin\mycelioEnv.bat
 
-set _powershell=
+    if exist "C:\Program Files\PowerShell\7\pwsh.exe" (
+        set _powershell=C:\Program Files\PowerShell\7\pwsh.exe
+        goto:$BuildEnvironment
+    )
 
-if exist "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" (
-    set _powershell="C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-    goto:$BuildEnvironment
+    if exist "C:\Program Files\PowerShell\pwsh.exe" (
+        set _powershell=C:\Program Files\PowerShell\pwsh.exe
+        goto:$BuildEnvironment
+    )
+
+    if exist "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" (
+        set _powershell=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+        goto:$BuildEnvironment
+    )
+
+    :$BuildEnvironment
+    if exist "!_powershell!" (
+        "!_powershell!" -NoLogo -NoProfile -File "%~dp0..\powershell\Write-EnvironmentSetup.ps1" -ScriptPath "%_mycelio_env%"
+    )
+endlocal & (
+    set "MYCELIO_POWERSHELL=%_powershell%"
+    set "MYCELIO_ENV=%_mycelio_env%"
 )
 
-if exist "C:\Program Files\PowerShell\pwsh.exe" (
-    set _powershell="C:\Program Files\PowerShell\pwsh.exe"
-    goto:$BuildEnvironment
-)
+if not exist "%MYCELIO_POWERSHELL%" exit /b 2
+if not exist "%MYCELIO_ENV%" exit /b 3
 
-if exist "C:\Program Files\PowerShell\7\pwsh.exe" (
-    set _powershell="C:\Program Files\PowerShell\7\pwsh.exe"
-    goto:$BuildEnvironment
-)
-exit /b 1
-
-:$BuildEnvironment
-!_powershell! -NoLogo -NoProfile -File "%~dp0..\powershell\Write-EnvironmentSetup.ps1"
-exit /b
+exit /b 0

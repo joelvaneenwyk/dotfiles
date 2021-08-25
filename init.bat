@@ -93,19 +93,6 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     call :InstallAutoRun
 
-    set _gitConfig=.gitconfig
-    call :WriteGitConfig "%USERPROFILE%"
-
-    call :StowProfile "linux" ".config\micro\settings.json"
-    call :StowProfile "linux" ".config\micro\init.lua"
-    call :StowProfile "linux" ".gitignore_global"
-    call :StowProfile "linux" ".profile"
-    call :StowProfile "linux" ".ctags"
-    call :StowProfile "bash" ".bash_profile"
-    call :StowProfile "bash" ".bash_aliases"
-    call :StowProfile "bash" ".bashrc"
-    call :StowProfile "templates" ".gnupg\gpg.conf"
-
     call :StowPowerShell "Documents\WindowsPowerShell" "Profile.ps1"
     call :StowPowerShell "Documents\PowerShell" "Profile.ps1"
 
@@ -129,9 +116,6 @@ setlocal EnableExtensions EnableDelayedExpansion
         echo ======-------
         echo.
         !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\powershell\Initialize-PowerShell.ps1"
-
-        :# This is the command used by VSCode extension to install package management so we use it here as well
-        !_powershell! -NoLogo -NoProfile -Command '[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Install-Module -Name PackageManagement -Force -MinimumVersion 1.4.6 -Scope CurrentUser -AllowClobber -Repository PSGallery'
     )
 
     echo.
@@ -146,7 +130,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
 
     call "%~dp0windows\env.bat"
-    if exist "%~dp0..\.tmp\setupEnvironment.bat" call "%~dp0..\.tmp\setupEnvironment.bat"
+    if exist "%MYCELIO_ENV%" call "%MYCELIO_ENV%"
 
     :: Initialize 'msys2' environment with bash script. We call the shim directly because environment
     :: may not read path properly after it has just been installed.
@@ -155,7 +139,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo Mycelio Environment Setup
     echo ======-------
     echo.
-    call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./init.sh !_args!"
+    call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./init.sh --home /c/Users/%USERNAME% !_args!"
 
     :$InitializeDone
 endlocal & (
@@ -189,23 +173,6 @@ exit /b 0
     if not exist "C:\Windows\System32\%~1" (
         copy /B /Y /V "%_deploy%\%~1" "C:\Windows\System32\%~1" > nul 2>&1
         echo Deployed file to 'C:\Windows\System32\' path: '%~1'
-    )
-endlocal & exit /b
-
-::-----------------------------------
-:: Write .gitconfig
-::-----------------------------------
-:WriteGitConfig %1=TargetFolder
-    setlocal EnableExtensions EnableDelayedExpansion
-    set _gitConfig=.gitconfig
-    set _gitRoot=%MYCELIO_ROOT%\git
-    set "_gitRoot=!_gitRoot:\=/!"
-    if exist "%~1" (
-        echo.[include]> "%~1\%_gitConfig%"
-        echo.    path = "!_gitRoot!/.gitconfig_common">> "%~1\%_gitConfig%"
-        echo.    path = "!_gitRoot!/.gitconfig_windows">> "%~1\%_gitConfig%"
-
-        echo Created custom '.gitconfig' with include directives: '%~1'
     )
 endlocal & exit /b
 
@@ -267,20 +234,12 @@ exit /b
     echo Created registry key "%KEY%" value "AutoRun"
 endlocal & exit /b 0
 
-:StowProfile %1=RelativeRoot %2=Filename
-    call :StowProfileRemove "%~1" "%~2"
-    call :CreateLink "%USERPROFILE%" "%~2" "%MYCELIO_ROOT%\%~1\%~2"
-exit /b 0
-
-:StowProfileRemove %1=RelativeRoot %2=Filename
-    call :DeleteLink "%USERPROFILE%" "%~2" "%MYCELIO_ROOT%\%~1\%~2"
-    call :DeleteLink "%USERPROFILE%\scoop\persist\msys2\home\%USERNAME%\" "%~2" "%MYCELIO_ROOT%\%~1\%~2"
-exit /b 0
-
+::-----------------------------------
+:: It is very important that we do NOT store PowerShell modules or scripts on OneDrive
+:: as it can cause a lot of problems. We force delete it here which is dangerous but
+:: necessary.
+::-----------------------------------
 :StowPowerShell
-    :: It is very important that we do NOT store PowerShell modules or scripts on OneDrive
-    :: as it can cause a lot of problems. We force delete it here which is dangerous but
-    :: necessary.
     if exist "%OneDrive%\%~1" (
         rmdir /s /q "%OneDrive%\%~1"
         echo Removed '%OneDrive%\%~1' as modules should not be in OneDrive. See https://stackoverflow.com/a/67531193
@@ -299,16 +258,5 @@ exit /b 0
         if exist "%_linkDir%\%_linkFilename%" del "%_linkDir%\%_linkFilename%"
         mklink "%_linkDir%\%_linkFilename%" "%_linkTarget%" > nul 2>&1
         echo Created symbolic link: '%_linkTarget%' to '%_linkDir%'
-    )
-exit /b 0
-
-:DeleteLink %1=LinkDirectory %2=LinkFilename %3=TargetPath
-    setlocal EnableExtensions EnableDelayedExpansion
-    set _linkDir=%~1
-    set _linkFilename=%~2
-    set _linkTarget=%~3
-    if not exist "%_linkDir%" mkdir "%_linkDir%" > nul 2>&1
-    if exist "%_linkDir%" (
-        if exist "%_linkDir%\%_linkFilename%" del "%_linkDir%\%_linkFilename%"
     )
 exit /b 0

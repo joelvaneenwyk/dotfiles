@@ -142,8 +142,8 @@ function _setup_error_handling() {
         MYCELIO_DEBUG_TRACE_FILE=""
 
         if [ "$_bash_debug" = "1" ] && [ "$_enable_trace" = "1" ]; then
-            MYCELIO_DEBUG_TRACE_FILE="$HOME/.logs/init.xtrace.log"
-            mkdir -p "$HOME/.logs"
+            MYCELIO_DEBUG_TRACE_FILE="$MYCELIO_HOME/.logs/init.xtrace.log"
+            mkdir -p "$MYCELIO_HOME/.logs"
             exec 19>"$MYCELIO_DEBUG_TRACE_FILE"
             export BASH_XTRACEFD=19
             set -o xtrace
@@ -246,24 +246,44 @@ function _has_admin_rights() {
     return 1
 }
 
+function _is_windows() {
+    case "$(uname -s)" in
+    CYGWIN*)
+        return 0
+        ;;
+    MINGW*)
+        return 0
+        ;;
+    MSYS*)
+        return 0
+        ;;
+    esac
+
+    return 1
+}
+
 function initialize_gitconfig() {
-    _git_config="$HOME/.gitconfig"
+    _git_config="$MYCELIO_HOME/.gitconfig"
     rm -f "$_git_config"
     unlink "$_git_config" >/dev/null 2>&1 || true
     echo "[include]" >"$_git_config"
     echo "    path = $MYCELIO_ROOT/git/.gitconfig_common" >>"$_git_config"
     echo "    path = $MYCELIO_ROOT/git/.gitconfig_linux" >>"$_git_config"
 
+    if _is_windows; then
+        echo "    path = $MYCELIO_ROOT/git/.gitconfig_linux" >>"$_git_config"
+    fi
+
     if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
         echo "    path = $MYCELIO_ROOT/git/.gitconfig_wsl" >>"$_git_config"
-        echo "Added WSL to '.gitconfig' include directives."
+        echo "Added WSL include to '.gitconfig' file."
     fi
 
     echo "Created custom '.gitconfig' with include directives."
 }
 
 function install_hugo {
-    _local_bin="$HOME/.local/bin"
+    _local_bin="$MYCELIO_HOME/.local/bin"
     _go_exe="$MYCELIO_GOBIN/go"
     _hugo_exe="$MYCELIO_GOBIN/hugo"
 
@@ -327,7 +347,7 @@ function install_hugo {
 }
 
 function install_go {
-    _local_root="$HOME/.local"
+    _local_root="$MYCELIO_HOME/.local"
     _local_go_root="$_local_root/go"
     _go_exe="$_local_go_root/bin/go"
     _go_requires_update=0
@@ -458,13 +478,16 @@ function install_go {
 function _stow() {
     _stow_bin="$MYCELIO_ROOT/source/stow/bin/stow"
 
+    _package="$1"
+    _target_path="$MYCELIO_HOME"
+
     if [ ! -x "$(command -v git)" ]; then
-        echo "❌ Failed to stow '$1' as git is required."
+        echo "❌ Failed to stow '$_package' as git is required."
         return 1
     elif [ -d "$MYCELIO_ROOT/.git" ]; then
-        git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$1" | while IFS= read -r line; do
+        git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$_package" | while IFS= read -r line; do
             _source="${MYCELIO_ROOT%/}/$line"
-            _target="${HOME%/}/${line/$1\//}"
+            _target="${_target_path%/}/${line/$_package\//}"
 
             if [ -f "$_source" ] || [ -d "$_source" ]; then
                 if [ -f "$_target" ] || [ -d "$_target" ]; then
@@ -480,7 +503,7 @@ function _stow() {
                     fi
 
                     ln -s "$_source" "$_target"
-                    echo "✔ Stowed '$1' target: '$_target'"
+                    echo "✔ Stowed '$_package' target: '$_target'"
                 fi
             fi
         done
@@ -488,17 +511,17 @@ function _stow() {
 
     if [ -f "$_stow_bin" ]; then
         # NOTE: We filter out spurious 'find_stowed_path' error due to https://github.com/aspiers/stow/issues/65
-        _stow_args=(--dir="$MYCELIO_ROOT" --target="$HOME" --verbose)
+        _stow_args=(--dir="$MYCELIO_ROOT" --target="$_target_path" --verbose)
 
         if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
             _stow_args+=(--restow)
         fi
 
         echo "##[cmd] stow ${_stow_args[*]} $*"
-        if "$_stow_bin" "${_stow_args[@]}" "$@" 2>&1 | grep -v "BUG in find_stowed_path"; then
-            echo "✔ Stowed : '$1'"
+        if "$_stow_bin" "${_stow_args[@]}" "$_package" 2>&1 | grep -v "BUG in find_stowed_path"; then
+            echo "✔ Stowed : '$_package'"
         else
-            echo "❌ Stow failed: '$1'"
+            echo "❌ Stow failed: '$_package'"
             return 3
         fi
     fi
@@ -538,8 +561,8 @@ function configure_linux() {
     _stow "$@" fish
 
     if [ -x "$(command -v fish)" ]; then
-        if [ ! -f "$HOME/.config/fish/functions/fundle.fish" ]; then
-            echo "❌ Fundle not installed in home directory: '$HOME/.config/fish/functions/fundle.fish'"
+        if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
+            echo "❌ Fundle not installed in home directory: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
         else
             if fish -c "fundle install"; then
                 echo "✔ Installed 'fundle' package manager for fish."
@@ -551,7 +574,7 @@ function configure_linux() {
         echo "Skipped fish shell initialization as it is not installed."
     fi
 
-    _gnupg_config_root="$HOME/.gnupg"
+    _gnupg_config_root="$MYCELIO_HOME/.gnupg"
     _gnupg_templates_root="$MYCELIO_ROOT/templates/.gnupg"
     mkdir -p "$_gnupg_config_root"
 
@@ -568,34 +591,44 @@ function configure_linux() {
 }
 
 function install_micro_text_editor() {
+    mkdir -p "$MYCELIO_HOME/.local/bin/"
+
+    if [ "$MYCELIO_OS" == "windows" ]; then
+        _micro_exe="micro.exe"
+    else
+        _micro_exe="micro"
+    fi
+
+    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+        rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
+    fi
+
     # Install micro text editor. It is optional so ignore failures
-    if [ -x "$(command -v micro)" ]; then
+    if [ -f "$MYCELIO_HOME/.local/bin/$_micro_exe" ]; then
         echo "✔ micro text editor already installed."
         return 0
     fi
 
     _tmp_micro="$MYCELIO_TEMP/micro"
     mkdir -p "$_tmp_micro"
-
     rm -rf "$_tmp_micro"
     git -c advice.detachedHead=false clone -b "v2.0.10" "https://github.com/zyedidia/micro" "$_tmp_micro"
 
     if (
         cd "$_tmp_micro"
         make build
-        mkdir -p "$HOME/.local/bin/"
-        mv micro "$HOME/.local/bin/"
+        mv "$_micro_exe" "$MYCELIO_HOME/.local/bin/"
     ); then
         echo "✔ Successfully compiled micro text editor."
     else
         if (
-            mkdir -p "$HOME/.local/bin/"
-            cd "$HOME/.local/bin/"
+            mkdir -p "$MYCELIO_HOME/.local/bin/"
+            cd "$MYCELIO_HOME/.local/bin/"
             curl "https://getmic.ro" | bash
         ); then
-            echo "[init.sh] Successfully installed 'micro' text editor."
+            echo "[mycelio] Successfully installed 'micro' text editor."
         else
-            echo "[init.sh] WARNING: Failed to install 'micro' text editor."
+            echo "[mycelio] WARNING: Failed to install 'micro' text editor."
             return 2
         fi
     fi
@@ -604,7 +637,7 @@ function install_micro_text_editor() {
 }
 
 function initialize_linux() {
-    dotenv="$HOME/.env"
+    dotenv="$MYCELIO_HOME/.env"
     if [ ! -f "$dotenv" ]; then
         echo "# Generated by Mycelio dotfiles project." >"$dotenv"
         echo "" >>"$dotenv"
@@ -619,13 +652,13 @@ function initialize_linux() {
         echo "Skipped installing dependencies. Not supported on Synology platform."
     elif [ -x "$(command -v pacman)" ]; then
         # Primary driver for these dependencies is 'stow' but they are generally useful as well
-        echo "[init.sh] Installing minimal packages to build dependencies on Windows using MSYS2."
+        echo "[mycelio] Installing minimal packages to build dependencies on Windows using MSYS2."
 
         # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
         rm -f /var/lib/pacman/db.lck
 
-        pacman -Syu --noconfirm
-        pacman -S --noconfirm --needed \
+        pacman -Syu --quiet --noconfirm
+        pacman -S --quiet --noconfirm --needed \
             msys2-keyring curl wget unzip \
             git gawk \
             fish tmux \
@@ -636,12 +669,12 @@ function initialize_linux() {
             rm -rf "/etc/pacman.d/gnupg/"
         fi
 
-        pacman-key --init
-        pacman-key --populate msys2
+        pacman-key --quiet --init
+        pacman-key --quiet --populate msys2
 
         # Long version of '-Syuu' gets fresh package databases from server and
         # upgrades the packages while allowing downgrades '-uu' as well if needed.
-        pacman --sync --refresh -uu --noconfirm
+        pacman --quiet --sync --refresh -uu --noconfirm
     elif [ -x "$(command -v apk)" ]; then
         if [ ! -x "$(command -v sudo)" ]; then
             apk update
@@ -712,7 +745,7 @@ function initialize_linux() {
         echo "Skipped install of 'oh-my-posh' for root user."
     else
         if [ ! -x "$(command -v oh-my-posh)" ]; then
-            _local_bin="$HOME/.local/bin"
+            _local_bin="$MYCELIO_HOME/.local/bin"
             mkdir -p "$_local_bin"
 
             if [ "$MYCELIO_OS" = "windows" ]; then
@@ -734,7 +767,7 @@ function initialize_linux() {
         font_base_name="JetBrains Mono"
         font_base_filename=${font_base_name// /}
         font_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$font_base_filename.zip"
-        _fonts_path="$HOME/.fonts"
+        _fonts_path="$MYCELIO_HOME/.fonts"
 
         if [ ! -f "$_fonts_path/JetBrains Mono Regular Nerd Font Complete.ttf" ]; then
             mkdir -p "$_fonts_path"
@@ -762,8 +795,8 @@ function initialize_linux() {
             fi
         fi
 
-        if [ ! -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
-            _posh_themes="$HOME/.poshthemes"
+        if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
+            _posh_themes="$MYCELIO_HOME/.poshthemes"
             mkdir -p "$_posh_themes"
             wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
 
@@ -780,9 +813,9 @@ function initialize_linux() {
         fi
     fi
 
-    if [ ! -d "$HOME/.asdf" ]; then
+    if [ ! -d "$MYCELIO_HOME/.asdf" ]; then
         if [ -x "$(command -v git)" ]; then
-            git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$HOME/.asdf" --branch v0.8.1
+            git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$MYCELIO_HOME/.asdf" --branch v0.8.1
         else
             echo "Skipped install of 'asdf' as git is not installed."
         fi
@@ -793,13 +826,18 @@ function initialize_linux() {
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
 function _build_stow() {
+    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+        rm -f "$MYCELIO_ROOT/source/stow/bin/stow"
+        rm -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm"
+    fi
+
     if [ -x "$(command -v cpan)" ]; then
         # If configuration file does not exist yet then we automate configuration with
         # answers to standard questions. These may become invalid with newer versions.
-        if [ ! -f "$HOME/.cpan/CPAN/MyConfig.pm" ]; then
+        if [ ! -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm" ]; then
             (
                 echo "yes"
-                echo "local::lib"
+                echo ""
                 echo "no"
                 echo "exit"
             ) | cpan
@@ -829,7 +867,7 @@ function _build_stow() {
         rm -f "./configure~"
         git checkout -- "./aclocal.m4" || true
     ); then
-        echo "✔ Successfully build 'stow' from source."
+        echo "✔ Successfully built 'stow' from source."
     else
         echo "❌ Failed to build 'stow' from source."
     fi
@@ -892,7 +930,7 @@ function install_macos_apps() {
 }
 
 function configure_macos_apps() {
-    mkdir -p "$HOME/Library/Application\ Support/Code"
+    mkdir -p "$MYCELIO_HOME/Library/Application\ Support/Code"
 
     _stow "$@" macos
 
@@ -945,13 +983,13 @@ function configure_macos_dock() {
 
 function configure_macos_finder() {
     # Save screenshots to Downloads folder
-    defaults write com.apple.screencapture location -string "${HOME}/Downloads"
+    defaults write com.apple.screencapture location -string "${MYCELIO_HOME}/Downloads"
     # Require password immediately after sleep or screen saver begins
     defaults write com.apple.screensaver askForPassword -int 1
     defaults write com.apple.screensaver askForPasswordDelay -int 0
     # Set home directory as the default location for new Finder windows
     defaults write com.apple.finder NewWindowTarget -string "PfLo"
-    defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/"
+    defaults write com.apple.finder NewWindowTargetPath -string "file://${MYCELIO_HOME}/"
     # Display full POSIX path as Finder window title
     defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
     # Keep folders on top when sorting by name
@@ -1066,39 +1104,48 @@ function main() {
     HOME=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
     export HOME
 
-    # We use 'whoami' as $USER is not set for scheduled tasks
-    echo "╔▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀"
-    echo "║       • Root: '$MYCELIO_ROOT'"
-    echo "║         User: '$(whoami)'"
-    echo "║         Home: '$HOME'"
-    echo "║           OS: '$MYCELIO_OS' ($MYCELIO_ARCH)"
-    echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
-    echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
+    export MYCELIO_HOME="$HOME"
 
     # Assume we are fine with interactive prompts if necessary
     export MYCELIO_INTERACTIVE=1
     export MYCELIO_REFRESH_ENVIRONMENT=0
 
-    # Reset in case getopts has been used previously in the shell.
-    OPTIND=1
-    while getopts "cy" opt >/dev/null 2>&1; do
-        case "$opt" in
-        c)
+    POSITIONAL=()
+    while [[ $# -gt 0 ]]; do
+        key="$1"
+
+        case $key in
+        -c | --clean)
             export MYCELIO_REFRESH_ENVIRONMENT=1
+            shift # past argument
             ;;
-        y)
+        -y | --yes)
             # Equivalent to the apt-get "assume yes" of '-y'
             export MYCELIO_INTERACTIVE=0
+            shift # past value
             ;;
-        *)
-            # We simply ignore invalid options
+        -h | --home)
+            export MYCELIO_HOME="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        *)                     # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift              # past argument
             ;;
         esac
     done
-    shift $((OPTIND - 1))
-    [ "${1:-}" = "--" ] && shift
 
     export MYCELIO_TEMP="$MYCELIO_ROOT/.tmp"
+
+    # We use 'whoami' as $USER is not set for scheduled tasks
+    echo "╔▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀"
+    echo "║       • Root: '$MYCELIO_ROOT'"
+    echo "║         User: '$(whoami)'"
+    echo "║         Home: '$MYCELIO_HOME'"
+    echo "║           OS: '$MYCELIO_OS' ($MYCELIO_ARCH)"
+    echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
+    echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
 
     # Make sure we have the appropriate permissions to write to home temporary folder
     # otherwise much of this initialization will fail.
@@ -1112,13 +1159,17 @@ function main() {
 
     if [ "$1" == "clean" ]; then
         rm -rf "$MYCELIO_TEMP"
-        echo "[init.sh] Removed workspace temporary files to force a rebuild."
+        echo "[mycelio] Removed workspace temporary files to force a rebuild."
     fi
 
-    mkdir -p "$HOME/.config/fish"
-    mkdir -p "$HOME/.ssh"
-    mkdir -p "$HOME/.local/share"
+    mkdir -p "$MYCELIO_HOME/.config/fish"
+    mkdir -p "$MYCELIO_HOME/.ssh"
+    mkdir -p "$MYCELIO_HOME/.local/share"
     mkdir -p "$MYCELIO_TEMP"
+
+    if [ "$MYCELIO_OS" = "windows" ] && [ -d "/etc/" ]; then
+        cp -f "$MYCELIO_ROOT/source/windows/nsswitch.conf" "/etc/nsswitch.conf"
+    fi
 
     initialize_gitconfig
 

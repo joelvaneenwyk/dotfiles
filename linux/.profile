@@ -318,7 +318,7 @@ _initialize_synology() {
     #fi
 
     if [ "$(whoami)" = "root" ]; then
-        HOME=/root
+        HOME="${HOME:-/root}"
         export HOME
 
         USERNAME=root
