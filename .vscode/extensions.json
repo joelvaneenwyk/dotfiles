@@ -8,6 +8,7 @@
         "bmalehorn.vscode-fish",
         "mhutchie.git-graph",
         "eamodio.gitlens",
-        "donjayamanne.githistory"
+        "donjayamanne.githistory",
+        "jetmartin.bats"
     ]
 }
