@@ -157,20 +157,43 @@ function _setup_error_handling() {
 # so we define our own version here.
 function _get_real_path() {
     _pwd="$(pwd)"
-    _input_path="$1"
+    _path="$1"
+    _offset=""
+    _real_path=""
 
-    cd "$(dirname "$_input_path")" || true
+    while :; do
+        _base="$(basename "$_path")"
 
-    _link=$(readlink "$(basename "$_input_path")")
-    while [ "$_link" ]; do
-        cd "$(dirname "$_link")" || true
-        _link=$(readlink "$(basename "$_input_path")")
+        if ! cd "$(dirname "$_path")"; then
+            break
+        fi
+
+        _link=$(readlink "$_base") || true
+        _path="$(pwd)"
+
+        if [ -n "$_link" ]; then
+            if [ -f "$_path" ]; then
+                _real_path=$(_get_real_path "$_link")
+                break
+            else
+                _path="$_path/$_link"
+            fi
+        else
+            _offset="/$_base$_offset"
+        fi
+
+        if [ "$_path" = "/" ]; then
+            _real_path="$_offset"
+            break
+        else
+            _real_path="$_path$_offset"
+        fi
     done
 
-    _real_path="$(pwd)/$(basename "$_input_path")"
     cd "$_pwd" || true
-
     echo "$_real_path"
+
+    return 0
 }
 
 function _command_exists() {
@@ -498,25 +521,25 @@ function _stow_internal() {
     if [ -f "$_source" ] || [ -d "$_source" ]; then
         if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
             _remove=0
-            _parent=""
+            _real="$(_get_real_path "$_target")"
 
-            if [ -f "$_target" ]; then
+            if [ -f "$_target" ] || [ -d "$_target" ]; then
                 _remove=1
-                _parent="$(dirname "$(dirname "$_target")")"
-            elif [ -L "$_target" ] && [ -d "$_target" ]; then
-                _remove=1
-                _parent="$(dirname "$_target")"
             fi
 
-            # Do not remove the target if the parent is a link because that
-            # means we are removing files in a target location.
-            if [ -L "$_parent" ]; then
-                _remove=0
+            if [ ! -L "$_target" ]; then
+                if [[ "$_real" == *"$MYCELIO_ROOT"* ]]; then
+                    _remove=0
+                fi
             fi
 
             if [ "$_remove" = "1" ]; then
                 rm -rf "$_target"
-                echo "REMOVED: '$_target'"
+                if [ -L "$_target" ]; then
+                    echo "UNLINK: '$_target'"
+                else
+                    echo "REMOVED: '$_target'"
+                fi
             fi
         fi
 
