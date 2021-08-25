@@ -371,7 +371,7 @@ function install_go {
         # https://golang.org/doc/install/source
         if [ -x "$(command -v go)" ] && [ -x "$(command -v gcc)" ] && [ -x "$(command -v make)" ]; then
             _go_src_archive="$MYCELIO_TEMP/go.tgz"
-            wget -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
+            wget --quiet -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
 
             echo "Extracting 'go' source: '$_go_src_archive'"
             tar -C "$_local_root" -xzf "$_go_src_archive"
@@ -476,6 +476,38 @@ function install_go {
     fi
 }
 
+function _stow_internal() {
+    _package="$1"
+    _source="$2"
+    _target="$3"
+
+    if [ -f "$_source" ] || [ -d "$_source" ]; then
+        if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+            _remove=0
+
+            if [ -f "$_target" ]; then
+                _remove=1
+            elif [ -L "$_target" ] && [ -d "$_target" ]; then
+                _remove=1
+            fi
+
+            if [ "$_remove" = "1" ]; then
+                rm -rf "$_target"
+                echo "REMOVED: '$_target'"
+            fi
+        fi
+
+        if [ ! -f "$_stow_bin" ]; then
+            if [ -f "$_source" ]; then
+                mkdir -p "$(dirname "$_target")"
+            fi
+
+            ln -s "$_source" "$_target"
+            echo "✔ Stowed '$_package' target: '$_target'"
+        fi
+    fi
+}
+
 function _stow() {
     _stow_bin="$MYCELIO_ROOT/source/stow/bin/stow"
 
@@ -489,32 +521,13 @@ function _stow() {
         git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$_package" | while IFS= read -r line; do
             _source="${MYCELIO_ROOT%/}/$line"
             _target="${_target_path%/}/${line/$_package\//}"
-
-            if [ -f "$_source" ] || [ -d "$_source" ]; then
-                if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
-                    _remove=0
-
-                    if [ -f "$_target" ]; then
-                        _remove=1
-                    elif [ -L "$_target" ] && [ -d "$_target" ]; then
-                        _remove=1
-                    fi
-
-                    if [ "$_remove" = "1" ]; then
-                        rm -rf "$_target"
-                        echo "REMOVED: '$_target'"
-                    fi
-                fi
-
-                if [ ! -f "$_stow_bin" ]; then
-                    if [ -f "$_source" ]; then
-                        mkdir -p "$(dirname "$_target")"
-                    fi
-
-                    ln -s "$_source" "$_target"
-                    echo "✔ Stowed '$_package' target: '$_target'"
-                fi
-            fi
+            _stow_internal "$_package" "$_source" "$_target"
+        done
+    else
+        find "$MYCELIO_ROOT" -maxdepth 1-type f -print0 | while IFS= read -r -d $'\0' file; do
+            _source="$file"
+            _target="$HOME/${file//$_root_dir/}"
+            _stow_internal "$_package" "$_source" "$_target"
         done
     fi
 
@@ -549,25 +562,27 @@ function configure_linux() {
     # We use built-in VSCode syncing so disabled the stow operation for VSCode
     # _stow vscode
 
+    # We intentionally stow 'fish' config first to populate the directories
+    # and then we create additional links (e.g. keybindings) and download
+    # the fish package manager fundle, see https://github.com/danhper/fundle
+    _stow "$@" fish
+
+    mkdir -p "$MYCELIO_HOME/.config/fish/functions"
+
     # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to
     # install it.
-    _binding_link="./fish/.config/fish/functions/fzf_key_bindings.fish"
+    _binding_link="$MYCELIO_HOME/.config/fish/functions/fzf_key_bindings.fish"
     _binding_file="/usr/local/opt/fzf/shell/key-bindings.fish"
     if [ -f "$_binding_file" ] && [ ! -f "$_binding_link" ]; then
         ln -s "$_binding_file" "$_binding_link"
     fi
 
-    if [ ! -f "./fish/.config/fish/functions/fundle.fish" ]; then
-        wget "https://git.io/fundle" -O "./fish/.config/fish/functions/fundle.fish" || true
-        if [ -f "./fish/.config/fish/functions/fundle.fish" ]; then
-            chmod a+x "./fish/.config/fish/functions/fundle.fish"
+    if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
+        wget "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish" || true
+        if [ -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
+            chmod a+x "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
         fi
     fi
-
-    # After getting fundle, we now stow the configuration so that it populates the
-    # home directory ('~/.config/fish') which allows the rest of the initialization
-    # to work, see https://github.com/danhper/fundle
-    _stow "$@" fish
 
     if [ -x "$(command -v fish)" ]; then
         if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
@@ -767,7 +782,7 @@ function initialize_linux() {
             _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$_posh_extension"
             _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
 
-            if wget "$_posh_url" -O "$_local_bin/oh-my-posh$_posh_extension"; then
+            if wget --quiet "$_posh_url" -O "$_local_bin/oh-my-posh$_posh_extension"; then
                 chmod +x "$_local_bin/oh-my-posh$_posh_extension"
             else
                 echo "Unsupported platform for installing 'oh-my-posh' extension."
@@ -781,7 +796,7 @@ function initialize_linux() {
 
         if [ ! -f "$_fonts_path/JetBrains Mono Regular Nerd Font Complete.ttf" ]; then
             mkdir -p "$_fonts_path"
-            wget "$font_url" -O "$_fonts_path/$font_base_filename.zip"
+            wget --quiet "$font_url" -O "$_fonts_path/$font_base_filename.zip"
 
             if [ -x "$(command -v unzip)" ]; then
                 unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
@@ -808,7 +823,7 @@ function initialize_linux() {
         if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
             _posh_themes="$MYCELIO_HOME/.poshthemes"
             mkdir -p "$_posh_themes"
-            wget "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
+            wget --quiet "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
 
             if [ -x "$(command -v unzip)" ]; then
                 unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
