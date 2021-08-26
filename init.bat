@@ -28,6 +28,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     set _arg_remainder=
     shift
 
+    set _error=0
     set _clean=0
 
     :: Keep appending arguments until there are none left
@@ -121,6 +122,9 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo ======-------
     echo.
     !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\powershell\Initialize-Environment.ps1"
+    if not "%ERRORLEVEL%"=="0" (
+        set _error=%ERRORLEVEL%
+    )
 
     ::
     :: Initialize 'msys2' environment with bash script.
@@ -137,20 +141,26 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo.
     if not exist "%USERPROFILE%\scoop\shims\msys2.cmd" (
         echo "ERROR: MSYS2 not installed. Initialization failed."
-    ) else (
-        call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./init.sh --home /c/Users/%USERNAME% !_args!"
+        _error=55
+        goto:$InitializeDone
+    )
+
+    call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./init.sh --home /c/Users/%USERNAME% !_args!"
+    if not "%ERRORLEVEL%"=="0" (
+        set _error=%ERRORLEVEL%
     )
 
     :$InitializeDone
 endlocal & (
     set "MYCELIO_ROOT=%MYCELIO_ROOT%"
     set "MYCELIO_PROFILE_INITIALIZED=%MYCELIO_PROFILE_INITIALIZED%"
+    set "MYCELIO_ERROR=%error%"
     set "PATH=%PATH%"
     set "POWERSHELL=%_pwsh%"
 )
 
 echo Completed execution of `dotfiles` initialization.
-exit /b 0
+exit /b %MYCELIO_ERROR%
 
 :CheckSystemFile %1=SystemFilename
     setlocal EnableExtensions EnableDelayedExpansion

@@ -33,29 +33,49 @@ Test
 #>
 
 param(
-    ## The path to the script to run
+    ## The path to the script to run.
     [Parameter(Mandatory = $true)]
     [string] $Path,
 
-    ## The arguments to the script
-    [string] $ArgumentList
+    ## The arguments to pass to the script.
+    [string] $ArgumentList,
+
+    ## If set, start script inside current environment and then update current environment
+    ## with results from executing the script.
+    [bool] $SetEnvironment
 )
 
 Set-StrictMode -Version Latest
 
-$tempFile = [IO.Path]::GetTempFileName()
+if (Test-Path -Path $Path -PathType Leaf) {
+    ## Store the output of cmd.exe.  We also ask cmd.exe to output
+    ## the environment table after the batch file completes
+    if ($SetEnvironment) {
+        $tempFile = [IO.Path]::GetTempFileName()
 
-## Store the output of cmd.exe.  We also ask cmd.exe to output
-## the environment table after the batch file completes
-& cmd /c " `"$Path`" $argumentList && set > `"$tempFile`" "
-Write-Host "Finished execution: $Path"
+        Start-Process -Wait -FilePath "$env:windir\system32\cmd.exe" -NoNewWindow -ArgumentList @(
+            "/c", "$Path $argumentList && set > $tempFile")
 
-## Go through the environment variables in the temp file.
-## For each of them, set the variable in our local environment.
-Get-Content $tempFile | ForEach-Object {
-    if ($_ -match "^(.*?)=(.*)$") {
-        Set-Content "env:\$($matches[1])" $matches[2]
+        ## Go through the environment variables in the temp file.
+        ## For each of them, set the variable in our local environment.
+        Get-Content $tempFile | ForEach-Object {
+            if ($_ -match "^(.*?)=(.*)$") {
+                Set-Content "env:\$($matches[1])" $matches[2]
+            }
+        }
+
+        Remove-Item $tempFile
+
+        Write-Host "Finished execution: $Path"
+    }
+    else {
+        Start-Process -Wait -FilePath "$env:windir\system32\cmd.exe" -NoNewWindow -UseNewEnvironment -ArgumentList @(
+            "/c", "`"$Path`" $argumentList")
+        Write-Host "Finished execution: $Path"
     }
 }
+else {
+    Write-Host "ERROR: Script not found: '$Path'"
+}
 
-Remove-Item $tempFile
+

@@ -144,13 +144,15 @@ Function Initialize-Environment {
             # It's required for unpacking installers created with the WiX Toolset.
             scoop install "dark"
 
-            # SSH
-            # https://stackoverflow.com/a/58029292
-            #Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+            $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+            if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+                # Add SSH client, see https://stackoverflow.com/a/58029292
+                Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
 
-            # Windows Defender may slow down or disrupt installs with realtime scanning.
-            #sudo Add-MpPreference -ExclusionPath "C:\Users\$env:USERNAME\scoop"
-            #sudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
+                # Windows Defender may slow down or disrupt installs with realtime scanning.
+                sudo Add-MpPreference -ExclusionPath "C:\Users\$env:USERNAME\scoop"
+                sudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
+            }
         }
 
         try {
@@ -172,6 +174,12 @@ Function Initialize-Environment {
                 scoop install "msys2"
             }
 
+            # We run this here to ensure that the first run of msys2 is done before the 'init.sh' call
+            # as the initial upgrade of msys2 results in it shutting down the console.
+            if (Test-CommandExists "msys2") {
+                msys2 -where "$PSScriptRoot\..\" -shell bash -no-start -c "./windows/msys/pacman-upgrade.sh"
+            }
+
             # https://github.com/chrisant996/clink
             if (-not(Test-CommandExists "clink")) {
                 scoop install "clink"
@@ -181,12 +189,6 @@ Function Initialize-Environment {
             if (-not(Test-CommandExists "hugo")) {
                 scoop install hugo-extended
             }
-
-            # We do not install 'micro' (https://micro-editor.github.io/) here because we install
-            # it later using the bash environment for windows
-            # if (-not(Test-CommandExists "micro")) {
-            #     scoop install "micro"
-            # }
 
             if (-not(Test-CommandExists "perl")) {
                 scoop install "perl"
