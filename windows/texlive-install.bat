@@ -1,24 +1,24 @@
 @echo off
 
-set TEXLIVE_INSTALL=%~dp0.tmp\texlive-install\install-tl-windows.bat
-set TEXLIVE_BIN=%~dp0.tmp\texlive\bin\win32
+set TEXLIVE_INSTALL=%USERPROFILE%\.tmp\texlive-install\install-tl-windows.bat
+set TEXLIVE_BIN=%USERPROFILE%\.tmp\texlive\bin\win32
 
-set TEXDIR=%~dp0.tmp\texlive
-set TEXMFCONFIG=%~dp0.tmp\texlive\texmf-config
-set TEXMFHOME=%~dp0.tmp\texlive\texmf-local
-set TEXMFLOCAL=%~dp0.tmp\texlive\texmf-local
-set TEXMFSYSCONFIG=%~dp0.tmp\texlive\texmf-config
-set TEXMFSYSVAR=%~dp0.tmp\texlive\texmf-var
-set TEXMFVAR=%~dp0.tmp\texlive\texmf-var
+set TEXDIR=%USERPROFILE%\.tmp\texlive
+set TEXMFCONFIG=%USERPROFILE%\.tmp\texlive\texmf-config
+set TEXMFHOME=%USERPROFILE%\.tmp\texlive\texmf-local
+set TEXMFLOCAL=%USERPROFILE%\.tmp\texlive\texmf-local
+set TEXMFSYSCONFIG=%USERPROFILE%\.tmp\texlive\texmf-config
+set TEXMFSYSVAR=%USERPROFILE%\.tmp\texlive\texmf-var
+set TEXMFVAR=%USERPROFILE%\.tmp\texlive\texmf-var
 
-set TEXLIVE_INSTALL_PREFIX=%~dp0.tmp\texlive
-set TEXLIVE_INSTALL_TEXDIR=%~dp0.tmp\texlive
-set TEXLIVE_INSTALL_TEXMFCONFIG=%~dp0.tmp\texlive\texmf-config
-set TEXLIVE_INSTALL_TEXMFHOME=%~dp0.tmp\texlive\texmf-local
-set TEXLIVE_INSTALL_TEXMFLOCAL=%~dp0.tmp\texlive\texmf-local
-set TEXLIVE_INSTALL_TEXMFSYSCONFIG=%~dp0.tmp\texlive\texmf-config
-set TEXLIVE_INSTALL_TEXMFSYSVAR=%~dp0.tmp\texlive\texmf-var
-set TEXLIVE_INSTALL_TEXMFVAR=%~dp0.tmp\texlive\texmf-var
+set TEXLIVE_INSTALL_PREFIX=%USERPROFILE%\.tmp\texlive
+set TEXLIVE_INSTALL_TEXDIR=%USERPROFILE%\.tmp\texlive
+set TEXLIVE_INSTALL_TEXMFCONFIG=%USERPROFILE%\.tmp\texlive\texmf-config
+set TEXLIVE_INSTALL_TEXMFHOME=%USERPROFILE%\.tmp\texlive\texmf-local
+set TEXLIVE_INSTALL_TEXMFLOCAL=%USERPROFILE%\.tmp\texlive\texmf-local
+set TEXLIVE_INSTALL_TEXMFSYSCONFIG=%USERPROFILE%\.tmp\texlive\texmf-config
+set TEXLIVE_INSTALL_TEXMFSYSVAR=%USERPROFILE%\.tmp\texlive\texmf-var
+set TEXLIVE_INSTALL_TEXMFVAR=%USERPROFILE%\.tmp\texlive\texmf-var
 
 set _texInstallCommand="%TEXLIVE_INSTALL%" -no-gui -portable -profile "%~dp0windows\texlive.profile"
 if not exist "%TEXLIVE_BIN%\texi2dvi.exe" (

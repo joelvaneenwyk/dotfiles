@@ -110,8 +110,7 @@ Function Get-File {
     }
 }
 Function Initialize-Environment {
-    $root = Resolve-Path -Path "$PSScriptRoot\.."
-    $tempFolder = "$root\.tmp"
+    $tempFolder = "$ENV:UserProfile\.tmp"
 
     $fontBaseName = "JetBrains Mono"
     $fontBaseFilename = $fontBaseName -replace '\s', ''

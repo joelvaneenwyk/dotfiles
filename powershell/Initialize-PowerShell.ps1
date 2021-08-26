@@ -125,8 +125,7 @@ Function Get-File {
 Function Initialize-PowerShell {
     Write-Host "PowerShell v$($host.Version)"
 
-    $root = Resolve-Path -Path "$PSScriptRoot\.."
-    $tempFolder = "$root\.tmp"
+    $tempFolder = "$ENV:UserProfile\.tmp"
 
     if ( -not(Test-Path -Path "$tempFolder") ) {
         New-Item -ItemType directory -Path "$tempFolder" | Out-Null
