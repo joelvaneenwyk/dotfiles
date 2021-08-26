@@ -11,8 +11,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     set _container_name=menv:!_container_platform!
     set _container_instance=menv_!_container_platform!
 
-    set "DOT_PROFILE_NAME=mycelio"
-    set "MYCELIO_ROOT=!_mycelio_root:~0,-1!"                    &:# Script path, without the trailing \
+    set "MYCELIO_ROOT=%_mycelio_root:~0,-1%"                    &:# Script path, without the trailing \
     set "USER[HKLM]=all users"
     set "USER[HKCU]=%USERNAME%"
     set "HIVE="
@@ -101,6 +100,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     :: Initialize each installed PowerShell we find
     ::
+    goto:$Setup
 
     set _powershell=
     set _pwshs=
@@ -138,6 +138,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo Mycelio Environment Setup
     echo ======-------
     echo.
+    :$Setup
     call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./init.sh --home /c/Users/%USERNAME% !_args!"
 
     :$InitializeDone

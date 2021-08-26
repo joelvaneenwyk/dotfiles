@@ -5,8 +5,15 @@
     "shellcheck.customArgs": ["--external-sources"],
     "shellcheck.useWorkspaceRootAsCwd": true,
     "shellcheck.ignorePatterns": {
-        "source/stow/**": true,
-        "fish/.config/**": true
+        "**/git-fuzy": true,
+        "**/test_canonicalize_path": true,
+        "**/test_readlink_emulation": true,
+        "**/default.mustache": true,
+        "**/source/stow/**/*.sh": true,
+        "**/fish/.config/**/*.sh": true,
+        "**/fish/.config/base16-shell/**/*.sh": true,
+        "**/fish/.config/base16-fzf/**/*.sh": true,
+        "**/fish/.config/git-fuzzy/**/*.sh": true
     },
     "[shellscript]": {
         "editor.formatOnSave": true,
@@ -26,6 +33,8 @@
     ],
 
     "perl.enable": false,
+
+    "xml.validation.enabled": false,
 
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
 
@@ -160,6 +169,10 @@
         ".Xresources",
         ".xmobarrc",
         "windows/clink-completions/**",
+        "fish/.config/base16-shell/**",
+        "fish/.config/base16-fzf/**",
+        "fish/.config/git-fuzzy/**",
+        "fish/.config/fish/fish_variables",
         "linux/.config/micro/settings.json"
     ],
     "cSpell.words": [

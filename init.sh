@@ -516,91 +516,95 @@ function install_go {
 }
 
 function _stow_internal() {
-    _package="$1"
-    _source="$2"
-    _target="$3"
+    _source="$1"
+    _target="$2"
+    shift 2
 
-    if [ -f "$_source" ] || [ -d "$_source" ]; then
-        if [ "$MYCELIO_REFRESH_ENVIRONMENT" = "1" ] || [ "$MYCELIO_FORCE" = "1" ]; then
-            _remove=0
+    if [[ "$*" == *"--delete"* ]]; then
+        _remove=0
+
+        if [ -f "$_target" ] || [ -d "$_target" ]; then
+            _remove=1
+        fi
+
+        if [ ! -L "$_target" ]; then
             _real="$(_get_real_path "$_target")"
-
-            if [ -f "$_target" ] || [ -d "$_target" ]; then
-                _remove=1
-            fi
-
-            if [ ! -L "$_target" ]; then
-                if [[ "$_real" == *"$MYCELIO_ROOT"* ]]; then
-                    _remove=0
-                fi
-            fi
-
-            if [ "$_remove" = "1" ]; then
-                rm -rf "$_target"
-                if [ -L "$_target" ]; then
-                    echo "UNLINK: '$_target'"
-                else
-                    echo "REMOVED: '$_target'"
-                fi
+            if [[ "$_real" == *"$MYCELIO_ROOT"* ]]; then
+                _remove=0
             fi
         fi
 
-        if [ ! -f "$_stow_bin" ]; then
-            if [ -f "$_source" ]; then
-                mkdir -p "$(dirname "$_target")"
+        if [ "$_remove" = "1" ]; then
+            rm -rf "$_target"
+            if [ -L "$_target" ]; then
+                echo "UNLINKED: '$_target'"
+            else
+                echo "REMOVED: '$_target'"
             fi
+        fi
+    elif [ ! -f "$_stow_bin" ]; then
+        if [ -f "$_source" ]; then
+            mkdir -p "$(dirname "$_target")"
+        fi
 
+        if [ -f "$_source" ] || [ -d "$_source" ]; then
             ln -s "$_source" "$_target"
-            echo "✔ Stowed '$_package' target: '$_target'"
+            echo "✔ Stowed target: '$_target'"
         fi
     fi
 }
 
 function _stow() {
     _stow_bin="$MYCELIO_ROOT/source/stow/bin/stow"
-
-    _package="$1"
     _target_path="$MYCELIO_HOME"
 
-    if [ ! -x "$(command -v git)" ] || [ ! -d "$MYCELIO_ROOT/.git" ]; then
-        _root="$MYCELIO_ROOT/$_package"
-        find "$_root" -maxdepth 1 -type f -print0 | while IFS= read -r -d $'\0' file; do
-            _source="$file"
-            _target="$HOME/${file//$_root\//}"
-            _stow_internal "$_package" "$_source" "$_target"
-        done
-    else
-        {
-            git -C "$MYCELIO_ROOT" ls-tree -d --name-only -r HEAD "$_package"
-            git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$_package"
-        } | while IFS= read -r line; do
-            _source="${MYCELIO_ROOT%/}/$line"
-            _target="${_target_path%/}/${line/$_package\//}"
-            _stow_internal "$_package" "$_source" "$_target"
-        done
-    fi
+    for _package in "$@"; do
+        if [[ ! $_package == -* ]]; then
+            if [ ! -x "$(command -v git)" ] || [ ! -d "$MYCELIO_ROOT/.git" ]; then
+                _root="$MYCELIO_ROOT/$_package"
+                find "$_root" -maxdepth 1 -type f -print0 | while IFS= read -r -d $'\0' file; do
+                    _source="$file"
+                    _target="$HOME/${file//$_root\//}"
+                    _stow_internal "$_source" "$_target" "$@"
+                done
+            else
+                {
+                    git -C "$MYCELIO_ROOT" ls-tree -d --name-only -r HEAD "$_package"
+                    git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$_package"
+                } | while IFS= read -r line; do
+                    _source="${MYCELIO_ROOT%/}/$line"
+                    _target="${_target_path%/}/${line/$_package\//}"
+                    _stow_internal "$_source" "$_target" "$@"
+                done
+            fi
+        fi
+    done
 
-    if [ -f "$_stow_bin" ]; then
+    if [[ ! "$*" == *"--delete"* ]] && [ -f "$_stow_bin" ]; then
         # NOTE: We filter out spurious 'find_stowed_path' error due to https://github.com/aspiers/stow/issues/65
         _stow_args=(--dir="$MYCELIO_ROOT" --target="$_target_path" --verbose)
+        _stow_args+=("$@")
 
-        if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
-            _stow_args+=(--restow)
+        _return_code=0
+        echo "##[cmd] stow ${_stow_args[*]}"
+        if "$_stow_bin" "${_stow_args[@]}" 2>&1 | grep -v "BUG in find_stowed_path"; then
+            _return_code="${PIPESTATUS[0]}"
+        else
+            _return_code="${PIPESTATUS[0]}"
         fi
 
-        echo "##[cmd] stow ${_stow_args[*]} $*"
-        if "$_stow_bin" "${_stow_args[@]}" "$_package" 2>&1 | grep -v "BUG in find_stowed_path"; then
-            echo "✔ Stowed : '$_package'"
+        if [ "$_return_code" = "0" ]; then
+            echo "✔ Stowed."
         else
-            echo "❌ Stow failed: '$_package'"
-            return 3
+            echo "❌ Stow failed."
+            return "$_return_code"
         fi
     fi
 
     return 0
 }
 
-function configure_linux() {
+function _stow_packages() {
     _stow "$@" linux
     _stow "$@" bash
     _stow "$@" zsh
@@ -612,6 +616,23 @@ function configure_linux() {
     # and then we create additional links (e.g. keybindings) and download
     # the fish package manager fundle, see https://github.com/danhper/fundle
     _stow "$@" fish
+
+    if [ "$MYCELIO_OS" = "darwin" ]; then
+        mkdir -p "$MYCELIO_HOME/Library/Application\ Support/Code"
+        _stow "$@" macos
+    fi
+}
+
+function configure_linux() {
+    if [ "$MYCELIO_REFRESH_ENVIRONMENT" = "1" ] || [ "$MYCELIO_FORCE" = "1" ]; then
+        _stow_packages --delete
+    fi
+
+    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+        _stow_packages --restow
+    else
+        _stow_packages
+    fi
 
     mkdir -p "$MYCELIO_HOME/.config/fish/functions"
 
@@ -970,9 +991,7 @@ function initialize_macos() {
 
     configure_macos_dock
     configure_macos_finder
-
-    # We pass in 'stow' arguments
-    configure_macos_apps "$@"
+    configure_macos_apps
     configure_macos_system
 }
 
@@ -1018,10 +1037,6 @@ function install_macos_apps() {
 }
 
 function configure_macos_apps() {
-    mkdir -p "$MYCELIO_HOME/Library/Application\ Support/Code"
-
-    _stow "$@" macos
-
     for f in .osx/*.plist; do
         [ -e "$f" ] || continue
 
@@ -1144,8 +1159,15 @@ function main() {
     _setup_error_handling
 
     if [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
+        # Loading the profile may overwrite the root after it reads the '.env' file
+        # so we restore it afterwards.
+        _root=$MYCELIO_ROOT
+
         # shellcheck source=linux/.profile
         . "$MYCELIO_ROOT/linux/.profile"
+
+        # Restore previous root folder
+        export MYCELIO_ROOT="${_root:-MYCELIO_ROOT}"
     fi
 
     if [ -x "$(command -v apk)" ]; then
@@ -1293,7 +1315,7 @@ function main() {
     mkdir -p "$MYCELIO_TEMP"
 
     if [ "$MYCELIO_OS" = "windows" ] && [ -d "/etc/" ]; then
-        cp -f "$MYCELIO_ROOT/source/windows/nsswitch.conf" "/etc/nsswitch.conf"
+        cp -f "$MYCELIO_ROOT/source/windows/nsswitch.conf" "/etc/nsswitch.conf" || true
     fi
 
     initialize_gitconfig

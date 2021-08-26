@@ -15,6 +15,7 @@ Brewfile.lock.json
 fonts/.fonts/JetBrains*
 
 fish/.local/share
+fish/.config/fish/fish_variables
 fish/.config/fish/fishd.*
 fish/.config/fish/fish_history
 fish/.config/fish/functions/fundle.fish

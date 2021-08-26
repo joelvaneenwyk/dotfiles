@@ -13,6 +13,50 @@
         - C:\Users\jovaneen\OneDrive - Microsoft\Documents\PowerShell\Profile.ps1
 #>
 
+Function Get-RealScriptPath() {
+    $ScriptPath = $PSCommandPath
+
+    # Attempt to extract link target from script pathname
+    $link_target = Get-Item $ScriptPath | Select-Object -ExpandProperty Target
+
+    # If the script is not a link just return the script path as is
+    If (-Not($link_target)) {
+        return $ScriptPath
+    }
+
+    # Check if the path is rooted / absolute. If so return that.
+    $is_absolute = [System.IO.Path]::IsPathRooted($link_target)
+    if ($is_absolute) {
+        return $link_target
+    }
+
+    # We now know that the script was launched from a link and the link target is
+    # probably relative depending on how accurate IsPathRooted() is. Try to make an
+    # absolute path by merging the script directory and the link target and then
+    # normalize it through Resolve-Path.
+    $joined = Join-Path $PSScriptRoot $link_target
+    $resolved = Resolve-Path -Path $joined
+
+    return $resolved
+}
+
+Function Get-ScriptDirectory() {
+    $ScriptPath = Get-RealScriptPath
+    $ScriptDir = Split-Path -Parent $ScriptPath
+    return $ScriptDir
+}
+
+Function global:init() {
+    param(
+        [string] $ArgumentList
+    )
+
+    $ScriptPath = Get-ScriptDirectory
+    $Path = Resolve-Path "$ScriptPath\Invoke-Init.ps1"
+    Write-Host "##[cmd] $Path $ArgumentList"
+    & $Path $ArgumentList
+}
+
 try {
     # WARNING: You appear to have an unsupported Git distribution; setting
     # $GitPromptSettings.AnsiConsole = $false. posh-git recommends Git for Windows.
