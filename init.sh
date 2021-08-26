@@ -1219,6 +1219,8 @@ function main() {
     export MYCELIO_REFRESH_ENVIRONMENT=0
     export MYCELIO_FORCE=0
 
+    _skip_initialization=0
+
     POSITIONAL=()
     while [[ $# -gt 0 ]]; do
         key="$1"
@@ -1237,6 +1239,10 @@ function main() {
             export MYCELIO_INTERACTIVE=0
             shift # past argument
             ;;
+        -s | --skip)
+            _skip_initialization=1
+            shift # past argument
+            ;;
         -h | --home)
             export MYCELIO_HOME="$2"
             shift # past argument
@@ -1250,6 +1256,10 @@ function main() {
     done
 
     export MYCELIO_TEMP="$MYCELIO_HOME/.tmp"
+
+    if [ "$_skip_initialization" = "1" ]; then
+        return 0
+    fi
 
     # Note below that we use 'whoami' since $USER variable is not set for
     # scheduled tasks on Synology.

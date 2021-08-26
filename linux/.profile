@@ -210,6 +210,8 @@ _initialize_interactive_profile() {
     alias cls='clear'
 
     ## Common typos
+    alias cd.='cd "$MYCELIO_ROOT"'
+    alias cd~='cd ~'
     alias cd..='cd ..'
     alias cd~='cd ~'
 

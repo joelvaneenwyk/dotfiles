@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
 
-setup() {
+_common_setup() {
     load 'test_helper/bats-support/load'
     load 'test_helper/bats-assert/load'
 
-    MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd .. && pwd)"
-    export MYCELIO_ROOT
-
-    MYCELIO_TEST_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
-    export MYCELIO_TEST_ROOT
-
-    export MYCELIO_TEST_LINK="$MYCELIO_TEST_ROOT/.tmpln"
-
     export TEST_MAIN_DIR="${BATS_TEST_DIRNAME}/.."
     export TEST_DEPS_DIR="${TEST_DEPS_DIR-${TEST_MAIN_DIR}/..}"
+
+    export MYCELIO_ROOT="$TEST_MAIN_DIR"
+    export MYCELIO_TEST_ROOT="$BATS_TEST_DIRNAME"
+    export MYCELIO_TEST_LINK="$MYCELIO_TEST_ROOT/.tmpln"
+
+    . "$MYCELIO_ROOT/init.sh" --skip
 }
