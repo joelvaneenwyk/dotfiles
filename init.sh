@@ -450,6 +450,7 @@ function install_go {
                 fi
             ); then
                 echo "Successfully compiled 'go' from source."
+                _go_compiled=1
             else
                 echo "Failed to compile 'go' from source."
             fi
@@ -606,7 +607,6 @@ function _stow() {
             echo "✔ Stowed."
         else
             echo "❌ Stow failed."
-            return "$_return_code"
         fi
     fi
 

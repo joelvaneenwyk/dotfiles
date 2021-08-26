@@ -36,11 +36,47 @@ Function Initialize-PowerShell {
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-    try {
-        Import-Module PowerShellGet
+    #
+    # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
+    #
+    # Error it is attempting to mitigate: "The term 'PackageManagement\Get-PackageSource' is not recognized as the name
+    # of a cmdlet, function, script file, or operable program."
+    #
+    Write-Host "Importing package management module and validating NuGet package provider."
+    Import-Module PackageManagement -ErrorAction SilentlyContinue >$null
+    if (-not $?) {
+        Install-Module -Name PackageManagement -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue >$null
+        Write-Host "✔ Installed 'PackageManagement' module."
+    }
+
+    Import-Module PackageManagement -ErrorAction SilentlyContinue >$null
+    if ($?) {
+        Write-Host "✔ Imported 'PackageManagement' module."
+
+        # Now install the NuGet package provider if possible.
+        $nuget = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue >$null
+        if ($? -and ($null -ne $nuget)) {
+            Write-Host "✔ 'NuGet' package provider already installed."
+        }
+        else {
+            Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue >$null
+            if ($?) {
+                Write-Host "✔ Installed 'NuGet' package provider."
+            }
+            else {
+                Write-Host "❌ Failed to install 'NuGet' package source. $NugetPackage"
+            }
+        }
+    }
+    else {
+        Write-Host "❌ Failed to import PowerShell package management.", $_.Exception.Message
+    }
+
+    Import-Module PowerShellGet -ErrorAction SilentlyContinue >$null
+    if ($?) {
         Write-Host "✔ PowerShellGet module already installed."
     }
-    catch {
+    else {
         # We do not check if module is installed because 'Get-Package' may not exist yet.
         Install-Module -Name PowerShellGet -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue >$null
         if ($?) {
@@ -52,41 +88,18 @@ Function Initialize-PowerShell {
         else {
             Write-Host "Failed to install and update 'PowerShellGet' module."
         }
-    }
 
-    try {
-        #
-        # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
-        #
-        # Error it is attempting to mitigate: "The term 'PackageManagement\Get-PackageSource' is not recognized as the name
-        # of a cmdlet, function, script file, or operable program."
-        #
-        Import-Module PackageManagement
-
-        # Now install the NuGet package provider if possible.
-        $nuget = Get-PackageProvider -Name NuGet
-        if ($null -eq $nuget) {
-            Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue >$null
-            if ($?) {
-                Write-Host "✔ Installed 'NuGet' package provider."
-            }
-            else {
-                Write-Host "❌ Failed to install 'NuGet' package source. $NugetPackage"
-            }
+        Import-Module PowerShellGet -ErrorAction SilentlyContinue >$null
+        if (-not $?) {
+            Write-Host "Failed to import required 'PowerShellGet' module. Exiting initialization."
+            return 1;
         }
-        else {
-            Write-Host "✔ 'NuGet' package provider already installed."
-        }
-
-    }
-    catch [Exception] {
-        Write-Host "❌ Failed to import PowerShell package management.", $_.Exception.Message
     }
 
     # Set Microsoft PowerShell Gallery to 'Trusted' as this is needed for packages
     # like 'WindowsConsoleFonts' and 'PSReadLine' installed below.
     try {
-        $psGallery = Get-PSRepository -Name "*PSGallery*"
+        $psGallery = Get-PSRepository -Name "*PSGallery*" -ErrorAction SilentlyContinue
         if ($null -eq $psGallery) {
             if ($host.Version.Major -ge 5) {
                 Register-PSRepository -Default -InstallationPolicy Trusted
