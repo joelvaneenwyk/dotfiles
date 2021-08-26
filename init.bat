@@ -91,7 +91,6 @@ setlocal EnableExtensions EnableDelayedExpansion
     )
 
     call :InstallAutoRun
-
     call :StowPowerShell "Documents\WindowsPowerShell" "Profile.ps1"
     call :StowPowerShell "Documents\PowerShell" "Profile.ps1"
 
@@ -100,8 +99,6 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     :: Initialize each installed PowerShell we find
     ::
-    goto:$Setup
-
     set _powershell=
     set _pwshs=
     if exist "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwshs=!_pwshs! "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
@@ -138,8 +135,11 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo Mycelio Environment Setup
     echo ======-------
     echo.
-    :$Setup
-    call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./init.sh --home /c/Users/%USERNAME% !_args!"
+    if not exist "%USERPROFILE%\scoop\shims\msys2.cmd" (
+        echo "ERROR: MSYS2 not installed. Initialization failed."
+    ) else (
+        call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./init.sh --home /c/Users/%USERNAME% !_args!"
+    )
 
     :$InitializeDone
 endlocal & (

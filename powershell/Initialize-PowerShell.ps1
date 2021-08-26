@@ -1,4 +1,4 @@
-<#
+﻿<#
 .NOTES
     ===========================================================================
     Created on:   August 2021
@@ -25,103 +25,6 @@
         - https://office365itpros.com/2020/05/04/onedrive-known-folders-powershell-module-installations/
 #>
 
-<#
-.SYNOPSIS
-    Returns true if the given command can be executed from the shell.
-.INPUTS
-    Command name which does not need to be a full path.
-.OUTPUTS
-    Whether or not the command exists and can be executed.
-#>
-Function Test-CommandExists {
-    Param ($command)
-
-    $oldPreference = $ErrorActionPreference
-
-    $ErrorActionPreference = 'stop'
-    $IsValid = $false
-
-    try {
-        if (Get-Command $command) {
-            $IsValid = $true
-        }
-    }
-    Catch {
-        Write-Host "Command '$command' does not exist."
-    }
-    Finally {
-        $ErrorActionPreference = $oldPreference
-    }
-
-    return $IsValid
-} #end function test-CommandExists
-
-Function Get-File {
-    <#
-.SYNOPSIS
-    Downloads a file
-.DESCRIPTION
-    Downloads a file
-.PARAMETER Url
-    URL to file/resource to download
-.PARAMETER Filename
-    file to save it as locally
-.EXAMPLE
-    C:\PS> Get-File -Name "mynuget.exe" -Url https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-#>
-
-    Param(
-        [Parameter(Position = 0, mandatory = $true)]
-        [string]$Url,
-        [string]$Filename = ''
-    )
-
-    # Get filename
-    if (!$Filename) {
-        $Filename = [System.IO.Path]::GetFileName($Url)
-    }
-
-    Write-Host "Downloading file from source: $Url"
-    Write-Host "Target file: '$Filename'"
-
-    $FilePath = $Filename
-
-    # Make absolute local path
-    if (![System.IO.Path]::IsPathRooted($Filename)) {
-        $FilePath = Join-Path (Get-Item -Path ".\" -Verbose).FullName $Filename
-    }
-
-    if ($null -ne ($Url -as [System.URI]).AbsoluteURI) {
-        $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
-        $client = New-Object -TypeName System.Net.Http.HttpClient -ArgumentList $handler
-        $client.Timeout = New-Object -TypeName System.TimeSpan -ArgumentList 0, 30, 0
-        $cancelTokenSource = [System.Threading.CancellationTokenSource]::new(-1)
-        $responseMsg = $client.GetAsync([System.Uri]::new($Url), $cancelTokenSource.Token)
-        $responseMsg.Wait()
-        if (!$responseMsg.IsCanceled) {
-            $response = $responseMsg.Result
-            if ($response.IsSuccessStatusCode) {
-                $downloadedFileStream = [System.IO.FileStream]::new(
-                    $FilePath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
-
-                $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
-
-                Write-Host "Download started..."
-                $copyStreamOp.Wait()
-
-                $downloadedFileStream.Close()
-                if ($null -ne $copyStreamOp.Exception) {
-                    throw $copyStreamOp.Exception
-                }
-            }
-        }
-
-        Write-Host "Downloaded file: '$Filename'"
-    }
-    else {
-        throw "Cannot download from $Url"
-    }
-}
 Function Initialize-PowerShell {
     Write-Host "PowerShell v$($host.Version)"
 
@@ -134,15 +37,10 @@ Function Initialize-PowerShell {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     try {
-        # Now install the NuGet package provider if possible.
-        $NugetPackage = Get-PackageProvider -Name "NuGet" -ForceBootstrap >$null
-        if ($?) {
-            Write-Host "Installed NuGet package provider."
-        }
-        else {
-            Write-Host "Failed to install NuGet package source. $NugetPackage"
-        }
-
+        Import-Module PowerShellGet
+        Write-Host "✔ PowerShellGet module already installed."
+    }
+    catch {
         # We do not check if module is installed because 'Get-Package' may not exist yet.
         Install-Module -Name PowerShellGet -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue >$null
         if ($?) {
@@ -154,9 +52,9 @@ Function Initialize-PowerShell {
         else {
             Write-Host "Failed to install and update 'PowerShellGet' module."
         }
+    }
 
-        Import-Module PowerShellGet
-
+    try {
         #
         # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
         #
@@ -164,9 +62,25 @@ Function Initialize-PowerShell {
         # of a cmdlet, function, script file, or operable program."
         #
         Import-Module PackageManagement
+
+        # Now install the NuGet package provider if possible.
+        $nuget = Get-PackageProvider -Name NuGet
+        if ($null -eq $nuget) {
+            Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue >$null
+            if ($?) {
+                Write-Host "✔ Installed 'NuGet' package provider."
+            }
+            else {
+                Write-Host "❌ Failed to install 'NuGet' package source. $NugetPackage"
+            }
+        }
+        else {
+            Write-Host "✔ 'NuGet' package provider already installed."
+        }
+
     }
     catch [Exception] {
-        Write-Host "Failed to install NuGet package provider", $_.Exception.Message
+        Write-Host "❌ Failed to import PowerShell package management.", $_.Exception.Message
     }
 
     # Set Microsoft PowerShell Gallery to 'Trusted' as this is needed for packages
@@ -180,48 +94,56 @@ Function Initialize-PowerShell {
             else {
                 Register-PSRepository -Name PSGallery -SourceLocation "https://www.powershellgallery.com/api/v2/" -InstallationPolicy Trusted
             }
-            Write-Host "Registered 'PSGallery' repository."
+            Write-Host "✔ Registered 'PSGallery' repository."
         }
         else {
-            Write-Host "Already registered 'PSGallery' repository."
+            Write-Host "✔ Already registered 'PSGallery' repository."
         }
     }
     catch [Exception] {
-        Write-Host "Failed to add repository.", $_.Exception.Message
+        Write-Host "❌ Failed to add repository.", $_.Exception.Message
     }
 
     try {
         if ($null -eq (Get-InstalledModule -Name "WindowsConsoleFonts" -ErrorAction SilentlyContinue)) {
             Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -ErrorAction SilentlyContinue >$null
             if ($?) {
-                Write-Host "Installed 'WindowsConsoleFonts' module."
+                Write-Host "✔ Installed 'WindowsConsoleFonts' module."
             }
+        }
+        else {
+            Write-Host "✔ 'WindowsConsoleFonts' module already installed."
         }
     }
     catch [Exception] {
-        Write-Host "Failed to install WindowsConsoleFonts.", $_.Exception.Message
+        Write-Host "❌ Failed to install 'WindowsConsoleFonts' module.", $_.Exception.Message
     }
 
     try {
         if ($null -eq (Get-InstalledModule -Name "Terminal-Icons" -ErrorAction SilentlyContinue)) {
             Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck -Repository PSGallery
-            Write-Host "Installed 'Terminal-Icons' module."
+            Write-Host "✔ Installed 'Terminal-Icons' module."
+        }
+        else {
+            Write-Host "✔ 'Terminal-Icons' module already installed."
         }
     }
     catch [Exception] {
-        Write-Host "Failed to install 'Terminal-Icons' module.", $_.Exception.Message
+        Write-Host "❌ Failed to install 'Terminal-Icons' module.", $_.Exception.Message
     }
 
     try {
-        if ($null -eq (Get-InstalledModule -Name "PSReadLine" -ErrorAction SilentlyContinue)) {
-            Install-Module -Name PSReadLine -Scope CurrentUser -ErrorAction SilentlyContinue -Force -SkipPublisherCheck >$null
-            if ($?) {
-                Write-Host "Installed 'PSReadLine' module."
-            }
-        }
+        Import-Module PSReadLine
+        Write-Host "✔ 'PSReadLine' module already installed."
     }
     catch {
-        Write-Host "Failed to install 'PSReadLine' module.", $_.Exception.Message
+        try {
+            Install-Module -Name PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck >$null
+            Write-Host "✔ Installed 'PSReadLine' module."
+        }
+        catch {
+            Write-Host "❌ Failed to install 'PSReadLine' module.", $_.Exception.Message
+        }
     }
 
     # https://ohmyposh.dev/
@@ -229,27 +151,33 @@ Function Initialize-PowerShell {
         if ($null -eq (Get-InstalledModule -Name "oh-my-posh" -ErrorAction SilentlyContinue)) {
             Install-Module -Name oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck >$null
             if ($?) {
-                Write-Host "Installed 'oh-my-posh' module."
+                Write-Host "✔ Installed 'oh-my-posh' module."
             }
+        }
+        else {
+            Write-Host "✔ 'oh-my-posh' module already installed."
         }
     }
     catch [Exception] {
-        Write-Host "Failed to install 'oh-my-posh' module.", $_.Exception.Message
+        Write-Host "❌ Failed to install 'oh-my-posh' module.", $_.Exception.Message
     }
 
     try {
         if ($null -eq (Get-InstalledModule -Name "posh-git" -ErrorAction SilentlyContinue)) {
             Install-Module -Name posh-git -Scope CurrentUser -Force -SkipPublisherCheck
             if ($?) {
-                Write-Host "Installed 'posh-git' module."
+                Write-Host "✔ Installed 'posh-git' module."
+            }
+            else {
+                Write-Host "✔ 'posh-git' module already installed."
             }
         }
     }
     catch [Exception] {
-        Write-Host "Failed to install 'posh-git' module.", $_.Exception.Message
+        Write-Host "❌ Failed to install 'posh-git' module.", $_.Exception.Message
     }
 
-    Write-Host "Initialized PowerShell environment."
+    Write-Host "✔ Initialized PowerShell environment."
 }
 
 Initialize-PowerShell

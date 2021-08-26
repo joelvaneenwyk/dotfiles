@@ -535,7 +535,14 @@ function _stow_internal() {
         fi
 
         if [ "$_remove" = "1" ]; then
-            rm -rf "$_target"
+            if [ -f "$_source" ]; then
+                rm -f "$_target" >/dev/null 2>&1 || true
+            elif [ -d "$_source" ]; then
+                # Remove empty directories in target
+                find "$_target" -type d -empty -delete >/dev/null 2>&1 || true
+                rm -df "$_target" >/dev/null 2>&1 || true
+            fi
+
             if [ -L "$_target" ]; then
                 echo "UNLINKED: '$_target'"
             else
@@ -568,9 +575,11 @@ function _stow() {
                     _stow_internal "$_source" "$_target" "$@"
                 done
             else
+                # Remove files from directories first and then the directory but only if
+                # it is empty.
                 {
-                    git -C "$MYCELIO_ROOT" ls-tree -d --name-only -r HEAD "$_package"
                     git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$_package"
+                    git -C "$MYCELIO_ROOT" ls-tree -d --name-only -r HEAD "$_package"
                 } | while IFS= read -r line; do
                     _source="${MYCELIO_ROOT%/}/$line"
                     _target="${_target_path%/}/${line/$_package\//}"
