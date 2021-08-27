@@ -115,7 +115,7 @@ jobs:
         run: |
           echo 'Running 'Mycelio' environment setup in MSYS2!'
           pwd
-          mv "$GITHUB_WORKSPACE/" "$HOME/"
+          mv $(cygpath "$GITHUB_WORKSPACE/") "$HOME/"
           cd "$HOME"
           pwd
           ./dotfiles/init.sh --clean --force
