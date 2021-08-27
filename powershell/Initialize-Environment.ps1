@@ -150,17 +150,19 @@ Function Initialize-Environment {
                 Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
 
                 # Windows Defender may slow down or disrupt installs with realtime scanning.
+                Import-Module Defender
                 sudo Add-MpPreference -ExclusionPath "C:\Users\$env:USERNAME\scoop"
                 sudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
             }
         }
 
         try {
-            scoop update
-
+            # Make sure git is installed first as scoop uses git to update itself
             if (-not(Test-CommandExists "git")) {
                 scoop install "git"
             }
+
+            scoop update
 
             if (-not(Test-CommandExists "sudo")) {
                 scoop install "sudo"

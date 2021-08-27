@@ -53,19 +53,12 @@ Function Initialize-PowerShell {
     if ($?) {
         Write-Host "✔ Imported 'PackageManagement' module."
 
-        # Now install the NuGet package provider if possible.
-        $nuget = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue >$null
-        if ($? -and ($null -ne $nuget)) {
-            Write-Host "✔ 'NuGet' package provider already installed."
+        Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue >$null
+        if ($?) {
+            Write-Host "✔ Installed 'NuGet' package provider."
         }
         else {
-            Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue >$null
-            if ($?) {
-                Write-Host "✔ Installed 'NuGet' package provider."
-            }
-            else {
-                Write-Host "❌ Failed to install 'NuGet' package source. $NugetPackage"
-            }
+            Write-Host "❌ Failed to install 'NuGet' package source. $NugetPackage"
         }
     }
     else {

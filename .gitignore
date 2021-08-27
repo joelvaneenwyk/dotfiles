@@ -22,6 +22,8 @@ fish/.config/fish/functions/fundle.fish
 fish/.config/fish/functions/fzf_key_bindings.fish
 fish/.config/fish/fundle/
 
+linux/.config/micro/buffers/
+
 vim/.vim/plugged/
 
 xmonad/.xmonad/xmonad-x86_64-linux

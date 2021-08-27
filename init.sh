@@ -383,12 +383,17 @@ function install_hugo {
 
 function install_go {
     _local_root="$MYCELIO_HOME/.local"
+
     _local_go_root="$_local_root/go"
     _go_exe="$_local_go_root/bin/go"
+
+    _local_go_bootstrap_root="$_local_root/gobootstrap"
+    _go_bootstrap_exe="$_local_go_bootstrap_root/bin/go"
     _go_requires_update=0
 
     if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
         rm -rf "$_local_go_root"
+        rm -rf "$_local_go_bootstrap_root"
     fi
 
     if [ -f "$_go_exe" ] && _go_version="$("$_go_exe" version 2>&1 | (
@@ -408,7 +413,31 @@ function install_go {
         _go_compiled=0
 
         # https://golang.org/doc/install/source
-        if [ -x "$(command -v go)" ] && [ -x "$(command -v gcc)" ] && [ -x "$(command -v make)" ]; then
+        _go_bootstrap_src_archive="$MYCELIO_TEMP/go_bootstrap.tgz"
+        wget --quiet -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
+        echo "Extracting 'go' source: '$_go_bootstrap_src_archive'"
+        tar -C "$_local_root" -xzf "$_go_bootstrap_src_archive"
+        mv "$_local_root/go" "$_local_go_bootstrap_root"
+        rm "$_go_bootstrap_src_archive"
+
+        echo "Compiling 'go' 1.4 bootstrap from source: '$_local_go_bootstrap_root/src'"
+        if (
+            # shellcheck disable=SC2031
+            export CGO_ENABLED=0
+            cd "$_local_go_bootstrap_root/src"
+            if [ -x "$(command -v cygpath)" ]; then
+                cmd /c "make.bat"
+            else
+                ./make.bash
+            fi
+        ); then
+            echo "Successfully compiled 'go' bootstrap from source."
+        else
+            echo "Failed to compile 'go' bootstrap from source."
+        fi
+
+        # https://golang.org/doc/install/source
+        if [ -f "$_go_bootstrap_exe" ] && [ -x "$(command -v gcc)" ] && [ -x "$(command -v make)" ]; then
             _go_src_archive="$MYCELIO_TEMP/go.tgz"
             wget --quiet -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
 
@@ -419,6 +448,9 @@ function install_go {
             echo "Compiling 'go' from source: '$_local_go_root/src'"
             if (
                 cd "$_local_go_root/src"
+
+                GOROOT_BOOTSTRAP="$_local_go_bootstrap_root"
+                export GOROOT_BOOTSTRAP
 
                 GOHOSTOS="$MYCELIO_OS"
                 export GOHOSTOS
@@ -567,7 +599,7 @@ function _stow() {
     _target_path="$MYCELIO_HOME"
 
     for _package in "$@"; do
-        if [[ ! $_package == -* ]]; then
+        if [ -d "$MYCELIO_ROOT/$_package" ] && [[ ! $_package == -* ]]; then
             if [ ! -x "$(command -v git)" ] || [ ! -d "$MYCELIO_ROOT/.git" ]; then
                 _root="$MYCELIO_ROOT/$_package"
                 find "$_root" -maxdepth 1 -type f -print0 | while IFS= read -r -d $'\0' file; do
@@ -634,9 +666,11 @@ function _stow_packages() {
 
 function configure_linux() {
     if [ "$MYCELIO_REFRESH_ENVIRONMENT" = "1" ] || [ "$MYCELIO_FORCE" = "1" ]; then
+        echo "Removing leftover mycelium dots..."
         _stow_packages --delete
     fi
 
+    echo "Connecting the mycelium..."
     if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
         _stow_packages --restow
     else
@@ -734,7 +768,7 @@ function install_micro_text_editor() {
 
     if [ -f "$_tmp_micro/$_micro_exe" ]; then
         rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
-        mv "$_micro_exe" "$MYCELIO_HOME/.local/bin/"
+        mv "$_tmp_micro/$_micro_exe" "$MYCELIO_HOME/.local/bin/"
     fi
 
     return 0

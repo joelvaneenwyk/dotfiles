@@ -36,7 +36,57 @@
 
     "xml.validation.enabled": false,
 
+    "terminal.integrated.confirmOnExit": "always",
+    "terminal.integrated.showExitAlert": true,
+    "terminal.integrated.cwd": "${workspaceFolder}",
+
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "terminal.integrated.profiles.windows": {
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell"
+        },
+        "Command Prompt": {
+            "path": [
+                "${env:windir}\\Sysnative\\cmd.exe",
+                "${env:windir}\\System32\\cmd.exe"
+            ],
+            "args": [],
+            "icon": "terminal-cmd"
+        },
+        "MSYS2": {
+            "path": [
+                "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\bash.exe"
+            ],
+            "args": [
+                "--login", "-i"
+            ],
+            "env": {
+                "MSYSTEM": "MINGW64",
+                "CHERE_INVOKING": "1",
+                "MSYS2_PATH_TYPE": "inherit"
+            },
+            "icon": "terminal-bash"
+        },
+        "Fish": {
+            "path": [
+                "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\fish.exe"
+            ],
+            "args": [
+                "--login", "-i"
+            ],
+            "env": {
+                "MSYSTEM": "MSYS2",
+                "CHERE_INVOKING": "1",
+                "MSYS2_PATH_TYPE": "inherit"
+            },
+            "icon": "terminal"
+        },
+        "Git Bash": {
+            "source": "Git Bash",
+            "icon": "terminal-bash"
+        }
+    },
 
     "terminal.integrated.defaultProfile.osx": "fish",
     "terminal.integrated.profiles.osx": {
@@ -73,9 +123,6 @@
         }
     },
 
-    "terminal.integrated.confirmOnExit": "always",
-    "terminal.integrated.showExitAlert": true,
-    "terminal.integrated.cwd": "${workspaceFolder}",
     "terminal.integrated.defaultProfile.linux": "bash",
     "terminal.integrated.profiles.linux": {
         "sh": {
