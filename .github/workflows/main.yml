@@ -116,7 +116,7 @@ jobs:
           echo 'Running 'Mycelio' environment setup in MSYS2!'
           pwd
           rm -rf "$HOME/dotfiles"
-          cp -af $(cygpath "$GITHUB_WORKSPACE/") "$HOME/dots/"
+          cp --dereference -af $(cygpath "$GITHUB_WORKSPACE/") "$HOME/dots/"
           cd "$HOME"
           pwd
           ./dots/init.sh --clean --force
