@@ -359,9 +359,9 @@ _initialize_profile() {
         IFS="${IFS% }"
 
         # shellcheck disable=SC2013
-        for _line in $(grep -v '^#.*' "$dotenv"); do
+        for _line in $(grep -v '^#.*' "$dotenv" || ""); do
             if [ -n "${_line:-}" ]; then
-                eval "export $_line"
+                eval "export $_line" >/dev/null 2>&1 || true
             fi
         done
 

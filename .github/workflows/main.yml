@@ -102,18 +102,18 @@ jobs:
         shell: msys2 {0}
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
           update: true
 
+      - uses: actions/checkout@v2
+        with:
+          path: dotfiles/
+          submodules: recursive
+
       - name: Initialize environment
         run: |
           echo 'Running 'Mycelio' environment setup in MSYS2!'
-          cp -a ./ ~/dotfiles
-          cd ~/dotfiles
+          cd dotfiles
           ./init.sh --clean --force

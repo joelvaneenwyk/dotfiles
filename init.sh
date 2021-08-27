@@ -18,7 +18,6 @@ function __print_stack() {
             ((++index))
         done
 
-        echo "  > Callstack:"
         printf "%b\n" "$callstack" >&2
     fi
 
@@ -67,12 +66,12 @@ function __trap_error() {
     # This only exists in a few shells e.g. bash
     # shellcheck disable=SC2039,SC3044
     if _caller="$(caller 2>&1)"; then
-        echo "  > Caller: '${_caller:-UNKNOWN}'"
+        echo "  - Caller: '${_caller:-UNKNOWN}'"
     fi
 
-    echo "  > Command: '${BASH_COMMAND:-UNKNOWN}'"
-    echo "  > Code: '${_retval:-}'"
-
+    echo "  - Command: '${BASH_COMMAND:-UNKNOWN}'"
+    echo "  - Code: '${_retval:-}'"
+    echo "  - Callstack:"
     __print_stack "$@"
 
     # We always exit immediately on error
@@ -782,7 +781,7 @@ function initialize_linux() {
         echo "" >>"$dotenv"
     fi
 
-    if ! grep -q "MYCELIO_ROOT" "$dotenv"; then
+    if ! grep -q "MYCELIO_ROOT=$MYCELIO_ROOT" "$dotenv"; then
         echo "MYCELIO_ROOT=$MYCELIO_ROOT" >>"$dotenv"
         echo "Added 'MYCELIO_ROOT' to dotenv file: '$dotenv'"
     fi
