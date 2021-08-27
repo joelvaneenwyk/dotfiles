@@ -629,7 +629,7 @@ function _stow() {
 
         _return_code=0
         echo "##[cmd] stow ${_stow_args[*]}"
-        if "$_stow_bin" "${_stow_args[@]}" 2>&1 | grep -v "BUG in find_stowed_path"; then
+        if perl -I "$MYCELIO_ROOT/source/stow/lib" "$_stow_bin" "${_stow_args[@]}" 2>&1 | grep -v "BUG in find_stowed_path"; then
             _return_code="${PIPESTATUS[0]}"
         else
             _return_code="${PIPESTATUS[0]}"
@@ -649,6 +649,7 @@ function _stow_packages() {
     _stow "$@" linux
     _stow "$@" bash
     _stow "$@" zsh
+    _stow "$@" micro
     _stow "$@" fonts
     _stow "$@" ruby
     _stow "$@" vim
@@ -795,6 +796,7 @@ function initialize_linux() {
         # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
         rm -f /var/lib/pacman/db.lck
 
+        pacman -Fy
         pacman -Syu --quiet --noconfirm
         pacman -S --quiet --noconfirm --needed \
             msys2-keyring curl wget unzip \
@@ -841,7 +843,6 @@ function initialize_linux() {
         DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y --no-install-recommends \
             tzdata git wget curl unzip xclip \
             software-properties-common build-essential gcc g++ make automake autoconf golang \
-            texinfo \
             stow tmux neofetch fish \
             python3 python3-pip \
             fontconfig
@@ -881,7 +882,7 @@ function initialize_linux() {
         install_hugo || true
     fi
 
-    _build_stow
+    _stow_make
 
     # Optional dependency so ignore errors
     install_micro_text_editor || true
@@ -970,7 +971,7 @@ function initialize_linux() {
 #
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
-function _build_stow() {
+function _stow_make() {
     if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
         rm -f "$MYCELIO_ROOT/source/stow/bin/stow"
         rm -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm"
@@ -1003,7 +1004,7 @@ function _build_stow() {
 
     if [ ! -f "$MYCELIO_ROOT/source/stow/configure.ac" ]; then
         echo "❌ 'stow' source not available: '$MYCELIO_ROOT/source/stow'"
-    elif [ -f "$MYCELIO_ROOT/source/stow/bin/stow" ]; then
+    elif [ -f "$MYCELIO_ROOT/source/stow/bin/stow" ] && [ -f "$MYCELIO_ROOT/source/stow/lib/Stow.pm" ]; then
         echo "✔ Custom 'stow' binary already built from source."
     elif (
         # Move to source directory and start install.
@@ -1014,7 +1015,7 @@ function _build_stow() {
         ./configure --prefix="" 2>&1 | awk '{ print "[stow.configure]", $0 }'
 
         # Documentation part is expected to fail but we can ignore that
-        make --keep-going --ignore-errors 2>&1 | awk '{ print "[stow.make]", $0 }'
+        make bin/stow bin/chkstow lib/Stow.pm lib/Stow/Util.pm
 
         rm -f "./configure~"
         git checkout -- "./aclocal.m4" || true

@@ -307,8 +307,8 @@ _initialize_go_paths() {
 
 _initialize_windows() {
     if [ -d "${MYCELIO_ROOT:-}" ]; then
-        _add_path "prepend" "$MYCELIO_ROOT/.tmp/texlive/bin/win32"
-        alias stow='perl -I "$MYCELIO_STOW_ROOT/lib" "$MYCELIO_STOW_ROOT/bin/stow"'
+        _add_path "prepend" "$HOME/.tmp/texlive/bin/win32"
+        alias stow='perl -I "$MYCELIO_ROOT/source/stow/lib" "$MYCELIO_ROOT/source/stow/bin/stow"'
     fi
 }
 
@@ -373,10 +373,9 @@ _initialize_profile() {
     fi
 
     export LD_PRELOAD=
-    export MYCELIO_STOW_ROOT=$MYCELIO_ROOT/source/stow
 
     # Need library path for 'stow' to work from compiled version
-    PERL5LIB="$(_add_to_list "$PERL5LIB" "$MYCELIO_STOW_ROOT/lib")"
+    PERL5LIB="$(_add_to_list "$PERL5LIB" "$MYCELIO_ROOT/source/stow/lib")"
     PERL5LIB="$(_add_to_list "$PERL5LIB" "$HOME/perl5/lib/perl5")"
     export PERL5LIB
 
@@ -400,7 +399,11 @@ _initialize_profile() {
     _add_path "prepend" "$HOME/.local/bin"
     _add_path "prepend" "$HOME/.local/sbin"
     _add_path "prepend" "$HOME/.config/git-fuzzy/bin"
-    _add_path "prepend" "$MYCELIO_STOW_ROOT/bin"
+    _add_path "prepend" "$MYCELIO_ROOT/source/stow/bin"
+
+    if [ -f "/mingw64/bin/tex.exe" ]; then
+        export TEX="/mingw64/bin/tex.exe"
+    fi
 
     _initialize_go_paths
 

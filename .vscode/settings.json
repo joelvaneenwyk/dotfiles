@@ -11,9 +11,11 @@
         "**/default.mustache": true,
         "**/source/stow/**/*.sh": true,
         "**/fish/.config/**/*.sh": true,
-        "**/fish/.config/base16-shell/**/*.sh": true,
-        "**/fish/.config/base16-fzf/**/*.sh": true,
-        "**/fish/.config/git-fuzzy/**/*.sh": true
+        "**/fish/.config/base16-shell/**/*": true,
+        "**/fish/.config/base16-fzf/**/*": true,
+        "**/fish/.config/git-fuzzy/**/*": true,
+        "**/test/bats/**/*": true,
+        "**/test/test_helper/**/*": true
     },
     "[shellscript]": {
         "editor.formatOnSave": true,
@@ -44,6 +46,7 @@
     "terminal.integrated.profiles.windows": {
         "PowerShell": {
             "source": "PowerShell",
+            "args": ["-nologo"],
             "icon": "terminal-powershell"
         },
         "Command Prompt": {
@@ -87,6 +90,11 @@
             "icon": "terminal-bash"
         }
     },
+
+    "stylelint.enable": false,
+
+    "powershell.integratedConsole.showOnStartup": false,
+    "powershell.integratedConsole.suppressStartupBanner": true,
 
     "terminal.integrated.defaultProfile.osx": "fish",
     "terminal.integrated.profiles.osx": {
@@ -210,17 +218,20 @@
         "**/node_modules/**",
         "**/vscode-extension/**",
         "**/.git/objects/**",
-        ".vscode",
-        ".vscode-insiders",
-        "source/stow/**",
-        ".Xresources",
-        ".xmobarrc",
+        ".vscode/**",
+        ".vscode-insiders/**",
+        "**/source/stow/**/*",
         "windows/clink-completions/**",
+        "fish/.base16_theme",
         "fish/.config/base16-shell/**",
         "fish/.config/base16-fzf/**",
         "fish/.config/git-fuzzy/**",
         "fish/.config/fish/fish_variables",
-        "linux/.config/micro/settings.json"
+        "linux/.config/micro/settings.json",
+        "test/bats/**",
+        ".Xresources",
+        ".xmobarrc",
+        ".travis.yml"
     ],
     "cSpell.words": [
         "asdf",
@@ -233,6 +244,10 @@
         "fundle",
         "joelvaneenwyk",
         "kleopatra",
+        "mingw",
+        "msys",
+        "msystem",
+        "mycelio",
         "noconfirm",
         "pacman",
         "qemu",
@@ -246,6 +261,7 @@
         "synoservicectl",
         "tldr",
         "xclip",
-        "xmonad"
+        "xmonad",
+        "yabai"
     ]
 }
