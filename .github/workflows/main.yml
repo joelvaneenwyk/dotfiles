@@ -109,11 +109,13 @@ jobs:
 
       - uses: actions/checkout@v2
         with:
-          path: dotfiles/
           submodules: recursive
 
       - name: Initialize environment
         run: |
           echo 'Running 'Mycelio' environment setup in MSYS2!'
-          cd dotfiles
-          ./init.sh --clean --force
+          pwd
+          mv "$GITHUB_WORKSPACE/" "$HOME/"
+          cd "$HOME"
+          pwd
+          ./dotfiles/init.sh --clean --force
