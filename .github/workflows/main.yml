@@ -96,9 +96,11 @@ jobs:
 
   msys2:
     runs-on: windows-latest
+
     defaults:
       run:
         shell: msys2 {0}
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -112,4 +114,6 @@ jobs:
       - name: Initialize environment
         run: |
           echo 'Running 'Mycelio' environment setup in MSYS2!'
+          cp -a ./ ~/dotfiles
+          cd ~/dotfiles
           ./init.sh --clean --force
