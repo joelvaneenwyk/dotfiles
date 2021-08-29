@@ -355,13 +355,11 @@ function install_hugo {
 
             # No support for GCC on Synology so not able to build extended features
             if ! uname -a | grep -q "synology"; then
-                export CGO_ENABLED="1"
                 echo "##[cmd] $_go_exe install --tags extended"
-                "$_go_exe" install --tags extended
+                CGO_ENABLED="1" "$_go_exe" install --tags extended
             else
-                export CGO_ENABLED="0"
                 echo "##[cmd] $_go_exe install"
-                "$_go_exe" install
+                CGO_ENABLED="0" "$_go_exe" install
             fi
         ); then
             echo "Successfully installed 'hugo' site builder."
@@ -376,6 +374,198 @@ function install_hugo {
     fi
 
     "$_hugo_exe" version
+
+    return 0
+}
+
+function install_oh_my_posh {
+    _go_exe="$MYCELIO_GOBIN/go"
+    _oh_my_posh_tmp="$MYCELIO_TEMP/oh_my_posh"
+
+    if [ "$MYCELIO_OS" = "windows" ]; then
+        _exe_extension=".exe"
+    else
+        _exe_extension=""
+    fi
+
+    _oh_my_posh_exe="$MYCELIO_GOBIN/oh-my-posh$_exe_extension"
+
+    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+        rm -rf "$_oh_my_posh_tmp"
+    fi
+
+    if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
+        echo "Skipped install of 'oh-my-posh' for root user."
+        return 0
+    fi
+
+    if [ -f "$_oh_my_posh_exe" ]; then
+        echo "✔ 'oh-my-posh' already installed."
+        return 0
+    fi
+
+    if [ ! -x "$(command -v git)" ]; then
+        echo "❌ Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
+        return 1
+    fi
+
+    if [ ! -f "$_go_exe" ]; then
+        echo "❌ Failed to install 'oh-my-posh' extension. Missing 'go' compiler: '$_go_exe'"
+        return 2
+    fi
+
+    if [ -f "$_go_exe" ]; then
+        mkdir -p "$_oh_my_posh_tmp"
+        rm -rf "$_oh_my_posh_tmp"
+        git -c advice.detachedHead=false clone -b "v3.175.0" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
+
+        if (
+            cd "$_oh_my_posh_tmp/src"
+
+            # We only modify the environment for this subshell and that is the expectation
+            # so we ignore the warnings here.
+            # shellcheck disable=SC2030,SC2031
+            export GOROOT="$MYCELIO_GOROOT"
+            # shellcheck disable=SC2030,SC2031
+            export GOBIN="$MYCELIO_GOBIN"
+
+            "$_go_exe" install
+        ); then
+            echo "Successfully installed 'oh-my-posh' site builder."
+        else
+            echo "Failed to install 'oh-my-posh' site builder."
+        fi
+    fi
+
+    if [ ! -f "$_oh_my_posh_exe" ]; then
+        echo "❌ Failed to install 'oh_my_posh' static site builder."
+        return 3
+    fi
+
+    "$_oh_my_posh_exe" version
+
+    #if [ ! -f "$_local_bin/oh-my-posh$_exe_extension" ]; then
+    #    _local_bin="$MYCELIO_HOME/.local/bin"
+    #    mkdir -p "$_local_bin"
+    #    _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$_exe_extension"
+    #    _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
+    #    if wget --quiet "$_posh_url" -O "$_local_bin/oh-my-posh$_exe_extension"; then
+    #        chmod +x "$_local_bin/oh-my-posh$_exe_extension"
+    #    else
+    #        echo "Unsupported platform for installing 'oh-my-posh' extension."
+    #    fi
+    #fi
+
+    if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
+        _posh_themes="$MYCELIO_HOME/.poshthemes"
+        mkdir -p "$_posh_themes"
+        wget --quiet "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
+
+        if [ -x "$(command -v unzip)" ]; then
+            unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
+        elif [ -x "$(command -v 7z)" ]; then
+            7z e "$_posh_themes/themes.zip" -o"$_posh_themes" -r
+        else
+            echo "Neither 'unzip' nor '7z' commands available to extract oh-my-posh themes."
+        fi
+
+        chmod u+rw ~/.poshthemes/*.json
+        rm -f "$_posh_themes/themes.zip"
+    fi
+
+    font_base_name="JetBrains Mono"
+    font_base_filename=${font_base_name// /}
+    font_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$font_base_filename.zip"
+    _fonts_path="$MYCELIO_HOME/.fonts"
+
+    if [ ! -f "$_fonts_path/JetBrains Mono Regular Nerd Font Complete.ttf" ]; then
+        mkdir -p "$_fonts_path"
+        wget --quiet "$font_url" -O "$_fonts_path/$font_base_filename.zip"
+
+        if [ -x "$(command -v unzip)" ]; then
+            unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
+        elif [ -x "$(command -v 7z)" ]; then
+            7z e "$_fonts_path/$font_base_filename.zip" -o"$_fonts_path" -r
+        else
+            echo "Neither 'unzip' nor '7z' commands available to extract fonts."
+        fi
+
+        chmod u+rw ~/.fonts
+        rm -f "$_fonts_path/$font_base_filename.zip"
+
+        if [ -x "$(command -v fc-cache)" ]; then
+            if fc-cache -fv >/dev/null 2>&1; then
+                echo "Flushed font cache."
+            else
+                echo "Failed to flush font cache."
+            fi
+        else
+            echo "Unable to flush font cache as 'fc-cache' is not installed"
+        fi
+    fi
+
+    return 0
+}
+
+function install_fzf {
+    _fzf_tmp="$MYCELIO_TEMP/fzf"
+    _local_root="$MYCELIO_HOME/.local"
+
+    if [ "$MYCELIO_OS" = "windows" ]; then
+        _exe_extension=".exe"
+    else
+        _exe_extension=""
+    fi
+
+    _fzf_exe="$_local_root/bin/fzf$_exe_extension"
+
+    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+        rm -rf "$_fzf_tmp"
+    fi
+
+    if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
+        echo "Skipped install of 'fzf' for root user."
+        return 0
+    fi
+
+    if [ -f "$_fzf_exe" ]; then
+        echo "✔ 'fzf' already installed."
+        return 0
+    fi
+
+    if [ ! -x "$(command -v git)" ]; then
+        echo "❌ Failed to install 'fzf' extension. Required 'git' tool missing."
+        return 1
+    fi
+
+    if [ ! -f "$_go_exe" ]; then
+        echo "❌ Failed to install 'fzf' extension. Missing 'go' compiler: '$_go_exe'"
+        return 2
+    fi
+
+    if [ -f "$_go_exe" ]; then
+        mkdir -p "$_fzf_tmp"
+        rm -rf "$_fzf_tmp"
+        git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_tmp"
+
+        if (
+            cd "$_fzf_tmp"
+            make all bin/fzf
+        ); then
+            echo "Successfully generated 'fzf' utility with 'go' compiler."
+            mv "$_fzf_tmp/bin/fzf" "$_local_root/bin"
+            mv "$_fzf_tmp/bin/fzf-tmux" "$_local_root/bin"
+        else
+            echo "Failed to install 'fzf' utility."
+        fi
+    fi
+
+    if [ ! -f "$_fzf_exe" ]; then
+        echo "❌ Failed to compile 'fzf' utility."
+        return 3
+    fi
+
+    "$_fzf_exe" version
 
     return 0
 }
@@ -679,8 +869,7 @@ function configure_linux() {
 
     mkdir -p "$MYCELIO_HOME/.config/fish/functions"
 
-    # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to
-    # install it.
+    # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to install it.
     _binding_link="$MYCELIO_HOME/.config/fish/functions/fzf_key_bindings.fish"
     _binding_file="/usr/local/opt/fzf/shell/key-bindings.fish"
     if [ -f "$_binding_file" ] && [ ! -f "$_binding_link" ]; then
@@ -709,18 +898,18 @@ function configure_linux() {
     fi
 
     _gnupg_config_root="$MYCELIO_HOME/.gnupg"
-    _gnupg_templates_root="$MYCELIO_ROOT/templates/.gnupg"
+    _gnupg_templates_root="$MYCELIO_ROOT/source/gnupg"
     mkdir -p "$_gnupg_config_root"
 
     rm -f "$_gnupg_config_root/gpg-agent.conf"
-    cp "$_gnupg_templates_root/gpg-agent.conf" "$_gnupg_config_root/gpg-agent.conf"
+    cp "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
     if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
         echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gnupg_config_root/gpg-agent.conf"
     fi
     echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"
 
     rm -f "$_gnupg_config_root/gpg.conf"
-    cp "$_gnupg_templates_root/gpg.conf" "$_gnupg_config_root/gpg.conf"
+    cp "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
     echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
 }
 
@@ -824,7 +1013,7 @@ function initialize_linux() {
 
         sudo apk add \
             tzdata git wget curl unzip xclip \
-            build-base gcc g++ make musl-dev go \
+            build-base gcc g++ make musl-dev go perl-utils \
             stow tmux neofetch fish \
             python3 py3-pip \
             fontconfig openssl gnupg
@@ -881,82 +1070,14 @@ function initialize_linux() {
         install_hugo || true
     fi
 
-    _stow_make
+    _install_stow
 
     # Optional dependency so ignore errors
     install_micro_text_editor || true
 
-    if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
-        echo "Skipped install of 'oh-my-posh' for root user."
-    else
-        if [ ! -x "$(command -v oh-my-posh)" ]; then
-            _local_bin="$MYCELIO_HOME/.local/bin"
-            mkdir -p "$_local_bin"
+    install_fzf || true
 
-            if [ "$MYCELIO_OS" = "windows" ]; then
-                _posh_extension=".exe"
-            else
-                _posh_extension=""
-            fi
-
-            _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$_posh_extension"
-            _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
-
-            if wget --quiet "$_posh_url" -O "$_local_bin/oh-my-posh$_posh_extension"; then
-                chmod +x "$_local_bin/oh-my-posh$_posh_extension"
-            else
-                echo "Unsupported platform for installing 'oh-my-posh' extension."
-            fi
-        fi
-
-        font_base_name="JetBrains Mono"
-        font_base_filename=${font_base_name// /}
-        font_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$font_base_filename.zip"
-        _fonts_path="$MYCELIO_HOME/.fonts"
-
-        if [ ! -f "$_fonts_path/JetBrains Mono Regular Nerd Font Complete.ttf" ]; then
-            mkdir -p "$_fonts_path"
-            wget --quiet "$font_url" -O "$_fonts_path/$font_base_filename.zip"
-
-            if [ -x "$(command -v unzip)" ]; then
-                unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
-            elif [ -x "$(command -v 7z)" ]; then
-                7z e "$_fonts_path/$font_base_filename.zip" -o"$_fonts_path" -r
-            else
-                echo "Neither 'unzip' nor '7z' commands available to extract fonts."
-            fi
-
-            chmod u+rw ~/.fonts
-            rm -f "$_fonts_path/$font_base_filename.zip"
-
-            if [ -x "$(command -v fc-cache)" ]; then
-                if fc-cache -fv >/dev/null 2>&1; then
-                    echo "Flushed font cache."
-                else
-                    echo "Failed to flush font cache."
-                fi
-            else
-                echo "Unable to flush font cache as 'fc-cache' is not installed"
-            fi
-        fi
-
-        if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
-            _posh_themes="$MYCELIO_HOME/.poshthemes"
-            mkdir -p "$_posh_themes"
-            wget --quiet "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
-
-            if [ -x "$(command -v unzip)" ]; then
-                unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
-            elif [ -x "$(command -v 7z)" ]; then
-                7z e "$_posh_themes/themes.zip" -o"$_posh_themes" -r
-            else
-                echo "Neither 'unzip' nor '7z' commands available to extract oh-my-posh themes."
-            fi
-
-            chmod u+rw ~/.poshthemes/*.json
-            rm -f "$_posh_themes/themes.zip"
-        fi
-    fi
+    install_oh_my_posh || true
 
     if [ ! -d "$MYCELIO_HOME/.asdf" ]; then
         if [ -x "$(command -v git)" ]; then
@@ -970,7 +1091,7 @@ function initialize_linux() {
 #
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
-function _stow_make() {
+function _install_stow() {
     if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
         rm -f "$MYCELIO_ROOT/source/stow/bin/stow"
         rm -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm"
@@ -1166,6 +1287,26 @@ function configure_macos_system() {
     echo "Configured system settings."
 }
 
+function _reload_profile() {
+    if [[ $(type -t _initialize_interactive_profile) == function ]]; then
+        _initialize_profile
+        _initialize_interactive_profile
+    elif [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
+        # Loading the profile may overwrite the root after it reads the '.env' file
+        # so we restore it afterwards.
+        _root=$MYCELIO_ROOT
+
+        # shellcheck source=linux/.profile
+        . "$MYCELIO_ROOT/linux/.profile"
+
+        # Restore previous root folder
+        export MYCELIO_ROOT="${_root:-MYCELIO_ROOT}"
+    fi
+
+    echo "Reloaded shell profile."
+
+    return 0
+}
 #
 # Minimal set of required environment variables that the rest of the script relies
 # on heavily to operate including setting up error handling. It is therefore critical
@@ -1201,17 +1342,7 @@ function main() {
 
     _setup_error_handling
 
-    if [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
-        # Loading the profile may overwrite the root after it reads the '.env' file
-        # so we restore it afterwards.
-        _root=$MYCELIO_ROOT
-
-        # shellcheck source=linux/.profile
-        . "$MYCELIO_ROOT/linux/.profile"
-
-        # Restore previous root folder
-        export MYCELIO_ROOT="${_root:-MYCELIO_ROOT}"
-    fi
+    _reload_profile
 
     if [ -x "$(command -v apk)" ]; then
         _arch_name="$(apk --print-arch)"
@@ -1257,27 +1388,25 @@ function main() {
 
     export MYCELIO_ARCH MYCELIO_386 MYCELIO_ARM
 
-    uname_system="$(uname -s)"
-    case "${uname_system}" in
+    MYCELIO_OS="$(uname -s)"
+    case "${MYCELIO_OS}" in
     Linux*)
-        export MYCELIO_OS='linux'
+        MYCELIO_OS='linux'
         ;;
     Darwin*)
-        export MYCELIO_OS='darwin'
+        MYCELIO_OS='darwin'
         ;;
     CYGWIN*)
-        export MYCELIO_OS='windows'
+        MYCELIO_OS='windows'
         ;;
     MINGW*)
-        export MYCELIO_OS='windows'
+        MYCELIO_OS='windows'
         ;;
     MSYS*)
-        export MYCELIO_OS='windows'
-        ;;
-    *)
-        export MYCELIO_OS="UNKNOWN:${uname_system}"
+        MYCELIO_OS='windows'
         ;;
     esac
+    export MYCELIO_OS
 
     # Assume we are fine with interactive prompts if necessary
     export MYCELIO_INTERACTIVE=1
@@ -1377,28 +1506,25 @@ function main() {
     # setup scripts to home directory.
     configure_linux "$@"
 
-    if [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
-        # shellcheck source=linux/.profile
-        . "$MYCELIO_ROOT/linux/.profile"
-        echo "Refreshed '${MYCELIO_OS}' profile data."
-    fi
+    _reload_profile
 
     if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
         DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
     fi
 
     # Remove intermediate files here to reduce size of Docker container layer
-    if [ -f "/.dockerenv" ]; then
+    if [ -f "/.dockerenv" ] && [ "$MYCELIO_REFRESH_ENVIRONMENT" = "1" ]; then
         rm -rf "$MYCELIO_TEMP" || true
         sudo rm -rf "/tmp/*" || true
         sudo rm -rf "/usr/tmp/*" || true
         sudo rm -rf "/var/lib/apt/lists/*" || true
+        echo "Removed intermediate temporary fails from Docker instance."
     fi
 
     _supports_neofetch=0
     if [ "$BASH_VERSION_MAJOR" -ge 4 ]; then
         _supports_neofetch=1
-    elif [ "$BASH_VERSION_MAJOR" -ge 3 ] && [ "$BASH_VERSION_MAJOR" -ge 2 ]; then
+    elif [ "$BASH_VERSION_MAJOR" -ge 3 ] && [ "$BASH_VERSION_MINOR" -ge 2 ]; then
         _supports_neofetch=1
     fi
 
@@ -1408,9 +1534,15 @@ function main() {
         _displayed_details=1
     fi
 
-    if [ "$_displayed_details" = "1" ]; then
-        echo "Initialized '${MYCELIO_OS}' machine."
+    if [ ! "$_displayed_details" = "1" ]; then
+        echo "Initialized '$MYCELIO_OS' machine."
     fi
+
+    return 0
 }
 
-main "$@"
+if ! main "$@"; then
+    echo "ERROR: Failed to initialize environment."
+fi
+
+trap - ERR
