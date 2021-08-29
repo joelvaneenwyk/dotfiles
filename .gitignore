@@ -35,6 +35,8 @@ xmonad/.xmonad/xmonad.o
 windows/clink/clink_history*
 windows/clink/clink.log
 
+source/vagrant/.vagrant/
+
 # Saved by 'micro' text editor by default
 log.txt
 
