@@ -78,6 +78,16 @@ function __trap_error() {
     __safe_exit ${_retval:-1}
 }
 
+function _remove_error_handling() {
+    trap - ERR || true
+    trap - DEBUG || true
+
+    # oh-my-posh adds an exit handler (see https://git.io/JEPIq) which we do not want firing so remove that
+    trap - EXIT || true
+
+    return 0
+}
+
 function _setup_error_handling() {
     export MYCELIO_DEBUG_TRAP_ENABLED=0
 
@@ -1288,9 +1298,9 @@ function configure_macos_system() {
 }
 
 function _reload_profile() {
-    if [[ $(type -t _initialize_interactive_profile) == function ]]; then
-        _initialize_profile
-        _initialize_interactive_profile
+    if [[ $(type -t initialize_interactive_profile) == function ]]; then
+        initialize_profile
+        initialize_interactive_profile
     elif [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
         # Loading the profile may overwrite the root after it reads the '.env' file
         # so we restore it afterwards.
@@ -1506,8 +1516,6 @@ function main() {
     # setup scripts to home directory.
     configure_linux "$@"
 
-    _reload_profile
-
     if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
         DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
     fi
@@ -1520,6 +1528,8 @@ function main() {
         sudo rm -rf "/var/lib/apt/lists/*" || true
         echo "Removed intermediate temporary fails from Docker instance."
     fi
+
+    _reload_profile
 
     _supports_neofetch=0
     if [ "$BASH_VERSION_MAJOR" -ge 4 ]; then
@@ -1545,4 +1555,4 @@ if ! main "$@"; then
     echo "ERROR: Failed to initialize environment."
 fi
 
-trap - ERR
+_remove_error_handling

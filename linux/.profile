@@ -98,7 +98,60 @@ _add_path() {
     export PATH
 }
 
-_initialize_interactive_profile() {
+_start_tmux() {
+    if ! { [ "$TERM" = "screen" ] && [ -n "$TMUX" ]; }; then
+        tmux new-session -d -s mycelio -n mycowin
+        tmux send-keys -t mycelio:mycowin "cd ~/workspace" Enter
+        tmux source-file ~/.tmux.conf
+        tmux attach -t mycelio:mycowin
+        setw -g mouse on
+        tmux
+        return 0
+    fi
+
+    return 1
+}
+
+_set_golang_paths() {
+    export MYCELIO_GOROOT="$HOME/.local/go"
+    export MYCELIO_GOBIN="$MYCELIO_GOROOT/bin"
+    mkdir -p "$MYCELIO_GOROOT"
+
+    _add_path "prepend" "${GOBIN:-}"
+    _add_path "prepend" "${MYCELIO_GOBIN:-}"
+
+    _go_exe="$MYCELIO_GOBIN/bin/go"
+    if [ -f "$_go_exe" ]; then
+        export GOROOT="" GOBIN="" GOPATH=""
+        "$_go_exe" env -u GOPATH
+        "$_go_exe" env -u GOROOT
+        "$_go_exe" env -u GOBIN
+    fi
+}
+
+_initialize_windows() {
+    if [ -d "${MYCELIO_ROOT:-}" ]; then
+        _add_path "prepend" "$HOME/.tmp/texlive/bin/win32"
+        alias stow='perl -I "$MYCELIO_ROOT/source/stow/lib" "$MYCELIO_ROOT/source/stow/bin/stow"'
+    fi
+}
+
+_initialize_synology() {
+    #This fixes the backspace when telnetting in.
+    #if [ "$TERM" != "linux" ]; then
+    #        stty erase
+    #fi
+
+    if [ "$(whoami)" = "root" ]; then
+        HOME="${HOME:-/root}"
+        export HOME
+
+        USERNAME=root
+        export USERNAME
+    fi
+}
+
+initialize_interactive_profile() {
     # make less more friendly for non-text input files, see lesspipe(1)
     [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
@@ -143,7 +196,7 @@ _initialize_interactive_profile() {
     *) ;;
     esac
 
-    # enable color support of ls
+    # Enable color support for 'ls'
     if [ -x /usr/bin/dircolors ]; then
         if [ -r "$HOME/.dircolors" ]; then
             eval "$(dircolors -b "$HOME/.dircolors")"
@@ -154,10 +207,6 @@ _initialize_interactive_profile() {
 
     # Colored GCC warnings and errors
     export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
-    if ! _parent="$(ps -o args= ${PPID:-0} 2>&1 | head -n 1)"; then
-        _parent="N/A"
-    fi
 
     MYCELIO_OS_NAME="UNKNOWN"
     MYCELIO_OS_VARIANT="$(uname -s)"
@@ -202,6 +251,12 @@ _initialize_interactive_profile() {
     if [ -x "$(command -v oh-my-posh)" ] && [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ] && [ "$_use_oh_my_posh" = "1" ]; then
         _shell=$(oh-my-posh --print-shell)
         eval "$(oh-my-posh --init --shell "$_shell" --config "$HOME/.poshthemes/stelbent.minimal.omp.json")"
+    fi
+
+    if [ "$MYCELIO_OS_NAME" = "Windows" ]; then
+        _parent="$(ps -p $$ --all | tail -n +2 | awk '{ print $8 }')"
+    elif ! _parent="$(ps -o args= ${PPID:-0} 2>&1 | head -n 1)"; then
+        _parent="N/A"
     fi
 
     alias gpgreset='gpg-connect-agent updatestartuptty /bye'
@@ -265,7 +320,7 @@ _initialize_interactive_profile() {
     echo "▓▓░░"
     echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
     echo ""
-    echo "Initialized '${MYCELIO_OS_NAME}:${MYCELIO_OS_VARIANT}' environment: '$MYCELIO_ROOT'"
+    echo "Initialized '${MYCELIO_OS_NAME:-UNKNOWN}:${MYCELIO_OS_VARIANT:-UNKNOWN}' environment: '${MYCELIO_ROOT:-}'"
     echo "Parent Process: $_parent"
     echo ""
     echo "  refresh     Try to pull latest 'dotfiles' and reload profile"
@@ -276,60 +331,7 @@ _initialize_interactive_profile() {
     return 0
 }
 
-_start_tmux() {
-    if ! { [ "$TERM" = "screen" ] && [ -n "$TMUX" ]; }; then
-        tmux new-session -d -s mycelio -n mycowin
-        tmux send-keys -t mycelio:mycowin "cd ~/workspace" Enter
-        tmux source-file ~/.tmux.conf
-        tmux attach -t mycelio:mycowin
-        setw -g mouse on
-        tmux
-        return 0
-    fi
-
-    return 1
-}
-
-_initialize_go_paths() {
-    export MYCELIO_GOROOT="$HOME/.local/go"
-    export MYCELIO_GOBIN="$MYCELIO_GOROOT/bin"
-    mkdir -p "$MYCELIO_GOROOT"
-
-    _add_path "prepend" "${GOBIN:-}"
-    _add_path "prepend" "${MYCELIO_GOBIN:-}"
-
-    _go_exe="$MYCELIO_GOBIN/bin/go"
-    if [ -f "$_go_exe" ]; then
-        export GOROOT="" GOBIN="" GOPATH=""
-        "$_go_exe" env -u GOPATH
-        "$_go_exe" env -u GOROOT
-        "$_go_exe" env -u GOBIN
-    fi
-}
-
-_initialize_windows() {
-    if [ -d "${MYCELIO_ROOT:-}" ]; then
-        _add_path "prepend" "$HOME/.tmp/texlive/bin/win32"
-        alias stow='perl -I "$MYCELIO_ROOT/source/stow/lib" "$MYCELIO_ROOT/source/stow/bin/stow"'
-    fi
-}
-
-_initialize_synology() {
-    #This fixes the backspace when telnetting in.
-    #if [ "$TERM" != "linux" ]; then
-    #        stty erase
-    #fi
-
-    if [ "$(whoami)" = "root" ]; then
-        HOME="${HOME:-/root}"
-        export HOME
-
-        USERNAME=root
-        export USERNAME
-    fi
-}
-
-_initialize_profile() {
+initialize_profile() {
     export EDITOR="micro"
     export PAGER="less -r"
     export LC_ALL="C"
@@ -407,7 +409,7 @@ _initialize_profile() {
         export TEX="/mingw64/bin/tex.exe"
     fi
 
-    _initialize_go_paths
+    _set_golang_paths
 
     case "$(uname -s)" in
     CYGWIN*)
@@ -429,7 +431,7 @@ _initialize_profile() {
         ;;
     esac
 
-    _initialize_interactive_profile
+    initialize_interactive_profile
 }
 
-_initialize_profile "$@"
+initialize_profile "$@"
