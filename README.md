@@ -45,6 +45,20 @@
 
 Instructions are provided below for each platform, but the high level approach for each is to clone the `git` repository and then run the initialization script for that platform.
 
+To install on platforms with `bash` you can do the following:
+
+```bash
+curl -sL git.io/mycelio | bash
+```
+
+This will clone the repository and run `init.sh`.
+
+This custom URL was created using the following command:
+
+```bash
+curl -i https://git.io -F "url=https://gist.githubusercontent.com/joelvaneenwyk/dfe24a255f77b2e14e67965391a3a8fe/raw/e05066832edc673c2e6d102888ff1f5be63b9a0e/dotclone.sh" -F "code=mycelio"
+```
+
 ### Windows
 
 1. Clone the repo from your home directory:

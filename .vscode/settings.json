@@ -93,9 +93,6 @@
 
     "stylelint.enable": false,
 
-    "powershell.integratedConsole.showOnStartup": false,
-    "powershell.integratedConsole.suppressStartupBanner": true,
-
     "terminal.integrated.defaultProfile.osx": "fish",
     "terminal.integrated.profiles.osx": {
         "sh": {
@@ -195,6 +192,8 @@
         "editor.formatOnSave": true,
         "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
     },
+    "powershell.integratedConsole.showOnStartup": false,
+    "powershell.integratedConsole.suppressStartupBanner": true,
     "powershell.scriptAnalysis.enable": true,
     "powershell.scriptAnalysis.settingsPath": "powershell/PSScriptAnalyzerSettings.psd1",
     "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,

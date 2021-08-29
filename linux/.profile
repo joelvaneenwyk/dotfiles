@@ -272,6 +272,8 @@ _initialize_interactive_profile() {
     echo "  micro       Default text editor. Press 'F2' to save and 'F4' to exit."
     echo "  gpgtest     Validate that git commit signing will work with secret key"
     echo ""
+
+    return 0
 }
 
 _start_tmux() {
