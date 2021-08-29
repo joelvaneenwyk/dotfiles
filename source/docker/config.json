@@ -1,0 +1,10 @@
+{
+    "registry-mirrors": [],
+    "insecure-registries": [],
+    "debug": false,
+    "experimental": true,
+    "data-root": "e:\\Docker\\Data",
+    "storage-opts": [
+        "size=160GB"
+    ]
+}
