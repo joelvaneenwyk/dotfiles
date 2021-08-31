@@ -74,18 +74,19 @@ Function Get-EnvironmentPathFolders {
     Return $PathArray
 }
 
-$root = Resolve-Path -Path "$PSScriptRoot\.."
+$dotfilesRoot = Resolve-Path -Path "$PSScriptRoot\..\.."
 
 $environmentVariables = @()
-$environmentVariables += "C:\Program Files\Git\bin"
-$environmentVariables += "$root"
-$environmentVariables += "$root\windows"
 $environmentVariables += "$ENV:UserProfile\.local\bin"
 $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
-$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\mingw64"
-$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\clang64"
-$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\usr\bin"
+$environmentVariables += "C:\Program Files\Git\bin"
+$environmentVariables += "$dotfilesRoot"
+$environmentVariables += "$dotfilesRoot\windows"
+$environmentVariables += "$ENV:UserProfile\scoop\apps\perl\current\perl\bin"
+$environmentVariables += "$ENV:UserProfile\scoop\apps\perl\current\perl\site\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\shims"
+$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\mingw64"
+$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\usr\bin"
 $environmentVariables += $(Get-EnvironmentPathFolders)
 
 $environmentPaths = @()
@@ -116,7 +117,7 @@ Try {
         $fileStream.WriteLine("@echo off")
         $fileStream.WriteLine("")
         $fileStream.WriteLine("set ""PATH=$($environmentPaths -join ";")""")
-        $fileStream.WriteLine("set ""MYCELIO_ROOT=$root""")
+        $fileStream.WriteLine("set ""MYCELIO_ROOT=$dotfilesRoot""")
         $fileStream.WriteLine("set ""HOME=$ENV:UserProfile""")
         $fileStream.WriteLine("set ""MSYSTEM=MINGW64""")
         $fileStream.WriteLine("set ""CHERE_INVOKING=1""")

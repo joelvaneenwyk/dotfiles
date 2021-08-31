@@ -168,6 +168,11 @@ Function Initialize-Environment {
                 scoop install "sudo"
             }
 
+            # More robust than 'sudo' above and not just a PowerShell script, see https://github.com/gerardog/gsudo
+            if (-not(Test-CommandExists "gsudo")) {
+                scoop install "gsudo"
+            }
+
             if (-not(Test-CommandExists "nuget")) {
                 scoop install "nuget"
             }
@@ -179,7 +184,7 @@ Function Initialize-Environment {
             # We run this here to ensure that the first run of msys2 is done before the 'init.sh' call
             # as the initial upgrade of msys2 results in it shutting down the console.
             if (Test-CommandExists "msys2") {
-                msys2 -where "$PSScriptRoot\..\" -shell bash -no-start -c "./windows/msys/pacman-upgrade.sh"
+                msys2 -where "$PSScriptRoot\..\..\" -shell bash -no-start -c "./source/shell/upgrade-package-manager.sh"
             }
 
             # https://github.com/chrisant996/clink
@@ -187,11 +192,12 @@ Function Initialize-Environment {
                 scoop install "clink"
             }
 
-            # Static site builder
+            # Static site builder.
             if (-not(Test-CommandExists "hugo")) {
                 scoop install hugo-extended
             }
 
+            # Necessary for 'stow' so that we can run it outside of msys environment.
             if (-not(Test-CommandExists "perl")) {
                 scoop install "perl"
             }

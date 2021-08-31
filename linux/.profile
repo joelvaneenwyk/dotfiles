@@ -129,13 +129,6 @@ _set_golang_paths() {
     fi
 }
 
-_initialize_windows() {
-    if [ -d "${MYCELIO_ROOT:-}" ]; then
-        _add_path "prepend" "$HOME/.tmp/texlive/bin/win32"
-        alias stow='perl -I "$MYCELIO_ROOT/source/stow/lib" "$MYCELIO_ROOT/source/stow/bin/stow"'
-    fi
-}
-
 _initialize_synology() {
     #This fixes the backspace when telnetting in.
     #if [ "$TERM" != "linux" ]; then
@@ -149,6 +142,23 @@ _initialize_synology() {
         USERNAME=root
         export USERNAME
     fi
+}
+
+_setup_perl_environment() {
+    # Need library path for 'stow' to work from compiled version
+    PERL5LIB="$(_add_to_list "$PERL5LIB" "$MYCELIO_ROOT/source/stow/lib")"
+    PERL5LIB="$(_add_to_list "$PERL5LIB" "/mingw64/share/tlpkg")"
+    #PERL5LIB="$(_add_to_list "$PERL5LIB" "$HOME/perl5/lib/perl5")"
+    export PERL5LIB
+
+    #PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
+    #export PERL_LOCAL_LIB_ROOT
+
+    #PERL_MB_OPT=$(echo "--install_base \"$HOME\"")
+    #export PERL_MB_OPT
+
+    #PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"
+    #export PERL_MM_OPT
 }
 
 initialize_interactive_profile() {
@@ -258,6 +268,8 @@ initialize_interactive_profile() {
     elif ! _parent="$(ps -o args= ${PPID:-0} 2>&1 | head -n 1)"; then
         _parent="N/A"
     fi
+
+    alias mstow='perl -I "$MYCELIO_ROOT/source/stow/lib" "$MYCELIO_ROOT/source/stow/bin/stow"'
 
     alias gpgreset='gpg-connect-agent updatestartuptty /bye'
     alias pgptest='source "$MYCELIO_ROOT/source/shell/pgptest.sh"'
@@ -378,25 +390,12 @@ initialize_profile() {
 
     export LD_PRELOAD=
 
-    # Need library path for 'stow' to work from compiled version
-    PERL5LIB="$(_add_to_list "$PERL5LIB" "$MYCELIO_ROOT/source/stow/lib")"
-    PERL5LIB="$(_add_to_list "$PERL5LIB" "$HOME/perl5/lib/perl5")"
-    export PERL5LIB
-
-    PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
-    export PERL_LOCAL_LIB_ROOT
-
-    PERL_MB_OPT=$(echo "--install_base \"$HOME\"")
-    export PERL_MB_OPT
-
-    PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"
-    export PERL_MM_OPT
+    _setup_perl_environment
 
     _add_path "prepend" "/mingw64/bin"
     _add_path "prepend" "/clang64/bin"
     _add_path "prepend" "/mnt/c/Program Files/Microsoft VS Code/bin"
 
-    _add_path "prepend" "$HOME/perl5/bin"
     _add_path "prepend" "/usr/bin"
     _add_path "prepend" "/usr/local/gnupg/bin"
     _add_path "prepend" "$HOME/.local/go/bin"
@@ -407,21 +406,10 @@ initialize_profile() {
 
     if [ -f "/mingw64/bin/tex.exe" ]; then
         export TEX="/mingw64/bin/tex.exe"
+        export TEX_OS_NAME="win32"
     fi
 
     _set_golang_paths
-
-    case "$(uname -s)" in
-    CYGWIN*)
-        _initialize_windows
-        ;;
-    MINGW*)
-        _initialize_windows
-        ;;
-    MSYS*)
-        _initialize_windows
-        ;;
-    esac
 
     # If not running interactively, don't do anything else.
     case $- in

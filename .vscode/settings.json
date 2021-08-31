@@ -24,14 +24,14 @@
 
     "Lua.workspace.ignoreDir": [
         ".vscode",
-        "linux/.config/micro",
+        "micro/.config/micro",
         "windows/clink"
     ],
     "Lua.workspace.library": [
         "windows/clink-completions",
         "windows/clink",
         "macos/.hammerspoon",
-        "linux/.config"
+        "micro/.config"
     ],
 
     "perl.enable": false,
@@ -195,7 +195,7 @@
     "powershell.integratedConsole.showOnStartup": false,
     "powershell.integratedConsole.suppressStartupBanner": true,
     "powershell.scriptAnalysis.enable": true,
-    "powershell.scriptAnalysis.settingsPath": "powershell/PSScriptAnalyzerSettings.psd1",
+    "powershell.scriptAnalysis.settingsPath": "source/powershell/PSScriptAnalyzerSettings.psd1",
     "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
     "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
     "powershell.codeFormatting.whitespaceAroundOperator": true,
@@ -226,7 +226,7 @@
         "fish/.config/base16-fzf/**",
         "fish/.config/git-fuzzy/**",
         "fish/.config/fish/fish_variables",
-        "linux/.config/micro/settings.json",
+        "micro/.config/micro/**",
         "test/bats/**",
         ".Xresources",
         ".xmobarrc",

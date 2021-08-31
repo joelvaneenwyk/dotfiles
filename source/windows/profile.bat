@@ -106,7 +106,7 @@ doskey cp=copy $*
 doskey mv=move $*
 doskey h=doskey /HISTORY
 doskey edit=%HOME%\.local\bin\micro.exe $*
-doskey refresh=%MYCELIO_ROOT%\windows\profile.bat --refresh
+doskey refresh=%MYCELIO_ROOT%\source\windows\profile.bat --refresh
 doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
 
 :$StartClink

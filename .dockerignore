@@ -5,3 +5,5 @@ artifacts
 !artifacts/windows
 .vscode
 dev
+example.fls
+exmaple.log

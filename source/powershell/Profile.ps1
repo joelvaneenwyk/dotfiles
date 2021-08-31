@@ -13,7 +13,6 @@
         - C:\Users\jovaneen\OneDrive - Microsoft\Documents\PowerShell\Profile.ps1
 #>
 
-
 Function Get-EnvironmentPathFolders {
     <#
     .SYNOPSIS
@@ -178,7 +177,7 @@ Function Update-TerminalSettings() {
 
         try {
             Import-Module oh-my-posh -ErrorAction SilentlyContinue >$null
-            Set-PoshPrompt -ErrorAction SilentlyContinue -Theme stelbent.minimal
+            Set-PoshPrompt -ErrorAction SilentlyContinue -Theme "stelbent.minimal"
         }
         catch {
             Write-Host "Failed to set 'oh-my-posh' prompt."

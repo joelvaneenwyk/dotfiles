@@ -1,6 +1,6 @@
 @echo off
 
-call "%~dp0..\..\windows\env.bat"
+call "%~dp0..\..\source\windows\env.bat"
 
 cd /d "%MYCELIO_ROOT%"
 ::"C:\Program Files\Git\bin\bash.exe" -c "%*"

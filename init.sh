@@ -304,19 +304,19 @@ function initialize_gitconfig() {
 
     if _is_windows; then
         {
-            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/git/.gitconfig_common")"
-            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/git/.gitconfig_linux")"
-            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/git/.gitconfig_windows")"
+            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_common")"
+            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_linux")"
+            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_windows")"
         } >>"$_git_config"
     else
         {
-            echo "    path = $MYCELIO_ROOT/git/.gitconfig_common"
-            echo "    path = $MYCELIO_ROOT/git/.gitconfig_linux"
+            echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_common"
+            echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_linux"
         } >>"$_git_config"
     fi
 
     if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-        echo "    path = $MYCELIO_ROOT/git/.gitconfig_wsl" >>"$_git_config"
+        echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_wsl" >>"$_git_config"
         echo "Added WSL include to '.gitconfig' file."
     fi
 
@@ -324,7 +324,6 @@ function initialize_gitconfig() {
 }
 
 function install_hugo {
-    _local_bin="$MYCELIO_HOME/.local/bin"
     _go_exe="$MYCELIO_GOBIN/go"
     _hugo_exe="$MYCELIO_GOBIN/hugo"
     _hugo_tmp="$MYCELIO_TEMP/hugo"
@@ -520,14 +519,7 @@ function install_oh_my_posh {
 function install_fzf {
     _fzf_tmp="$MYCELIO_TEMP/fzf"
     _local_root="$MYCELIO_HOME/.local"
-
-    if [ "$MYCELIO_OS" = "windows" ]; then
-        _exe_extension=".exe"
-    else
-        _exe_extension=""
-    fi
-
-    _fzf_exe="$_local_root/bin/fzf$_exe_extension"
+    _fzf_exe="$_local_root/bin/fzf"
 
     if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
         rm -rf "$_fzf_tmp"
@@ -752,21 +744,21 @@ function _stow_internal() {
     _target="$2"
     shift 2
 
-    if [[ "$*" == *"--delete"* ]]; then
-        _remove=0
+    _remove=0
 
-        if [ -f "$_target" ] || [ -d "$_target" ]; then
-            _remove=1
+    if [ -f "$_target" ] || [ -d "$_target" ]; then
+        _remove=1
+    fi
+
+    if [ ! -L "$_target" ]; then
+        _real="$(_get_real_path "$_target")"
+        if [[ "$_real" == *"$MYCELIO_ROOT"* ]]; then
+            _remove=0
         fi
+    fi
 
-        if [ ! -L "$_target" ]; then
-            _real="$(_get_real_path "$_target")"
-            if [[ "$_real" == *"$MYCELIO_ROOT"* ]]; then
-                _remove=0
-            fi
-        fi
-
-        if [ "$_remove" = "1" ]; then
+    if [ "$_remove" = "1" ]; then
+        if [[ "$*" == *"--delete"* ]]; then
             if [ -f "$_source" ]; then
                 rm -f "$_target" >/dev/null 2>&1 || true
             elif [ -d "$_source" ]; then
@@ -774,14 +766,16 @@ function _stow_internal() {
                 find "$_target" -type d -empty -delete >/dev/null 2>&1 || true
                 rm -df "$_target" >/dev/null 2>&1 || true
             fi
-
-            if [ -L "$_target" ]; then
-                echo "UNLINKED: '$_target'"
-            else
-                echo "REMOVED: '$_target'"
-            fi
         fi
-    elif [ ! -f "$_stow_bin" ]; then
+
+        if [ -L "$_target" ]; then
+            echo "UNLINKED: '$_target'"
+        else
+            echo "REMOVED: '$_target'"
+        fi
+    fi
+
+    if [[ ! "$*" == *"--delete"* ]] && [ ! -f "$_stow_bin" ]; then
         if [ -f "$_source" ]; then
             mkdir -p "$(dirname "$_target")"
         fi
@@ -861,6 +855,10 @@ function _stow_packages() {
     if [ "$MYCELIO_OS" = "darwin" ]; then
         mkdir -p "$MYCELIO_HOME/Library/Application\ Support/Code"
         _stow "$@" macos
+    fi
+
+    if [ "$MYCELIO_OS" = "windows" ]; then
+        _stow "$@" windows
     fi
 }
 
@@ -1211,13 +1209,13 @@ function install_macos_apps() {
 }
 
 function configure_macos_apps() {
-    for f in .osx/*.plist; do
+    for f in source/macos/*.plist; do
         [ -e "$f" ] || continue
 
-        echo "Importing settings from $f"
+        echo "Importing settings: $f"
         plist=$(basename -s .plist "$f")
-        echo defaults delete "$plist" >/dev/null || true
-        echo defaults import "$plist" "$f"
+        defaults delete "$plist" >/dev/null || true
+        defaults import "$plist" "$f"
     done
 
     echo "Configured applications with settings."

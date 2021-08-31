@@ -2,7 +2,7 @@ param(
     [string] $ArgumentList
 )
 
-$Path = Resolve-Path "$PSScriptRoot\..\init.bat"
+$Path = Resolve-Path "$PSScriptRoot\..\..\init.bat"
 
 if (Test-Path -Path $Path -PathType Leaf) {
     Write-Host "##[cmd] $PSScriptRoot\Invoke-CmdScript.ps1 $Path $ArgumentList"

@@ -4,6 +4,7 @@ chcp 65001 >NUL 2>&1
 
 setlocal EnableExtensions EnableDelayedExpansion
     set "_mycelio_root=%~dp0"
+    set "_current_dir=%cd%"
 
     :: Setup Docker arguments before we parse out arguments
     set _container_platform=%~2
@@ -15,12 +16,13 @@ setlocal EnableExtensions EnableDelayedExpansion
     set "USER[HKLM]=all users"
     set "USER[HKCU]=%USERNAME%"
     set "HIVE="
+    set "HOME=%USERPROFILE%"
     set "COMMENT=echo"
     set "SCRIPT=%~nx0"                                          &:# Script name
     set "SNAME=%~n0"                                            &:# Script name, without its extension
     set ^"ARG0=%0^"                                             &:# Script invokation name
     set ^"ARGS=%*^"                                             &:# Argument line
-    set "SPROFILE=%MYCELIO_ROOT%\windows\profile.bat"           &:# Full path to profile script
+    set "SPROFILE=%MYCELIO_ROOT%\source\windows\profile.bat"    &:# Full path to profile script
     set "STOW=%MYCELIO_ROOT%\source\stow\bin\stow"
 
     set "COMMAND=%~1"
@@ -54,7 +56,12 @@ setlocal EnableExtensions EnableDelayedExpansion
         echo Cleared out temporary files and reinitializing environment.
     )
 
-    call "%MYCELIO_ROOT%\windows\profile.bat"
+    :: We intentionally setup autorun as soon as possible especially in case there is an
+    :: outdated or invalid version already there since it is called in all subsequent 'call'
+    :: commands we issue.
+    call :InstallAutoRun
+
+    call "%MYCELIO_ROOT%\source\windows\profile.bat"
 
     :: These files are missing from Windows Nano Server instances in Docker so either
     :: copy them to local temp folder if running in host or copy them to system folder
@@ -91,10 +98,6 @@ setlocal EnableExtensions EnableDelayedExpansion
         exit /b 0
     )
 
-    call :InstallAutoRun
-    call :StowPowerShell "Documents\WindowsPowerShell" "Profile.ps1"
-    call :StowPowerShell "Documents\PowerShell" "Profile.ps1"
-
     echo Initialized profile settings into '%USERNAME%' user directories.
 
     ::
@@ -102,35 +105,53 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     set _powershell=
     set _pwshs=
-    if exist "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" set _pwshs=!_pwshs! "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-    if exist "C:\Program Files\PowerShell\pwsh.exe" set _pwshs=!_pwshs! "C:\Program Files\PowerShell\pwsh.exe"
-    if exist "C:\Program Files\PowerShell\7\pwsh.exe" set _pwshs=!_pwshs! "C:\Program Files\PowerShell\7\pwsh.exe"
+    set _pwshs=!_pwshs! "C:\Program Files\PowerShell\7\pwsh.exe"
+    set _pwshs=!_pwshs! "C:\Program Files\PowerShell\pwsh.exe"
+    set _pwshs=!_pwshs! "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
 
     for %%p in (!_pwshs!) do (
         set _powershell=%%p
-        echo.
-        echo ======-------
-        echo Initializing PowerShell: !_powershell!
-        echo ======-------
-        echo.
-        !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\powershell\Initialize-PowerShell.ps1"
+        if exist !_powershell! goto:$PowerShellSet
     )
+    :$PowerShellSet
+
+    echo.
+    echo ======-------
+    echo Initializing PowerShell: !_powershell!
+    echo ======-------
+    echo.
+    !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-PowerShell.ps1"
 
     echo.
     echo ======-------
     echo Installing Windows Dependencies
     echo ======-------
     echo.
-    !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\powershell\Initialize-Environment.ps1"
+    !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Environment.ps1"
     if not "%ERRORLEVEL%"=="0" (
         set _error=%ERRORLEVEL%
     )
 
     ::
-    :: Initialize 'msys2' environment with bash script.
+    :: Re-initialize environment paths now that dependencies are installed
     ::
 
-    call "%~dp0windows\env.bat"
+    call "%MYCELIO_ROOT%\source\windows\env.bat"
+
+    cd /d "%MYCELIO_ROOT%\source\stow"
+        perl "%MYCELIO_ROOT%\source\stow\Build.PL"
+        call "%MYCELIO_ROOT%\source\stow\Build.bat" installdeps
+        call "%MYCELIO_ROOT%\source\stow\Build.bat"
+        call "%MYCELIO_ROOT%\source\stow\Build.bat" install
+
+        :: These tests do not yet work due to limitations in 'stow' on Windows
+        ::call "%MYCELIO_ROOT%\source\stow\Build.bat" test
+    cd /d "%MYCELIO_ROOT%"
+
+    :: The 'stow' tool should now be installed in our local perl so we can
+    :: stow the Windows settings. However, due to limitations in 'stow' on Windows
+    :: we need to do this in MSYS2 instead.
+    ::stow windows
 
     :: Initialize 'msys2' environment with bash script. We call the shim directly because environment
     :: may not read path properly after it has just been installed.
@@ -151,6 +172,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     )
 
     :$InitializeDone
+    cd /d "%_current_dir%"
 endlocal & (
     set "MYCELIO_ROOT=%MYCELIO_ROOT%"
     set "MYCELIO_PROFILE_INITIALIZED=%MYCELIO_PROFILE_INITIALIZED%"
@@ -243,30 +265,3 @@ exit /b
     %EXEC% reg add "%KEY%" /v "AutoRun" /t REG_SZ /d "%SPROFILE%" /f
     echo Created registry key "%KEY%" value "AutoRun"
 endlocal & exit /b 0
-
-::-----------------------------------
-:: It is very important that we do NOT store PowerShell modules or scripts on OneDrive
-:: as it can cause a lot of problems. We force delete it here which is dangerous but
-:: necessary.
-::-----------------------------------
-:StowPowerShell
-    if exist "%OneDrive%\%~1" (
-        rmdir /s /q "%OneDrive%\%~1"
-        echo Removed '%OneDrive%\%~1' as modules should not be in OneDrive. See https://stackoverflow.com/a/67531193
-    )
-
-    call :CreateLink "%USERPROFILE%\%~1" "%~2" "%MYCELIO_ROOT%\powershell\%~2"
-exit /b 0
-
-:CreateLink %1=LinkDirectory %2=LinkFilename %3=TargetPath
-    setlocal EnableExtensions EnableDelayedExpansion
-    set _linkDir=%~1
-    set _linkFilename=%~2
-    set _linkTarget=%~3
-    if not exist "%_linkDir%" mkdir "%_linkDir%" > nul 2>&1
-    if exist "%_linkDir%" (
-        if exist "%_linkDir%\%_linkFilename%" del "%_linkDir%\%_linkFilename%"
-        mklink "%_linkDir%\%_linkFilename%" "%_linkTarget%" > nul 2>&1
-        echo Created symbolic link: '%_linkTarget%' to '%_linkDir%'
-    )
-exit /b 0

@@ -32,8 +32,8 @@ xmonad/.xmonad/xmonad.errors
 xmonad/.xmonad/xmonad.hi
 xmonad/.xmonad/xmonad.o
 
-windows/clink/clink_history*
-windows/clink/clink.log
+source/windows/clink/clink_history*
+source/windows/clink/clink.log
 
 source/vagrant/.vagrant/
 
@@ -50,3 +50,4 @@ log.txt
 
 # Generated files
 *.stackdump
+texput.log
