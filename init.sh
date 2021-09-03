@@ -328,7 +328,7 @@ function install_hugo {
     _hugo_exe="$MYCELIO_GOBIN/hugo"
     _hugo_tmp="$MYCELIO_TEMP/hugo"
 
-    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -rf "$_hugo_tmp"
     fi
 
@@ -399,7 +399,7 @@ function install_oh_my_posh {
 
     _oh_my_posh_exe="$MYCELIO_GOBIN/oh-my-posh$_exe_extension"
 
-    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -rf "$_oh_my_posh_tmp"
     fi
 
@@ -521,7 +521,7 @@ function install_fzf {
     _local_root="$MYCELIO_HOME/.local"
     _fzf_exe="$_local_root/bin/fzf"
 
-    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -rf "$_fzf_tmp"
     fi
 
@@ -582,7 +582,7 @@ function install_go {
     _go_bootstrap_exe="$_local_go_bootstrap_root/bin/go"
     _go_requires_update=0
 
-    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -rf "$_local_go_root"
         rm -rf "$_local_go_bootstrap_root"
     fi
@@ -746,33 +746,54 @@ function _stow_internal() {
 
     _remove=0
 
-    if [ -f "$_target" ] || [ -d "$_target" ]; then
+    if [ -f "$_target" ] || [ -d "$_target" ] || [ -L "$_target" ]; then
         _remove=1
     fi
 
     if [ ! -L "$_target" ]; then
         _real="$(_get_real_path "$_target")"
+
+        # Do not delete files or directories that are actually inside the
+        # dot files source directory.
         if [[ "$_real" == *"$MYCELIO_ROOT"* ]]; then
             _remove=0
+            echo "🔗 SKIPPED: $_target"
         fi
     fi
 
     if [ "$_remove" = "1" ]; then
-        if [[ "$*" == *"--delete"* ]]; then
-            if [ -f "$_source" ]; then
-                rm -f "$_target" >/dev/null 2>&1 || true
-            elif [ -d "$_source" ]; then
-                # Remove empty directories in target
-                find "$_target" -type d -empty -delete >/dev/null 2>&1 || true
-                rm -df "$_target" >/dev/null 2>&1 || true
+        _name="'$_target'"
+        if [ -L "$_target" ]; then
+            _name="$_name (link)"
+        fi
+
+        if [ -f "$_source" ]; then
+            _name="$_name (file)"
+            if [[ "$*" == *"--delete"* ]]; then
+                if rm -f "$_target" >/dev/null 2>&1; then
+                    echo "REMOVED: $_name"
+                else
+                    echo "SKIPPED: $_name"
+                fi
+            else
+                echo "TARGET: $_name"
+            fi
+        elif [ -d "$_source" ]; then
+            _name="$_name (directory)"
+            if [[ "$*" == *"--delete"* ]]; then
+                # Remove empty directories in target. It will not delete directories
+                # that have files in them.
+                if find "$_target" -type d -empty -delete >/dev/null 2>&1 &&
+                    rm -df "$_target" >/dev/null 2>&1; then
+                    echo "REMOVED: $_name"
+                else
+                    echo "SKIPPED: $_name"
+                fi
+            else
+                echo "TARGET: $_name"
             fi
         fi
 
-        if [ -L "$_target" ]; then
-            echo "UNLINKED: '$_target'"
-        else
-            echo "REMOVED: '$_target'"
-        fi
     fi
 
     if [[ ! "$*" == *"--delete"* ]] && [ ! -f "$_stow_bin" ]; then
@@ -804,8 +825,8 @@ function _stow() {
                 # Remove files from directories first and then the directory but only if
                 # it is empty.
                 {
-                    git -C "$MYCELIO_ROOT" ls-tree --name-only -r HEAD "$_package"
-                    git -C "$MYCELIO_ROOT" ls-tree -d --name-only -r HEAD "$_package"
+                    git -C "$MYCELIO_ROOT" ls-tree -r --name-only HEAD "$_package"
+                    (git -C "$MYCELIO_ROOT" ls-tree -r -d --name-only HEAD "$_package" | tac)
                 } | while IFS= read -r line; do
                     _source="${MYCELIO_ROOT%/}/$line"
                     _target="${_target_path%/}/${line/$_package\//}"
@@ -863,13 +884,13 @@ function _stow_packages() {
 }
 
 function configure_linux() {
-    if [ "$MYCELIO_REFRESH_ENVIRONMENT" = "1" ] || [ "$MYCELIO_FORCE" = "1" ]; then
+    if [ "$MYCELIO_ARG_CLEAN" = "1" ] || [ "$MYCELIO_ARG_FORCE" = "1" ]; then
         echo "Removing leftover mycelium dots..."
         _stow_packages --delete
     fi
 
     echo "Connecting the mycelium..."
-    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         _stow_packages --restow
     else
         _stow_packages
@@ -930,7 +951,7 @@ function install_micro_text_editor() {
         _micro_exe="micro"
     fi
 
-    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
     fi
 
@@ -1100,7 +1121,7 @@ function initialize_linux() {
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
 function _install_stow() {
-    if [ "${MYCELIO_REFRESH_ENVIRONMENT:-}" = "1" ]; then
+    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -f "$MYCELIO_ROOT/source/stow/bin/stow"
         rm -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm"
     fi
@@ -1108,14 +1129,7 @@ function _install_stow() {
     if [ -x "$(command -v cpan)" ]; then
         # If configuration file does not exist yet then we automate configuration with
         # answers to standard questions. These may become invalid with newer versions.
-        if [ ! -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm" ]; then
-            (
-                echo "yes"
-                echo ""
-                echo "no"
-                echo "exit"
-            ) | cpan
-        fi
+        perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'
 
         # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because
         # it is faster but also because tests in 'Test::Output' causes consistent hangs
@@ -1145,7 +1159,7 @@ function _install_stow() {
         # Documentation part is expected to fail but we can ignore that
         make bin/stow bin/chkstow lib/Stow.pm lib/Stow/Util.pm
 
-        rm -f "./configure~"
+        rm -f "./configure~" "Build.bat" "Build"
         git checkout -- "./aclocal.m4" || true
     ); then
         echo "✔ Successfully built 'stow' from source."
@@ -1418,8 +1432,8 @@ function main() {
 
     # Assume we are fine with interactive prompts if necessary
     export MYCELIO_INTERACTIVE=1
-    export MYCELIO_REFRESH_ENVIRONMENT=0
-    export MYCELIO_FORCE=0
+    export MYCELIO_ARG_CLEAN=0
+    export MYCELIO_ARG_FORCE=0
 
     _skip_initialization=0
 
@@ -1429,11 +1443,11 @@ function main() {
 
         case $key in
         -c | --clean)
-            export MYCELIO_REFRESH_ENVIRONMENT=1
+            export MYCELIO_ARG_CLEAN=1
             shift # past argument
             ;;
         -f | --force)
-            export MYCELIO_FORCE=1
+            export MYCELIO_ARG_FORCE=1
             shift # past argument
             ;;
         -y | --yes)
@@ -1484,7 +1498,7 @@ function main() {
         rm "$MYCELIO_TEMP/.test"
     fi
 
-    if [ "$MYCELIO_REFRESH_ENVIRONMENT" = "1" ]; then
+    if [ "$MYCELIO_ARG_CLEAN" = "1" ]; then
         rm -rf "$MYCELIO_TEMP"
         echo "[mycelio] Removed workspace temporary files to force a rebuild."
     fi
@@ -1519,7 +1533,7 @@ function main() {
     fi
 
     # Remove intermediate files here to reduce size of Docker container layer
-    if [ -f "/.dockerenv" ] && [ "$MYCELIO_REFRESH_ENVIRONMENT" = "1" ]; then
+    if [ -f "/.dockerenv" ] && [ "$MYCELIO_ARG_CLEAN" = "1" ]; then
         rm -rf "$MYCELIO_TEMP" || true
         sudo rm -rf "/tmp/*" || true
         sudo rm -rf "/usr/tmp/*" || true

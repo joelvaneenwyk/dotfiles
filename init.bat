@@ -4,7 +4,7 @@ chcp 65001 >NUL 2>&1
 
 setlocal EnableExtensions EnableDelayedExpansion
     set "_mycelio_root=%~dp0"
-    set "_current_dir=%cd%"
+    set "_starting_directory=%cd%"
 
     :: Setup Docker arguments before we parse out arguments
     set _container_platform=%~2
@@ -98,8 +98,6 @@ setlocal EnableExtensions EnableDelayedExpansion
         exit /b 0
     )
 
-    echo Initialized profile settings into '%USERNAME%' user directories.
-
     ::
     :: Initialize each installed PowerShell we find
     ::
@@ -138,19 +136,10 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     call "%MYCELIO_ROOT%\source\windows\env.bat"
 
-    cd /d "%MYCELIO_ROOT%\source\stow"
-        perl "%MYCELIO_ROOT%\source\stow\Build.PL"
-        call "%MYCELIO_ROOT%\source\stow\Build.bat" installdeps
-        call "%MYCELIO_ROOT%\source\stow\Build.bat"
-        call "%MYCELIO_ROOT%\source\stow\Build.bat" install
-
-        :: These tests do not yet work due to limitations in 'stow' on Windows
-        ::call "%MYCELIO_ROOT%\source\stow\Build.bat" test
-    cd /d "%MYCELIO_ROOT%"
-
     :: The 'stow' tool should now be installed in our local perl so we can
     :: stow the Windows settings. However, due to limitations in 'stow' on Windows
     :: we need to do this in MSYS2 instead.
+    ::call "%MYCELIO_ROOT%\source\windows\stow\build.bat"
     ::stow windows
 
     :: Initialize 'msys2' environment with bash script. We call the shim directly because environment
@@ -172,7 +161,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     )
 
     :$InitializeDone
-    cd /d "%_current_dir%"
+    cd /d "%_starting_directory%"
 endlocal & (
     set "MYCELIO_ROOT=%MYCELIO_ROOT%"
     set "MYCELIO_PROFILE_INITIALIZED=%MYCELIO_PROFILE_INITIALIZED%"

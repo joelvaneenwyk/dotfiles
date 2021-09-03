@@ -404,6 +404,8 @@ initialize_profile() {
     _add_path "prepend" "$HOME/.config/git-fuzzy/bin"
     _add_path "prepend" "$MYCELIO_ROOT/source/stow/bin"
 
+    _add_path "prepend" "$HOME/scoop/apps/msys2/current/usr/bin/site_perl"
+
     if [ -f "/mingw64/bin/tex.exe" ]; then
         export TEX="/mingw64/bin/tex.exe"
         export TEX_OS_NAME="win32"

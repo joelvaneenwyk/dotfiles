@@ -25,11 +25,11 @@
     "Lua.workspace.ignoreDir": [
         ".vscode",
         "micro/.config/micro",
-        "windows/clink"
+        "source/windows/clink"
     ],
     "Lua.workspace.library": [
-        "windows/clink-completions",
-        "windows/clink",
+        "source/windows/clink-completions",
+        "source/windows/clink",
         "macos/.hammerspoon",
         "micro/.config"
     ],
@@ -37,9 +37,13 @@
     "perl.enable": false,
 
     "xml.validation.enabled": false,
+    "stylelint.enable": false,
 
-    "terminal.integrated.confirmOnExit": "always",
-    "terminal.integrated.showExitAlert": true,
+    "git.requireGitUserConfig": false,
+
+    "terminal.integrated.environmentChangesRelaunch": false,
+    "terminal.integrated.confirmOnExit": "never",
+    "terminal.integrated.showExitAlert": false,
     "terminal.integrated.cwd": "${workspaceFolder}",
 
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
@@ -90,8 +94,6 @@
             "icon": "terminal-bash"
         }
     },
-
-    "stylelint.enable": false,
 
     "terminal.integrated.defaultProfile.osx": "fish",
     "terminal.integrated.profiles.osx": {
@@ -207,10 +209,6 @@
     "powershell.codeFormatting.ignoreOneLineBlock": false,
     "powershell.codeFormatting.alignPropertyValuePairs": true,
     "powershell.codeFormatting.useCorrectCasing": true,
-
-    "git.requireGitUserConfig": false,
-
-    "terminal.integrated.environmentChangesRelaunch": false,
 
     "cSpell.ignorePaths": [
         "**/package-lock.json",
