@@ -1059,7 +1059,8 @@ function initialize_linux() {
 
         DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y --no-install-recommends \
             tzdata git wget curl unzip xclip \
-            software-properties-common build-essential gcc g++ make automake autoconf golang \
+            software-properties-common apt-transport-https \
+            build-essential gcc g++ make automake autoconf golang \
             stow tmux neofetch fish \
             python3 python3-pip \
             fontconfig
@@ -1090,13 +1091,13 @@ function initialize_linux() {
         fi
     fi
 
+    _install_powershell
+
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped install of 'go' and 'hugo' for root user."
     else
         install_go
-
-        # We are counting this as an optional dependency so ignore errors
-        install_hugo || true
+        install_hugo
     fi
 
     _install_stow
@@ -1113,6 +1114,37 @@ function initialize_linux() {
             git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$MYCELIO_HOME/.asdf" --branch v0.8.1
         else
             echo "Skipped install of 'asdf' as git is not installed."
+        fi
+    fi
+}
+
+function _sudo() {
+    if [ -x "$(command -v sudo)" ]; then
+        DEBIAN_FRONTEND="noninteractive" sudo "$@"
+    else
+        "$@"
+    fi
+}
+
+function _install_powershell() {
+    if [ -x "$(command -v apt-get)" ]; then
+        if [ -f "/etc/os-release" ]; then
+            source "/etc/os-release"
+        fi
+
+        _packages_production="packages-microsoft-prod.deb"
+        _url="https://packages.microsoft.com/config/ubuntu/${VERSION_ID:-0.0}/$_packages_production"
+
+        # Download the Microsoft repository GPG keys
+        if wget --quiet "$_url" -O "$MYCELIO_TEMP/$_packages_production"; then
+            # Register the Microsoft repository GPG keys
+            _sudo dpkg -i "$MYCELIO_TEMP/$_packages_production"
+            # Update the list of products
+            _sudo apt-get update
+            # Enable the "universe" repositories
+            _sudo add-apt-repository universe || true
+            # Install PowerShell
+            _sudo apt-get install -y powershell
         fi
     fi
 }
