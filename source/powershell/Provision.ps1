@@ -3,15 +3,24 @@
 <#
 .NOTES
     ===========================================================================
-    Created on:   August 2021
+    Created on:   September 2021
     Created by:   Joel Van Eenwyk
-    Filename:     Initialize-Environment.ps1
+    Filename:     Provision.ps1
+    URL:          https://gist.github.com/joelvaneenwyk/83d48a63cc1c25fd62fb18a5ba49ff9d
     ===========================================================================
+
+.EXAMPLE
+
+`Set-ExecutionPolicy RemoteSigned -scope CurrentUser; iwr -useb git.io/mycelio.ps1 | iex`
 
 .DESCRIPTION
     Provision the environment with basic set of tools and utilities for common use
     including 'git', 'perl', 'sudo', 'micro', etc. These are mostly installed with
     the 'scoop' package manager.
+
+    Use the following to update the short URL:
+
+        - curl -i https://git.io -F "url=https://gist.githubusercontent.com/joelvaneenwyk/83d48a63cc1c25fd62fb18a5ba49ff9d/raw" -F "code=mycelio.ps1"
 #>
 
 using namespace System.Net.Http;
@@ -360,7 +369,7 @@ Function Initialize-Environment {
                 Write-Host "Verified that dependencies were installed with 'scoop' package manager."
 
                 if (Test-Path -Path "$HOME/dotfiles/.git") {
-                    git -C "$HOME" pull
+                    git -C "$HOME/dotfiles" pull
                 }
                 else {
                     git -C "$HOME" clone --recursive "https://github.com/joelvaneenwyk/dotfiles.git"
@@ -429,8 +438,3 @@ finally {
 
     Write-Host "Initialized Mycelio environment."
 }
-
-#
-# Set-ExecutionPolicy RemoteSigned -scope CurrentUser; curl -useb git.io/mycodots | iex
-# Set-ExecutionPolicy RemoteSigned -scope CurrentUser; curl -useb https://gist.githubusercontent.com/joelvaneenwyk/83d48a63cc1c25fd62fb18a5ba49ff9d/raw/d283bec00fe893c9c902f8682213e650608d8861/mycelio.ps1 | iex
-#
