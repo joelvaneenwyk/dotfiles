@@ -16,7 +16,7 @@
 
 param([string]$ScriptPath = "")
 
-Function Get-EnvironmentPathFolders {
+Function Get-CurrentEnvironment {
     <#
     .SYNOPSIS
         Split $env:Path into an array.
@@ -78,16 +78,21 @@ $dotfilesRoot = Resolve-Path -Path "$PSScriptRoot\..\.."
 
 $environmentVariables = @()
 $environmentVariables += "$ENV:UserProfile\.local\bin"
+$environmentVariables += "$ENV:UserProfile\.local\go\bin"
 $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
 $environmentVariables += "$dotfilesRoot"
 $environmentVariables += "$dotfilesRoot\source\windows"
 $environmentVariables += "$ENV:UserProfile\scoop\apps\perl\current\perl\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\apps\perl\current\perl\site\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\shims"
-$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\mingw64"
-#$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\usr\bin"
 $environmentVariables += "C:\Program Files\Git\bin"
-$environmentVariables += $(Get-EnvironmentPathFolders)
+$environmentVariables += $(Get-CurrentEnvironment)
+$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\mingw64\bin"
+
+# This is intentionally at the very end as we want to pick non-MSYS2 (or Cygwin) style
+# versions if at all possible. This is mainly required for tools like 'make' which are
+# only available in the 'usr/bin' folder.
+$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\usr\bin"
 
 $environmentPaths = @()
 $environmentVariables | ForEach-Object {
@@ -116,12 +121,14 @@ Try {
     try {
         $fileStream.WriteLine("@echo off")
         $fileStream.WriteLine("")
+
         $fileStream.WriteLine("set ""PATH=$($environmentPaths -join ";")""")
         $fileStream.WriteLine("set ""MYCELIO_ROOT=$dotfilesRoot""")
         $fileStream.WriteLine("set ""HOME=$ENV:UserProfile""")
         #$fileStream.WriteLine("set ""MSYSTEM=MINGW64""")
         #$fileStream.WriteLine("set ""CHERE_INVOKING=1""")
         #$fileStream.WriteLine("set ""MSYS2_PATH_TYPE=inherit""")
+
         $fileStream.WriteLine("echo Initialized path from generated script.")
         $fileStream.WriteLine("")
         $fileStream.WriteLine("exit /b 0")

@@ -16,6 +16,8 @@
 :: IMPORTANT: Do not use %CMDCMDLINE% as is may contain unprotected | & > < characters. Use !CMDCMDLINE! instead.
 ::
 
+if "%MYCELIO_PROFILE_INITIALIZED%"=="1" exit /b 0
+
 setlocal EnableExtensions EnableDelayedExpansion
     if "%~1"=="--refresh" goto:$InitializeProfile
 
@@ -51,9 +53,6 @@ endlocal & (
     set "MYCELIO_AUTORUN_INITIALIZED=1"
 )
 
-:: Generate the environment batch script
-call "%~dp0env.bat"
-
 chcp 65001 >NUL 2>&1
 
 ::
@@ -84,7 +83,9 @@ echo ▓│  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
 echo ▓│
 echo ▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 echo.
-if exist "%MYCELIO_ENV%" call "%MYCELIO_ENV%"
+
+:: Generate and run the environment batch script
+call "%~dp0env.bat"
 echo Initialized 'Windows' environment: '%MYCELIO_ROOT%'
 echo.
 echo Commands:

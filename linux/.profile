@@ -115,17 +115,17 @@ _start_tmux() {
 _set_golang_paths() {
     export MYCELIO_GOROOT="$HOME/.local/go"
     export MYCELIO_GOBIN="$MYCELIO_GOROOT/bin"
+    export MYCELIO_GOEXE="$MYCELIO_GOBIN/go$MYCELIO_OS_APP_EXTENSION"
     mkdir -p "$MYCELIO_GOROOT"
 
     _add_path "prepend" "${GOBIN:-}"
     _add_path "prepend" "${MYCELIO_GOBIN:-}"
 
-    _go_exe="$MYCELIO_GOBIN/bin/go"
-    if [ -f "$_go_exe" ]; then
+    if [ -f "$MYCELIO_GOEXE" ]; then
         export GOROOT="" GOBIN="" GOPATH=""
-        "$_go_exe" env -u GOPATH
-        "$_go_exe" env -u GOROOT
-        "$_go_exe" env -u GOBIN
+        "$MYCELIO_GOEXE" env -u GOPATH >/dev/null 2>&1
+        "$MYCELIO_GOEXE" env -u GOROOT >/dev/null 2>&1
+        "$MYCELIO_GOEXE" env -u GOBIN >/dev/null 2>&1
     fi
 }
 
@@ -142,23 +142,6 @@ _initialize_synology() {
         USERNAME=root
         export USERNAME
     fi
-}
-
-_setup_perl_environment() {
-    # Need library path for 'stow' to work from compiled version
-    PERL5LIB="$(_add_to_list "$PERL5LIB" "$MYCELIO_ROOT/source/stow/lib")"
-    PERL5LIB="$(_add_to_list "$PERL5LIB" "/mingw64/share/tlpkg")"
-    #PERL5LIB="$(_add_to_list "$PERL5LIB" "$HOME/perl5/lib/perl5")"
-    export PERL5LIB
-
-    #PERL_LOCAL_LIB_ROOT="$HOME/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"
-    #export PERL_LOCAL_LIB_ROOT
-
-    #PERL_MB_OPT=$(echo "--install_base \"$HOME\"")
-    #export PERL_MB_OPT
-
-    #PERL_MM_OPT="INSTALL_BASE=$HOME/perl5"
-    #export PERL_MM_OPT
 }
 
 initialize_interactive_profile() {
@@ -218,47 +201,7 @@ initialize_interactive_profile() {
     # Colored GCC warnings and errors
     export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-    MYCELIO_OS_NAME="UNKNOWN"
-    MYCELIO_OS_VARIANT="$(uname -s)"
-
-    # We intentionally disable on some Windows variants due to corruption e.g. MSYS, Cygwin
-    _use_oh_my_posh=1
-
-    case "${MYCELIO_OS_VARIANT:-}" in
-    Linux*)
-        if uname -a | grep -q "synology"; then
-            MYCELIO_OS_NAME=Synology
-        else
-            MYCELIO_OS_NAME=Linux
-        fi
-
-        if grep -qEi "(Microsoft|WSL)" /proc/version >/dev/null 2>&1; then
-            MYCELIO_OS_VARIANT=WSL
-        else
-            MYCELIO_OS_VARIANT=$(uname -mrs)
-        fi
-        ;;
-    Darwin*)
-        MYCELIO_OS_NAME=macOS
-        ;;
-    CYGWIN*)
-        MYCELIO_OS_NAME=Windows
-        MYCELIO_OS_VARIANT=Cygwin
-        _use_oh_my_posh=0
-        ;;
-    MINGW*)
-        MYCELIO_OS_NAME=Windows
-        MYCELIO_OS_VARIANT=MINGW
-        _use_oh_my_posh=0
-        ;;
-    MSYS*)
-        MYCELIO_OS_NAME=Windows
-        MYCELIO_OS_VARIANT=MSYS
-        _use_oh_my_posh=0
-        ;;
-    esac
-
-    if [ -x "$(command -v oh-my-posh)" ] && [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ] && [ "$_use_oh_my_posh" = "1" ]; then
+    if [ -x "$(command -v oh-my-posh)" ] && [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ] && [ "$MYCELIO_OH_MY_POSH" = "1" ]; then
         _shell=$(oh-my-posh --print-shell)
         eval "$(oh-my-posh --init --shell "$_shell" --config "$HOME/.poshthemes/stelbent.minimal.omp.json")"
     fi
@@ -384,16 +327,57 @@ initialize_profile() {
         IFS=$OLD_IFS
     fi
 
+    # We intentionally disable on some Windows variants due to corruption e.g. MSYS, Cygwin
+    MYCELIO_OH_MY_POSH=1
+
+    MYCELIO_OS_NAME="UNKNOWN"
+    MYCELIO_OS_VARIANT="$(uname -s)"
+
+    case "${MYCELIO_OS_VARIANT:-}" in
+    Linux*)
+        if uname -a | grep -q "synology"; then
+            MYCELIO_OS_NAME=Synology
+        else
+            MYCELIO_OS_NAME=Linux
+        fi
+
+        if grep -qEi "(Microsoft|WSL)" /proc/version >/dev/null 2>&1; then
+            MYCELIO_OS_VARIANT=WSL
+        else
+            MYCELIO_OS_VARIANT=$(uname -mrs)
+        fi
+        ;;
+    Darwin*)
+        MYCELIO_OS_NAME=macOS
+        ;;
+    CYGWIN*)
+        MYCELIO_OS_NAME=Windows
+        MYCELIO_OS_VARIANT=Cygwin
+        MYCELIO_OS_APP_EXTENSION=.exe
+        MYCELIO_OH_MY_POSH=0
+        ;;
+    MINGW*)
+        MYCELIO_OS_NAME=Windows
+        MYCELIO_OS_VARIANT=MINGW
+        MYCELIO_OS_APP_EXTENSION=.exe
+        MYCELIO_OH_MY_POSH=0
+        ;;
+    MSYS*)
+        MYCELIO_OS_NAME=Windows
+        MYCELIO_OS_VARIANT=MSYS
+        MYCELIO_OS_APP_EXTENSION=.exe
+        MYCELIO_OH_MY_POSH=0
+        ;;
+    esac
+    export MYCELIO_OS_NAME MYCELIO_OS_VARIANT MYCELIO_OS_APP_EXTENSION MYCELIO_OH_MY_POSH
+
     if [ -z "${MYCELIO_ROOT:-}" ]; then
         export MYCELIO_ROOT="$HOME/dotfiles"
     fi
 
     export LD_PRELOAD=
 
-    _setup_perl_environment
-
     _add_path "prepend" "/mingw64/bin"
-    _add_path "prepend" "/clang64/bin"
     _add_path "prepend" "/mnt/c/Program Files/Microsoft VS Code/bin"
 
     _add_path "prepend" "/usr/bin"
@@ -402,9 +386,12 @@ initialize_profile() {
     _add_path "prepend" "$HOME/.local/bin"
     _add_path "prepend" "$HOME/.local/sbin"
     _add_path "prepend" "$HOME/.config/git-fuzzy/bin"
-    _add_path "prepend" "$MYCELIO_ROOT/source/stow/bin"
 
-    _add_path "prepend" "$HOME/scoop/apps/msys2/current/usr/bin/site_perl"
+    # Need library path for 'stow' to work from compiled version
+    _add_path "prepend" "$MYCELIO_ROOT/source/stow/bin"
+    PERL5LIB="$(_add_to_list "$PERL5LIB" "$MYCELIO_ROOT/source/stow/lib")"
+    PERL5LIB="$(_add_to_list "$PERL5LIB" "/mingw64/share/tlpkg")"
+    export PERL5LIB
 
     if [ -f "/mingw64/bin/tex.exe" ]; then
         export TEX="/mingw64/bin/tex.exe"

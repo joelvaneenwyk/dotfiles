@@ -8,7 +8,7 @@
 
 .DESCRIPTION
     Provision the environment with basic set of tools and utilities for common use
-    including 'git', 'perl', 'sudo', 'micro', etc. These are mostly installed with
+    including 'git', 'perl', 'gsudo', 'micro', etc. These are mostly installed with
     the 'scoop' package manager.
 #>
 
@@ -111,6 +111,7 @@ Function Get-File {
 }
 Function Initialize-Environment {
     $tempFolder = "$ENV:UserProfile\.tmp"
+    $mycelioRoot = Resolve-Path -Path "$PSScriptRoot\..\..\"
 
     $fontBaseName = "JetBrains Mono"
     $fontBaseFilename = $fontBaseName -replace '\s', ''
@@ -135,14 +136,10 @@ Function Initialize-Environment {
             Write-Host "Installing 'scoop' package manager..."
             Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
 
-            # For running commands as administrator
-            scoop install "sudo"
-
-            # It's required for unpacking InnoSetup files.
-            scoop install "innounp"
-
-            # It's required for unpacking installers created with the WiX Toolset.
-            scoop install "dark"
+            # gsudo: Run commands as administrator.
+            # innounp: Required for unpacking InnoSetup files.
+            # dark: Unpack installers created with the WiX Toolset.
+            scoop install "gsudo" "innounp" "dark"
 
             $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
             if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -151,8 +148,8 @@ Function Initialize-Environment {
 
                 # Windows Defender may slow down or disrupt installs with realtime scanning.
                 Import-Module Defender
-                sudo Add-MpPreference -ExclusionPath "C:\Users\$env:USERNAME\scoop"
-                sudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
+                gsudo Add-MpPreference -ExclusionPath "C:\Users\$env:USERNAME\scoop"
+                gsudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
             }
         }
 
@@ -163,10 +160,6 @@ Function Initialize-Environment {
             }
 
             scoop update
-
-            if (-not(Test-CommandExists "sudo")) {
-                scoop install "sudo"
-            }
 
             # More robust than 'sudo' above and not just a PowerShell script, see https://github.com/gerardog/gsudo
             if (-not(Test-CommandExists "gsudo")) {
@@ -184,7 +177,7 @@ Function Initialize-Environment {
             # We run this here to ensure that the first run of msys2 is done before the 'init.sh' call
             # as the initial upgrade of msys2 results in it shutting down the console.
             if (Test-CommandExists "msys2") {
-                msys2 -where "$PSScriptRoot\..\..\" -shell bash -no-start -c "./source/shell/upgrade-package-manager.sh"
+                msys2 -where "$mycelioRoot" -shell bash -no-start -c "./source/shell/upgrade-package-manager.sh"
             }
 
             # https://github.com/chrisant996/clink

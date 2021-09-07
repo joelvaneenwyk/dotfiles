@@ -324,9 +324,8 @@ function initialize_gitconfig() {
 }
 
 function install_hugo {
-    _go_exe="$MYCELIO_GOBIN/go"
-    _hugo_exe="$MYCELIO_GOBIN/hugo"
     _hugo_tmp="$MYCELIO_TEMP/hugo"
+    _hugo_exe="$MYCELIO_GOBIN/hugo$MYCELIO_OS_APP_EXTENSION"
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -rf "$_hugo_tmp"
@@ -342,12 +341,12 @@ function install_hugo {
         return 1
     fi
 
-    if [ ! -f "$_go_exe" ]; then
-        echo "❌ Failed to install 'hugo' site builder. Missing 'go' compiler: '$_go_exe'"
+    if [ ! -f "$MYCELIO_GOEXE" ]; then
+        echo "❌ Failed to install 'hugo' site builder. Missing 'go' compiler: '$MYCELIO_GOEXE'"
         return 2
     fi
 
-    if [ -f "$_go_exe" ]; then
+    if [ -f "$MYCELIO_GOEXE" ]; then
         mkdir -p "$_hugo_tmp"
         rm -rf "$_hugo_tmp"
         git -c advice.detachedHead=false clone -b "v0.87.0" "https://github.com/gohugoio/hugo.git" "$_hugo_tmp"
@@ -355,20 +354,14 @@ function install_hugo {
         if (
             cd "$_hugo_tmp"
 
-            # We only modify the environment for this subshell and that is the expectation
-            # so we ignore the warnings here.
-            # shellcheck disable=SC2030
-            export GOROOT="$MYCELIO_GOROOT"
-            # shellcheck disable=SC2030
-            export GOBIN="$MYCELIO_GOBIN"
-
             # No support for GCC on Synology so not able to build extended features
-            if ! uname -a | grep -q "synology"; then
-                echo "##[cmd] $_go_exe install --tags extended"
-                CGO_ENABLED="1" "$_go_exe" install --tags extended
+            if uname -a | grep -q "synology"; then
+                echo "##[cmd] $MYCELIO_GOEXE install"
+                GOBIN="$MYCELIO_GOBIN" GOROOT="$MYCELIO_GOROOT" CGO_ENABLED="0" "$MYCELIO_GOEXE" build -o "$_hugo_exe"
             else
-                echo "##[cmd] $_go_exe install"
-                CGO_ENABLED="0" "$_go_exe" install
+                # https://github.com/gohugoio/hugo/blob/master/goreleaser.yml
+                echo "##[cmd] $MYCELIO_GOEXE install --tags extended"
+                GOBIN="$MYCELIO_GOBIN" GOROOT="$MYCELIO_GOROOT" CGO_ENABLED="1" "$MYCELIO_GOEXE" build -o "$_hugo_exe" --tags extended -ldflags="-s -w -X 'main.Version=v0.87.0' -extldflags '-static'"
             fi
         ); then
             echo "Successfully installed 'hugo' site builder."
@@ -388,82 +381,12 @@ function install_hugo {
 }
 
 function install_oh_my_posh {
-    _go_exe="$MYCELIO_GOBIN/go"
     _oh_my_posh_tmp="$MYCELIO_TEMP/oh_my_posh"
-
-    if [ "$MYCELIO_OS" = "windows" ]; then
-        _exe_extension=".exe"
-    else
-        _exe_extension=""
-    fi
-
-    _oh_my_posh_exe="$MYCELIO_GOBIN/oh-my-posh$_exe_extension"
+    _oh_my_posh_exe="$MYCELIO_GOBIN/oh-my-posh$MYCELIO_OS_APP_EXTENSION"
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -rf "$_oh_my_posh_tmp"
     fi
-
-    if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
-        echo "Skipped install of 'oh-my-posh' for root user."
-        return 0
-    fi
-
-    if [ -f "$_oh_my_posh_exe" ]; then
-        echo "✔ 'oh-my-posh' already installed."
-        return 0
-    fi
-
-    if [ ! -x "$(command -v git)" ]; then
-        echo "❌ Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
-        return 1
-    fi
-
-    if [ ! -f "$_go_exe" ]; then
-        echo "❌ Failed to install 'oh-my-posh' extension. Missing 'go' compiler: '$_go_exe'"
-        return 2
-    fi
-
-    if [ -f "$_go_exe" ]; then
-        mkdir -p "$_oh_my_posh_tmp"
-        rm -rf "$_oh_my_posh_tmp"
-        git -c advice.detachedHead=false clone -b "v3.175.0" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
-
-        if (
-            cd "$_oh_my_posh_tmp/src"
-
-            # We only modify the environment for this subshell and that is the expectation
-            # so we ignore the warnings here.
-            # shellcheck disable=SC2030,SC2031
-            export GOROOT="$MYCELIO_GOROOT"
-            # shellcheck disable=SC2030,SC2031
-            export GOBIN="$MYCELIO_GOBIN"
-
-            "$_go_exe" install
-        ); then
-            echo "Successfully installed 'oh-my-posh' site builder."
-        else
-            echo "Failed to install 'oh-my-posh' site builder."
-        fi
-    fi
-
-    if [ ! -f "$_oh_my_posh_exe" ]; then
-        echo "❌ Failed to install 'oh_my_posh' static site builder."
-        return 3
-    fi
-
-    "$_oh_my_posh_exe" version
-
-    #if [ ! -f "$_local_bin/oh-my-posh$_exe_extension" ]; then
-    #    _local_bin="$MYCELIO_HOME/.local/bin"
-    #    mkdir -p "$_local_bin"
-    #    _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$_exe_extension"
-    #    _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
-    #    if wget --quiet "$_posh_url" -O "$_local_bin/oh-my-posh$_exe_extension"; then
-    #        chmod +x "$_local_bin/oh-my-posh$_exe_extension"
-    #    else
-    #        echo "Unsupported platform for installing 'oh-my-posh' extension."
-    #    fi
-    #fi
 
     if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
         _posh_themes="$MYCELIO_HOME/.poshthemes"
@@ -513,6 +436,56 @@ function install_oh_my_posh {
         fi
     fi
 
+    if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
+        echo "Skipped install of 'oh-my-posh' for root user."
+        return 0
+    fi
+
+    if [ -f "$_oh_my_posh_exe" ]; then
+        echo "✔ 'oh-my-posh' already installed."
+        return 0
+    fi
+
+    _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$MYCELIO_OS_APP_EXTENSION"
+    _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
+    if wget --quiet "$_posh_url" -O "$_oh_my_posh_exe"; then
+        chmod +x "$_oh_my_posh_exe"
+    else
+        if [ ! -x "$(command -v git)" ]; then
+            echo "❌ Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
+            return 1
+        fi
+
+        if [ ! -f "$MYCELIO_GOEXE" ]; then
+            echo "❌ Failed to install 'oh-my-posh' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
+            return 2
+        fi
+
+        if [ -f "$MYCELIO_GOEXE" ]; then
+            mkdir -p "$_oh_my_posh_tmp"
+            rm -rf "$_oh_my_posh_tmp"
+            git -c advice.detachedHead=false clone -b "v3.175.0" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
+
+            if (
+                cd "$_oh_my_posh_tmp/src"
+
+                # https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/.github/workflows/release.yml
+                GOROOT="$MYCELIO_GOROOT" GOBIN="$MYCELIO_GOBIN" "$MYCELIO_GOEXE" build -o "$_oh_my_posh_exe" -ldflags="-X 'main.Version=v3.175.0'"
+            ); then
+                echo "Successfully installed 'oh-my-posh' site builder."
+            else
+                echo "Failed to install 'oh-my-posh' site builder."
+            fi
+        fi
+    fi
+
+    if [ ! -f "$_oh_my_posh_exe" ]; then
+        echo "❌ Failed to install 'oh_my_posh' static site builder."
+        return 3
+    fi
+
+    "$_oh_my_posh_exe" version
+
     return 0
 }
 
@@ -540,12 +513,12 @@ function install_fzf {
         return 1
     fi
 
-    if [ ! -f "$_go_exe" ]; then
-        echo "❌ Failed to install 'fzf' extension. Missing 'go' compiler: '$_go_exe'"
+    if [ ! -f "$MYCELIO_GOEXE" ]; then
+        echo "❌ Failed to install 'fzf' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
         return 2
     fi
 
-    if [ -f "$_go_exe" ]; then
+    if [ -f "$MYCELIO_GOEXE" ]; then
         mkdir -p "$_fzf_tmp"
         rm -rf "$_fzf_tmp"
         git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_tmp"
@@ -574,10 +547,7 @@ function install_fzf {
 
 function install_go {
     _local_root="$MYCELIO_HOME/.local"
-
     _local_go_root="$_local_root/go"
-    _go_exe="$_local_go_root/bin/go"
-
     _local_go_bootstrap_root="$_local_root/gobootstrap"
     _go_bootstrap_exe="$_local_go_bootstrap_root/bin/go"
     _go_requires_update=0
@@ -587,7 +557,7 @@ function install_go {
         rm -rf "$_local_go_bootstrap_root"
     fi
 
-    if [ -f "$_go_exe" ] && _go_version="$("$_go_exe" version 2>&1 | (
+    if [ -f "$MYCELIO_GOEXE" ] && _go_version="$("$MYCELIO_GOEXE" version 2>&1 | (
         read -r _ _ v _
         echo "${v#go}"
     ))"; then
@@ -663,12 +633,12 @@ function install_go {
                     exit 1
                 fi
 
-                if [ ! -f "$_go_exe" ]; then
+                if [ ! -f "$MYCELIO_GOEXE" ]; then
                     exit 2
                 fi
 
                 # Pre-compile the standard library, just like the official binary release tarballs do
-                if "$_go_exe" install std; then
+                if "$MYCELIO_GOEXE" install std; then
                     echo "Pre-compiled 'go' standard library."
                 fi
             ); then
@@ -732,7 +702,7 @@ function install_go {
         fi
     fi
 
-    if [ -f "$_go_exe" ] && _version=$("$_go_exe" version); then
+    if [ -f "$MYCELIO_GOEXE" ] && _version=$("$MYCELIO_GOEXE" version); then
         echo "✔ $_version"
     else
         echo "❌ Failed to install 'go' language."
@@ -944,12 +914,7 @@ function configure_linux() {
 
 function install_micro_text_editor() {
     mkdir -p "$MYCELIO_HOME/.local/bin/"
-
-    if [ "$MYCELIO_OS" == "windows" ]; then
-        _micro_exe="micro.exe"
-    else
-        _micro_exe="micro"
-    fi
+    _micro_exe="micro$MYCELIO_OS_APP_EXTENSION"
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
@@ -1017,10 +982,11 @@ function initialize_linux() {
         pacman -Syu --quiet --noconfirm
         pacman -S --quiet --noconfirm --needed \
             msys2-keyring curl wget unzip \
-            git gawk \
+            git gawk perl \
             fish tmux \
-            base-devel mingw-w64-x86_64-gcc make autoconf automake1.16 automake-wrapper libtool \
-            perl mingw-w64-x86_64-go
+            base-devel make autoconf automake1.16 automake-wrapper libtool \
+            mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils \
+            mingw-w64-x86_64-go
 
         if [ -f "/etc/pacman.d/gnupg/" ]; then
             rm -rf "/etc/pacman.d/gnupg/"
@@ -1129,6 +1095,7 @@ function _sudo() {
 function _install_powershell() {
     if [ -x "$(command -v apt-get)" ]; then
         if [ -f "/etc/os-release" ]; then
+            # shellcheck disable=SC1091
             source "/etc/os-release"
         fi
 
