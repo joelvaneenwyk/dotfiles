@@ -392,10 +392,13 @@ initialize_profile() {
     # We want usr/bin to be at the end
     _add_path "append" "/usr/bin"
     _add_path "append" "/mnt/c/Program Files/Microsoft VS Code/bin"
+    _add_path "append" "/c/Program Files/Microsoft VS Code/bin"
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
 
+    export TEXINPUTS=.:$TEXINPUTS
+
     if [ -f "/mingw64/bin/tex.exe" ]; then
-        export TEX="/mingw64/bin/tex.exe"
+        export TEX="/mingw64/bin/tex"
         export TEX_OS_NAME="win32"
     fi
 
