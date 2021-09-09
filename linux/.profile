@@ -24,8 +24,8 @@ _unique_list() {
     # https://stackoverflow.com/questions/4667509/shell-variables-set-inside-while-loop-not-visible-outside-of-it
     printf '%s\n' "$_arg_input_list" | tr -s ':' '\n' | {
         while read -r dir; do
-            _list_left="${_list%:"$dir":*}" # remove last occurrence to end
-            if [ "$_list" = "$_list_left" ]; then
+            _left="${_list%:"$dir":*}" # remove last occurrence to end
+            if [ "$_list" = "$_left" ]; then
                 # PATH doesn't contain $dir
                 _list="$_list$dir:"
             fi
@@ -33,14 +33,14 @@ _unique_list() {
         # strip ':' pads
         _list="${_list#:}"
         _list="${_list%:}"
+
         # return
         printf '%s\n' "$_list"
     }
 }
 
 _add_to_list() {
-    _list="$(_unique_list "${1-}")"
-    _list=":$1:"
+    _list=":$(_unique_list "${1-}"):"
     shift
 
     case "$1" in
@@ -53,21 +53,21 @@ _add_to_list() {
 
     for dir in "$@"; do
         # Remove last occurrence to end
-        _list_left="${_list%:"$dir":*}"
+        _left="${_list%:$dir:*}"
 
-        if [ "$_list" = "$_list_left" ]; then
-            # PATH doesn't contain $dir
+        if [ "$_list" = "$_left" ]; then
+            # Input list does not contain $dir
             [ "$_action" = 'include' ] && _action='append'
-            _list_right=''
+            _right=''
         else
             # Remove start to last occurrence
-            _list_right=":${_list#"$_list_left":"$dir":}"
+            _right=":${_list#$_left:$dir:}"
         fi
 
         # Construct _list with $dir added
         case "$_action" in
-        'prepend') _list=":$dir$_list_left$_list_right" ;;
-        'append') _list="$_list_left$_list_right$dir:" ;;
+        'prepend') _list=":$dir$_left$_right" ;;
+        'append') _list="$_left$_right$dir:" ;;
         esac
     done
 
@@ -80,7 +80,7 @@ _add_to_list() {
 }
 
 #
-# USAGE: addPath [include|prepend|append] "dir1" "dir2" ...
+# USAGE: _add_path [include|prepend|append] "dir1" "dir2" ...
 #
 #   prepend: add/move to beginning
 #   append:  add/move to end
@@ -377,21 +377,22 @@ initialize_profile() {
 
     export LD_PRELOAD=
 
-    _add_path "prepend" "/mingw64/bin"
-    _add_path "prepend" "/mnt/c/Program Files/Microsoft VS Code/bin"
-
-    _add_path "prepend" "/usr/bin"
     _add_path "prepend" "/usr/local/gnupg/bin"
     _add_path "prepend" "$HOME/.local/go/bin"
     _add_path "prepend" "$HOME/.local/bin"
     _add_path "prepend" "$HOME/.local/sbin"
-    _add_path "prepend" "$HOME/.config/git-fuzzy/bin"
+    _add_path "prepend" "/mingw64/bin"
 
     # Need library path for 'stow' to work from compiled version
     _add_path "prepend" "$MYCELIO_ROOT/source/stow/bin"
     PERL5LIB="$(_add_to_list "$PERL5LIB" "$MYCELIO_ROOT/source/stow/lib")"
     PERL5LIB="$(_add_to_list "$PERL5LIB" "/mingw64/share/tlpkg")"
     export PERL5LIB
+
+    # We want usr/bin to be at the end
+    _add_path "append" "/usr/bin"
+    _add_path "append" "/mnt/c/Program Files/Microsoft VS Code/bin"
+    _add_path "append" "$HOME/.config/git-fuzzy/bin"
 
     if [ -f "/mingw64/bin/tex.exe" ]; then
         export TEX="/mingw64/bin/tex.exe"

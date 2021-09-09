@@ -984,7 +984,8 @@ function initialize_linux() {
             msys2-keyring curl wget unzip \
             git gawk perl \
             fish tmux \
-            base-devel make autoconf automake1.16 automake-wrapper libtool \
+            texinfo texinfo-tex \
+            base-devel msys2-runtime-devel make autoconf automake1.16 automake-wrapper libtool \
             mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils \
             mingw-w64-x86_64-go
 
