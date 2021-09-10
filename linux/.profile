@@ -395,6 +395,12 @@ initialize_profile() {
     _add_path "append" "/c/Program Files/Microsoft VS Code/bin"
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
 
+    # Clear out TMP as TEMP may come from Windows and we do not want tools confused
+    # if they find both.
+    unset TMP
+    unset temp
+    unset tmp
+
     export TEXINPUTS=.:$TEXINPUTS
 
     if [ -f "/mingw64/bin/tex.exe" ]; then
