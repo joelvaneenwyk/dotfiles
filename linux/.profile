@@ -145,22 +145,20 @@ _initialize_synology() {
 }
 
 initialize_interactive_profile() {
-    # make less more friendly for non-text input files, see lesspipe(1)
+    # Make less more friendly for non-text input files, see lesspipe(1)
     [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
-    # set variable identifying the chroot you work in (used in the prompt below)
+    # Set variable identifying the chroot you work in (used in the prompt below)
     if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
         debian_chroot=$(cat /etc/debian_chroot)
     fi
 
-    # set a fancy prompt (non-color, unless we know we "want" color)
+    # Set a fancy prompt (non-color, unless we know we "want" color)
     case "$TERM" in
     xterm-color | *-256color) color_prompt=yes ;;
     esac
 
-    # uncomment for a colored prompt, if the terminal has the capability; turned
-    # off by default to not distract the user: the focus in a terminal window
-    # should be on the output of commands, not on the prompt
+    # Use a colored prompt if the terminal has the capability
     force_color_prompt=yes
 
     if [ -n "$force_color_prompt" ]; then
@@ -174,10 +172,10 @@ initialize_interactive_profile() {
         fi
     fi
 
-    if [ "$color_prompt" = yes ]; then
-        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    if [ "$color_prompt" = "yes" ]; then
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\n \$ '
     else
-        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\n \$ '
     fi
     unset color_prompt force_color_prompt
 
@@ -201,9 +199,16 @@ initialize_interactive_profile() {
     # Colored GCC warnings and errors
     export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
-    if [ -x "$(command -v oh-my-posh)" ] && [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ] && [ "$MYCELIO_OH_MY_POSH" = "1" ]; then
+    if [ -x "$(command -v oh-my-posh)" ] && [ "$MYCELIO_OH_MY_POSH" = "1" ]; then
         _shell=$(oh-my-posh --print-shell)
-        eval "$(oh-my-posh --init --shell "$_shell" --config "$HOME/.poshthemes/stelbent.minimal.omp.json")"
+        _theme="$HOME/.poshthemes/mycelio.omp.json"
+        if [ ! -f "$_theme" ] && [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
+            _theme="$HOME/.poshthemes/stelbent.minimal.omp.json"
+        fi
+
+        if [ -f "$_theme" ]; then
+            eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")"
+        fi
     fi
 
     if [ "$MYCELIO_OS_NAME" = "Windows" ]; then

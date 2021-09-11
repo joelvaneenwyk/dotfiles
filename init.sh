@@ -499,7 +499,7 @@ function install_fzf {
     fi
 
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
-        echo "Skipped install of 'fzf' for root user."
+        echo "Skipped 'fzf' install for root user."
         return 0
     fi
 
@@ -518,21 +518,24 @@ function install_fzf {
         return 2
     fi
 
-    if [ -f "$MYCELIO_GOEXE" ]; then
-        mkdir -p "$_fzf_tmp"
-        rm -rf "$_fzf_tmp"
-        git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_tmp"
+    if [ ! -x "$(command -v make)" ]; then
+        echo "❌ Failed to install 'fzf' extension. Required 'make' tool missing."
+        return 3
+    fi
 
-        if (
-            cd "$_fzf_tmp"
-            make all bin/fzf
-        ); then
-            echo "Successfully generated 'fzf' utility with 'go' compiler."
-            mv "$_fzf_tmp/bin/fzf" "$_local_root/bin"
-            mv "$_fzf_tmp/bin/fzf-tmux" "$_local_root/bin"
-        else
-            echo "Failed to install 'fzf' utility."
-        fi
+    mkdir -p "$_fzf_tmp"
+    rm -rf "$_fzf_tmp"
+    git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_tmp"
+
+    if (
+        cd "$_fzf_tmp"
+        make all bin/fzf
+    ); then
+        echo "Successfully generated 'fzf' utility with 'go' compiler."
+        mv "$_fzf_tmp/bin/fzf" "$_local_root/bin"
+        mv "$_fzf_tmp/bin/fzf-tmux" "$_local_root/bin"
+    else
+        echo "Failed to install 'fzf' utility."
     fi
 
     if [ ! -f "$_fzf_exe" ]; then
@@ -581,82 +584,87 @@ function install_go {
         mv "$_local_root/go" "$_local_go_bootstrap_root"
         rm "$_go_bootstrap_src_archive"
 
-        echo "Compiling 'go' 1.4 bootstrap from source: '$_local_go_bootstrap_root/src'"
-        if (
-            # shellcheck disable=SC2031
-            export CGO_ENABLED=0
-            cd "$_local_go_bootstrap_root/src"
-            if [ -x "$(command -v cygpath)" ]; then
-                cmd /c "make.bat"
-            else
-                ./make.bash
-            fi
-        ); then
-            echo "Successfully compiled 'go' bootstrap from source."
+        if [ ! -x "$(command -v gcc)" ] && [ ! -x "$(command -v make)" ]; then
+            echo "❌ Skipped 'go' compile. Missing GCC toolchain."
         else
-            echo "Failed to compile 'go' bootstrap from source."
-        fi
+            echo "Compiling 'go' 1.4 bootstrap from source: '$_local_go_bootstrap_root/src'"
 
-        # https://golang.org/doc/install/source
-        if [ -f "$_go_bootstrap_exe" ] && [ -x "$(command -v gcc)" ] && [ -x "$(command -v make)" ]; then
-            _go_src_archive="$MYCELIO_TEMP/go.tgz"
-            wget --quiet -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
-
-            echo "Extracting 'go' source: '$_go_src_archive'"
-            tar -C "$_local_root" -xzf "$_go_src_archive"
-            rm "$_go_src_archive"
-
-            echo "Compiling 'go' from source: '$_local_go_root/src'"
             if (
-                cd "$_local_go_root/src"
-
-                GOROOT_BOOTSTRAP="$_local_go_bootstrap_root"
-                export GOROOT_BOOTSTRAP
-
-                GOHOSTOS="$MYCELIO_OS"
-                export GOHOSTOS
-
-                GOARCH="$MYCELIO_ARCH"
-                export GOARCH
-
-                GOARM="$MYCELIO_ARM"
-                export GOARM
-
-                GOHOSTARCH="$MYCELIO_ARCH"
-                export GOHOSTARCH
-
+                # shellcheck disable=SC2031
+                export CGO_ENABLED=0
+                cd "$_local_go_bootstrap_root/src"
                 if [ -x "$(command -v cygpath)" ]; then
-                    if ! cmd /c "make.bat"; then
-                        exit 1
-                    fi
-                elif ! ./make.bash; then
-                    exit 1
-                fi
-
-                if [ ! -f "$MYCELIO_GOEXE" ]; then
-                    exit 2
-                fi
-
-                # Pre-compile the standard library, just like the official binary release tarballs do
-                if "$MYCELIO_GOEXE" install std; then
-                    echo "Pre-compiled 'go' standard library."
+                    cmd /c "make.bat"
+                else
+                    ./make.bash
                 fi
             ); then
-                echo "Successfully compiled 'go' from source."
-                _go_compiled=1
+                echo "Successfully compiled 'go' bootstrap from source."
             else
-                echo "Failed to compile 'go' from source."
+                echo "Failed to compile 'go' bootstrap from source."
             fi
 
-            # Remove a few intermediate / bootstrapping files the official binary release tarballs do not contain
-            rm -rf "$_local_go_root/pkg/*/cmd"
-            rm -rf "$_local_go_root/pkg/bootstrap"
-            rm -rf "$_local_go_root/pkg/obj"
-            rm -rf "$_local_go_root/pkg/tool/*/api"
-            rm -rf "$_local_go_root/pkg/tool/*/go_bootstrap "
-            rm -rf "$_local_go_root/src/cmd/dist/dist"
-        else
-            echo "Missing required tools to compile 'go' from source."
+            # https://golang.org/doc/install/source
+            if [ -f "$_go_bootstrap_exe" ]; then
+                _go_src_archive="$MYCELIO_TEMP/go.tgz"
+                wget --quiet -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
+
+                echo "Extracting 'go' source: '$_go_src_archive'"
+                tar -C "$_local_root" -xzf "$_go_src_archive"
+                rm "$_go_src_archive"
+
+                echo "Compiling 'go' from source: '$_local_go_root/src'"
+                if (
+                    cd "$_local_go_root/src"
+
+                    GOROOT_BOOTSTRAP="$_local_go_bootstrap_root"
+                    export GOROOT_BOOTSTRAP
+
+                    GOHOSTOS="$MYCELIO_OS"
+                    export GOHOSTOS
+
+                    GOARCH="$MYCELIO_ARCH"
+                    export GOARCH
+
+                    GOARM="$MYCELIO_ARM"
+                    export GOARM
+
+                    GOHOSTARCH="$MYCELIO_ARCH"
+                    export GOHOSTARCH
+
+                    if [ -x "$(command -v cygpath)" ]; then
+                        if ! cmd /c "make.bat"; then
+                            exit 1
+                        fi
+                    elif ! ./make.bash; then
+                        exit 1
+                    fi
+
+                    if [ ! -f "$MYCELIO_GOEXE" ]; then
+                        exit 2
+                    fi
+
+                    # Pre-compile the standard library, just like the official binary release tarballs do
+                    if "$MYCELIO_GOEXE" install std; then
+                        echo "Pre-compiled 'go' standard library."
+                    fi
+                ); then
+                    echo "Successfully compiled 'go' from source."
+                    _go_compiled=1
+                else
+                    echo "Failed to compile 'go' from source."
+                fi
+
+                # Remove a few intermediate / bootstrapping files the official binary release tarballs do not contain
+                rm -rf "$_local_go_root/pkg/*/cmd"
+                rm -rf "$_local_go_root/pkg/bootstrap"
+                rm -rf "$_local_go_root/pkg/obj"
+                rm -rf "$_local_go_root/pkg/tool/*/api"
+                rm -rf "$_local_go_root/pkg/tool/*/go_bootstrap "
+                rm -rf "$_local_go_root/src/cmd/dist/dist"
+            else
+                echo "Missing required tools to compile 'go' from source."
+            fi
         fi
 
         if [ "$_go_compiled" = "0" ]; then
@@ -779,7 +787,7 @@ function _stow_internal() {
 }
 
 function _stow() {
-    _stow_bin="$MYCELIO_ROOT/source/stow/bin/stow"
+    _stow_bin="$STOW_ROOT/bin/stow"
     _target_path="$MYCELIO_HOME"
 
     for _package in "$@"; do
@@ -813,7 +821,7 @@ function _stow() {
 
         _return_code=0
         echo "##[cmd] stow ${_stow_args[*]}"
-        if perl -I "$MYCELIO_ROOT/source/stow/lib" "$_stow_bin" "${_stow_args[@]}" 2>&1 | grep -v "BUG in find_stowed_path"; then
+        if perl -I "$STOW_ROOT/lib" "$_stow_bin" "${_stow_args[@]}" 2>&1 | grep -v "BUG in find_stowed_path"; then
             _return_code="${PIPESTATUS[0]}"
         else
             _return_code="${PIPESTATUS[0]}"
@@ -926,17 +934,28 @@ function install_micro_text_editor() {
         return 0
     fi
 
-    _tmp_micro="$MYCELIO_TEMP/micro"
-    mkdir -p "$_tmp_micro"
-    rm -rf "$_tmp_micro"
-    git -c advice.detachedHead=false clone -b "v2.0.10" "https://github.com/zyedidia/micro" "$_tmp_micro"
-
-    if (
-        cd "$_tmp_micro"
-        make build
-    ); then
-        echo "✔ Successfully compiled micro text editor."
+    if [ ! -x "$(command -v git)" ] || [ ! -x "$(command -v make)" ]; then
+        echo "Skipped 'micro' compile. Missing build tools."
     else
+        _tmp_micro="$MYCELIO_TEMP/micro"
+        mkdir -p "$_tmp_micro"
+        rm -rf "$_tmp_micro"
+        git -c advice.detachedHead=false clone -b "v2.0.10" "https://github.com/zyedidia/micro" "$_tmp_micro"
+
+        if (
+            cd "$_tmp_micro"
+            make build
+        ); then
+            if [ -f "$_tmp_micro/$_micro_exe" ]; then
+                rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
+                mv "$_tmp_micro/$_micro_exe" "$MYCELIO_HOME/.local/bin/"
+            fi
+
+            echo "✔ Successfully compiled micro text editor."
+        fi
+    fi
+
+    if [ ! -f "$MYCELIO_HOME/.local/bin/$_micro_exe" ]; then
         if (
             mkdir -p "$MYCELIO_HOME/.local/bin/"
             cd "$MYCELIO_HOME/.local/bin/"
@@ -947,11 +966,6 @@ function install_micro_text_editor() {
             echo "[mycelio] WARNING: Failed to install 'micro' text editor."
             return 2
         fi
-    fi
-
-    if [ -f "$_tmp_micro/$_micro_exe" ]; then
-        rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
-        mv "$_tmp_micro/$_micro_exe" "$MYCELIO_HOME/.local/bin/"
     fi
 
     return 0
@@ -1038,7 +1052,7 @@ function initialize_linux() {
     fi
 
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
-        echo "Skipped install of Python setup for root user."
+        echo "Skipped Python setup for root user."
     else
         if [ -x "$(command -v python3)" ]; then
             if ! python3 -m pip --version >/dev/null 2>&1; then
@@ -1061,7 +1075,7 @@ function initialize_linux() {
     _install_powershell
 
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
-        echo "Skipped install of 'go' and 'hugo' for root user."
+        echo "Skipped 'go' and 'hugo' install for root user."
     else
         install_go
         install_hugo
@@ -1080,7 +1094,7 @@ function initialize_linux() {
         if [ -x "$(command -v git)" ]; then
             git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$MYCELIO_HOME/.asdf" --branch v0.8.1
         else
-            echo "Skipped install of 'asdf' as git is not installed."
+            echo "Skipped 'asdf' install. Missing required 'git' tool."
         fi
     fi
 }
@@ -1117,19 +1131,100 @@ function _install_powershell() {
     fi
 }
 
+function _stow_transform_perl_input() {
+    input_file="$1.in"
+    output_file="$1"
+
+    # This is more explicit and reliable than the config file trick
+    sed -e "s|[@]PERL[@]|$PERL|g" \
+        -e "s|[@]VERSION[@]|$VERSION|g" \
+        -e "s|[@]USE_LIB_PMDIR[@]|$USE_LIB_PMDIR|g" "$input_file" >"$output_file"
+}
+
+function _generate_stow_binaries() {
+    # Move to source directory and start processst
+    cd "$STOW_ROOT" || true
+
+    VERSION=2.3.2
+    PERL=$(which perl)
+    PERL="${PERL:-/bin/perl}"
+
+    if [ -x "$(command -v autoreconf)" ] && [ -x "$(command -v make)" ]; then
+        autoreconf --install --verbose 2>&1 | awk '{ print "[stow.autoreconf]", $0 }'
+
+        eval "$(perl -V:siteprefix)"
+
+        if [ -x "$(command -v cygpath)" ]; then
+            siteprefix=$(cygpath "$siteprefix")
+        fi
+
+        PERL5LIB=$(perl -le 'print $INC[0]')
+        export PERL5LIB
+
+        echo "Site prefix: ${siteprefix:-NULL}"
+        echo "Perl lib: $PERL5LIB"
+
+        ./configure --prefix="${siteprefix:-}" --with-pmdir="$PERL5LIB" 2>&1 | awk '{ print "[stow.configure]", $0 }'
+
+        # We do not need documentation so only build binaries and libraries
+        make bin/stow bin/chkstow lib/Stow.pm lib/Stow/Util.pm
+    else
+        PMDIR=${prefix:-}/share/perl5/site_perl
+
+        if ! PERL5LIB=$($PERL -V | awk '/@INC/ {p=1; next} (p==1) {print $1}' | grep "$PMDIR" | head -n 1); then
+            echo "[stow.cpan] ERROR: Failed to check installed Perl libraries."
+            PERL5LIB="$PMDIR"
+        fi
+
+        echo "[stow.cpan] # Perl modules will be installed to $PMDIR"
+        echo "[stow.cpan] #"
+        if [ -n "$PERL5LIB" ]; then
+            USE_LIB_PMDIR=""
+            echo "[stow.cpan] # This is in $PERL's built-in @INC, so everything"
+            echo "[stow.cpan] # should work fine with no extra effort."
+        else
+            USE_LIB_PMDIR="use lib \"$PMDIR\";"
+            echo "[stow.cpan] # This is *not* in $PERL's built-in @INC, so the"
+            echo "[stow.cpan] # front-end scripts will have an appropriate \"use lib\""
+            echo "[stow.cpan] # line inserted to compensate."
+        fi
+
+        echo "[stow.cpan] #"
+        echo "[stow.cpan] # PERL5LIB: $PERL5LIB"
+
+        _stow_transform_perl_input "$STOW_ROOT/bin/chkstow"
+        _stow_transform_perl_input "$STOW_ROOT/bin/stow"
+        _stow_transform_perl_input "$STOW_ROOT/lib/Stow.pm"
+        _stow_transform_perl_input "$STOW_ROOT/lib/Stow/Util.pm"
+
+        chmod a+x "$STOW_ROOT/bin/chkstow" "$STOW_ROOT/bin/stow"
+    fi
+}
+
 #
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
 function _install_stow() {
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
-        rm -f "$MYCELIO_ROOT/source/stow/bin/stow"
+        rm -f "$STOW_ROOT/bin/stow"
         rm -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm"
     fi
 
     if [ -x "$(command -v cpan)" ]; then
         # If configuration file does not exist yet then we automate configuration with
         # answers to standard questions. These may become invalid with newer versions.
-        perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit'
+        if [ ! -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm" ]; then
+            (
+                echo "yes"
+                echo ""
+                echo "no"
+                echo "exit"
+            ) | cpan | awk '{ print "[stow.cpan]", $0 }'
+        fi
+
+        # If configuration file does not exist yet then we automate configuration with
+        # answers to standard questions. These may become invalid with newer versions.
+        perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit' | awk '{ print "[stow.cpan]", $0 }'
 
         # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because
         # it is faster but also because tests in 'Test::Output' causes consistent hangs
@@ -1139,25 +1234,17 @@ function _install_stow() {
         echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
     fi
 
-    if [ ! -f "$MYCELIO_ROOT/source/stow/configure.ac" ] && [ -x "$(command -v git)" ]; then
+    if [ ! -f "$STOW_ROOT/configure.ac" ] && [ -x "$(command -v git)" ]; then
         git -C "$MYCELIO_ROOT" submodule update --init --recursive
-        echo "Updated submodules due to missing 'stow' source."
+        echo "[stow.cpan] Updated submodules due to missing 'stow' source."
     fi
 
-    if [ ! -f "$MYCELIO_ROOT/source/stow/configure.ac" ]; then
-        echo "❌ 'stow' source not available: '$MYCELIO_ROOT/source/stow'"
-    elif [ -f "$MYCELIO_ROOT/source/stow/bin/stow" ] && [ -f "$MYCELIO_ROOT/source/stow/lib/Stow.pm" ]; then
+    if [ ! -f "$STOW_ROOT/configure.ac" ]; then
+        echo "❌ 'stow' source not available: '$STOW_ROOT'"
+    elif [ -f "$STOW_ROOT/bin/stow" ] && [ -f "$STOW_ROOT/lib/Stow.pm" ]; then
         echo "✔ Custom 'stow' binary already built from source."
     elif (
-        # Move to source directory and start install.
-        cd "$MYCELIO_ROOT/source/stow" || true
-        autoreconf --install --verbose 2>&1 | awk '{ print "[stow.autoreconf]", $0 }'
-
-        # We want a local install
-        ./configure --prefix="" 2>&1 | awk '{ print "[stow.configure]", $0 }'
-
-        # Documentation part is expected to fail but we can ignore that
-        make bin/stow bin/chkstow lib/Stow.pm lib/Stow/Util.pm
+        _generate_stow_binaries
 
         rm -f "./configure~" "Build.bat" "Build"
         git checkout -- "./aclocal.m4" || true
@@ -1356,6 +1443,8 @@ function _setup_environment() {
     export HOME
 
     export MYCELIO_HOME="$HOME"
+
+    export STOW_ROOT="$MYCELIO_ROOT/source/stow"
 }
 
 function main() {
