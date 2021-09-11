@@ -44,8 +44,9 @@
                     "style": "plain",
                     "foreground": "#757575",
                     "properties": {
-                        "prefix": " ",
-                        "display_host": true
+                        "prefix": "\u250c ",
+                        "display_host": true,
+                        "ssh_icon": "[SSH] "
                     }
                 },
                 {
@@ -55,7 +56,8 @@
                     "foreground": "#100e23",
                     "background": "#91ddff",
                     "properties": {
-                        "style": "folder",
+                        "style": "agnoster_full",
+                        "max_depth": 4,
                         "enable_hyperlink": false
                     }
                 },
