@@ -122,10 +122,12 @@ _set_golang_paths() {
     _add_path "prepend" "${MYCELIO_GOBIN:-}"
 
     if [ -f "$MYCELIO_GOEXE" ]; then
-        export GOROOT="" GOBIN="" GOPATH=""
-        "$MYCELIO_GOEXE" env -u GOPATH >/dev/null 2>&1
-        "$MYCELIO_GOEXE" env -u GOROOT >/dev/null 2>&1
-        "$MYCELIO_GOEXE" env -u GOBIN >/dev/null 2>&1
+        unset GOROOT
+        unset GOBIN
+        unset GOPATH
+        "$MYCELIO_GOEXE" env -u GOPATH >/dev/null 2>&1 || true
+        "$MYCELIO_GOEXE" env -u GOROOT >/dev/null 2>&1 || true
+        "$MYCELIO_GOEXE" env -u GOBIN >/dev/null 2>&1 || true
     fi
 }
 
@@ -382,15 +384,16 @@ initialize_profile() {
 
     export LD_PRELOAD=
 
+    # Must NOT include /mingw64/bin as we want to rely on the system environment setup
+    # to specify those.
     _add_path "prepend" "/usr/local/gnupg/bin"
     _add_path "prepend" "$HOME/.local/go/bin"
     _add_path "prepend" "$HOME/.local/bin"
     _add_path "prepend" "$HOME/.local/sbin"
-    _add_path "prepend" "/mingw64/bin"
 
     # Need library path for 'stow' to work from compiled version
     _add_path "prepend" "$MYCELIO_ROOT/source/stow/bin"
-    PERL5LIB="$(_add_to_list "$PERL5LIB" "$MYCELIO_ROOT/source/stow/lib")"
+    PERL5LIB="$(_add_to_list "${PERL5LIB:-}" "$MYCELIO_ROOT/source/stow/lib")"
     PERL5LIB="$(_add_to_list "$PERL5LIB" "/mingw64/share/tlpkg")"
     export PERL5LIB
 
@@ -406,7 +409,7 @@ initialize_profile() {
     unset temp
     unset tmp
 
-    export TEXINPUTS=.:$TEXINPUTS
+    export TEXINPUTS=.:${TEXINPUTS:-}
 
     if [ -f "/mingw64/bin/tex.exe" ]; then
         export TEX="/mingw64/bin/tex"

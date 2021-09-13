@@ -8,6 +8,9 @@
 # Generated files that may be used in Docker
 artifacts/
 
+# Perl intermediate files
+_Inline/
+
 packages/fonts/.fonts/JetBrains*
 
 packages/fish/.local/share

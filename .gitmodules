@@ -20,9 +20,9 @@
 
 [submodule "source/stow"]
 	path = source/stow
-	url = https://github.com/aspiers/stow
+	url = https://github.com/joelvaneenwyk/stow
 
-[submodule "bats"]
+[submodule "bats-core"]
 	path = test/bats
 	url = https://github.com/bats-core/bats-core.git
 

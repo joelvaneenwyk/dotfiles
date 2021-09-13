@@ -34,8 +34,6 @@
         "micro/.config"
     ],
 
-    "perl.enable": false,
-
     "xml.validation.enabled": false,
     "stylelint.enable": false,
 
@@ -160,6 +158,13 @@
         }
     },
 
+    "perl.enable": true,
+    "perl.perlInc": [
+        "${workspaceFolder}/lib",
+        "${workspaceFolder}/bin",
+        "${workspaceFolder}/t"
+    ],
+
     "beautify.language": {
         "js": {
             "type": ["javascript", "json", "json"],
@@ -170,12 +175,31 @@
         "html": ["htm", "html"]
     },
 
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "source/stow/lib/**/*.pm": true,
+        "source/stow/tmp-testing-trees": true,
+        "source/stow/autom4te.cache": true,
+        "**/_build/**": true,
+        "**/_Inline/**": true,
+        "**/blib/**": true
+    },
     "files.associations": {
         ".gitconfig_common": "properties",
         ".gitconfig_linux": "properties",
         ".gitconfig_windows": "properties",
         ".gitconfig_wsl": "properties",
-        "*.json.git": "cjson"
+        ".gitignore": "properties",
+        "*.json.git": "cjson",
+        "*.in": "perl",
+        "stow": "perl",
+        "chkstow": "perl",
+        "get-version": "perl",
+        "cpanfile": "perl"
     },
 
     "[json]": {

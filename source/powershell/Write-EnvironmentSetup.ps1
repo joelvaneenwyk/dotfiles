@@ -125,9 +125,8 @@ Try {
         $fileStream.WriteLine("set ""PATH=$($environmentPaths -join ";")""")
         $fileStream.WriteLine("set ""MYCELIO_ROOT=$dotfilesRoot""")
         $fileStream.WriteLine("set ""HOME=$ENV:UserProfile""")
-        #$fileStream.WriteLine("set ""MSYSTEM=MINGW64""")
-        #$fileStream.WriteLine("set ""CHERE_INVOKING=1""")
-        #$fileStream.WriteLine("set ""MSYS2_PATH_TYPE=inherit""")
+        $fileStream.WriteLine("set ""MSYS=winsymlinks:nativestrict""")
+        $fileStream.WriteLine("set ""MSYS2_PATH_TYPE=inherit""")
 
         $fileStream.WriteLine("echo Initialized path from generated script.")
         $fileStream.WriteLine("")
