@@ -29,7 +29,7 @@ if test -d /usr/libexec/java_home
     set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
 end
 
-# It should already be installed by './init.sh' but just in case we do it here
+# It should already be installed by './setup.sh' but just in case we do it here
 # as well.
 if not functions -q fundle
     eval (curl -sfL https://git.io/fundle-install)

@@ -51,7 +51,7 @@ To install on platforms with `bash` you can do the following:
 curl -sL git.io/mycelio | bash
 ```
 
-This will clone the repository and run `init.sh`.
+This will clone the repository and run `setup.sh`.
 
 This custom URL was created using the following command:
 
@@ -96,7 +96,7 @@ Most versions of MacOS will already have Git installed, and you can activate it 
 3. Clone the repo from your home directory:
    > `git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
 4. Initialize environment.
-   > `./init.sh`
+   > `./setup.sh`
 5. Install bash settings for the root user
    > `sudo stow bash -t /root`
 
@@ -107,7 +107,7 @@ Most versions of MacOS will already have Git installed, and you can activate it 
 2. Navigate to `dotfiles` project.
    > `cd dotfiles`
 3. Initialize the environment.
-   > `./init.sh`
+   > `./setup.sh`
 
 ### Secrets
 

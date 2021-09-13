@@ -93,6 +93,6 @@ WORKDIR C:\\
 COPY ./ ./dotfiles
 
 WORKDIR C:\\dotfiles
-RUN call init.bat
+RUN call setup.bat
 
 CMD ["cmd.exe"]

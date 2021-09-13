@@ -11,5 +11,5 @@ _common_setup() {
     export MYCELIO_TEST_ROOT="$BATS_TEST_DIRNAME"
     export MYCELIO_TEST_LINK="$MYCELIO_TEST_ROOT/.tmpln"
 
-    . "$MYCELIO_ROOT/init.sh" --skip
+    . "$MYCELIO_ROOT/setup.sh" --skip
 }

@@ -77,7 +77,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     :: https://docs.microsoft.com/en-us/windows/wsl/reference
     ::
     if "%COMMAND%"=="wsl" (
-        wsl !_arg_remainder! -- bash -c ./init.sh
+        wsl !_arg_remainder! -- bash -c ./setup.sh
         exit /b %ERRORLEVEL%
     )
 
@@ -155,7 +155,7 @@ setlocal EnableExtensions EnableDelayedExpansion
         goto:$InitializeDone
     )
 
-    call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./init.sh --home /c/Users/%USERNAME% !_args!"
+    call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
     if not "%ERRORLEVEL%"=="0" (
         set _error=%ERRORLEVEL%
     )

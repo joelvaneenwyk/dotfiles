@@ -381,10 +381,10 @@ Function Initialize-Environment {
         }
 
         if (!(Test-Path Variable:\IsWindows) -or $IsWindows) {
-            Start-Process -Wait -NoNewWindow "cmd.exe" -ArgumentList @("/c", "$HOME/dotfiles/init.bat")
+            Start-Process -Wait -NoNewWindow "cmd.exe" -ArgumentList @("/c", "$HOME/dotfiles/setup.bat")
         }
         else {
-            Start-Process -Wait -NoNewWindow "bash" -ArgumentList @("-c", "$HOME/dotfiles/init.sh")
+            Start-Process -Wait -NoNewWindow "bash" -ArgumentList @("-c", "$HOME/dotfiles/setup.sh")
         }
     }
     catch [Exception] {

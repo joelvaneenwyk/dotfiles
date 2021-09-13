@@ -106,7 +106,7 @@ function _initialize_interactive_bash_profile() {
     # ~/.bash_aliases, instead of adding them here directly.
     # See /usr/share/doc/bash-doc/examples in the bash-doc package.
     if [ -f "$HOME/.bash_aliases" ]; then
-        # shellcheck source=bash/.bash_aliases
+        # shellcheck source=packages/bash/.bash_aliases
         source "$HOME/.bash_aliases"
     fi
 
@@ -157,7 +157,7 @@ function _initialize_bash_profile() {
         . "$HOME/.profile" "$@"
     fi
 
-    if [ -f "${MYCELIO_ROOT:-}/init.sh" ]; then
+    if [ -f "${MYCELIO_ROOT:-}/setup.sh" ]; then
         MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd .. && pwd)"
         export MYCELIO_ROOT
     fi

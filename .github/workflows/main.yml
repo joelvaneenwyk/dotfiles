@@ -25,11 +25,11 @@ jobs:
           - windows-latest
         include:
           - platform: ubuntu-latest
-            launch: bash init.sh
+            launch: bash setup.sh
           - platform: macos-latest
-            launch: bash init.sh
+            launch: bash setup.sh
           - platform: windows-latest
-            launch: cmd /c init.bat
+            launch: cmd /c setup.bat
 
     # The type of runner that the job will run on
     runs-on: ${{ matrix.platform }}
@@ -119,4 +119,4 @@ jobs:
           cp --dereference -af $(cygpath "$GITHUB_WORKSPACE/") "$HOME/dots/" || true
           cd "$HOME"
           pwd
-          ./dots/init.sh --clean --force
+          ./dots/setup.sh --clean --force

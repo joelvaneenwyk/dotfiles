@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Usage: ./init.sh
+# Usage: ./setup.sh
 #
 #   - Install commonly used apps using "brew bundle" (see Brewfile) or apt-get (on Ubunutu/Debian).
 #   - Uses "stow" to link config files into home directory.
@@ -791,23 +791,24 @@ function _stow() {
     _target_path="$MYCELIO_HOME"
 
     for _package in "$@"; do
-        _root="$MYCELIO_ROOT/packages/$_package"
-        if [ -d "$_root" ] && [[ ! $_package == -* ]]; then
-            if [ ! -x "$(command -v git)" ] || [ ! -d "$MYCELIO_ROOT/.git" ]; then
-                find "$_root" -maxdepth 1 -type f -print0 | while IFS= read -r -d $'\0' file; do
-                    _source="$file"
-                    _target="$HOME/${file//$_root\//}"
-                    _stow_internal "$_source" "$_target" "$@"
-                done
-            else
+        _offset=$"packages/$_package"
+        _root="$MYCELIO_ROOT/$_offset"
+        if [ -d "$_root" ]; then
+            if [ -x "$(command -v git)" ] && [ -d "$MYCELIO_ROOT/.git" ]; then
                 # Remove files from directories first and then the directory but only if
                 # it is empty.
                 {
                     git -C "$MYCELIO_ROOT" ls-tree -r --name-only HEAD "packages/$_package"
                     (git -C "$MYCELIO_ROOT" ls-tree -r -d --name-only HEAD "packages/$_package" | tac)
                 } | while IFS= read -r line; do
-                    _source="${MYCELIO_ROOT%/}/packages/$line"
-                    _target="${_target_path%/}/${line/$_package\//}"
+                    _source="${MYCELIO_ROOT%/}/$line"
+                    _target="${_target_path%/}/${line/$_offset\//}"
+                    _stow_internal "$_source" "$_target" "$@"
+                done
+            else
+                find "$_root" -maxdepth 1 -type f -print0 | while IFS= read -r -d $'\0' file; do
+                    _source="$file"
+                    _target="$HOME/${file//$_root\//}"
                     _stow_internal "$_source" "$_target" "$@"
                 done
             fi
@@ -882,6 +883,9 @@ function configure_linux() {
     if [ -f "$_binding_file" ] && [ ! -f "$_binding_link" ]; then
         ln -s "$_binding_file" "$_binding_link"
     fi
+
+    rm -f "$MYCELIO_HOME/.base16_theme"
+    ln -s "$MYCELIO_HOME/.config/base16-shell/scripts/base16-irblack.sh" "$MYCELIO_HOME/.base16_theme"
 
     if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
         wget "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish" || true
@@ -1275,7 +1279,7 @@ function install_macos_apps() {
 
     brew upgrade
 
-    if ! brew bundle; then
+    if ! brew bundle --file="$MYCELIO_ROOT/source/macos/Brewfile"; then
         echo "Install with 'brew' failed with errors, but continuing."
     fi
 

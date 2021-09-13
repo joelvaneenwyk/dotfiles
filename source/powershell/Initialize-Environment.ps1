@@ -174,7 +174,7 @@ Function Initialize-Environment {
                 scoop install "msys2"
             }
 
-            # We run this here to ensure that the first run of msys2 is done before the 'init.sh' call
+            # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
             # as the initial upgrade of msys2 results in it shutting down the console.
             if (Test-CommandExists "msys2") {
                 msys2 -where "$mycelioRoot" -shell bash -no-start -c "./source/shell/upgrade-package-manager.sh"
