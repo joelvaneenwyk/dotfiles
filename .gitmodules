@@ -1,36 +1,45 @@
 [submodule "vundle"]
 	path = packages/vim/.vim/bundle/vundle
 	url = https://github.com/VundleVim/Vundle.vim
+	branch = master
 
 [submodule "mailmate"]
 	path = packages/macos/Library/Application Support/Resources
 	url = https://github.com/chauncey-garrett/mailmate.git
+	branch = master
 
 [submodule "base16-shell"]
 	path = packages/fish/.config/base16-shell
 	url = https://github.com/chriskempson/base16-shell.git
+	branch = master
 
 [submodule "base16-fzf"]
 	path = packages/fish/.config/base16-fzf
 	url = https://github.com/nicodebo/base16-fzf.git
+	branch = master
 
 [submodule "git-fuzzy"]
 	path = packages/fish/.config/git-fuzzy
 	url = https://github.com/bigH/git-fuzzy.git
+	branch = master
 
 [submodule "source/stow"]
 	path = source/stow
 	url = https://github.com/joelvaneenwyk/stow
+	branch = docs
 
 [submodule "bats-core"]
 	path = test/bats
 	url = https://github.com/bats-core/bats-core.git
+	branch = master
 
 [submodule "bats-support"]
 	path = test/test_helper/bats-support
 	url = https://github.com/bats-core/bats-support.git
+	branch = master
 
 [submodule "bats-assert"]
 	path = test/test_helper/bats-assert
 	url = https://github.com/bats-core/bats-assert.git
+	branch = master
 
