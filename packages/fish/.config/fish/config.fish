@@ -29,7 +29,7 @@ if test -d /usr/libexec/java_home
     set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
 end
 
-# It should already be installed by './setup.sh' but just in case we do it here
+# It should already be installed by './init.sh' but just in case we do it here
 # as well.
 if not functions -q fundle
     eval (curl -sfL https://git.io/fundle-install)
@@ -100,7 +100,7 @@ if status --is-interactive && test -e $profile_helper
     source $profile_helper
 end
 
-set theme (echo $HOME/.config/base16-fzf/fish/(basename (readlink $HOME/(readlink $HOME/.base16_theme)) .sh).fish)
+set theme (echo $HOME/.config/base16-fzf/fish/(basename $HOME/(readlink $HOME/.base16_theme) .sh).fish)
 if test -e $theme
     source $theme
 else

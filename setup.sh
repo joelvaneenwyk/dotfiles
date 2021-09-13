@@ -490,12 +490,12 @@ function install_oh_my_posh {
 }
 
 function install_fzf {
-    _fzf_tmp="$MYCELIO_TEMP/fzf"
     _local_root="$MYCELIO_HOME/.local"
+    _fzf_root="$_local_root/fzf"
     _fzf_exe="$_local_root/bin/fzf"
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
-        rm -rf "$_fzf_tmp"
+        rm -rf "$_fzf_root"
     fi
 
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
@@ -503,7 +503,7 @@ function install_fzf {
         return 0
     fi
 
-    if [ -f "$_fzf_exe" ]; then
+    if [ -d "$_fzf_root" ] && [ -f "$_fzf_exe" ]; then
         echo "✔ 'fzf' already installed."
         return 0
     fi
@@ -523,17 +523,17 @@ function install_fzf {
         return 3
     fi
 
-    mkdir -p "$_fzf_tmp"
-    rm -rf "$_fzf_tmp"
-    git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_tmp"
+    mkdir -p "$_fzf_root"
+    rm -rf "$_fzf_root"
+    git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_root"
 
     if (
-        cd "$_fzf_tmp"
+        cd "$_fzf_root"
         make all bin/fzf
     ); then
         echo "Successfully generated 'fzf' utility with 'go' compiler."
-        mv "$_fzf_tmp/bin/fzf" "$_local_root/bin"
-        mv "$_fzf_tmp/bin/fzf-tmux" "$_local_root/bin"
+        mv "$_fzf_root/bin/fzf" "$_local_root/bin"
+        mv "$_fzf_root/bin/fzf-tmux" "$_local_root/bin"
     else
         echo "Failed to install 'fzf' utility."
     fi
@@ -879,13 +879,13 @@ function configure_linux() {
 
     # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to install it.
     _binding_link="$MYCELIO_HOME/.config/fish/functions/fzf_key_bindings.fish"
-    _binding_file="/usr/local/opt/fzf/shell/key-bindings.fish"
+    _binding_file="$MYCELIO_HOME/.local/fzf/shell/key-bindings.fish"
     if [ -f "$_binding_file" ] && [ ! -f "$_binding_link" ]; then
         ln -s "$_binding_file" "$_binding_link"
     fi
 
     rm -f "$MYCELIO_HOME/.base16_theme"
-    ln -s "$MYCELIO_HOME/.config/base16-shell/scripts/base16-irblack.sh" "$MYCELIO_HOME/.base16_theme"
+    ln -s --relative "$MYCELIO_HOME/.config/base16-shell/scripts/base16-irblack.sh" "$MYCELIO_HOME/.base16_theme"
 
     if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
         wget "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish" || true
@@ -1633,6 +1633,9 @@ function main() {
         sudo rm -rf "/var/lib/apt/lists/*" || true
         echo "Removed intermediate temporary fails from Docker instance."
     fi
+
+    # Left-over sometimes created by 'micro' text editor
+    rm -f "$MYCELIO_ROOT/log.txt" || true
 
     _reload_profile
 

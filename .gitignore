@@ -5,32 +5,30 @@
 # Local temporary files not intended to be committed or used in Docker instances
 .tmp
 
-/stow/
-
 # Generated files that may be used in Docker
 artifacts/
 
-Brewfile.lock.json
+packages/fonts/.fonts/JetBrains*
 
-fonts/.fonts/JetBrains*
+packages/fish/.local/share
+packages/fish/.config/fish/fish_variables
+packages/fish/.config/fish/fishd.*
+packages/fish/.config/fish/fish_history
+packages/fish/.config/fish/functions/fundle.fish
+packages/fish/.config/fish/functions/fzf_key_bindings.fish
+packages/fish/.config/fish/fundle/
 
-fish/.local/share
-fish/.config/fish/fish_variables
-fish/.config/fish/fishd.*
-fish/.config/fish/fish_history
-fish/.config/fish/functions/fundle.fish
-fish/.config/fish/functions/fzf_key_bindings.fish
-fish/.config/fish/fundle/
+packages/micro/.config/micro/buffers/
+packages/micro/.config/micro/backups/
 
-micro/.config/micro/buffers/
-micro/.config/micro/backups/
+packages/vim/.vim/plugged/
 
-vim/.vim/plugged/
+packages/xmonad/.xmonad/xmonad-x86_64-linux
+packages/xmonad/.xmonad/xmonad.errors
+packages/xmonad/.xmonad/xmonad.hi
+packages/xmonad/.xmonad/xmonad.o
 
-xmonad/.xmonad/xmonad-x86_64-linux
-xmonad/.xmonad/xmonad.errors
-xmonad/.xmonad/xmonad.hi
-xmonad/.xmonad/xmonad.o
+source/macos/Brewfile.lock.json
 
 source/windows/clink/clink_history*
 source/windows/clink/clink.log
