@@ -3,6 +3,19 @@
 if [ -x "$(command -v pacman)" ]; then
     echo "[mycelio] Initial setup and upgrade of MSYS2."
 
+    if [ ! -f "/etc/passwd" ]; then
+        mkpasswd -l -c >"/etc/passwd"
+    fi
+
+    if [ ! -f "/etc/group" ]; then
+        mkgroup -l -c >"/etc/group"
+    fi
+
+    if [ ! -L "/etc/nsswitch.conf" ]; then
+        rm -f "/etc/nsswitch.conf"
+        ln -s "$MYCELIO_ROOT/source/windows/nsswitch.conf" "/etc/nsswitch.conf"
+    fi
+
     # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
     rm -f /var/lib/pacman/db.lck
 

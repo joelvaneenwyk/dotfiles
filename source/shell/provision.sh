@@ -5,5 +5,8 @@
 #
 
 echo "[mycelio] Cloning..."
+
 git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git
+
+# shellcheck source=setup.sh
 . "$HOME/setup.sh"
