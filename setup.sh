@@ -101,10 +101,6 @@ function _setup_error_handling() {
     # set -e
     set -o errexit
 
-    # If set, command substitution inherits the value of the errexit option, instead of unsetting it in the
-    # subshell environment. This option is enabled when POSIX mode is enabled.
-    shopt -s inherit_errexit
-
     # We only output command on Bash because by default "-x" will output to 'stderr' which
     # results in an error on CI as it's used to make sure we have clean output. On Bash we
     # can override to to go to a new file descriptor.
@@ -157,6 +153,10 @@ function _setup_error_handling() {
             # we enable here as well. Otherwise errors in subshells can result in ERR
             # trap being called e.g. _my_result="$(errorfunc test)"
             set -o errtrace
+
+            # If set, command substitution inherits the value of the errexit option, instead of unsetting it in the
+            # subshell environment. This option is enabled when POSIX mode is enabled.
+            shopt -s inherit_errexit
 
             export MYCELIO_DEBUG_TRAP_ENABLED=1
         fi
@@ -783,11 +783,11 @@ function install_stow() {
                 echo "no"
                 echo "exit"
             ) | cpan | awk '{ print "[stow.cpan]", $0 }'
-        fi
 
-        # If configuration file does not exist yet then we automate configuration with
-        # answers to standard questions. These may become invalid with newer versions.
-        perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit' | awk '{ print "[stow.cpan]", $0 }'
+            # If configuration file does not exist yet then we automate configuration with
+            # answers to standard questions. These may become invalid with newer versions.
+            perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit' | awk '{ print "[stow.cpan]", $0 }'
+        fi
 
         if [ ! -x "$(command -v cpanm)" ]; then
             curl -L https://cpanmin.us | perl - App::cpanminus | awk '{ print "[stow.cpanm]", $0 }'
