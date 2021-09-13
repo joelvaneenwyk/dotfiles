@@ -142,20 +142,20 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::call "%MYCELIO_ROOT%\source\windows\stow\build.bat"
     ::stow windows
 
-    :: Initialize 'msys2' environment with bash script. We call the shim directly because environment
+    :: Initialize 'msys2' ("Minimal System") environment with bash script. We call the shim directly because environment
     :: may not read path properly after it has just been installed.
     echo.
     echo ======-------
     echo Mycelio Environment Setup
     echo ======-------
     echo.
-    if not exist "%USERPROFILE%\scoop\shims\msys2.cmd" (
-        echo "ERROR: MSYS2 not installed. Initialization failed."
+    if not exist "%USERPROFILE%\scoop\shims\mingw64.cmd" (
+        echo "ERROR: MSYS2 (MINGW64) not installed. Initialization failed."
         _error=55
         goto:$InitializeDone
     )
 
-    call "%USERPROFILE%\scoop\shims\msys2.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
+    call "%USERPROFILE%\scoop\shims\mingw64.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
     if not "%ERRORLEVEL%"=="0" (
         set _error=%ERRORLEVEL%
     )
@@ -234,7 +234,7 @@ exit /b
                 %EXEC% reg delete "!KEY!" /v "AutoRun" /f
                 %COMMENT% Delete existing key: "!KEY!\AutoRun"
             ) else (
-                %COMMENT% Skipped AutoRun installed. Key already exists.
+                %COMMENT% Skipped AutoRun install. Key already exists in registry.
                 endlocal & exit /b 0
             )
         )
@@ -243,9 +243,9 @@ exit /b
     :# No keys should exist now so try to install
     if not defined HIVE (
         call :IsAdmin
-        if not errorlevel 1 (       :# Admin user. Install for all users.
+        if not errorlevel 1 (       :# Admin user. All user install.
             set "HIVE=HKLM"
-        ) else (        :           # Normal user. Install for current user.
+        ) else (                    :# Normal user. Current user install.
             set "HIVE=HKCU"
         )
     )

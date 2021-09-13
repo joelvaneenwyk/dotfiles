@@ -8,6 +8,9 @@ been somewhat heavily modified and also just out of date with most recent versio
 
 ]]
 
+local script_dir = path.normalise(debug.getinfo(1, "S").source:match[[^@?(.*[\/])[^\/]-$]])
+local mycelio_root_dir = path.normalise(script_dir .. "../../..")
+
 local settings = {
     color_vsc_unknown = "\x1b[30;1m",
     color_vsc_clean = "\x1b[1;37;40m",
@@ -164,7 +167,6 @@ function bracket_prompt:filter(prompt)
     return prompt.."\n → "
 end
 
-local script_dir = debug.getinfo(1, "S").source:match[[^@?(.*[\/])[^\/]-$]]
-add_modules(script_dir .. "../clink-completions/")
+add_modules(mycelio_root_dir .. "/source/windows/clink-completions/")
 
 print('[clink] Initialized environment with `dotfiles` project.')

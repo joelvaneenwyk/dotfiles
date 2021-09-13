@@ -184,6 +184,7 @@
         "source/stow/lib/**/*.pm": true,
         "source/stow/tmp-testing-trees": true,
         "source/stow/autom4te.cache": true,
+        "source/stow/tools/texinfo/**": true,
         "**/_build/**": true,
         "**/_Inline/**": true,
         "**/blib/**": true

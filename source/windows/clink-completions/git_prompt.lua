@@ -1,4 +1,3 @@
-
 local gitutil = require('gitutil')
 
 -- TODO: cache config based on some modification indicator (system mtime, hash)

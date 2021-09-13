@@ -339,6 +339,7 @@ initialize_profile() {
 
     MYCELIO_OS_NAME="UNKNOWN"
     MYCELIO_OS_VARIANT="$(uname -s)"
+    MYCELIO_OS_APP_EXTENSION=""
 
     case "${MYCELIO_OS_VARIANT:-}" in
     Linux*)

@@ -686,7 +686,7 @@ function install_oh_my_posh {
 function install_fzf {
     _local_root="$MYCELIO_HOME/.local"
     _fzf_root="$_local_root/fzf"
-    _fzf_exe="$_local_root/bin/fzf"
+    _fzf_exe="$_local_root/bin/fzf${MYCELIO_OS_APP_EXTENSION:-}"
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -rf "$_fzf_root"
@@ -723,11 +723,9 @@ function install_fzf {
 
     if (
         cd "$_fzf_root"
-        make all bin/fzf
+        "$MYCELIO_GOEXE" build -a -ldflags "-s -w" -o "$_fzf_exe"
     ); then
         echo "Successfully generated 'fzf' utility with 'go' compiler."
-        mv "$_fzf_root/bin/fzf" "$_local_root/bin"
-        mv "$_fzf_root/bin/fzf-tmux" "$_local_root/bin"
     else
         echo "Failed to install 'fzf' utility."
     fi
@@ -1215,13 +1213,6 @@ function initialize_linux() {
         if [ -f "/etc/pacman.d/gnupg/" ]; then
             rm -rf "/etc/pacman.d/gnupg/"
         fi
-
-        pacman-key --init
-        pacman-key --populate msys2
-
-        # Long version of '-Syuu' gets fresh package databases from server and
-        # upgrades the packages while allowing downgrades '-uu' as well if needed.
-        pacman --quiet --sync --refresh -uu --noconfirm
     elif [ -x "$(command -v apk)" ]; then
         if [ ! -x "$(command -v sudo)" ]; then
             apk update
