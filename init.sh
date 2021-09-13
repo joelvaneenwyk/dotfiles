@@ -791,9 +791,9 @@ function _stow() {
     _target_path="$MYCELIO_HOME"
 
     for _package in "$@"; do
-        if [ -d "$MYCELIO_ROOT/$_package" ] && [[ ! $_package == -* ]]; then
+        _root="$MYCELIO_ROOT/packages/$_package"
+        if [ -d "$_root" ] && [[ ! $_package == -* ]]; then
             if [ ! -x "$(command -v git)" ] || [ ! -d "$MYCELIO_ROOT/.git" ]; then
-                _root="$MYCELIO_ROOT/$_package"
                 find "$_root" -maxdepth 1 -type f -print0 | while IFS= read -r -d $'\0' file; do
                     _source="$file"
                     _target="$HOME/${file//$_root\//}"
@@ -803,10 +803,10 @@ function _stow() {
                 # Remove files from directories first and then the directory but only if
                 # it is empty.
                 {
-                    git -C "$MYCELIO_ROOT" ls-tree -r --name-only HEAD "$_package"
-                    (git -C "$MYCELIO_ROOT" ls-tree -r -d --name-only HEAD "$_package" | tac)
+                    git -C "$MYCELIO_ROOT" ls-tree -r --name-only HEAD "packages/$_package"
+                    (git -C "$MYCELIO_ROOT" ls-tree -r -d --name-only HEAD "packages/$_package" | tac)
                 } | while IFS= read -r line; do
-                    _source="${MYCELIO_ROOT%/}/$line"
+                    _source="${MYCELIO_ROOT%/}/packages/$line"
                     _target="${_target_path%/}/${line/$_package\//}"
                     _stow_internal "$_source" "$_target" "$@"
                 done
