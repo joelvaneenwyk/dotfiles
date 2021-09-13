@@ -153,7 +153,7 @@ function _initialize_bash_profile() {
     # Generic POSIX shell profile setup. This will print the logo if
     # we are not running interactively.
     if [ -f "$HOME/.profile" ]; then
-        # shellcheck source=linux/.profile
+        # shellcheck source=packages/linux/.profile
         . "$HOME/.profile" "$@"
     fi
 

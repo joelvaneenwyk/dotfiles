@@ -238,7 +238,7 @@ initialize_interactive_profile() {
     alias .4='cd ../../../../'
     alias .5='cd ../../../../..'
 
-    alias refresh='git -C "$MYCELIO_ROOT" pull >/dev/null 2>&1 || source "$MYCELIO_ROOT/linux/.profile"'
+    alias refresh='git -C "$MYCELIO_ROOT" pull >/dev/null 2>&1 || source "$MYCELIO_ROOT/packages/linux/.profile"'
 
     alias less='less -r'
     alias more='less -r'

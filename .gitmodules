@@ -1,35 +1,36 @@
-[submodule "vim/.vim/bundle/vundle"]
-path = vim/.vim/bundle/vundle
-url = https://github.com/VundleVim/Vundle.vim.git
+[submodule "packages/vim/.vim/bundle/vundle"]
+	path = packages/vim/.vim/bundle/vundle
+	url = https://github.com/VundleVim/Vundle.vim
+
+[submodule "packages/macos/Library/Application Support/Resources"]
+	path = packages/macos/Library/Application Support/Resources
+	url = https://github.com/chauncey-garrett/mailmate.git
 
 [submodule "fish/.config/base16-shell"]
-path = fish/.config/base16-shell
-url = https://github.com/chriskempson/base16-shell.git
+	path = packages/fish/.config/base16-shell
+	url = https://github.com/chriskempson/base16-shell.git
 
 [submodule "fish/.config/base16-fzf"]
-path = fish/.config/base16-fzf
-url = https://github.com/nicodebo/base16-fzf.git
-
-[submodule "macos/Library/Application Support/Resources"]
-path = macos/Library/Application Support/Resources
-url = https://github.com/chauncey-garrett/mailmate.git
+	path = packages/fish/.config/base16-fzf
+	url = https://github.com/nicodebo/base16-fzf.git
 
 [submodule "fish/.config/git-fuzzy"]
-path = fish/.config/git-fuzzy
-url = https://github.com/bigH/git-fuzzy.git
+	path = packages/fish/.config/git-fuzzy
+	url = https://github.com/bigH/git-fuzzy.git
 
 [submodule "source/stow"]
-path = source/stow
-url = https://github.com/aspiers/stow
+	path = source/stow
+	url = https://github.com/aspiers/stow
 
 [submodule "test/bats"]
-path = test/bats
-url = https://github.com/bats-core/bats-core.git
+	path = test/bats
+	url = https://github.com/bats-core/bats-core.git
 
 [submodule "test/test_helper/bats-support"]
-path = test/test_helper/bats-support
-url = https://github.com/bats-core/bats-support.git
+	path = test/test_helper/bats-support
+	url = https://github.com/bats-core/bats-support.git
 
 [submodule "test/test_helper/bats-assert"]
-path = test/test_helper/bats-assert
-url = https://github.com/bats-core/bats-assert.git
+	path = test/test_helper/bats-assert
+	url = https://github.com/bats-core/bats-assert.git
+

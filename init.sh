@@ -816,7 +816,7 @@ function _stow() {
 
     if [[ ! "$*" == *"--delete"* ]] && [ -f "$_stow_bin" ]; then
         # NOTE: We filter out spurious 'find_stowed_path' error due to https://github.com/aspiers/stow/issues/65
-        _stow_args=(--dir="$MYCELIO_ROOT" --target="$_target_path" --verbose)
+        _stow_args=(--dir="$MYCELIO_ROOT/packages" --target="$_target_path" --verbose)
         _stow_args+=("$@")
 
         _return_code=0
@@ -1400,13 +1400,13 @@ function _reload_profile() {
     if [[ $(type -t initialize_interactive_profile) == function ]]; then
         initialize_profile
         initialize_interactive_profile
-    elif [ -f "$MYCELIO_ROOT/linux/.profile" ]; then
+    elif [ -f "$MYCELIO_ROOT/packages/linux/.profile" ]; then
         # Loading the profile may overwrite the root after it reads the '.env' file
         # so we restore it afterwards.
         _root=$MYCELIO_ROOT
 
-        # shellcheck source=linux/.profile
-        . "$MYCELIO_ROOT/linux/.profile"
+        # shellcheck source=packages/linux/.profile
+        . "$MYCELIO_ROOT/packages/linux/.profile"
 
         # Restore previous root folder
         export MYCELIO_ROOT="${_root:-MYCELIO_ROOT}"
