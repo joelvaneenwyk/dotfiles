@@ -815,11 +815,6 @@ function install_stow() {
         if [ ! -x "$(command -v cpanm)" ]; then
             curl -L https://cpanmin.us | perl - App::cpanminus | awk '{ print "[stow.cpanm]", $0 }'
         fi
-
-        # Install '-i' but skip tests '-T' for the modules we need. We skip tests in part because
-        # it is faster but also because tests in 'Test::Output' causes consistent hangs
-        # in MSYS2, see https://rt-cpan.github.io/Public/Bug/Display/64319/
-        cpanm --notest YAML Inline::C CPAN::DistnameInfo 2>&1 | awk '{ print "[stow.cpanm]", $0 }'
     else
         echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
     fi
@@ -837,8 +832,8 @@ function install_stow() {
             source "$MYCELIO_STOW_ROOT/tools/make-clean.sh"
         fi
 
-        # shellcheck source=source/stow/tools/make-stow.sh
-        source "$MYCELIO_STOW_ROOT/tools/make-stow.sh"
+        # shellcheck source=source/stow/tools/make-stow-minimal.sh
+        source "$MYCELIO_STOW_ROOT/tools/make-stow-minimal.sh"
 
         rm -f "$MYCELIO_STOW_ROOT/configure~" "$MYCELIO_STOW_ROOT/Build.bat" "$MYCELIO_STOW_ROOT/Build" >/dev/null 2>&1 || true
         git -C "$MYCELIO_STOW_ROOT" checkout -- "$MYCELIO_STOW_ROOT/aclocal.m4" >/dev/null 2>&1 || true
