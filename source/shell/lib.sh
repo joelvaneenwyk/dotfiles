@@ -28,7 +28,7 @@ import() {
     export MYCELIO_LOG_PATH
 
     if [ ! "${MYCELIO_LIBRARY_IMPORTED:-}" = "1" ]; then
-        # We use 'whoami' as $USER is not set for scheduled tasks
+        # We use 'whoami' as 'USER' is not set for scheduled tasks
         echo "User: '$(whoami)'" | tee "$MYCELIO_LOG_PATH"
         echo "Home: '$_home'" | tee "$MYCELIO_LOG_PATH"
         echo "Logs available here: '$MYCELIO_LOG_PATH'" | tee "$MYCELIO_LOG_PATH"

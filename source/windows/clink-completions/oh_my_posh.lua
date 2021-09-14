@@ -18,7 +18,9 @@ else
         local ohmyposh_prompt = clink.promptfilter(1)
         function ohmyposh_prompt:filter(prompt)
             prompt = io.popen(ohMyPosh .. " --config " .. mycelioConfig):read("*a")
-            return prompt, false
+            if os.geterrorlevel == 0 then
+                return prompt, false
+            end
         end
     end
 end

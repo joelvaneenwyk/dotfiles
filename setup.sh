@@ -525,7 +525,7 @@ function install_hugo {
         rm -rf "$_hugo_tmp"
     fi
 
-    if [ -f "$_hugo_exe" ]; then
+    if [ -f "$_hugo_exe" ] && "$_hugo_exe" version; then
         echo "✔ 'hugo' site builder already installed."
         return 0
     fi
@@ -543,19 +543,32 @@ function install_hugo {
     if [ -f "$MYCELIO_GOEXE" ]; then
         mkdir -p "$_hugo_tmp"
         rm -rf "$_hugo_tmp"
-        git -c advice.detachedHead=false clone -b "v0.87.0" "https://github.com/gohugoio/hugo.git" "$_hugo_tmp"
+        git -c advice.detachedHead=false clone -b "v0.88.1" "https://github.com/gohugoio/hugo.git" "$_hugo_tmp"
 
         if (
             cd "$_hugo_tmp"
 
-            # No support for GCC on Synology so not able to build extended features
+            GOHOSTOS="$MYCELIO_OS"
+            export GOHOSTOS
+
+            GOARCH="$MYCELIO_ARCH"
+            export GOARCH
+
+            GOARM="$MYCELIO_ARM"
+            export GOARM
+
+            GOHOSTARCH="$MYCELIO_ARCH"
+            export GOHOSTARCH
+
+            # Note that CGO_ENABLED allows the creation of Go packages that call C code. There
+            # is no support for GCC on Synology so not able to build extended features.
             if uname -a | grep -q "synology"; then
-                echo "##[cmd] $MYCELIO_GOEXE install"
-                GOBIN="$MYCELIO_GOBIN" GOROOT="$MYCELIO_GOROOT" CGO_ENABLED="0" "$MYCELIO_GOEXE" build -o "$_hugo_exe"
+                echo "##[cmd] $MYCELIO_GOEXE build"
+                CGO_ENABLED="0" "$MYCELIO_GOEXE" build -v -ldflags "-extldflags -static" -o "$_hugo_exe"
             else
                 # https://github.com/gohugoio/hugo/blob/master/goreleaser.yml
-                echo "##[cmd] $MYCELIO_GOEXE install --tags extended"
-                GOBIN="$MYCELIO_GOBIN" GOROOT="$MYCELIO_GOROOT" CGO_ENABLED="1" "$MYCELIO_GOEXE" build -o "$_hugo_exe" --tags extended -ldflags="-s -w -X 'main.Version=v0.87.0' -extldflags '-static'"
+                echo "##[cmd] CGO_ENABLED=1 $MYCELIO_GOEXE build -v -tags extended -o $_hugo_exe"
+                CGO_ENABLED="1" "$MYCELIO_GOEXE" build -v -tags extended -o "$_hugo_exe"
             fi
         ); then
             echo "Successfully installed 'hugo' site builder."
@@ -564,12 +577,10 @@ function install_hugo {
         fi
     fi
 
-    if [ ! -f "$_hugo_exe" ]; then
+    if [ ! -f "$_hugo_exe" ] || ! "$_hugo_exe" version; then
         echo "❌ Failed to install 'hugo' static site builder."
         return 3
     fi
-
-    "$_hugo_exe" version
 
     return 0
 }
@@ -635,7 +646,7 @@ function install_oh_my_posh {
         return 0
     fi
 
-    if [ -f "$_oh_my_posh_exe" ]; then
+    if [ -f "$_oh_my_posh_exe" ] && "$_oh_my_posh_exe" --version; then
         echo "✔ 'oh-my-posh' already installed."
         return 0
     fi
@@ -644,7 +655,9 @@ function install_oh_my_posh {
     _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
     if wget --quiet "$_posh_url" -O "$_oh_my_posh_exe"; then
         chmod +x "$_oh_my_posh_exe"
-    else
+    fi
+
+    if [ ! -f "$_oh_my_posh_exe" ] || ! "$_oh_my_posh_exe" --version; then
         if [ ! -x "$(command -v git)" ]; then
             echo "❌ Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
             return 1
@@ -663,8 +676,20 @@ function install_oh_my_posh {
             if (
                 cd "$_oh_my_posh_tmp/src"
 
+                GOHOSTOS="$MYCELIO_OS"
+                export GOHOSTOS
+
+                GOARCH="$MYCELIO_ARCH"
+                export GOARCH
+
+                GOARM="$MYCELIO_ARM"
+                export GOARM
+
+                GOHOSTARCH="$MYCELIO_ARCH"
+                export GOHOSTARCH
+
                 # https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/.github/workflows/release.yml
-                GOROOT="$MYCELIO_GOROOT" GOBIN="$MYCELIO_GOBIN" "$MYCELIO_GOEXE" build -o "$_oh_my_posh_exe" -ldflags="-X 'main.Version=v3.175.0'"
+                "$MYCELIO_GOEXE" build -a -ldflags "-extldflags -static" -o "$_oh_my_posh_exe"
             ); then
                 echo "Successfully installed 'oh-my-posh' site builder."
             else
@@ -673,12 +698,10 @@ function install_oh_my_posh {
         fi
     fi
 
-    if [ ! -f "$_oh_my_posh_exe" ]; then
+    if [ ! -f "$_oh_my_posh_exe" ] || ! "$_oh_my_posh_exe" --version; then
         echo "❌ Failed to install 'oh_my_posh' static site builder."
         return 3
     fi
-
-    "$_oh_my_posh_exe" --version
 
     return 0
 }
@@ -902,7 +925,7 @@ function install_go {
         echo "${v#go}"
     ))"; then
         _go_version_minor=$(echo "$_go_version" | cut -d. -f2)
-        if [ "$_go_version_minor" -lt 17 ]; then
+        if [ "$_go_version_minor" -lt 16 ]; then
             _go_requires_update=1
         fi
     else
@@ -910,55 +933,57 @@ function install_go {
     fi
 
     if [ "$_go_requires_update" = "1" ]; then
-        _go_version="1.17"
+        _go_version="1.16.7"
         _go_compiled=0
-
-        # https://golang.org/doc/install/source
-        _go_bootstrap_src_archive="$MYCELIO_TEMP/go_bootstrap.tgz"
-        wget --quiet -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
-        echo "Extracting 'go' source: '$_go_bootstrap_src_archive'"
-        rm -rf "$MYCELIO_TEMP/go" || true
-        tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
-        rm -rf "$_local_go_bootstrap_root" || true
-        mv "$MYCELIO_TEMP/go" "$_local_go_bootstrap_root"
-        rm "$_go_bootstrap_src_archive"
 
         if [ ! -x "$(command -v gcc)" ] && [ ! -x "$(command -v make)" ]; then
             echo "❌ Skipped 'go' compile. Missing GCC toolchain."
         else
-            echo "Compiling 'go' 1.4 bootstrap from source: '$_local_go_bootstrap_root/src'"
+            if [ ! -f "$_go_bootstrap_exe" ]; then
+                # https://golang.org/doc/install/source
+                _go_bootstrap_src_archive="$MYCELIO_TEMP/go_bootstrap.tgz"
+                wget --quiet -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
+                echo "Extracting 'go' source: '$_go_bootstrap_src_archive'"
+                rm -rf "$MYCELIO_TEMP/go" || true
+                tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
+                rm -rf "$_local_go_bootstrap_root" || true
+                mv "$MYCELIO_TEMP/go" "$_local_go_bootstrap_root"
+                rm "$_go_bootstrap_src_archive"
 
-            if (
-                GOROOT_FINAL="$_local_go_bootstrap_root"
-                export GOROOT_FINAL
+                echo "Compiling 'go' 1.4 bootstrap from source: '$_local_go_bootstrap_root/src'"
 
-                GOHOSTOS="$MYCELIO_OS"
-                export GOHOSTOS
+                if (
+                    GOROOT_FINAL="$_local_go_bootstrap_root"
+                    export GOROOT_FINAL
 
-                GOARCH="$MYCELIO_ARCH"
-                export GOARCH
+                    GOHOSTOS="$MYCELIO_OS"
+                    export GOHOSTOS
 
-                GOARM="$MYCELIO_ARM"
-                export GOARM
+                    GOARCH="$MYCELIO_ARCH"
+                    export GOARCH
 
-                GOHOSTARCH="$MYCELIO_ARCH"
-                export GOHOSTARCH
+                    GOARM="$MYCELIO_ARM"
+                    export GOARM
 
-                # shellcheck disable=SC2031
-                export CGO_ENABLED=0
-                cd "$_local_go_bootstrap_root/src"
+                    GOHOSTARCH="$MYCELIO_ARCH"
+                    export GOHOSTARCH
 
-                if [ -x "$(command -v cygpath)" ]; then
-                    cmd /c "make.bat"
+                    # shellcheck disable=SC2031
+                    export CGO_ENABLED=0
+                    cd "$_local_go_bootstrap_root/src"
+
+                    if [ -x "$(command -v cygpath)" ]; then
+                        cmd /c "make.bat"
+                    else
+                        ./make.bash
+                    fi
+
+                    unset GOROOT_FINAL
+                ); then
+                    echo "Successfully compiled 'go' bootstrap from source."
                 else
-                    ./make.bash
+                    echo "Failed to compile 'go' bootstrap from source."
                 fi
-
-                unset GOROOT_FINAL
-            ); then
-                echo "Successfully compiled 'go' bootstrap from source."
-            else
-                echo "Failed to compile 'go' bootstrap from source."
             fi
 
             # https://golang.org/doc/install/source
@@ -1000,9 +1025,8 @@ function install_go {
                     fi
 
                     # Pre-compile the standard library, just like the official binary release tarballs do
-                    if "$MYCELIO_GOEXE" install std; then
-                        echo "Pre-compiled 'go' standard library."
-                    fi
+                    echo "##[cmd] $MYCELIO_GOEXE install std"
+                    "$MYCELIO_GOEXE" install std
                 ); then
                     echo "Successfully compiled 'go' from source."
                     _go_compiled=1
@@ -1066,6 +1090,14 @@ function install_go {
     fi
 
     if [ -f "$MYCELIO_GOEXE" ] && _go_version=$("$MYCELIO_GOEXE" version); then
+        # The net package requires cgo by default because the host operating system
+        # must in general mediate network call setup. On some systems, though, it is
+        # possible to use the network without cgo, and useful to do so, for instance
+        # to avoid dynamic linking. The new build tag netgo (off by default) allows
+        # the construction of a net package in pure Go on those systems where it is possible.
+        #echo "##[cmd] $MYCELIO_GOEXE build -tags netgo -a -v"
+        #"$MYCELIO_GOEXE" build -tags netgo -a -v
+
         echo "✔ $_go_version"
     else
         echo "❌ Failed to install 'go' language."
@@ -1139,7 +1171,11 @@ function configure_linux() {
     fi
 
     rm -f "$MYCELIO_HOME/.base16_theme"
-    ln -s --relative "$MYCELIO_ROOT/packages/fish/.config/base16-shell/scripts/base16-irblack.sh" "$MYCELIO_HOME/.base16_theme"
+    (
+        # Not all platforms support '--relative' so go into the home directory to create
+        cd "$MYCELIO_HOME"
+        ln -s "$MYCELIO_ROOT/packages/fish/.config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
+    )
 
     if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
         wget "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish" || true
@@ -1223,8 +1259,9 @@ function initialize_linux() {
 
         sudo apk add \
             tzdata git wget curl unzip xclip \
-            build-base gcc g++ make musl-dev go perl-utils \
-            stow tmux neofetch fish \
+            build-base gcc g++ make musl-dev openssl-dev zlib-dev \
+            perl perl-dev perl-utils \
+            bash tmux neofetch fish \
             python3 py3-pip \
             fontconfig openssl gnupg
     elif [ -x "$(command -v apt-get)" ]; then
@@ -1241,7 +1278,7 @@ function initialize_linux() {
         DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y --no-install-recommends \
             tzdata git wget curl unzip xclip \
             software-properties-common apt-transport-https \
-            build-essential gcc g++ make automake autoconf golang \
+            build-essential gcc g++ make automake autoconf \
             stow tmux neofetch fish \
             python3 python3-pip \
             fontconfig
@@ -1539,7 +1576,7 @@ function main() {
         return 0
     fi
 
-    # Note below that we use 'whoami' since $USER variable is not set for
+    # Note below that we use 'whoami' since 'USER' variable is not set for
     # scheduled tasks on Synology.
 
     echo "╔▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀"

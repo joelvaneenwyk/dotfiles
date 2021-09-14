@@ -11,6 +11,9 @@ been somewhat heavily modified and also just out of date with most recent versio
 local script_dir = path.normalise(debug.getinfo(1, "S").source:match[[^@?(.*[\/])[^\/]-$]])
 local mycelio_root_dir = path.normalise(script_dir .. "../../..")
 
+local color_cyan   = "\x1b[36m"
+local color_normal = "\x1b[m"
+
 local settings = {
     color_vsc_unknown = "\x1b[30;1m",
     color_vsc_clean = "\x1b[1;37;40m",
@@ -141,14 +144,9 @@ function add_modules(path)
     end
 end
 
-local green  = "\x1b[92m"
-local yellow = "\x1b[93m"
-local cyan   = "\x1b[36m"
-local normal = "\x1b[m"
-
 local cwd_prompt = clink.promptfilter(30)
 function cwd_prompt:filter(prompt)
-    return settings.color_prompt..os.getcwd()..normal
+    return settings.color_prompt..os.getcwd()..color_normal
 end
 
 -- A prompt filter that appends the current git branch.
@@ -157,7 +155,7 @@ function git_branch_prompt:filter(prompt)
     local line = io.popen("git branch --show-current 2>nul"):read("*a")
     local branch = line:match("(.+)\n")
     if branch then
-        return prompt.." "..cyan.."["..branch.."]"..normal
+        return prompt.." "..color_cyan.."["..branch.."]"..color_normal
     end
 end
 
