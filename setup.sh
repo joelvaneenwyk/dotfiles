@@ -805,7 +805,7 @@ function install_stow() {
                 echo ""
                 echo "no"
                 echo "exit"
-            ) | cpan | awk '{ print "[stow.cpan]", $0 }'
+            ) | cpan -T | awk '{ print "[stow.cpan]", $0 }' || true
 
             # If configuration file does not exist yet then we automate configuration with
             # answers to standard questions. These may become invalid with newer versions.
@@ -1170,6 +1170,25 @@ function configure_linux() {
         fi
     fi
 
+    _gnupg_config_root="$MYCELIO_HOME/.gnupg"
+    _gnupg_templates_root="$MYCELIO_ROOT/source/gnupg"
+    mkdir -p "$_gnupg_config_root"
+
+    rm -f "$_gnupg_config_root/gpg-agent.conf"
+    cp "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
+    if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
+        echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gnupg_config_root/gpg-agent.conf"
+    fi
+    echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"
+
+    rm -f "$_gnupg_config_root/gpg.conf"
+    cp "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
+    echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
+
+    # Set permissions differently for files and directories
+    find "$_gnupg_config_root" -type f -exec chmod 600 {} \;
+    find "$_gnupg_config_root" -type d -exec chmod 700 {} \;
+
     # Stow packages after we have installed fundle and setup custom links
     echo "Connecting the mycelium..."
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
@@ -1191,21 +1210,6 @@ function configure_linux() {
     else
         echo "Skipped fish shell initialization as it is not installed."
     fi
-
-    _gnupg_config_root="$MYCELIO_HOME/.gnupg"
-    _gnupg_templates_root="$MYCELIO_ROOT/source/gnupg"
-    mkdir -p "$_gnupg_config_root"
-
-    rm -f "$_gnupg_config_root/gpg-agent.conf"
-    cp "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
-    if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-        echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gnupg_config_root/gpg-agent.conf"
-    fi
-    echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"
-
-    rm -f "$_gnupg_config_root/gpg.conf"
-    cp "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
-    echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
 
     if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
         DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
