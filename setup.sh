@@ -813,7 +813,7 @@ function install_stow() {
         fi
 
         if [ ! -x "$(command -v cpanm)" ]; then
-            curl -L https://cpanmin.us | perl - App::cpanminus | awk '{ print "[stow.cpanm]", $0 }'
+            curl -L https://cpanmin.us | perl - App::cpanminus
         fi
     else
         echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
@@ -899,6 +899,7 @@ function install_go {
     _local_go_bootstrap_root="$_local_root/gobootstrap"
     _go_bootstrap_exe="$_local_go_bootstrap_root/bin/go"
     _go_requires_update=0
+    _go_required_version_major=17
 
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped 'go' install for root user."
@@ -915,7 +916,7 @@ function install_go {
         echo "${v#go}"
     ))"; then
         _go_version_minor=$(echo "$_go_version" | cut -d. -f2)
-        if [ "$_go_version_minor" -lt 16 ]; then
+        if [ "$_go_version_minor" -lt "$_go_required_version_major" ]; then
             _go_requires_update=1
         fi
     else
@@ -923,7 +924,7 @@ function install_go {
     fi
 
     if [ "$_go_requires_update" = "1" ]; then
-        _go_version="1.16.7"
+        _go_version="1.$_go_required_version_major.1"
         _go_compiled=0
 
         if [ ! -x "$(command -v gcc)" ] && [ ! -x "$(command -v make)" ]; then
@@ -1290,6 +1291,7 @@ function initialize_linux() {
             tzdata git wget curl unzip xclip \
             software-properties-common apt-transport-https \
             build-essential gcc g++ make automake autoconf \
+            perl cpanminus \
             stow tmux neofetch fish \
             python3 python3-pip \
             fontconfig

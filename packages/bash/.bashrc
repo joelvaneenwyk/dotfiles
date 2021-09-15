@@ -158,7 +158,7 @@ function _initialize_bash_profile() {
     fi
 
     if [ -f "${MYCELIO_ROOT:-}/setup.sh" ]; then
-        MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd .. && pwd)"
+        MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
         export MYCELIO_ROOT
     fi
 
