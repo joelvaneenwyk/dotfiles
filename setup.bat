@@ -60,8 +60,18 @@ setlocal EnableExtensions EnableDelayedExpansion
     :: outdated or invalid version already there since it is called in all subsequent 'call'
     :: commands we issue.
     call :InstallAutoRun
+    if not "%ERRORLEVEL%"=="0" (
+        set _error=%ERRORLEVEL%
+        echo ERROR: AutoRun setup failed.
+        goto:$InitializeDone
+    )
 
     call "%MYCELIO_ROOT%\source\windows\profile.bat"
+    if not "%ERRORLEVEL%"=="0" (
+        set _error=%ERRORLEVEL%
+        echo ERROR: Profile setup failed.
+        goto:$InitializeDone
+    )
 
     :: These files are missing from Windows Nano Server instances in Docker so either
     :: copy them to local temp folder if running in host or copy them to system folder

@@ -175,6 +175,51 @@ function _setup_error_handling() {
     fi
 }
 
+_filter() {
+    _prefix="$1"
+    _ifs="$IFS"
+    IFS=''
+    while read -r line; do
+        echo "$_prefix $line"
+    done
+    IFS="$_ifs"
+}
+
+#
+# Run command and redirect stdout and stderr to logger at either info level or
+# error level depending. Return error code of the command.
+#
+# Original implementation: https://unix.stackexchange.com/a/70675
+#
+_run() {
+    _prefix="${1:-}"
+    shift
+
+    ( 
+        ( 
+            ( 
+                ( 
+                    ( 
+                        #   stderr -> #1
+                        #   stdout -> #3
+                        #   return code -> #5
+                        (
+                            "$@" 2>&3 3>&-
+                            echo $? >&5
+                        ) | _filter "$_prefix"
+                        # Redirects stdout to #4 so that it's not run through error log
+                    ) 3>&1 1>&4 | _filter "$_prefix"
+                ) >&4
+            ) 5>&1
+        ) | (
+            read -r return_code
+            __safe_exit "$return_code"
+        )
+    ) 4>&1
+
+    return $?
+}
+
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
 # so we define our own version here.
 function _get_real_path() {
@@ -805,36 +850,40 @@ function install_stow() {
                 echo ""
                 echo "no"
                 echo "exit"
-            ) | cpan -T | awk '{ print "[stow.cpan]", $0 }' || true
+            ) | _run "[stow.cpan]" cpan -T
 
             # If configuration file does not exist yet then we automate configuration with
             # answers to standard questions. These may become invalid with newer versions.
-            perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl" | awk '{ print "[stow.cpan.config]", $0 }'
+            _run "[stow.cpan.config]" perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"
+        else
+            echo "[stow.cpan.config] ✔ CPAN already initialized."
         fi
 
         if [ ! -x "$(command -v cpanm)" ]; then
             if [ -x "$(command -v curl)" ]; then
-                curl -L https://cpanmin.us | perl - --sudo App::cpanminus | awk '{ print "[stow.cpanm.https.install]", $0 }'
+                curl -L --silent https://cpanmin.us | _run "[stow.cpanm.https.install]" perl - --sudo --notest --verbose App::cpanminus
             fi
 
             if [ ! -x "$(command -v cpanm)" ]; then
-                _sudo cpan -i -T App::cpanminus | awk '{ print "[stow.cpanm.install]", $0 }'
+                _run "[stow.cpanm.install]" _sudo cpan -i -T App::cpanminus
             fi
+        else
+            echo "[stow.cpanm.install] ✔ CPANM already installed."
         fi
     else
         echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
     fi
 
     if [ ! -f "$MYCELIO_STOW_ROOT/configure.ac" ]; then
-        echo "❌ 'stow' source not available: '$MYCELIO_STOW_ROOT'"
+        echo "❌ 'stow' source missing: '$MYCELIO_STOW_ROOT'"
     elif (
         if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
             # shellcheck source=source/stow/tools/make-clean.sh
-            source "$MYCELIO_STOW_ROOT/tools/make-clean.sh"
+            _run "[stow.make.clean]" source "$MYCELIO_STOW_ROOT/tools/make-clean.sh"
         fi
 
         # shellcheck source=source/stow/tools/make-stow-minimal.sh
-        source "$MYCELIO_STOW_ROOT/tools/make-stow-minimal.sh"
+        _run "[stow.make]" source "$MYCELIO_STOW_ROOT/tools/make-stow-minimal.sh"
 
         rm -f "$MYCELIO_STOW_ROOT/configure~" "$MYCELIO_STOW_ROOT/Build.bat" "$MYCELIO_STOW_ROOT/Build" >/dev/null 2>&1 || true
         git -C "$MYCELIO_STOW_ROOT" checkout -- "$MYCELIO_STOW_ROOT/aclocal.m4" >/dev/null 2>&1 || true
