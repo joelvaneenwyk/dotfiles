@@ -813,7 +813,13 @@ function install_stow() {
         fi
 
         if [ ! -x "$(command -v cpanm)" ]; then
-            curl -L https://cpanmin.us | perl - App::cpanminus
+            if [ -x "$(command -v curl)" ]; then
+                curl -L https://cpanmin.us | perl - --sudo App::cpanminus | awk '{ print "[stow.cpanm.https.install]", $0 }'
+            fi
+
+            if [ ! -x "$(command -v cpanm)" ]; then
+                _sudo cpan -i -T App::cpanminus | awk '{ print "[stow.cpanm.install]", $0 }'
+            fi
         fi
     else
         echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
