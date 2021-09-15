@@ -26,7 +26,7 @@
 [submodule "source/stow"]
 	path = source/stow
 	url = https://github.com/joelvaneenwyk/stow
-	branch = docs
+	branch = main
 
 [submodule "bats-core"]
 	path = test/bats

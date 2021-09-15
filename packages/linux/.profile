@@ -208,13 +208,17 @@ initialize_interactive_profile() {
             _theme="$HOME/.poshthemes/stelbent.minimal.omp.json"
         fi
 
-        if [ -f "$_theme" ]; then
-            eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")"
+        if [ -n "$_shell" ] && [ -f "$_theme" ]; then
+            if ! eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")"; then
+                echo "❌ Failed to initialize Oh My Posh."
+            fi
         fi
     fi
 
-    if [ "$MYCELIO_OS_NAME" = "Windows" ]; then
-        _parent="$(ps -p $$ --all | tail -n +2 | awk '{ print $8 }')"
+    if [ "${MYCELIO_OS_NAME:-}" = "Windows" ]; then
+        if ! _parent="$(ps -p $$ --all | tail -n +2 | awk '{ print $8 }')"; then
+            _parent="N/A"
+        fi
     elif ! _parent="$(ps -o args= ${PPID:-0} 2>&1 | head -n 1)"; then
         _parent="N/A"
     fi
@@ -382,6 +386,14 @@ initialize_profile() {
     if [ -z "${MYCELIO_ROOT:-}" ]; then
         export MYCELIO_ROOT="$HOME/dotfiles"
     fi
+
+    # Make sure that USER is defined because some scripts (e.g. Oh My Posh) expect
+    # the variable to be defined.
+    export USER=${USER:-"$(whoami)"}
+
+    # Define a default for this as it is used by Oh My Posh and we do not want an
+    # error due to undefined access.
+    export PROMPT_COMMAND=${PROMPT_COMMAND:-""}
 
     export LD_PRELOAD=
 

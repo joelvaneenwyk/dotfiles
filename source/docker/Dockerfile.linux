@@ -1,0 +1,33 @@
+FROM ubuntu:focal
+
+ARG USERNAME=default
+
+# ubuntu does not have sudo, so fetch it and install it
+RUN apt-get update && apt-get install -y sudo
+
+# Create new user and disable password and gecos for later. See '--gecos' explained
+# well here: https://askubuntu.com/a/1195288/635348
+RUN adduser --home "/home/${USERNAME}" --disabled-password --gecos "" ${USERNAME}
+
+#  Add new user to sudo group
+RUN usermod -aG sudo "${USERNAME}"
+
+# Ensure sudo group users are not asked for a password when using
+# the sudo command by ammending sudoers file.
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Now we can set USER to the user we just created
+USER ${USERNAME}
+
+# Now switch to working in the user home directory
+WORKDIR /home/${USERNAME}
+
+RUN sudo apt-get update
+
+COPY --chown=${USERNAME} ./ ./dotfiles/
+
+# This will delete existing '.profile' or other configuration files when stowing
+RUN ./dotfiles/setup.sh --clean --yes
+
+ENTRYPOINT [ "/bin/bash", "-c" ]
+CMD ["neofetch && bash"]

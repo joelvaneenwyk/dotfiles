@@ -88,7 +88,9 @@ setlocal EnableExtensions EnableDelayedExpansion
         docker rm --force "!_container_name!" > nul 2>&1
         docker stop "!_container_instance!" > nul 2>&1
 
-        docker build --rm -t "!_container_name!" -f "%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!" !_arg_remainder! .
+        set _cmd=docker build --progress plain --rm -t "!_container_name!" -f "%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!" !_arg_remainder! !MYCELIO_ROOT!
+        echo ##[cmd] !_cmd!
+        !_cmd!
         if errorlevel 1 (
             echo Docker '!_container_name!' container build failed: '%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!'
         ) else (

@@ -809,7 +809,7 @@ function install_stow() {
 
             # If configuration file does not exist yet then we automate configuration with
             # answers to standard questions. These may become invalid with newer versions.
-            perl -MCPAN -e 'my $c = "CPAN::HandleConfig"; $c->load(doit => 1, autoconfig => 1); $c->edit(prerequisites_policy => "follow"); $c->edit(build_requires_install_policy => "yes"); $c->commit' | awk '{ print "[stow.cpan]", $0 }'
+            perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl" | awk '{ print "[stow.cpan.config]", $0 }'
         fi
 
         if [ ! -x "$(command -v cpanm)" ]; then
@@ -817,11 +817,6 @@ function install_stow() {
         fi
     else
         echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
-    fi
-
-    if [ ! -f "$MYCELIO_STOW_ROOT/configure.ac" ] && [ -x "$(command -v git)" ]; then
-        git -C "$MYCELIO_ROOT" submodule update --init --recursive
-        echo "[stow] ⚠ Updated submodules due to missing 'stow' source."
     fi
 
     if [ ! -f "$MYCELIO_STOW_ROOT/configure.ac" ]; then
@@ -1149,16 +1144,11 @@ function configure_linux() {
         _stow_packages --delete
     fi
 
-    echo "Connecting the mycelium..."
-    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
-        _stow_packages --restow
-    else
-        _stow_packages
-    fi
-
     mkdir -p "$MYCELIO_HOME/.config/fish/functions"
 
-    # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to install it.
+    # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to install it. We intentionally
+    # want to create this before we stow packages since we want to make sure the parent folder is not a symbolic
+    # link which would cause problems if running a Docker image on this folder if a symbolic link exists inside it.
     _binding_link="$MYCELIO_HOME/.config/fish/functions/fzf_key_bindings.fish"
     _binding_file="$MYCELIO_HOME/.local/fzf/shell/key-bindings.fish"
     if [ -f "$_binding_file" ] && [ ! -f "$_binding_link" ]; then
@@ -1177,6 +1167,14 @@ function configure_linux() {
         if [ -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
             chmod a+x "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
         fi
+    fi
+
+    # Stow packages after we have installed fundle and setup custom links
+    echo "Connecting the mycelium..."
+    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
+        _stow_packages --restow
+    else
+        _stow_packages
     fi
 
     if [ -x "$(command -v fish)" ]; then
@@ -1207,6 +1205,24 @@ function configure_linux() {
     rm -f "$_gnupg_config_root/gpg.conf"
     cp "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
     echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
+
+    if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
+        DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
+    fi
+
+    # Remove intermediate files here to reduce size of Docker container layer
+    if [ -f "/.dockerenv" ] && [ "$MYCELIO_ARG_CLEAN" = "1" ]; then
+        rm -rf "$MYCELIO_TEMP" || true
+        sudo rm -rf "/tmp/*" || true
+        sudo rm -rf "/usr/tmp/*" || true
+        sudo rm -rf "/var/lib/apt/lists/*" || true
+        echo "Removed intermediate temporary fails from Docker instance."
+    fi
+
+    # Left-over sometimes created by 'micro' text editor
+    rm -f "$MYCELIO_ROOT/log.txt" || true
+
+    echo "✔ Configured system."
 }
 
 function initialize_linux() {
@@ -1567,10 +1583,6 @@ function main() {
 
     export MYCELIO_TEMP="$MYCELIO_HOME/.tmp"
 
-    if [ "$_skip_initialization" = "1" ]; then
-        return 0
-    fi
-
     # Note below that we use 'whoami' since 'USER' variable is not set for
     # scheduled tasks on Synology.
 
@@ -1581,6 +1593,11 @@ function main() {
     echo "║           OS: '$MYCELIO_OS' ($MYCELIO_ARCH)"
     echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
     echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
+
+    if [ "$_skip_initialization" = "1" ]; then
+        echo "[mycelio] Skipped initialization."
+        return 0
+    fi
 
     # Make sure we have the appropriate permissions to write to home temporary folder
     # otherwise much of this initialization will fail.
@@ -1619,6 +1636,11 @@ function main() {
 
     initialize_gitconfig
 
+    if [ -x "$(command -v git)" ]; then
+        git -C "$MYCELIO_ROOT" submodule update --init --recursive
+        echo "Updated submodules."
+    fi
+
     if [ "$MYCELIO_OS" = "linux" ] || [ "$MYCELIO_OS" = "windows" ]; then
         initialize_linux "$@"
     elif [ "$MYCELIO_OS" = "darwin" ]; then
@@ -1629,23 +1651,9 @@ function main() {
     # setup scripts to home directory.
     configure_linux "$@"
 
-    if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
-        DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
+    if ! _reload_profile; then
+        echo "❌ Failed to reload profile."
     fi
-
-    # Remove intermediate files here to reduce size of Docker container layer
-    if [ -f "/.dockerenv" ] && [ "$MYCELIO_ARG_CLEAN" = "1" ]; then
-        rm -rf "$MYCELIO_TEMP" || true
-        sudo rm -rf "/tmp/*" || true
-        sudo rm -rf "/usr/tmp/*" || true
-        sudo rm -rf "/var/lib/apt/lists/*" || true
-        echo "Removed intermediate temporary fails from Docker instance."
-    fi
-
-    # Left-over sometimes created by 'micro' text editor
-    rm -f "$MYCELIO_ROOT/log.txt" || true
-
-    _reload_profile
 
     _supports_neofetch=0
     if [ "$BASH_VERSION_MAJOR" -ge 4 ]; then
@@ -1669,4 +1677,4 @@ function main() {
 
 main "$@"
 
-_remove_error_handling
+_remove_error_handling || true

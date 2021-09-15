@@ -1,7 +1,27 @@
-FROM ubuntu:latest
+ARG VARIANT=focal
 
+FROM ubuntu:${VARIANT}
+
+# Install gnupg to allow apt-key verification, time to allow profiling
 RUN apt-get update
-RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y git stow sudo micro neofetch
+RUN apt-get install -y gnupg time
+
+# Set up PPA for apt-fast
+RUN echo deb http://ppa.launchpad.net/apt-fast/stable/ubuntu ${VARIANT} main >> /etc/apt/sources.list.d/apt-fast.list \
+	&& echo deb-src http://ppa.launchpad.net/apt-fast/stable/ubuntu ${VARIANT} main >> /etc/apt/sources.list.d/apt-fast.list
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A2166B8DE8BDC3367D1901C11EE2FF37CA8DA16B
+RUN apt-get update
+
+# Configure apt-fast installation to avoid prompts
+RUN echo debconf debconf/frontend select Noninteractive | debconf-set-selections
+RUN echo apt-fast apt-fast/maxdownloads string 10 | debconf-set-selections
+RUN echo apt-fast apt-fast/dlflag boolean true | debconf-set-selections
+RUN echo apt-fast apt-fast/aptmanager string apt-get | debconf-set-selections
+
+# Install apt-fast
+RUN apt-get install -y apt-fast
+
+RUN DEBIAN_FRONTEND="noninteractive" apt-fast install -y --no-install-recommends git stow sudo micro neofetch
 
 # Add a default user and then switch over to that user
 RUN useradd -ms /bin/bash default

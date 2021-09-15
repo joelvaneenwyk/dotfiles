@@ -15,6 +15,7 @@
 	verbose = true
 	gpgsign = true
 [alias]
+	spull = submodule update --init --recursive
 	co = checkout
 	br = branch
 	ci = commit
