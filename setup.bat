@@ -152,14 +152,16 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo ======-------
     echo.
     if not exist "%USERPROFILE%\scoop\shims\mingw64.cmd" (
-        echo "ERROR: MSYS2 (MINGW64) not installed. Initialization failed."
-        _error=55
+        set _error=55
+        echo ERROR: MSYS2 [MINGW64] not installed. Initialization failed.
         goto:$InitializeDone
     )
 
     call "%USERPROFILE%\scoop\shims\mingw64.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
     if not "%ERRORLEVEL%"=="0" (
         set _error=%ERRORLEVEL%
+        echo ERROR: MSYS2 [MINGW64] setup process failed.
+        goto:$InitializeDone
     )
 
     :$InitializeDone
@@ -167,12 +169,17 @@ setlocal EnableExtensions EnableDelayedExpansion
 endlocal & (
     set "MYCELIO_ROOT=%MYCELIO_ROOT%"
     set "MYCELIO_PROFILE_INITIALIZED=%MYCELIO_PROFILE_INITIALIZED%"
-    set "MYCELIO_ERROR=%error%"
+    set "MYCELIO_ERROR=%_error%"
     set "PATH=%PATH%"
     set "POWERSHELL=%_pwsh%"
 )
 
-echo Completed execution of `dotfiles` initialization.
+if "%MYCELIO_ERROR%"=="0" (
+    echo Completed execution of `dotfiles` initialization.
+) else (
+    echo Execution of `dotfiles` initialization failed. Error code: '%MYCELIO_ERROR%'
+)
+
 exit /b %MYCELIO_ERROR%
 
 :CheckSystemFile %1=SystemFilename

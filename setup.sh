@@ -1170,9 +1170,10 @@ function configure_linux() {
     )
 
     if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
-        wget "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish" || true
+        wget --quiet "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
         if [ -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
             chmod a+x "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
+            echo "Downloaded latest fundle: $MYCELIO_HOME/.config/fish/functions/fundle.fish"
         fi
     fi
 
@@ -1649,7 +1650,7 @@ function main() {
     initialize_gitconfig
 
     if [ -x "$(command -v git)" ]; then
-        git -C "$MYCELIO_ROOT" submodule update --init --recursive
+        git -C "$MYCELIO_ROOT" submodule foreach git pull --rebase --autostash
         echo "Updated submodules."
     fi
 
