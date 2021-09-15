@@ -33,6 +33,7 @@ jobs:
 
     # The type of runner that the job will run on
     runs-on: ${{ matrix.platform }}
+    if: always()
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -46,8 +47,39 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: ${{ matrix.launch }} --clean --yes
 
+  windows_msys2:
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Initialize environment
+        run: |
+          echo 'Running 'Mycelio' environment setup in MSYS2!'
+          pwd
+          rm -rf "$HOME/dotfiles"
+          cp --dereference -af $(cygpath "$GITHUB_WORKSPACE/") "$HOME/dots/" || true
+          cd "$HOME"
+          pwd
+          ./dots/setup.sh --clean --force
+
   docker_build:
     runs-on: ubuntu-latest
+
+    # Only build this if the main tasks complete
+    needs: init
+
     steps:
       - uses: actions/checkout@v2
         with:
@@ -93,30 +125,3 @@ jobs:
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
-
-  msys2:
-    runs-on: windows-latest
-
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Initialize environment
-        run: |
-          echo 'Running 'Mycelio' environment setup in MSYS2!'
-          pwd
-          rm -rf "$HOME/dotfiles"
-          cp --dereference -af $(cygpath "$GITHUB_WORKSPACE/") "$HOME/dots/" || true
-          cd "$HOME"
-          pwd
-          ./dots/setup.sh --clean --force

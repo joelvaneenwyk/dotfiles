@@ -1342,7 +1342,7 @@ function initialize_linux() {
 
     if [ ! -d "$MYCELIO_HOME/.asdf" ]; then
         if [ -x "$(command -v git)" ]; then
-            git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$MYCELIO_HOME/.asdf" --branch v0.8.1
+            git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$MYCELIO_HOME/.asdf" --branch "v0.8.1"
         else
             echo "Skipped 'asdf' install. Missing required 'git' tool."
         fi
