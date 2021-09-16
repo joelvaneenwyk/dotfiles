@@ -67,8 +67,8 @@ vmap <S-Tab> <<CR>gv
 imap <S-Tab> <C-D>
 
 " Keep selection after indenting.
-vnoremap > ><CR>gv 
-vnoremap < <<CR>gv 
+vnoremap > ><CR>gv
+vnoremap < <<CR>gv
 
 " Mappings for file tabs.
 set wildchar=<Tab> wildmenu wildmode=full
@@ -207,4 +207,3 @@ endfunction
 autocmd BufReadPost * call PositionCursorFromVimInfo()
 
 hi Normal guibg=NONE ctermbg=NONE
-

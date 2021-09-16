@@ -53,7 +53,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) =
       ((modm .|. shiftMask, xK_Up   ),    sendMessage $ Swap U),
       ((modm .|. shiftMask, xK_Down ),    sendMessage $ Swap D),
 
-      -- Toogle Fullscreen
+      -- Toggle Fullscreen
       ((modm, xK_f),                      sendMessage ToggleLayout),
 
       -- Lock Screen
@@ -90,7 +90,7 @@ fullscreenLayout = named "fullscreen" $ noBorders Full
 imLayout = avoidStruts $ withIM ratio roster chatLayout where
     chatLayout = Grid
     ratio      = 1%7
-    roster     = Title("jonathanve - Skype™")
+    roster     = Title("Joel Van Eenwyk - Skype™")
 gimpLayout = withIM (0.11) (Role "gimp-toolbox") $ reflectHoriz $
              withIM (0.15) (Role "gimp-dock") Full
 
@@ -126,5 +126,3 @@ main = do
          modMask = mod4Mask,
          terminal = "rxvt"
       }
-
-

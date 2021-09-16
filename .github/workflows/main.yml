@@ -26,10 +26,17 @@ jobs:
         include:
           - platform: ubuntu-latest
             launch: bash setup.sh
+            logs: /home/runneradmin/.cpanm/work/**/*.log
+
           - platform: macos-latest
             launch: bash setup.sh
+            logs: /home/runneradmin/.cpanm/work/**/*.log
+
           - platform: windows-latest
             launch: cmd /c setup.bat
+
+            # https://github.com/msys2/setup-msys2/blob/master/main.js
+            logs: C:\Users\runneradmin\.cpanm\work\**\*.log
 
     # The type of runner that the job will run on
     runs-on: ${{ matrix.platform }}
@@ -46,6 +53,12 @@ jobs:
       - name: Initialize environment
         working-directory: ${{ github.workspace }}
         run: ${{ matrix.launch }} --clean --yes
+
+      - uses: actions/upload-artifact@v2
+        name: Upload Logs
+        with:
+          name: cpanm-logs
+          path: ${{ matrix.logs }}
 
   windows_msys2:
     runs-on: windows-latest

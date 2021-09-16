@@ -4,8 +4,8 @@ Expunge Both
 
 IMAPAccount mail
 Host mail.example.com
-User jdve
-PassCmd "secret-tool lookup user jdve"
+User joelvaneenwyk
+PassCmd "secret-tool lookup user joelvaneenwyk"
 UseIMAPS yes
 PipelineDepth 100
 

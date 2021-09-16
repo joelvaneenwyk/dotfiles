@@ -124,7 +124,7 @@ if errorlevel 1 (
 )
 
 :$InitializedProfile
-exit /b
+exit /b 0
 
 ::-----------------------------------
 :: Extract the ARG0 and ARG1 from %CMDCMDLINE% using cmd.exe own parser

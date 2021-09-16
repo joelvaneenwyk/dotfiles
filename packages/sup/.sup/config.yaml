@@ -26,8 +26,8 @@
 :always_edit_async: false
 :accounts:
   :default:
-    :name: Jonathan Van Eenwyk
-    :email: jdve@example.com
+    :name: Joel Van Eenwyk
+    :email: joelvaneenwyk@example.com
     :alternates: []
     :sendmail: sendmail -oem -ti
     :gpgkey: ''

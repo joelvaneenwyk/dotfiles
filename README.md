@@ -20,26 +20,39 @@
  ░▓▓▓▓▓▓▓▓▓▓▓▓▓▓
  ░░░░░░░░░░░░░░
 
- bash           > basic bash setup
- fish           > fish setup
+ bash           > basic `bash` setup
+ fish           > `fish` setup
  fonts          > favorite fonts
+ linux          > shared profile setup
  macos          > special sauce for macOS / OSX
  windows        > helper scripts for Windows
  python         > flake8 config
+ ruby           > default gems and `asdf` config
  sup            > sup mail client configs
  vim            > vim configs
  x11            > three-monitor x11 config
  xmonad         > x11 window manager configs
+ zsh            > shell config for `zsh`
 ```
 
-## table of contents
+## Table of Contents
 
-- [Setup](#Setup)
-- [Introduction](#dotfiles)
-- [Management](#managing)
-- [Install](#installing)
-- [Implementation](#how-it-works)
-- [Details](#details)
+- [Portable Configuration](#portable-configuration)
+  - [Table of Contents](#table-of-contents)
+  - [Setup](#setup)
+    - [Windows](#windows)
+    - [macOS](#macos)
+    - [Linux](#linux)
+    - [Synology](#synology)
+    - [Raspberry PI](#raspberry-pi)
+    - [Secrets](#secrets)
+  - [Introduction](#introduction)
+  - [Management](#management)
+  - [Installation](#installation)
+  - [Implementation](#implementation)
+  - [Details](#details)
+    - [x11](#x11)
+  - [Resources](#resources)
 
 ## Setup
 
