@@ -850,7 +850,7 @@ function install_stow() {
                 echo ""
                 echo "no"
                 echo "exit"
-            ) | _run "[stow.cpan]" cpan -T
+            ) | _run "[stow.cpan]" cpan -T || true
 
             # If configuration file does not exist yet then we automate configuration with
             # answers to standard questions. These may become invalid with newer versions.
