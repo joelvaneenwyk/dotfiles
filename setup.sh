@@ -191,6 +191,11 @@ _filter() {
 #
 # Original implementation: https://unix.stackexchange.com/a/70675
 #
+# Resources:
+#
+#   - https://stackoverflow.com/questions/3173131/redirect-copy-of-stdout-to-log-file-from-within-bash-script-itself
+#   - https://unix.stackexchange.com/questions/14270/get-exit-status-of-process-thats-piped-to-another
+#
 _run() {
     _prefix="${1:-}"
     shift
@@ -200,20 +205,23 @@ _run() {
             ( 
                 ( 
                     ( 
-                        #   stderr -> #1
-                        #   stdout -> #3
-                        #   return code -> #5
                         (
+                            # Disable exit on error so that we can redirect output
+                            set +e
+
+                            #   stderr -> #1
+                            #   stdout -> #3
                             "$@" 2>&3 3>&-
+
+                            # return code -> #5
                             echo $? >&5
-                        ) | _filter "$_prefix"
-                        # Redirects stdout to #4 so that it's not run through error log
-                    ) 3>&1 1>&4 | _filter "$_prefix"
+                        ) | _filter "$_prefix"                    # Output standard log (stdout)
+                    ) 3>&1 1>&4 | _filter "$_prefix [ERROR] " >&2 # Redirects stdout to #4 so that it's not run through error log
                 ) >&4
             ) 5>&1
         ) | (
-            read -r return_code
-            __safe_exit "$return_code"
+            read -r _return_code
+            __safe_exit "$_return_code"
         )
     ) 4>&1
 

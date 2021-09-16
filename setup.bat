@@ -6,12 +6,6 @@ setlocal EnableExtensions EnableDelayedExpansion
     set "_mycelio_root=%~dp0"
     set "_starting_directory=%cd%"
 
-    :: Setup Docker arguments before we parse out arguments
-    set _container_platform=%~2
-    if "%_container_platform%"=="" set _container_platform=linux
-    set _container_name=menv:!_container_platform!
-    set _container_instance=menv_!_container_platform!
-
     set "MYCELIO_ROOT=%_mycelio_root:~0,-1%"                    &:# Script path, without the trailing \
     set "USER[HKLM]=all users"
     set "USER[HKCU]=%USERNAME%"
@@ -30,6 +24,15 @@ setlocal EnableExtensions EnableDelayedExpansion
     set _arg_remainder=
     shift
 
+    :: Setup Docker arguments before we parse out argument remainder
+    if "!COMMAND!"=="docker" (
+        set _container_platform=%~1
+        shift
+    )
+
+    set _container_name=menv:!_container_platform!
+    set _container_instance=menv_!_container_platform!
+
     set _error=0
     set _clean=0
 
@@ -39,6 +42,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     if "%~1"=="--clean" set _clean=1
     if "%~1"=="clean" set _clean=1
     if "%~1"=="cls" set _clean=1
+
     set "_args=!_args! %1"
     set "_arg_remainder=!_arg_remainder! %1"
     shift
@@ -60,15 +64,15 @@ setlocal EnableExtensions EnableDelayedExpansion
     :: outdated or invalid version already there since it is called in all subsequent 'call'
     :: commands we issue.
     call :InstallAutoRun
-    if not "%ERRORLEVEL%"=="0" (
-        set _error=%ERRORLEVEL%
+    if not "!ERRORLEVEL!"=="0" (
+        set _error=!ERRORLEVEL!
         echo ERROR: AutoRun setup failed.
         goto:$InitializeDone
     )
 
     call "%MYCELIO_ROOT%\source\windows\profile.bat"
-    if not "%ERRORLEVEL%"=="0" (
-        set _error=%ERRORLEVEL%
+    if not "!ERRORLEVEL!"=="0" (
+        set _error=!ERRORLEVEL!
         echo ERROR: Profile setup failed.
         goto:$InitializeDone
     )
@@ -88,7 +92,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     if "%COMMAND%"=="wsl" (
         wsl !_arg_remainder! -- bash -c ./setup.sh
-        exit /b %ERRORLEVEL%
+        exit /b !ERRORLEVEL!
     )
 
     ::
@@ -138,8 +142,8 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo ======-------
     echo.
     !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Environment.ps1"
-    if not "%ERRORLEVEL%"=="0" (
-        set _error=%ERRORLEVEL%
+    if not "!ERRORLEVEL!"=="0" (
+        set _error=!ERRORLEVEL!
     )
 
     ::
@@ -168,8 +172,8 @@ setlocal EnableExtensions EnableDelayedExpansion
     )
 
     call "%USERPROFILE%\scoop\shims\mingw64.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
-    if not "%ERRORLEVEL%"=="0" (
-        set _error=%ERRORLEVEL%
+    if not "!ERRORLEVEL!"=="0" (
+        set _error=!ERRORLEVEL!
         echo ERROR: MSYS2 [MINGW64] setup process failed.
         goto:$InitializeDone
     )
@@ -231,7 +235,7 @@ endlocal & exit /b
 endlocal & (if not "%~2"=="" (set "%~2=%VALUE%")) & exit /b
 
 ::-----------------------------------
-:: Check if the user has system administrator rights. %ERRORLEVEL% 0=Yes; 5=No
+:: Check if the user has system administrator rights. !ERRORLEVEL! 0=Yes; 5=No
 ::-----------------------------------
 :IsAdmin
     >NUL 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
