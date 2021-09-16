@@ -17,7 +17,7 @@ function __print_stack() {
         local callstack=""
         while ((function_index < callstack_end)); do
             function=${FUNCNAME[$function_index]+"${FUNCNAME[$function_index]}"}
-            callstack+=$(printf '  >    %s:%d: %s()\\n' "${BASH_SOURCE[$source_index]}" "${BASH_LINENO[$source_index]}" "${function:-}")
+            callstack+=$(printf '  >    %s:%d: %s()\n' "${BASH_SOURCE[$source_index]}" "${BASH_LINENO[$source_index]}" "${function:-}")
             ((++function_index))
             ((++source_index))
         done
@@ -1202,20 +1202,27 @@ function configure_linux() {
 
     mkdir -p "$MYCELIO_HOME/.config/fish/functions"
 
-    # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to install it. We intentionally
-    # want to create this before we stow packages since we want to make sure the parent folder is not a symbolic
-    # link which would cause problems if running a Docker image on this folder if a symbolic link exists inside it.
-    _binding_link="$MYCELIO_HOME/.config/fish/functions/fzf_key_bindings.fish"
-    _binding_file="$MYCELIO_HOME/.local/fzf/shell/key-bindings.fish"
-    if [ -f "$_binding_file" ] && [ ! -f "$_binding_link" ]; then
-        ln -s "$_binding_file" "$_binding_link"
-    fi
-
-    rm -f "$MYCELIO_HOME/.base16_theme"
     (
-        # Not all platforms support '--relative' so go into the home directory to create
+        # Not all platforms support '--relative' so go into target directory first
+        cd "$MYCELIO_HOME/.config/fish/functions"
+
+        # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to install it. We intentionally
+        # want to create this before we stow packages since we want to make sure the parent folder is not a symbolic
+        # link which would cause problems if running a Docker image on this folder if a symbolic link exists inside it.
+        _binding_file="../../../.local/fzf/shell/key-bindings.fish"
+
+        _binding_link="fzf_key_bindings.fish"
+        if [ -e "$_binding_file" ]; then
+            rm -f "$_binding_link"
+            ln -s "$_binding_file" "$_binding_link"
+        fi
+    )
+
+    (
+        # Not all platforms support '--relative' so go into target directory first
         cd "$MYCELIO_HOME"
-        ln -s "$MYCELIO_ROOT/packages/fish/.config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
+        rm -f "$MYCELIO_HOME/.base16_theme"
+        ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
     )
 
     if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
@@ -1530,6 +1537,17 @@ function _setup_environment() {
     export MYCELIO_STOW_ROOT="$MYCELIO_ROOT/source/stow"
 }
 
+function _update_git_repository() {
+    _path="$1"
+    _branch="$2"
+
+    if git -C "$MYCELIO_ROOT/$_path" symbolic-ref -q HEAD >/dev/null 2>&1; then
+        _run "[$_path][pull]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
+    else
+        _run "[$_path][checkout]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
+    fi
+}
+
 function main() {
     # Need to setup environment variables before anything else
     _setup_environment
@@ -1699,7 +1717,15 @@ function main() {
     initialize_gitconfig
 
     if [ -x "$(command -v git)" ]; then
-        git -C "$MYCELIO_ROOT" submodule foreach git pull --rebase --autostash
+        _update_git_repository "source/stow" "main"
+        _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
+        _update_git_repository "packages/macos/Library/Application Support/Resources" "master"
+        _update_git_repository "packages/fish/.config/base16-shell" "master"
+        _update_git_repository "packages/fish/.config/base16-fzf" "master"
+        _update_git_repository "packages/fish/.config/git-fuzzy" "master"
+        _update_git_repository "test/bats" "master"
+        _update_git_repository "test/test_helper/bats-support" "master"
+        _update_git_repository "test/test_helper/bats-assert" "master"
         echo "Updated submodules."
     fi
 

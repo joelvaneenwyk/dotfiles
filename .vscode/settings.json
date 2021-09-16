@@ -190,17 +190,19 @@
         "**/blib/**": true
     },
     "files.associations": {
-        ".gitconfig_common": "properties",
-        ".gitconfig_linux": "properties",
-        ".gitconfig_windows": "properties",
-        ".gitconfig_wsl": "properties",
-        ".gitignore": "properties",
         "*.json.git": "cjson",
         "*.in": "perl",
         "stow": "perl",
         "chkstow": "perl",
         "get-version": "perl",
-        "cpanfile": "perl"
+        "cpanfile": "perl",
+        ".gitconfig_common": "properties",
+        ".gitconfig_linux": "properties",
+        ".gitconfig_windows": "properties",
+        ".gitconfig_wsl": "properties",
+        ".gitignore": "properties",
+        ".gitmodules": "properties",
+        ".editorconfig": "editorconfig"
     },
 
     "[json]": {
