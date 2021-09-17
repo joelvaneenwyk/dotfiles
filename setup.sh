@@ -17,7 +17,7 @@ function __print_stack() {
         local callstack=""
         while ((function_index < callstack_end)); do
             function=${FUNCNAME[$function_index]+"${FUNCNAME[$function_index]}"}
-            callstack+=$(printf '  >    %s:%d: %s()\n' "${BASH_SOURCE[$source_index]}" "${BASH_LINENO[$source_index]}" "${function:-}")
+            callstack+=$(printf '\\n    >  %s:%d: %s()' "${BASH_SOURCE[$source_index]}" "${BASH_LINENO[$source_index]}" "${function:-}")
             ((++function_index))
             ((++source_index))
         done
@@ -45,38 +45,39 @@ function __safe_exit() {
 function __trap_error() {
     _retval=$?
 
-    # Stop tracing once we hit the error
-    set +o xtrace || true
+    if [ ! "${MYCELIO_DISABLE_TRAP:-}" == "1" ]; then
+        # Stop tracing once we hit the error
+        #set +o xtrace || true
 
-    _line=${_mycelio_dbg_last_line:-}
+        _line=${_mycelio_dbg_last_line:-}
 
-    if [ "${_line:-}" = "" ]; then
-        _line="${1:-}"
+        if [ "${_line:-}" = "" ]; then
+            _line="${1:-}"
+        fi
+
+        if [ "${_line:-}" = "" ]; then
+            _line="[undefined]"
+        fi
+
+        # First argument is always the line number even if unused
+        shift
+
+        echo "--------------------------------------" >&2
+
+        if [ "${MYCELIO_DEBUG_TRAP_ENABLED:-}" = "1" ]; then
+            echo "Error on line #$_line:" >&2
+        fi
+
+        # This only exists in a few shells e.g. bash
+        # shellcheck disable=SC2039,SC3044
+        if _caller="$(caller 2>&1)"; then
+            printf " - Caller: '%s'\n" "${_caller:-UNKNOWN}" >&2
+        fi
+
+        printf " - Code: '%s'\n" "${_retval:-}" >&2
+        printf " - Callstack:" >&2
+        __print_stack "$@" >&2
     fi
-
-    if [ "${_line:-}" = "" ]; then
-        _line="[undefined]"
-    fi
-
-    # First argument is always the line number even if unused
-    shift
-
-    echo "--------------------------------------"
-
-    if [ "${MYCELIO_DEBUG_TRAP_ENABLED:-}" = "1" ]; then
-        echo "Error on line #$_line:"
-    fi
-
-    # This only exists in a few shells e.g. bash
-    # shellcheck disable=SC2039,SC3044
-    if _caller="$(caller 2>&1)"; then
-        echo "  - Caller: '${_caller:-UNKNOWN}'"
-    fi
-
-    echo "  - Command: '${BASH_COMMAND:-UNKNOWN}'"
-    echo "  - Code: '${_retval:-}'"
-    echo "  - Callstack:"
-    __print_stack "$@"
 
     # We always exit immediately on error
     __safe_exit ${_retval:-1}
@@ -200,29 +201,21 @@ _run() {
     _prefix="${1:-}"
     shift
 
-    ( 
+    (
+        MYCELIO_DISABLE_TRAP=1
         ( 
             ( 
-                ( 
-                    ( 
-                        (
-                            # Disable exit on error so that we can redirect output
-                            set +e
+                (
+                    unset MYCELIO_DISABLE_TRAP
 
-                            #   stderr -> #1
-                            #   stdout -> #3
-                            "$@" 2>&3 3>&-
+                    echo "##[cmd] $*"
 
-                            # return code -> #5
-                            echo $? >&5
-                        ) | _filter "$_prefix"                    # Output standard log (stdout)
-                    ) 3>&1 1>&4 | _filter "$_prefix [ERROR] " >&2 # Redirects stdout to #4 so that it's not run through error log
-                ) >&4
-            ) 5>&1
-        ) | (
-            read -r _return_code
-            __safe_exit "$_return_code"
-        )
+                    #  stdout (#1) -> untouched
+                    #  stderr (#2) -> #3
+                    "$@" 2>&3 3>&-
+                ) | _filter "$_prefix [stdout] "           # Output standard log (stdout)
+            ) 3>&1 1>&4 | _filter "$_prefix [stderr] " >&2 # Redirects stdout to #4 so that it's not run through error log
+        ) >&4
     ) 4>&1
 
     return $?
@@ -869,7 +862,9 @@ function install_stow() {
 
         if [ ! -x "$(command -v cpanm)" ]; then
             if [ -x "$(command -v curl)" ]; then
-                curl -L --silent https://cpanmin.us | _run "[stow.cpanm.https.install]" perl - --sudo --notest --verbose App::cpanminus
+                curl -L -- silent "https://cpanmin.us/" -o "$MYCELIO_HOME/.local/bin/cpanm"
+                chmod +x "$MYCELIO_HOME/.local/bin/cpanm"
+                _run "[stow.cpanm.https.install]" _sudo perl "$MYCELIO_HOME/.local/bin/cpanm" --notest --verbose App::cpanminus
             fi
 
             if [ ! -x "$(command -v cpanm)" ]; then
@@ -892,15 +887,15 @@ function install_stow() {
 
         # shellcheck source=source/stow/tools/make-stow-minimal.sh
         _run "[stow.make]" source "$MYCELIO_STOW_ROOT/tools/make-stow-minimal.sh"
-
-        rm -f "$MYCELIO_STOW_ROOT/configure~" "$MYCELIO_STOW_ROOT/Build.bat" "$MYCELIO_STOW_ROOT/Build" >/dev/null 2>&1 || true
-        git -C "$MYCELIO_STOW_ROOT" checkout -- "$MYCELIO_STOW_ROOT/aclocal.m4" >/dev/null 2>&1 || true
     ); then
         echo "✔ Successfully built 'stow' from source."
     else
         echo "❌ Failed to build 'stow' from source."
         return 15
     fi
+
+    rm -f "$MYCELIO_STOW_ROOT/configure~" "$MYCELIO_STOW_ROOT/Build.bat" "$MYCELIO_STOW_ROOT/Build" >/dev/null 2>&1 || true
+    git -C "$MYCELIO_STOW_ROOT" checkout -- "$MYCELIO_STOW_ROOT/aclocal.m4" >/dev/null 2>&1 || true
 
     _stow --version
 }
@@ -1550,9 +1545,9 @@ function _update_git_repository() {
     _branch="$2"
 
     if git -C "$MYCELIO_ROOT/$_path" symbolic-ref -q HEAD >/dev/null 2>&1; then
-        _run "[$_path][pull]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
+        _run "[git.pull][$_path]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
     else
-        _run "[$_path][checkout]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
+        _run "[git.checkout][$_path]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
     fi
 }
 

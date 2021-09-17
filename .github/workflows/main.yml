@@ -55,9 +55,10 @@ jobs:
         run: ${{ matrix.launch }} --clean --yes
 
       - uses: actions/upload-artifact@v2
+        if: always()
         name: Upload Logs
         with:
-          name: cpanm-logs
+          name: cpanm-logs-${{ matrix.platform }}
           path: ${{ matrix.logs }}
 
   windows_msys2:

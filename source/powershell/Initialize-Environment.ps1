@@ -109,6 +109,11 @@ Function Get-File {
         throw "Cannot download from $Url"
     }
 }
+
+function msys() {
+    & "$Env:UserProfile\.local\msys64\usr\bin\bash.exe" @('-lc') + @Args
+}
+
 Function Initialize-Environment {
     $tempFolder = "$ENV:UserProfile\.tmp"
     $mycelioRoot = Resolve-Path -Path "$PSScriptRoot\..\..\"
@@ -130,6 +135,33 @@ Function Initialize-Environment {
     }
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    if ( -not(Test-Path -Path "$Env:UserProfile\.local\msys64\mingw64.exe" -PathType Leaf) ) {
+        if ( -not(Test-Path -Path "$Env:UserProfile\.local") ) {
+            New-Item -ItemType directory -Path "$Env:UserProfile\.local" | Out-Null
+        }
+
+        $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/nightly-x86_64/msys2-base-x86_64-latest.sfx.exe"
+
+        if ( -not(Test-Path -Path "$tempFolder\msys2.exe" -PathType Leaf) ) {
+            Invoke-WebRequest -UseBasicParsing -Uri "$msysInstaller" -OutFile "$tempFolder\msys2.exe"
+        }
+
+        if ( -not(Test-Path -Path "$Env:UserProfile\.local\msys64\msys2.exe" -PathType Leaf) ) {
+            & "$tempFolder\msys2.exe" -y -o"$Env:UserProfile\.local"
+            msys ' '
+            msys 'pacman --noconfirm -Syuu'
+            msys 'pacman --noconfirm -Syuu'
+            msys 'pacman --noconfirm -Scc'
+            Write-Host 'Finished MSYS2 install.'
+        }
+
+        # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
+        # as the initial upgrade of msys2 results in it shutting down the console.
+        & cmd /s /c "$Env:UserProfile\.local\msys64\msys2_shell.cmd" \
+        -mingw64 -defterm -no-start -where "$mycelioRoot" \
+        -shell bash -c "./source/shell/upgrade-package-manager.sh"
+    }
 
     try {
         if (-not(Test-CommandExists "scoop")) {
@@ -168,16 +200,6 @@ Function Initialize-Environment {
 
             if (-not(Test-CommandExists "nuget")) {
                 scoop install "nuget"
-            }
-
-            if (-not(Test-CommandExists "msys2")) {
-                scoop install "msys2"
-            }
-
-            # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
-            # as the initial upgrade of msys2 results in it shutting down the console.
-            if (Test-CommandExists "msys2") {
-                msys2 -where "$mycelioRoot" -shell bash -no-start -c "./source/shell/upgrade-package-manager.sh"
             }
 
             # https://github.com/chrisant996/clink

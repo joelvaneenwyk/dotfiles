@@ -48,7 +48,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     shift
     if not "%~1"=="" goto :$ArgumentParse
 
-    echo ##[cmd] %ARG0% %COMMAND%!_arg_remainder!
+    echo ##[cmd] %SCRIPT% %COMMAND%!_arg_remainder!
 
     if "!_clean!"=="1" (
         set MYCELIO_PROFILE_INITIALIZED=
@@ -141,7 +141,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo Installing Windows Dependencies
     echo ======-------
     echo.
-    !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Environment.ps1"
+    !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Environment.ps1" %*
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
     )
@@ -158,6 +158,9 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::call "%MYCELIO_ROOT%\source\windows\stow\build.bat"
     ::stow windows
 
+    set MSYS2_PATH_TYPE=minimal
+    set MSYS_SHELL=%USERPROFILE%\.local\msys64\msys2_shell.cmd
+
     :: Initialize 'msys2' ("Minimal System") environment with bash script. We call the shim directly because environment
     :: may not read path properly after it has just been installed.
     echo.
@@ -165,13 +168,13 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo Mycelio Environment Setup
     echo ======-------
     echo.
-    if not exist "%USERPROFILE%\scoop\shims\mingw64.cmd" (
+    if not exist "%MSYS_SHELL%" (
         set _error=55
         echo ERROR: MSYS2 [MINGW64] not installed. Initialization failed.
         goto:$InitializeDone
     )
 
-    call "%USERPROFILE%\scoop\shims\mingw64.cmd" -where "%MYCELIO_ROOT%" -shell bash -no-start -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
+    call "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: MSYS2 [MINGW64] setup process failed.
@@ -257,7 +260,7 @@ exit /b
                 %EXEC% reg delete "!KEY!" /v "AutoRun" /f
                 %COMMENT% Delete existing key: "!KEY!\AutoRun"
             ) else (
-                %COMMENT% Skipped AutoRun install. Key already exists in registry.
+                %COMMENT% Profile for dotfiles already registered in AutoRun.
                 endlocal & exit /b 0
             )
         )
