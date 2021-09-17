@@ -18,46 +18,46 @@ setlocal EnableExtensions EnableDelayedExpansion
     set ^"ARGS=%*^"                                             &:# Argument line
     set "SPROFILE=%MYCELIO_ROOT%\source\windows\profile.bat"    &:# Full path to profile script
     set "STOW=%MYCELIO_ROOT%\source\stow\bin\stow"
-
     set "COMMAND=%~1"
-    set "_args=%1"
-    set _arg_remainder=
-    shift
-
-    :: Setup Docker arguments before we parse out argument remainder
-    if "!COMMAND!"=="docker" (
-        set _container_platform=%~1
-        shift
-    )
-
-    set _container_name=menv:!_container_platform!
-    set _container_instance=menv_!_container_platform!
 
     set _error=0
     set _clean=0
 
     :: Keep appending arguments until there are none left
     :$ArgumentParse
-    if "%~1"=="-c" set _clean=1
-    if "%~1"=="--clean" set _clean=1
-    if "%~1"=="clean" set _clean=1
-    if "%~1"=="cls" set _clean=1
+        if not "!COMMAND!"=="docker" goto:$ArgumentParseRemainder
+        if not "!_container_platform!"=="" goto:$ArgumentParseRemainder
 
-    set "_args=!_args! %1"
-    set "_arg_remainder=!_arg_remainder! %1"
-    shift
+        :: Setup Docker arguments
+        set _container_platform=%~1
+        set _container_name=menv:!_container_platform!
+        set _container_instance=menv_!_container_platform!
+        goto:$ArgumentNext
+
+        :$ArgumentParseRemainder
+            if "%~1"=="-c" set _clean=1
+            if "%~1"=="--clean" set _clean=1
+            if "%~1"=="clean" set _clean=1
+            if "%~1"=="cls" set _clean=1
+            set "_arg_remainder=%1 !_arg_remainder!"
+
+        :$ArgumentNext
+            set "_args=%1 !_args!"
+            shift
     if not "%~1"=="" goto :$ArgumentParse
 
-    echo ##[cmd] %SCRIPT% %COMMAND%!_arg_remainder!
+    echo ##[cmd] %SCRIPT% !_args!
 
     if "!_clean!"=="1" (
         set MYCELIO_PROFILE_INITIALIZED=
+        if exist "%USERPROFILE%\.local\msys64" rmdir /s /q "%USERPROFILE%\.local\msys64" > nul 2>&1
+        if exist "%USERPROFILE%\.tmp" rmdir /s /q "%USERPROFILE%\.tmp" > nul 2>&1
         if exist "%MYCELIO_ROOT%\.tmp" rmdir /s /q "%MYCELIO_ROOT%\.tmp" > nul 2>&1
         if exist "%MYCELIO_ROOT%\source\stow\bin\stow" del "%MYCELIO_ROOT%\source\stow\bin\stow" > nul 2>&1
         if exist "%MYCELIO_ROOT%\source\stow\bin\chkstow" del "%MYCELIO_ROOT%\source\stow\bin\chkstow" > nul 2>&1
         if exist "%USERPROFILE%\Documents\PowerShell" rmdir /q /s "%USERPROFILE%\Documents\PowerShell" > nul 2>&1
         if exist "%USERPROFILE%\Documents\WindowsPowerShell" rmdir /q /s "%USERPROFILE%\Documents\WindowsPowerShell" > nul 2>&1
-        echo Cleared out temporary files and reinitializing environment.
+        echo [mycelio] Cleared out generated files and reinitializing environment.
     )
 
     :: We intentionally setup autorun as soon as possible especially in case there is an
@@ -73,7 +73,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     call "%MYCELIO_ROOT%\source\windows\profile.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
-        echo ERROR: Profile setup failed.
+        echo ERROR: Profile setup failed. 1>&2
         goto:$InitializeDone
     )
 
@@ -170,14 +170,14 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo.
     if not exist "%MSYS_SHELL%" (
         set _error=55
-        echo ERROR: MSYS2 [MINGW64] not installed. Initialization failed.
+        echo ERROR: MSYS2 [MINGW64] not installed. Initialization failed. 1>&2
         goto:$InitializeDone
     )
 
     call "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
-        echo ERROR: MSYS2 [MINGW64] setup process failed.
+        echo ERROR: MSYS2 [MINGW64] setup process failed. 1>&2
         goto:$InitializeDone
     )
 
@@ -194,7 +194,7 @@ endlocal & (
 if "%MYCELIO_ERROR%"=="0" (
     echo Completed execution of `dotfiles` initialization.
 ) else (
-    echo Execution of `dotfiles` initialization failed. Error code: '%MYCELIO_ERROR%'
+    echo Execution of `dotfiles` initialization failed. Error code: '%MYCELIO_ERROR%' 1>&2
 )
 
 exit /b %MYCELIO_ERROR%

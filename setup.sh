@@ -839,7 +839,9 @@ function install_powershell() {
 function install_stow() {
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -f "$MYCELIO_STOW_ROOT/bin/stow"
-        rm -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm"
+        rm -rf "$MYCELIO_HOME/.cpan/"
+        rm -f "$MYCELIO_HOME/.local/bin/cpanm"
+        rm -rf "$MYCELIO_HOME/.cpanm/"
     fi
 
     if [ -x "$(command -v cpan)" ]; then
@@ -860,9 +862,9 @@ function install_stow() {
             echo "[stow.cpan.config] ✔ CPAN already initialized."
         fi
 
-        if [ ! -x "$(command -v cpanm)" ]; then
+        if [ ! -f "$MYCELIO_HOME/.local/bin/cpanm" ]; then
             if [ -x "$(command -v curl)" ]; then
-                curl -L -- silent "https://cpanmin.us/" -o "$MYCELIO_HOME/.local/bin/cpanm"
+                curl -L --silent "https://cpanmin.us/" -o "$MYCELIO_HOME/.local/bin/cpanm"
                 chmod +x "$MYCELIO_HOME/.local/bin/cpanm"
                 _run "[stow.cpanm.https.install]" _sudo perl "$MYCELIO_HOME/.local/bin/cpanm" --notest --verbose App::cpanminus
             fi
@@ -1664,8 +1666,6 @@ function main() {
         esac
     done
 
-    export MYCELIO_TEMP="$MYCELIO_HOME/.tmp"
-
     # Note below that we use 'whoami' since 'USER' variable is not set for
     # scheduled tasks on Synology.
 
@@ -1676,6 +1676,8 @@ function main() {
     echo "║           OS: '$MYCELIO_OS' ($MYCELIO_ARCH)"
     echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
     echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
+
+    export MYCELIO_TEMP="$MYCELIO_HOME/.tmp/"
 
     if [ "$_skip_initialization" = "1" ]; then
         echo "[mycelio] Skipped initialization."
@@ -1689,12 +1691,15 @@ function main() {
         echo "[mycelio] ERROR: Missing permissions to write to temp folder: '$MYCELIO_TEMP'"
         return 1
     else
-        rm "$MYCELIO_TEMP/.test"
+        rm -rf "$MYCELIO_TEMP/.test"
     fi
 
     if [ "$MYCELIO_ARG_CLEAN" = "1" ]; then
-        rm -rf "$MYCELIO_TEMP"
-        echo "[mycelio] Removed workspace temporary files to force a rebuild."
+        if rm -rf "$MYCELIO_TEMP" >/dev/null 2>&1; then
+            echo "[mycelio] Removed workspace temporary files to force a rebuild."
+        else
+            echo "[mycelio] Partially removed workspace temporary files to force a rebuild."
+        fi
     fi
 
     mkdir -p "$MYCELIO_HOME/.config/fish"

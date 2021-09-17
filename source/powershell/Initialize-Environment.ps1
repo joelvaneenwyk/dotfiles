@@ -149,6 +149,13 @@ Function Initialize-Environment {
 
         if ( -not(Test-Path -Path "$Env:UserProfile\.local\msys64\msys2.exe" -PathType Leaf) ) {
             & "$tempFolder\msys2.exe" -y -o"$Env:UserProfile\.local"
+
+            Set-Content -Path '$Env:UserProfile\.local\msys64\etc\post-install\09-dotfiles.post' -Value @"
+MAYBE_FIRST_START=false
+[ -f '/usr/bin/update-ca-trust' ] && sh /usr/bin/update-ca-trust
+echo 'Post-install complete.'
+"@
+
             msys ' '
             msys 'pacman --noconfirm -Syuu'
             msys 'pacman --noconfirm -Syuu'
@@ -171,7 +178,9 @@ Function Initialize-Environment {
             # gsudo: Run commands as administrator.
             # innounp: Required for unpacking InnoSetup files.
             # dark: Unpack installers created with the WiX Toolset.
-            scoop install "gsudo" "innounp" "dark"
+            scoop install "gsudo"
+            scoop install "innounp"
+            scoop install "dark"
 
             $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
             if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
