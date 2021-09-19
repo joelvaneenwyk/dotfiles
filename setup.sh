@@ -853,11 +853,11 @@ function install_stow() {
                 echo ""
                 echo "no"
                 echo "exit"
-            ) | _run "[stow.cpan]" cpan -T || true
+            ) | _run "[stow.cpan]" _sudo cpan -T || true
 
             # If configuration file does not exist yet then we automate configuration with
             # answers to standard questions. These may become invalid with newer versions.
-            _run "[stow.cpan.config]" perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"
+            _run "[stow.cpan.config]" _sudo perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl" || true
         else
             echo "[stow.cpan.config] ✔ CPAN already initialized."
         fi
@@ -869,6 +869,7 @@ function install_stow() {
                 _run "[stow.cpanm.https.install]" _sudo perl "$MYCELIO_HOME/.local/bin/cpanm" --notest --verbose App::cpanminus
             fi
 
+            # If still not available try installing cpanminus with cpan
             if [ ! -x "$(command -v cpanm)" ]; then
                 _run "[stow.cpanm.install]" _sudo cpan -i -T App::cpanminus
             fi
