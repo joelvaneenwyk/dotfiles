@@ -157,7 +157,9 @@ initialize_interactive_profile() {
 
     # Set a fancy prompt (non-color, unless we know we "want" color)
     case "$TERM" in
-    xterm-color | *-256color) color_prompt=yes ;;
+    xterm-color | *-256color)
+        color_prompt=yes
+        ;;
     esac
 
     # Use a colored prompt if the terminal has the capability
@@ -244,7 +246,7 @@ initialize_interactive_profile() {
     alias .4='cd ../../../../'
     alias .5='cd ../../../../..'
 
-    alias refresh='git -C "$MYCELIO_ROOT" pull >/dev/null 2>&1 || source "$MYCELIO_ROOT/packages/linux/.profile"'
+    alias refresh='git -C "$MYCELIO_ROOT" pull >/dev/null 2>&1 || true; source "$MYCELIO_ROOT/packages/linux/.profile"'
 
     alias less='less -r'
     alias more='less -r'
@@ -430,6 +432,10 @@ initialize_profile() {
     fi
 
     _set_golang_paths
+}
+
+initialize() {
+    initialize_profile "$@"
 
     # If not running interactively, don't do anything else.
     case $- in
@@ -439,7 +445,7 @@ initialize_profile() {
         ;;
     esac
 
-    initialize_interactive_profile
+    initialize_interactive_profile "$@"
 }
 
-initialize_profile "$@"
+initialize "$@"

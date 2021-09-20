@@ -13,11 +13,11 @@ if [ -x "$(command -v pacman)" ]; then
 
     if [ ! -L "/etc/nsswitch.conf" ]; then
         rm -f "/etc/nsswitch.conf"
-        ln -s "$MYCELIO_ROOT/source/windows/nsswitch.conf" "/etc/nsswitch.conf"
+        ln -s "$MYCELIO_ROOT/source/windows/msys/nsswitch.conf" "/etc/nsswitch.conf"
     fi
 
     # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
-    rm -f /var/lib/pacman/db.lck
+    rm -f "/var/lib/pacman/db.lck"
 
     pacman -Syu --quiet --noconfirm
 

@@ -20,7 +20,7 @@ set TEXLIVE_INSTALL_TEXMFSYSCONFIG=%USERPROFILE%\.tmp\texlive\texmf-config
 set TEXLIVE_INSTALL_TEXMFSYSVAR=%USERPROFILE%\.tmp\texlive\texmf-var
 set TEXLIVE_INSTALL_TEXMFVAR=%USERPROFILE%\.tmp\texlive\texmf-var
 
-set _texInstallCommand="%TEXLIVE_INSTALL%" -no-gui -portable -profile "%~dp0windows\texlive.profile"
+set _texInstallCommand="%TEXLIVE_INSTALL%" -no-gui -portable -profile "%~dp0windows\texlive\texlive.profile"
 if not exist "%TEXLIVE_BIN%\texi2dvi.exe" (
     echo %_texInstallCommand%
     call %_texInstallCommand%

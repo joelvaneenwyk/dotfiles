@@ -23,13 +23,12 @@ function _cause_error() {
     source "$MYCELIO_ROOT/source/shell/mycelio.sh"
 
     _setup_environment
-    _setup_error_handling
 
     if _result=$(_run "prefix" _cause_error); then
         assert_failure
     else
-        :
-        #run assert_equal "$_result" "127"
+        run assert_equal "$_result" "command not found"
+        run assert_equal "$?" "127"
     fi
 
     echo "here we go!"

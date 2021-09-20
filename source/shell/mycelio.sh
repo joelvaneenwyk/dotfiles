@@ -93,90 +93,7 @@ function _remove_error_handling() {
     return 0
 }
 
-function _setup_error_handling() {
-    export MYCELIO_DEBUG_TRAP_ENABLED=0
-
-    # set -u
-    set -o nounset
-
-    # set -e
-    set -o errexit
-
-    # We only output command on Bash because by default "-x" will output to 'stderr' which
-    # results in an error on CI as it's used to make sure we have clean output. On Bash we
-    # can override to to go to a new file descriptor.
-    if [ -z "${BASH:-}" ]; then
-        echo "No error handling enabled. Only supported in bash shell."
-    else
-        # Disable xtrace and re-enable below if desired
-        set +o xtrace || true
-
-        shopt -s extdebug
-
-        # aka. set -T
-        set -o functrace
-
-        # The return value of a pipeline is the status of
-        # the last command to exit with a non-zero status,
-        # or zero if no command exited with a non-zero status.
-        set -o pipefail
-
-        _mycelio_dbg_line=
-        export _mycelio_dbg_line
-
-        _mycelio_dbg_last_line=
-        export _mycelio_dbg_last_line
-
-        # 'ERR' is undefined in POSIX. We also use a somewhat strange looking expansion here
-        # for 'BASH_LINENO' to ensure it works if BASH_LINENO is not set. There is a 'gist' of
-        # at https://bit.ly/3cuHidf along with more details available at https://bit.ly/2AE2mAC.
-        trap '__trap_error "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
-
-        _enable_trace=0
-        _bash_debug=0
-
-        # Redirect only supported in Bash versions after 4.1
-        if [ "$BASH_VERSION_MAJOR" -eq 4 ] && [ "$BASH_VERSION_MINOR" -ge 1 ]; then
-            _enable_trace=1
-        elif [ "$BASH_VERSION_MAJOR" -gt 4 ]; then
-            _enable_trace=1
-        fi
-
-        if [ "$_enable_trace" = "1" ] && [ -z "${BATS_TEST_NAME:-}" ]; then
-            trap '[[ "${FUNCNAME:-}" == "__trap_error" ]] || {
-                    _mycelio_dbg_last_line=${_mycelio_dbg_line:-};
-                    _mycelio_dbg_line=${LINENO:-};
-                }' DEBUG || true
-
-            _bash_debug=1
-
-            # Error tracing (sub shell errors) only work properly in version >=4.0 so
-            # we enable here as well. Otherwise errors in subshells can result in ERR
-            # trap being called e.g. _my_result="$(errorfunc test)"
-            set -o errtrace
-
-            # If set, command substitution inherits the value of the errexit option, instead of unsetting it in the
-            # subshell environment. This option is enabled when POSIX mode is enabled.
-            shopt -s inherit_errexit
-
-            export MYCELIO_DEBUG_TRAP_ENABLED=1
-        fi
-
-        MYCELIO_DEBUG_TRACE_FILE=""
-
-        if [ "$_bash_debug" = "1" ] && [ "$_enable_trace" = "1" ]; then
-            MYCELIO_DEBUG_TRACE_FILE="$MYCELIO_HOME/.logs/init.xtrace.log"
-            mkdir -p "$MYCELIO_HOME/.logs"
-            exec 19>"$MYCELIO_DEBUG_TRACE_FILE"
-            export BASH_XTRACEFD=19
-            set -o xtrace
-        fi
-
-        export MYCELIO_DEBUG_TRACE_FILE
-    fi
-}
-
-_filter() {
+function _filter() {
     _prefix="$1"
     _ifs="$IFS"
     IFS=''
@@ -197,7 +114,7 @@ _filter() {
 #   - https://stackoverflow.com/questions/3173131/redirect-copy-of-stdout-to-log-file-from-within-bash-script-itself
 #   - https://unix.stackexchange.com/questions/14270/get-exit-status-of-process-thats-piped-to-another
 #
-_run() {
+function _run() {
     _prefix="${1:-}"
     shift
 
@@ -357,7 +274,7 @@ function _reload_profile() {
         _root=$MYCELIO_ROOT
 
         # shellcheck source=packages/linux/.profile
-        . "$MYCELIO_ROOT/packages/linux/.profile"
+        source "$MYCELIO_ROOT/packages/linux/.profile"
 
         # Restore previous root folder
         export MYCELIO_ROOT="${_root:-MYCELIO_ROOT}"
@@ -1001,7 +918,7 @@ function install_go {
                 wget --quiet -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
                 echo "Extracting 'go' source: '$_go_bootstrap_src_archive'"
                 rm -rf "$MYCELIO_TEMP/go" || true
-                tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
+                _run "[go.bootstrap.tar]" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
                 rm -rf "$_local_go_bootstrap_root" || true
                 mv "$MYCELIO_TEMP/go" "$_local_go_bootstrap_root"
                 rm "$_go_bootstrap_src_archive"
@@ -1029,9 +946,9 @@ function install_go {
                     cd "$_local_go_bootstrap_root/src"
 
                     if [ -x "$(command -v cygpath)" ]; then
-                        cmd /c "make.bat"
+                        _run "[go.bootstrap.make]" cmd /c "make.bat"
                     else
-                        ./make.bash
+                        _run "[go.bootstrap.make]" ./make.bash
                     fi
 
                     unset GOROOT_FINAL
@@ -1071,9 +988,9 @@ function install_go {
                     export GOHOSTARCH
 
                     if [ -x "$(command -v cygpath)" ]; then
-                        cmd /c "make.bat"
+                        _run "[go.make]" cmd /c "make.bat"
                     else
-                        ./make.bash
+                        _run "[go.make]" ./make.bash
                     fi
 
                     if [ ! -f "$MYCELIO_GOEXE" ]; then
@@ -1339,33 +1256,22 @@ function initialize_linux() {
             rm -rf "/etc/pacman.d/gnupg/"
         fi
     elif [ -x "$(command -v apk)" ]; then
-        if [ ! -x "$(command -v sudo)" ]; then
-            apk update
-            apk add sudo
-        else
-            sudo apk update
-        fi
-
-        sudo apk add \
-            tzdata git wget curl unzip xclip \
+        _sudo apk update
+        _sudo apk add \
+            sudo tzdata git wget curl unzip xclip \
             build-base gcc g++ make musl-dev openssl-dev zlib-dev \
             perl perl-dev perl-utils \
             bash tmux neofetch fish \
             python3 py3-pip \
             fontconfig openssl gnupg
     elif [ -x "$(command -v apt-get)" ]; then
-        if [ ! -x "$(command -v sudo)" ]; then
-            apt-get update
-            apt-get install -y sudo
-        else
-            sudo apt-get update
-        fi
+        _sudo apt-get update
 
         # Needed to prevent interactive questions during 'tzdata' install, see https://stackoverflow.com/a/44333806
-        sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
+        _sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
 
-        DEBIAN_FRONTEND="noninteractive" sudo apt-get install -y --no-install-recommends \
-            tzdata git wget curl unzip xclip \
+        DEBIAN_FRONTEND="noninteractive" _sudo apt-get install -y --no-install-recommends \
+            sudo tzdata git wget curl unzip xclip libnotify-bin \
             software-properties-common apt-transport-https \
             build-essential gcc g++ make automake autoconf \
             perl cpanminus \
@@ -1374,7 +1280,7 @@ function initialize_linux() {
             fontconfig
 
         if [ -x "$(command -v dpkg-reconfigure)" ]; then
-            sudo dpkg-reconfigure --frontend noninteractive tzdata
+            _sudo dpkg-reconfigure --frontend noninteractive tzdata
         fi
     fi
 
@@ -1399,14 +1305,6 @@ function initialize_linux() {
         fi
     fi
 
-    install_go
-    install_hugo
-    install_stow
-    install_fzf
-    install_oh_my_posh
-    install_powershell
-    install_micro_text_editor
-
     if [ ! -d "$MYCELIO_HOME/.asdf" ]; then
         if [ -x "$(command -v git)" ]; then
             git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$MYCELIO_HOME/.asdf" --branch "v0.8.1"
@@ -1414,6 +1312,15 @@ function initialize_linux() {
             echo "Skipped 'asdf' install. Missing required 'git' tool."
         fi
     fi
+
+    install_stow
+
+    install_go
+    install_hugo
+    install_fzf
+    install_oh_my_posh
+    install_powershell
+    install_micro_text_editor
 }
 
 function initialize_macos() {
@@ -1523,6 +1430,24 @@ function configure_macos_system() {
 # platforms.
 #
 function _setup_environment() {
+    MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
+    export MYCELIO_ROOT
+
+    # Get home path which is hopefully in 'HOME' but if not we use the parent
+    # directory of this project as a backup.
+    HOME=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
+    export HOME
+
+    export MYCELIO_HOME="$HOME"
+    export MYCELIO_STOW_ROOT="$MYCELIO_ROOT/source/stow"
+    export MYCELIO_DEBUG_TRAP_ENABLED=0
+
+    # set -u
+    set -o nounset
+
+    # set -e
+    set -o errexit
+
     if [ -n "${BASH:-}" ]; then
         BASH_VERSION_MAJOR=$(echo "$BASH_VERSION" | cut -d. -f1)
         BASH_VERSION_MINOR=$(echo "$BASH_VERSION" | cut -d. -f2)
@@ -1534,17 +1459,78 @@ function _setup_environment() {
     export BASH_VERSION_MAJOR
     export BASH_VERSION_MINOR
 
-    MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
-    export MYCELIO_ROOT
+    export MYCELIO_DEBUG_TRAP_ENABLED=0
 
-    # Get home path which is hopefully in 'HOME' but if not we use the parent
-    # directory of this project as a backup.
-    HOME=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
-    export HOME
+    # We only output command on Bash because by default "-x" will output to 'stderr' which
+    # results in an error on CI as it's used to make sure we have clean output. On Bash we
+    # can override to to go to a new file descriptor.
+    if [ -z "${BASH:-}" ]; then
+        echo "No error handling enabled. Only supported in bash shell."
+    else
+        shopt -s extdebug
 
-    export MYCELIO_HOME="$HOME"
+        # aka. set -T
+        set -o functrace
 
-    export MYCELIO_STOW_ROOT="$MYCELIO_ROOT/source/stow"
+        # The return value of a pipeline is the status of
+        # the last command to exit with a non-zero status,
+        # or zero if no command exited with a non-zero status.
+        set -o pipefail
+
+        _mycelio_dbg_line=
+        export _mycelio_dbg_line
+
+        _mycelio_dbg_last_line=
+        export _mycelio_dbg_last_line
+
+        # 'ERR' is undefined in POSIX. We also use a somewhat strange looking expansion here
+        # for 'BASH_LINENO' to ensure it works if BASH_LINENO is not set. There is a 'gist' of
+        # at https://bit.ly/3cuHidf along with more details available at https://bit.ly/2AE2mAC.
+        trap '__trap_error "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
+
+        _enable_trace=0
+        _bash_debug=0
+
+        # Redirect only supported in Bash versions after 4.1
+        if [ "$BASH_VERSION_MAJOR" -eq 4 ] && [ "$BASH_VERSION_MINOR" -ge 1 ]; then
+            _enable_trace=1
+        elif [ "$BASH_VERSION_MAJOR" -gt 4 ]; then
+            _enable_trace=1
+        fi
+
+        if [ "$_enable_trace" = "1" ] && [ -z "${BATS_TEST_NAME:-}" ]; then
+            trap '[[ "${FUNCNAME:-}" == "__trap_error" ]] || {
+                    _mycelio_dbg_last_line=${_mycelio_dbg_line:-};
+                    _mycelio_dbg_line=${LINENO:-};
+                }' DEBUG || true
+
+            _bash_debug=1
+
+            # Error tracing (sub shell errors) only work properly in version >=4.0 so
+            # we enable here as well. Otherwise errors in subshells can result in ERR
+            # trap being called e.g. _my_result="$(errorfunc test)"
+            set -o errtrace
+
+            # If set, command substitution inherits the value of the errexit option, instead of unsetting it in the
+            # subshell environment. This option is enabled when POSIX mode is enabled.
+            shopt -s inherit_errexit
+
+            export MYCELIO_DEBUG_TRAP_ENABLED=1
+        fi
+
+        MYCELIO_DEBUG_TRACE_FILE=""
+
+        # Output trace to file if that is supported
+        if [ "$_bash_debug" = "1" ] && [ "$_enable_trace" = "1" ]; then
+            MYCELIO_DEBUG_TRACE_FILE="$MYCELIO_HOME/.logs/init.xtrace.log"
+            mkdir -p "$MYCELIO_HOME/.logs"
+            exec 19>"$MYCELIO_DEBUG_TRACE_FILE"
+            export BASH_XTRACEFD=19
+            set -o xtrace
+        fi
+
+        export MYCELIO_DEBUG_TRACE_FILE
+    fi
 }
 
 function _update_git_repository() {
@@ -1568,8 +1554,6 @@ function _update_git_repository() {
 function _initialize_environment() {
     # Need to setup environment variables before anything else
     _setup_environment
-
-    _setup_error_handling
 
     _reload_profile
 
@@ -1689,7 +1673,7 @@ function _initialize_environment() {
     echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
     echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
 
-    export MYCELIO_TEMP="$MYCELIO_HOME/.tmp/"
+    export MYCELIO_TEMP="$MYCELIO_HOME/.tmp"
 
     if [ "$_skip_initialization" = "1" ]; then
         echo "[mycelio] Skipped initialization."
@@ -1730,7 +1714,7 @@ function _initialize_environment() {
 
         if [ ! -L "/etc/nsswitch.conf" ]; then
             rm -f "/etc/nsswitch.conf"
-            ln -s "$MYCELIO_ROOT/source/windows/nsswitch.conf" "/etc/nsswitch.conf"
+            ln -s "$MYCELIO_ROOT/source/windows/msys/nsswitch.conf" "/etc/nsswitch.conf"
         fi
     fi
 
