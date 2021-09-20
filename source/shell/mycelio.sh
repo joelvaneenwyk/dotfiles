@@ -848,16 +848,20 @@ function install_stow() {
         # If configuration file does not exist yet then we automate configuration with
         # answers to standard questions. These may become invalid with newer versions.
         if [ ! -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm" ]; then
-            (
+            if ! (
                 echo "yes"
                 echo ""
                 echo "no"
                 echo "exit"
-            ) | _run "[stow.cpan]" cpan -T || true
+            ) | _run "[stow.cpan]" cpan -T; then
+                echo "[stow.cpan.config] ⚠ Automated CPAN configuration failed."
+            fi
 
             # If configuration file does not exist yet then we automate configuration with
             # answers to standard questions. These may become invalid with newer versions.
-            _run "[stow.cpan.config]" perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl" || true
+            if ! _run "[stow.cpan.config]" perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
+                echo "[stow.cpan.config] ⚠ CPAN configuration failed to initialize."
+            fi
         else
             echo "[stow.cpan.config] ✔ CPAN already initialized."
         fi
@@ -1546,11 +1550,18 @@ function _setup_environment() {
 function _update_git_repository() {
     _path="$1"
     _branch="$2"
+    _remote="${3:-}"
+
+    if [ -n "${_remote:-}" ]; then
+        _run "[$_path][git.remote]" git -C "$MYCELIO_ROOT/$_path" remote set-url "origin" "$_remote"
+    fi
+
+    _run "[$_path][git.fetch]" git -C "$MYCELIO_ROOT/$_path" fetch
 
     if git -C "$MYCELIO_ROOT/$_path" symbolic-ref -q HEAD >/dev/null 2>&1; then
-        _run "[git.pull][$_path]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
+        _run "[$_path][git.pull]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
     else
-        _run "[git.checkout][$_path]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
+        _run "[$_path][git.checkout]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
     fi
 }
 
@@ -1726,7 +1737,8 @@ function _initialize_environment() {
     initialize_gitconfig
 
     if [ -x "$(command -v git)" ]; then
-        _update_git_repository "source/stow" "main"
+        git submodule update --init --recursive
+        _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
         _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
         _update_git_repository "packages/macos/Library/Application Support/Resources" "master"
         _update_git_repository "packages/fish/.config/base16-shell" "master"
