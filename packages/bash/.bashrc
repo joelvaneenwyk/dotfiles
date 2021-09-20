@@ -110,7 +110,7 @@ function _initialize_interactive_bash_profile() {
         source "$HOME/.bash_aliases"
     fi
 
-    # enable programmable completion features (you don't need to enable
+    # Enable programmable completion features (you don't need to enable
     # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
     # sources /etc/bash.bashrc).
     if ! shopt -oq posix; then

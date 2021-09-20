@@ -401,6 +401,7 @@ initialize_profile() {
 
     # Must NOT include /mingw64/bin as we want to rely on the system environment setup
     # to specify those.
+    _add_path "prepend" "$HOME/.asdf/bin"
     _add_path "prepend" "/usr/local/gnupg/bin"
     _add_path "prepend" "$HOME/.local/go/bin"
     _add_path "prepend" "$HOME/.local/bin"

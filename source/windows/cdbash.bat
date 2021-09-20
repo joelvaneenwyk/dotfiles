@@ -22,14 +22,19 @@ shift
 goto :$ArgumentParse
 
 :$StartDocker
-
     :: For loop requires removing trailing backslash from %~dp0 output
     set "_current_directory=%CD%"
     set "_current_directory=%_current_directory:~0,-1%"
     for %%i in ("%_current_directory%") do set "_folder_name=%%~nxi"
 
-    echo Docker: '!_action!' '!_image!' in '%cd%'
-    echo ##[cmd] docker run -it --rm  --name "%_folder_name%__!_image!" -v %cd%:/usr/workspace "%_image%" sh -c "cd /usr/workspace && !_args!"
-    docker run -it --rm  --name "%_folder_name%__!_image!" -v %cd%:/usr/workspace "%_image%" sh -c "cd /usr/workspace && !_args!"
+    set _name=%_folder_name%__!_image!
+    set _name=!_name::=_!
+    set _name=!_name:.=_!
 
+    if "!_args!"=="" set _args=bash
+    set _shell_cmd=cd /usr/workspace ^&^& !_args!
+    set _cmd=docker run -it --rm  --name "!_name!" -v %cd%:/usr/workspace "%_image%" sh -c "!_shell_cmd!"
+    echo Docker: '!_action!' '!_image!' in '%cd%'
+    echo ##[cmd] !_cmd!
+    !_cmd!
 exit /b

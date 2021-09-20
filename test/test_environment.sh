@@ -1,25 +1,23 @@
 #!/usr/bin/env bash
 #
-# Usage: ./setup.sh
+# Usage: ./test_environment.sh
 #
-#   - Install commonly used apps using "brew bundle" (see Brewfile) or apt-get (on Ubunutu/Debian).
-#   - Uses "stow" to link config files into home directory.
-#   - Sets some app settings which were derived from https://github.com/Sajjadhosn/dotfiles
+#   Duplicate of functions in 'mycelio.sh' for testing.
 #
 
 function __print_stack() {
     if [ -n "${BASH:-}" ]; then
 
         source_index=0
-        function_index=1
         callstack_end=${#FUNCNAME[@]}
 
         local callstack=""
-        while ((function_index < callstack_end)); do
-            function=${FUNCNAME[$function_index]+"${FUNCNAME[$function_index]}"}
-            callstack+=$(printf '\\n    >  %s:%d: %s()' "${BASH_SOURCE[$source_index]}" "${BASH_LINENO[$source_index]}" "${function:-}")
-            ((++function_index))
+        while ((source_index < callstack_end)); do
+            _file=${BASH_SOURCE[$source_index]}
+            _line=${BASH_LINENO[$source_index]}
             ((++source_index))
+            _function=${FUNCNAME[$source_index]+"${FUNCNAME[$source_index]}"}
+            callstack+=$(printf '\\n    >  %s:%d: %s()' "$_file" "$_line" "${_function:-}")
         done
 
         printf "%b\n" "$callstack" >&2
@@ -42,45 +40,66 @@ function __safe_exit() {
     exit $_value
 }
 
-function __trap_error() {
-    _retval=$?
+function __print_error() {
+    _retval=${1:-0}
+    shift
 
-    if [ ! "${MYCELIO_DISABLE_TRAP:-}" == "1" ]; then
-        # Stop tracing once we hit the error
-        #set +o xtrace || true
+    _line=${_mycelio_dbg_last_line:-}
 
-        _line=${_mycelio_dbg_last_line:-}
-
-        if [ "${_line:-}" = "" ]; then
-            _line="${1:-}"
-        fi
-
-        if [ "${_line:-}" = "" ]; then
-            _line="[undefined]"
-        fi
-
-        # First argument is always the line number even if unused
-        shift
-
-        echo "--------------------------------------" >&2
-
-        if [ "${MYCELIO_DEBUG_TRAP_ENABLED:-}" = "1" ]; then
-            echo "Error on line #$_line:" >&2
-        fi
-
-        # This only exists in a few shells e.g. bash
-        # shellcheck disable=SC2039,SC3044
-        if _caller="$(caller 2>&1)"; then
-            printf " - Caller: '%s'\n" "${_caller:-UNKNOWN}" >&2
-        fi
-
-        printf " - Code: '%s'\n" "${_retval:-}" >&2
-        printf " - Callstack:" >&2
-        __print_stack "$@" >&2
+    if [ "${_line:-}" = "" ]; then
+        _line="${1:-}"
     fi
 
-    # We always exit immediately on error
-    __safe_exit ${_retval:-1}
+    # First argument is always the line number even if unused
+    shift
+
+    if [ "${_line:-}" = "" ]; then
+        _line="[undefined]"
+    fi
+
+    echo "--------------------------------------" >&2
+
+    if [ "${MYCELIO_DEBUG_TRAP_ENABLED:-}" = "1" ]; then
+        echo "Error on line #$_line:" >&2
+    fi
+
+    # This only exists in a few shells e.g. bash
+    # shellcheck disable=SC2039,SC3044
+    if _caller="$(caller 2>&1)"; then
+        printf " - Caller: '%s'\n" "${_caller:-UNKNOWN}" >&2
+    fi
+
+    printf " - Code: '%s'\n" "${_retval:-}" >&2
+    printf " - Callstack:" >&2
+    __print_stack "$@" >&2
+
+    return 0
+}
+
+function __save_line_number() {
+    local _ret="${1:-0}"
+    local _line="${2:-}"
+    local _func="${3:-}"
+    echo "'$_ret' '$_func' '$_line'"
+
+    _mycelio_dbg_last_line=${_mycelio_dbg_line:-}
+    _mycelio_dbg_line=${_line:-}
+
+    return "$_ret"
+}
+
+function __trap_error() {
+    _retval=${1:-0}
+    shift
+
+    __print_error "$_retval" "$@"
+
+    if [ ! "${MYCELIO_DISABLE_TRAP:-}" = "1" ]; then
+        # Exit on error by default
+        __safe_exit "$_retval"
+    fi
+
+    return "$_retval"
 }
 
 function _remove_error_handling() {
@@ -118,24 +137,41 @@ function _run() {
     _prefix="${1:-}"
     shift
 
-    (
-        MYCELIO_DISABLE_TRAP=1
+    export MYCELIO_DISABLE_TRAP=1
+    ( 
         ( 
             ( 
-                (
-                    unset MYCELIO_DISABLE_TRAP
+                ( 
+                    ( 
+                        (
+                            echo "##[cmd] $*"
 
-                    echo "##[cmd] $*"
+                            #  stdout (#1) -> untouched
+                            #  stderr (#2) -> #3 (we then close it using "3>&-")
+                            if "$@" 2>&3 3>&-; then
+                                _error=0
+                                echo "success"
+                            else
+                                _error=$?
+                                echo "failure"
+                                __print_error "$_error" 2>&3
+                            fi
 
-                    #  stdout (#1) -> untouched
-                    #  stderr (#2) -> #3
-                    "$@" 2>&3 3>&-
-                ) | _filter "$_prefix [stdout]"           # Output standard log (stdout)
-            ) 3>&1 1>&4 | _filter "$_prefix [stderr]" >&2 # Redirects stdout to #4 so that it's not run through error log
-        ) >&4
+                            echo "$_error" >&5
+                            exit $_error
+                        ) | _filter "$_prefix [stdout]"           # Output standard log (stdout)
+                    ) 3>&1 1>&4 | _filter "$_prefix [stderr]" >&2 # Pull stderr from 3 and redirect stdout to #4 so that it's not run through error log
+                ) >&4
+            ) 5>&1
+        ) | (
+            read -r xs
+            exit "${xs:-0}"
+        )
     ) 4>&1
 
-    return $?
+    _error_out=$?
+
+    return "$_error_out"
 }
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
@@ -264,7 +300,7 @@ function _sudo() {
     fi
 }
 
-function _load_profile() {
+function _reload_profile() {
     if [[ $(type -t initialize_interactive_profile) == function ]]; then
         initialize_profile
         initialize_interactive_profile
@@ -526,10 +562,12 @@ function install_hugo {
             # Note that CGO_ENABLED allows the creation of Go packages that call C code. There
             # is no support for GCC on Synology so not able to build extended features.
             if uname -a | grep -q "synology"; then
-                CGO_ENABLED="0" _run "[hugo.build]" "$MYCELIO_GOEXE" build -v -ldflags "-extldflags -static" -o "$_hugo_exe"
+                echo "##[cmd] $MYCELIO_GOEXE build"
+                CGO_ENABLED="0" "$MYCELIO_GOEXE" build -v -ldflags "-extldflags -static" -o "$_hugo_exe"
             else
                 # https://github.com/gohugoio/hugo/blob/master/goreleaser.yml
-                CGO_ENABLED="1" _run "[hugo.build]" "$MYCELIO_GOEXE" build -v -tags extended -o "$_hugo_exe"
+                echo "##[cmd] CGO_ENABLED=1 $MYCELIO_GOEXE build -v -tags extended -o $_hugo_exe"
+                CGO_ENABLED="1" "$MYCELIO_GOEXE" build -v -tags extended -o "$_hugo_exe"
             fi
         ); then
             echo "Successfully installed 'hugo' site builder."
@@ -560,9 +598,9 @@ function install_oh_my_posh {
         wget --quiet "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
 
         if [ -x "$(command -v unzip)" ]; then
-            _run "[posh.themes.unzip]" unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
+            unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
         elif [ -x "$(command -v 7z)" ]; then
-            _run "[posh.themes.7z]" 7z e "$_posh_themes/themes.zip" -o"$_posh_themes" -r
+            7z e "$_posh_themes/themes.zip" -o"$_posh_themes" -r
         else
             echo "Neither 'unzip' nor '7z' commands available to extract oh-my-posh themes."
         fi
@@ -581,9 +619,9 @@ function install_oh_my_posh {
         wget --quiet "$font_url" -O "$_fonts_path/$font_base_filename.zip"
 
         if [ -x "$(command -v unzip)" ]; then
-            _run "[fonts.unzip]" unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
+            unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
         elif [ -x "$(command -v 7z)" ]; then
-            _run "[fonts.7z]" 7z e "$_fonts_path/$font_base_filename.zip" -o"$_fonts_path" -r
+            7z e "$_fonts_path/$font_base_filename.zip" -o"$_fonts_path" -r
         else
             echo "Neither 'unzip' nor '7z' commands available to extract fonts."
         fi
@@ -593,12 +631,12 @@ function install_oh_my_posh {
 
         if [ -x "$(command -v fc-cache)" ]; then
             if fc-cache -fv >/dev/null 2>&1; then
-                echo "✔ Flushed font cache."
+                echo "Flushed font cache."
             else
-                echo "⚠ Failed to flush font cache."
+                echo "Failed to flush font cache."
             fi
         else
-            echo "⚠ Unable to flush font cache as 'fc-cache' is not installed"
+            echo "Unable to flush font cache as 'fc-cache' is not installed"
         fi
     fi
 
@@ -650,7 +688,7 @@ function install_oh_my_posh {
                 export GOHOSTARCH
 
                 # https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/.github/workflows/release.yml
-                _run "[oh-my-posh.build]" "$MYCELIO_GOEXE" build -a -ldflags "-extldflags -static" -o "$_oh_my_posh_exe"
+                "$MYCELIO_GOEXE" build -a -ldflags "-extldflags -static" -o "$_oh_my_posh_exe"
             ); then
                 echo "Successfully installed 'oh-my-posh' site builder."
             else
@@ -846,7 +884,7 @@ function install_micro_text_editor() {
 
         if (
             cd "$_tmp_micro"
-            _run "[micro.make]" make build
+            make build
         ); then
             if [ -f "$_tmp_micro/$_micro_exe" ]; then
                 rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
@@ -1443,9 +1481,8 @@ function _setup_environment() {
     # set -u
     set -o nounset
 
-    # We do not set exit on error as our custom error trap handles this.
     # set -e
-    # set -o errexit
+    set -o errexit
 
     if [ -n "${BASH:-}" ]; then
         BASH_VERSION_MAJOR=$(echo "$BASH_VERSION" | cut -d. -f1)
@@ -1458,14 +1495,15 @@ function _setup_environment() {
     export BASH_VERSION_MAJOR
     export BASH_VERSION_MINOR
 
-    export MYCELIO_DEBUG_TRAP_ENABLED=0
-
     # We only output command on Bash because by default "-x" will output to 'stderr' which
     # results in an error on CI as it's used to make sure we have clean output. On Bash we
     # can override to to go to a new file descriptor.
     if [ -z "${BASH:-}" ]; then
         echo "No error handling enabled. Only supported in bash shell."
     else
+        # Disable xtrace and re-enable below if desired
+        set +o xtrace || true
+
         shopt -s extdebug
 
         # aka. set -T
@@ -1485,7 +1523,7 @@ function _setup_environment() {
         # 'ERR' is undefined in POSIX. We also use a somewhat strange looking expansion here
         # for 'BASH_LINENO' to ensure it works if BASH_LINENO is not set. There is a 'gist' of
         # at https://bit.ly/3cuHidf along with more details available at https://bit.ly/2AE2mAC.
-        trap '__trap_error "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
+        trap '__trap_error "$?" "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
 
         _enable_trace=0
         _bash_debug=0
@@ -1498,12 +1536,9 @@ function _setup_environment() {
         fi
 
         if [ "$_enable_trace" = "1" ] && [ -z "${BATS_TEST_NAME:-}" ]; then
-            trap '[[ "${FUNCNAME:-}" == "__trap_error" ]] || {
-                    _mycelio_dbg_last_line=${_mycelio_dbg_line:-};
-                    _mycelio_dbg_line=${LINENO:-};
-                }' DEBUG || true
-
             _bash_debug=1
+
+            trap '__save_line_number "$?" "${LINENO:-}" "${FUNCNAME:-}"' DEBUG
 
             # Error tracing (sub shell errors) only work properly in version >=4.0 so
             # we enable here as well. Otherwise errors in subshells can result in ERR
@@ -1519,7 +1554,6 @@ function _setup_environment() {
 
         MYCELIO_DEBUG_TRACE_FILE=""
 
-        # Output trace to file if that is supported
         if [ "$_bash_debug" = "1" ] && [ "$_enable_trace" = "1" ]; then
             MYCELIO_DEBUG_TRACE_FILE="$MYCELIO_HOME/.logs/init.xtrace.log"
             mkdir -p "$MYCELIO_HOME/.logs"
@@ -1554,7 +1588,7 @@ function _initialize_environment() {
     # Need to setup environment variables before anything else
     _setup_environment
 
-    _load_profile
+    _reload_profile
 
     if [ -x "$(command -v apk)" ]; then
         _arch_name="$(apk --print-arch)"
@@ -1661,19 +1695,6 @@ function _initialize_environment() {
         esac
     done
 
-    if [ -n "${BASH_VERSION:-}" ]; then
-        MYCELIO_SHELL="bash v$BASH_VERSION"
-    elif [ -n "${ZSH_VERSION:-}" ]; then
-        MYCELIO_SHELL="zsh v$ZSH_VERSION"
-    elif [ -n "${KSH_VERSION:-}" ]; then
-        MYCELIO_SHELL="ksh v$KSH_VERSION"
-    elif [ -n "${version:-}" ]; then
-        MYCELIO_SHELL="sh v$version"
-    else
-        MYCELIO_SHELL="N/A"
-    fi
-    export MYCELIO_SHELL
-
     # Note below that we use 'whoami' since 'USER' variable is not set for
     # scheduled tasks on Synology.
 
@@ -1682,7 +1703,6 @@ function _initialize_environment() {
     echo "║         User: '$(whoami)'"
     echo "║         Home: '$MYCELIO_HOME'"
     echo "║           OS: '$MYCELIO_OS' ($MYCELIO_ARCH)"
-    echo "║        Shell: '$MYCELIO_SHELL'"
     echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
     echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
 
@@ -1757,7 +1777,7 @@ function _initialize_environment() {
     # setup scripts to home directory.
     configure_linux "$@"
 
-    if ! _load_profile; then
+    if ! _reload_profile; then
         echo "❌ Failed to reload profile."
     fi
 

@@ -165,9 +165,7 @@ echo 'Post-install complete.'
 
         # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
         # as the initial upgrade of msys2 results in it shutting down the console.
-        & cmd /s /c "$Env:UserProfile\.local\msys64\msys2_shell.cmd" \
-        -mingw64 -defterm -no-start -where "$mycelioRoot" \
-        -shell bash -c "./source/shell/upgrade-package-manager.sh"
+        & cmd /s /c "$Env:UserProfile\.local\msys64\msys2_shell.cmd -mingw64 -defterm -no-start -where $mycelioRoot -shell bash -c ./source/shell/upgrade-package-manager.sh"
     }
 
     try {
