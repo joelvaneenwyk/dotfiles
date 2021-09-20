@@ -10,21 +10,32 @@ setup_file() {
 }
 
 function _cause_error() {
-    set -e
     echo "derp"
     invalidcommand
-    echo "no"
     return 22
 }
 
-@test "test error handling" {
-    set -x
+@test "error handling" {
+    load test_helper
+
+    run assert_equal "1" "1"
+
+    source "$MYCELIO_ROOT/source/shell/mycelio.sh"
 
     _setup_environment
     _setup_error_handling
 
+    if _result=$(_run "prefix" _cause_error); then
+        assert_failure
+    else
+        :
+        #run assert_equal "$_result" "127"
+    fi
+
     echo "here we go!"
-    _run "prefix" _cause_error
+    #run assert_equal "$(_run "prefix" _cause_error)" "22"
+
     echo "done"
-    exit 0
+
+    return 0
 }

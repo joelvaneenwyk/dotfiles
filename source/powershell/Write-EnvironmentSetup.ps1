@@ -78,16 +78,17 @@ $dotfilesRoot = Resolve-Path -Path "$PSScriptRoot\..\.."
 
 $environmentVariables = @()
 $environmentVariables += "$ENV:UserProfile\.local\bin"
+$environmentVariables += "$ENV:UserProfile\.local\msys64"
 $environmentVariables += "$ENV:UserProfile\.local\go\bin"
 $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
 $environmentVariables += "$dotfilesRoot"
 $environmentVariables += "$dotfilesRoot\source\windows"
+$environmentVariables += "$ENV:UserProfile\.local\msys64\mingw64\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\apps\perl\current\perl\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\apps\perl\current\perl\site\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\shims"
 $environmentVariables += "C:\Program Files\Git\bin"
 $environmentVariables += $(Get-CurrentEnvironment)
-$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\mingw64\bin"
 
 # This is intentionally at the very end as we want to pick non-MSYS2 (or Cygwin) style
 # versions if at all possible. This is mainly required for tools like 'make' which are
