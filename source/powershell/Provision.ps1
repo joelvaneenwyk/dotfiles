@@ -1,4 +1,4 @@
-#!/usr/bin/env pwsh
+﻿#!/usr/bin/env pwsh
 #Requires -Version 5
 <#
 .NOTES
@@ -195,27 +195,44 @@ Function Get-File {
         $FilePath = Join-Path (Get-Item -Path ".\" -Verbose).FullName $Filename
     }
 
-    if ($null -ne ($Url -as [System.URI]).AbsoluteURI) {
+
+    $handler = $null
+    try {
         $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
-        $client = New-Object -TypeName System.Net.Http.HttpClient -ArgumentList $handler
-        $client.Timeout = New-Object -TypeName System.TimeSpan -ArgumentList 0, 30, 0
-        $cancelTokenSource = [System.Threading.CancellationTokenSource]::new(-1)
-        $responseMsg = $client.GetAsync([System.Uri]::new($Url), $cancelTokenSource.Token)
-        $responseMsg.Wait()
-        if (!$responseMsg.IsCanceled) {
-            $response = $responseMsg.Result
-            if ($response.IsSuccessStatusCode) {
-                $downloadedFileStream = [System.IO.FileStream]::new(
-                    $FilePath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+    }
+    catch {
+        Write-Host "HttpClientHandler not available, using Invoke-WebRequest instead."
+    }
 
-                $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
+    if ($null -ne ($Url -as [System.URI]).AbsoluteURI) {
+        Write-Host "Downloading file: $Url"
 
-                Write-Host "Download started..."
-                $copyStreamOp.Wait()
+        if ($null -eq $handler) {
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -UseBasicParsing -Uri "$Url" -OutFile "$Filename"
+        }
+        else {
+            $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
+            $client = New-Object -TypeName System.Net.Http.HttpClient -ArgumentList $handler
+            $client.Timeout = New-Object -TypeName System.TimeSpan -ArgumentList 0, 30, 0
+            $cancelTokenSource = [System.Threading.CancellationTokenSource]::new(-1)
+            $responseMsg = $client.GetAsync([System.Uri]::new($Url), $cancelTokenSource.Token)
+            $responseMsg.Wait()
+            if (!$responseMsg.IsCanceled) {
+                $response = $responseMsg.Result
+                if ($response.IsSuccessStatusCode) {
+                    $downloadedFileStream = [System.IO.FileStream]::new(
+                        $FilePath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
 
-                $downloadedFileStream.Close()
-                if ($null -ne $copyStreamOp.Exception) {
-                    throw $copyStreamOp.Exception
+                    $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
+
+                    Write-Host "Download started..."
+                    $copyStreamOp.Wait()
+
+                    $downloadedFileStream.Close()
+                    if ($null -ne $copyStreamOp.Exception) {
+                        throw $copyStreamOp.Exception
+                    }
                 }
             }
         }
@@ -223,7 +240,7 @@ Function Get-File {
         Write-Host "Downloaded file: '$Filename'"
     }
     else {
-        throw "Cannot download from $Url"
+        throw "Failed to download file: $Url"
     }
 }
 

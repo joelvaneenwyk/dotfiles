@@ -17,6 +17,7 @@ for %%p in (!_pwshs!) do (
 )
 :$PowerShellSet
 
+echo ##[cmd] !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Sandbox.ps1"
 !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Sandbox.ps1"
 
 call "%~dp0env.bat"
@@ -27,4 +28,5 @@ if not exist "%_sandbox%" (
     echo Failed to find sandbox template for dotfiles. Please run 'setup.bat' to create it.
     exit /b 11
 )
+echo ##[cmd] start "" "C:\Windows\System32\WindowsSandbox.exe" "%_sandbox%"
 start "" "C:\Windows\System32\WindowsSandbox.exe" "%_sandbox%"

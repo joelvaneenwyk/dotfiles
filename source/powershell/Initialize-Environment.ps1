@@ -12,6 +12,8 @@
     the 'scoop' package manager.
 #>
 
+using namespace System.Net.Http;
+
 <#
 .SYNOPSIS
     Returns true if the given command can be executed from the shell.
@@ -20,7 +22,7 @@
 .OUTPUTS
     Whether or not the command exists and can be executed.
 #>
-Function Test-CommandExists {
+Function Test-CommandValid {
     Param ($command)
 
     $oldPreference = $ErrorActionPreference
@@ -41,7 +43,52 @@ Function Test-CommandExists {
     }
 
     return $IsValid
-} #end function test-CommandExists
+} #end function Test-CommandValid
+
+Function Expand-File {
+    <#
+.SYNOPSIS
+    Extract an archive using 7zip if available otherwise use built-in utilities.
+.DESCRIPTION
+    Downloads a file
+.PARAMETER Url
+    URL to file/resource to download
+.PARAMETER Filename
+    file to save it as locally
+.EXAMPLE
+    C:\PS> Get-File -Name "mynuget.exe" -Url https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
+#>
+
+    Param(
+        [Parameter(Position = 0, mandatory = $true)]
+        [string]$DestinationPath,
+        [string]$Path = ''
+    )
+
+    if (![System.IO.Path]::IsPathRooted($DestinationPath)) {
+        $DestinationPath = Join-Path (Get-Item -Path ".\" -Verbose).FullName $DestinationPath
+    }
+
+    if (![System.IO.Path]::IsPathRooted($Path)) {
+        $Path = Join-Path (Get-Item -Path ".\" -Verbose).FullName $Path
+    }
+
+    $7zip = "$Env:UserProfile\scoop\apps\7zip\current\7z.exe"
+
+    try {
+        if (Test-Path -Path "$7zip" -PathType Leaf) {
+            & "$7zip" x "$Path" -aoa -o"$DestinationPath" -r -y
+        }
+        else {
+            $ProgressPreference = 'SilentlyContinue'
+            Expand-Archive -Path "$Path" -DestinationPath "$DestinationPath" -Force
+        }
+        Write-Host "Extracted archive: '$Path'"
+    }
+    catch {
+        throw "⚠ Failed to extract archive: $Path"
+    }
+}
 
 Function Get-File {
     <#
@@ -78,27 +125,43 @@ Function Get-File {
         $FilePath = Join-Path (Get-Item -Path ".\" -Verbose).FullName $Filename
     }
 
-    if ($null -ne ($Url -as [System.URI]).AbsoluteURI) {
+
+    $handler = $null
+    try {
         $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
-        $client = New-Object -TypeName System.Net.Http.HttpClient -ArgumentList $handler
-        $client.Timeout = New-Object -TypeName System.TimeSpan -ArgumentList 0, 30, 0
-        $cancelTokenSource = [System.Threading.CancellationTokenSource]::new(-1)
-        $responseMsg = $client.GetAsync([System.Uri]::new($Url), $cancelTokenSource.Token)
-        $responseMsg.Wait()
-        if (!$responseMsg.IsCanceled) {
-            $response = $responseMsg.Result
-            if ($response.IsSuccessStatusCode) {
-                $downloadedFileStream = [System.IO.FileStream]::new(
-                    $FilePath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+        Write-Host "Downloading with invoke web request: $Url"
+    }
+    catch {
+        Write-Host "Downloading: $Url"
+    }
 
-                $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
+    if ($null -ne ($Url -as [System.URI]).AbsoluteURI) {
+        if ($null -eq $handler) {
+            $ProgressPreference = 'SilentlyContinue'
+            Invoke-WebRequest -UseBasicParsing -Uri "$Url" -OutFile "$Filename"
+        }
+        else {
+            $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
+            $client = New-Object -TypeName System.Net.Http.HttpClient -ArgumentList $handler
+            $client.Timeout = New-Object -TypeName System.TimeSpan -ArgumentList 0, 30, 0
+            $cancelTokenSource = [System.Threading.CancellationTokenSource]::new(-1)
+            $responseMsg = $client.GetAsync([System.Uri]::new($Url), $cancelTokenSource.Token)
+            $responseMsg.Wait()
+            if (!$responseMsg.IsCanceled) {
+                $response = $responseMsg.Result
+                if ($response.IsSuccessStatusCode) {
+                    $downloadedFileStream = [System.IO.FileStream]::new(
+                        $FilePath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
 
-                Write-Host "Download started..."
-                $copyStreamOp.Wait()
+                    $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
 
-                $downloadedFileStream.Close()
-                if ($null -ne $copyStreamOp.Exception) {
-                    throw $copyStreamOp.Exception
+                    Write-Host "Download started..."
+                    $copyStreamOp.Wait()
+
+                    $downloadedFileStream.Close()
+                    if ($null -ne $copyStreamOp.Exception) {
+                        throw $copyStreamOp.Exception
+                    }
                 }
             }
         }
@@ -106,38 +169,47 @@ Function Get-File {
         Write-Host "Downloaded file: '$Filename'"
     }
     else {
-        throw "Cannot download from $Url"
+        throw "⚠ Failed to download file: $Url"
     }
 }
 
-function msys() {
+Function msys() {
     & "$Env:UserProfile\.local\msys64\usr\bin\bash.exe" @('-lc') + @Args
 }
 
 Function Initialize-Environment {
-    $mycelioRoot = Resolve-Path -Path "$PSScriptRoot\..\..\"
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPositionalParameters', '', Scope = 'Function')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Scope = 'Function')]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidGlobalVars', '', Scope = 'Function')]
+    param()
 
-    $tempFolder = "$ENV:UserProfile\.tmp"
-    if ( -not(Test-Path -Path "$tempFolder") ) {
-        New-Item -ItemType directory -Path "$tempFolder" | Out-Null
+    $MycelioRoot = Resolve-Path -Path "$PSScriptRoot\..\..\"
+
+    $MycelioTempDir = "$ENV:UserProfile\.tmp"
+    if ( -not(Test-Path -Path "$MycelioTempDir") ) {
+        New-Item -ItemType directory -Path "$MycelioTempDir" | Out-Null
     }
 
-    $mycelioArtifacts = Resolve-Path -Path "$mycelioRoot\artifacts\"
-    if ( -not(Test-Path -Path "$mycelioArtifacts") ) {
-        New-Item -ItemType directory -Path "$mycelioArtifacts" | Out-Null
+    $MycelioArtifactsDir = Resolve-Path -Path "$MycelioRoot\artifacts\"
+    if ( -not(Test-Path -Path "$MycelioArtifactsDir") ) {
+        New-Item -ItemType directory -Path "$MycelioArtifactsDir" | Out-Null
     }
 
+    $MycelioLocalDir = Resolve-Path -Path "$Env:UserProfile\.local\"
+    if ( -not(Test-Path -Path "$MycelioLocalDir") ) {
+        New-Item -ItemType directory -Path "$MycelioLocalDir" | Out-Null
+    }
 
-    $sandboxTemplate = Get-Content -Path "$mycelioRoot\source\windows\sandbox\sandbox.wsb.template" -Raw
-    $sandbox = $sandboxTemplate -replace '${workspaceFolder}', $mycelioRoot
-    Set-Content -Path "$mycelioArtifacts\sandbox.wsb" -Value "$sandbox"
+    $sandboxTemplate = Get-Content -Path "$MycelioRoot\source\windows\sandbox\sandbox.wsb.template" -Raw
+    $sandbox = $sandboxTemplate -replace '${workspaceFolder}', $MycelioRoot
+    Set-Content -Path "$MycelioArtifactsDir\sandbox.wsb" -Value "$sandbox"
 
     $fontBaseName = "JetBrains Mono"
     $fontBaseFilename = $fontBaseName -replace '\s', ''
     $fontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$fontBaseFilename.zip"
     $fontNameOriginal = "$fontBaseName Regular Nerd Font Complete Windows Compatible"
     $fontName = "$fontBaseFilename NF"
-    $tempFontFolder = "$tempFolder\fonts"
+    $tempFontFolder = "$MycelioTempDir\fonts"
     $targetTempFontPath = "$tempFontFolder\$fontName.ttf"
 
     # We save it to system directory with same path it's the name that needs to be short
@@ -146,21 +218,19 @@ Function Initialize-Environment {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     if ( -not(Test-Path -Path "$Env:UserProfile\.local\msys64\mingw64.exe" -PathType Leaf) ) {
-        if ( -not(Test-Path -Path "$Env:UserProfile\.local") ) {
-            New-Item -ItemType directory -Path "$Env:UserProfile\.local" | Out-Null
-        }
-
         $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/2021-07-25/msys2-base-x86_64-20210725.sfx.exe"
 
-        if ( -not(Test-Path -Path "$tempFolder\msys2.exe" -PathType Leaf) ) {
+        if ( -not(Test-Path -Path "$MycelioTempDir\msys2.exe" -PathType Leaf) ) {
             Write-Host "Downloading MSYS2..."
-            Invoke-WebRequest -UseBasicParsing -Uri "$msysInstaller" -OutFile "$tempFolder\msys2.exe"
+            Get-File -Url "$msysInstaller" -Filename "$MycelioTempDir\msys2.exe"
         }
 
-        if ( -not(Test-Path -Path "$Env:UserProfile\.local\msys64\msys2.exe" -PathType Leaf) ) {
-            & "$tempFolder\msys2.exe" -y -o"$Env:UserProfile\.local"
+        $msysDir = "$Env:UserProfile\.local\msys64"
 
-            Set-Content -Path "$Env:UserProfile\.local\msys64\etc\post-install\09-dotfiles.post" -Value @"
+        if ( -not(Test-Path -Path "$msysDir\msys2.exe" -PathType Leaf) ) {
+            & "$MycelioTempDir\msys2.exe" -y -o"$Env:UserProfile\.local"
+
+            Set-Content -Path "$msysDir\etc\post-install\09-dotfiles.post" -Value @"
 MAYBE_FIRST_START=false
 [ -f '/usr/bin/update-ca-trust' ] && sh /usr/bin/update-ca-trust
 echo '[mycelio] Post-install complete.'
@@ -175,75 +245,128 @@ echo '[mycelio] Post-install complete.'
 
         # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
         # as the initial upgrade of msys2 results in it shutting down the console.
-        & cmd /s /c "$Env:UserProfile\.local\msys64\msys2_shell.cmd -mingw64 -defterm -no-start -where $mycelioRoot -shell bash -c ./source/shell/upgrade-package-manager.sh"
+        & cmd /s /c "$Env:UserProfile\.local\msys64\msys2_shell.cmd -mingw64 -defterm -no-start -where $MycelioRoot -shell bash -c ./source/shell/upgrade-package-manager.sh"
     }
 
     try {
-        if (-not(Test-CommandExists "scoop")) {
+        if (-not(Test-CommandValid "scoop")) {
             Write-Host "Installing 'scoop' package manager..."
             Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-
-            # gsudo: Run commands as administrator.
-            # innounp: Required for unpacking InnoSetup files.
-            # dark: Unpack installers created with the WiX Toolset.
-            scoop install "gsudo"
-            scoop install "innounp"
-            scoop install "dark"
-
-            $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-            if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-                # Add SSH client, see https://stackoverflow.com/a/58029292
-                Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
-
-                # Windows Defender may slow down or disrupt installs with realtime scanning.
-                Import-Module Defender
-                gsudo Add-MpPreference -ExclusionPath "C:\Users\$env:USERNAME\scoop"
-                gsudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
-            }
-        }
-
-        try {
-            # Make sure git is installed first as scoop uses git to update itself
-            if (-not(Test-CommandExists "git")) {
-                scoop install "git"
-            }
-
-            scoop update
-
-            # More robust than 'sudo' above and not just a PowerShell script, see https://github.com/gerardog/gsudo
-            if (-not(Test-CommandExists "gsudo")) {
-                scoop install "gsudo"
-            }
-
-            if (-not(Test-CommandExists "nuget")) {
-                scoop install "nuget"
-            }
-
-            # https://github.com/chrisant996/clink
-            if (-not(Test-CommandExists "clink")) {
-                scoop install "clink"
-            }
-
-            # Static site builder.
-            if (-not(Test-CommandExists "hugo")) {
-                scoop install hugo-extended
-            }
-
-            # Necessary for 'stow' so that we can run it outside of msys environment.
-            if (-not(Test-CommandExists "perl")) {
-                scoop install "perl"
-            }
-
-            Write-Host "Verified that dependencies were installed with 'scoop' package manager."
-        }
-        catch {
-            Write-Host "Failed to install packages with 'scoop' manager."
         }
     }
     catch {
         Write-Host "Exception caught while installing `scoop` package manager."
     }
     finally {
+        try {
+            if (Test-CommandValid "scoop") {
+                # Make sure git is installed first as scoop uses git to update itself
+                if (-not(Test-CommandValid "git")) {
+                    scoop install "git"
+                }
+
+                # gsudo: Run commands as administrator.
+                # innounp: Required for unpacking InnoSetup files.
+                # dark: Unpack installers created with the WiX Toolset.
+                scoop install "gsudo"
+                scoop install "innounp"
+                scoop install "dark"
+
+                $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+                if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+                    # Add SSH client, see https://stackoverflow.com/a/58029292
+                    Add-WindowsCapability -Online -Name "OpenSSH.Client~~~~0.0.1.0"
+
+                    # Windows Defender may slow down or disrupt installs with realtime scanning.
+                    Import-Module Defender
+                    gsudo Add-MpPreference -ExclusionPath "$Env:UserProfile\scoop"
+                    gsudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
+                }
+
+                # Need this for VSCode
+                scoop bucket add extras "https://github.com/lukesampson/scoop-extras.git"
+
+                # Get latest buckets (requires 'git')
+                scoop update
+
+                # Install portable version even if it is already installed locally
+                scoop install vscode-portable
+
+                # Much better than default Windows terminal
+                scoop install windows-terminal
+
+                # Useful tool for syncing folders (like rsync) which is sometimes necessary with
+                # environments like MSYS which do not work in containerized spaces that mount local
+                # volumes as you can get 'Too many levels of symbolic links'
+                if (-not(Test-CommandValid "rclone")) {
+                    scoop install "rclone"
+                }
+
+                if ("$Env:Username" -eq "WDAGUtilityAccount") {
+                    if (Test-Path -Path "C:\Workspace") {
+                        rclone sync "C:\Workspace" "$Env:UserProfile\dotfiles" --copy-links
+                    }
+                }
+
+                # 'gsudo' is more robust than 'sudo' package and not just a PowerShell
+                # script, see https://github.com/gerardog/gsudo
+                if (-not(Test-CommandValid "gsudo")) {
+                    scoop install "gsudo"
+                }
+
+                if (-not(Test-CommandValid "nuget")) {
+                    scoop install "nuget"
+                }
+
+                # https://github.com/chrisant996/clink
+                if (-not(Test-CommandValid "clink")) {
+                    scoop install "clink"
+                }
+
+                Write-Host "Verified that dependencies were installed with 'scoop' package manager."
+            }
+        }
+        catch {
+            Write-Host "Failed to install packages with 'scoop' manager."
+        }
+
+        # Install Perl which is necessary for 'stow' so that we can run it outside of msys environment.
+        try {
+            if (-Not (Test-Path -Path "$MycelioLocalDir\perl\portableshell.bat" -PathType Leaf)) {
+                Write-Host "Downloading Strawberry Perl..."
+                $strawberryPerlVersion = "5.32.1.1"
+                $strawberyPerlUrl = "https://strawberryperl.com/download/$strawberryPerlVersion/strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
+                Get-File -Url "$strawberyPerlUrl" -Filename "$MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
+                Expand-File -Path "$MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip" -DestinationPath "$MycelioLocalDir\perl"
+                Write-Host "Extracting Strawberry Perl to target: '$MycelioLocalDir\perl'"
+            }
+        }
+        catch [Exception] {
+            Write-Host "Failed to install Strawberry Perl.", $_.Exception.Message
+        }
+
+        try {
+            # Useful tool for syncing folders (like rsync) which is sometimes necessary with
+            # environments like MSYS which do not work in containerized spaces that mount local
+            # volumes as you can get 'Too many levels of symbolic links'
+            if (Test-CommandValid "rclone") {
+                if ("$Env:Username" -eq "WDAGUtilityAccount") {
+                    if ((-Not (Test-Path -Path "$Env:UserProfile\dotfiles")) -and (Test-Path -Path "C:\Workspace")) {
+                        rclone sync "C:\Workspace" "$Env:UserProfile\dotfiles" --copy-links
+                    }
+                }
+                else {
+                    Write-Host "Skipped 'dotfiles' sync since we are not in container."
+                }
+            }
+            else {
+                Write-Host "⚠ Missing 'rclone' tool."
+            }
+        }
+        catch [Exception] {
+            Write-Host "Failed to sync dotfiles.", $_.Exception.Message
+        }
+
         try {
             # This can fail in containers as 'GetCurrentConsoleFont' will fail during build
             # so we just ignore the error here and continue.
@@ -274,7 +397,7 @@ echo '[mycelio] Post-install complete.'
 
                 # Download the font
                 Get-File -Url $fontUrl -Filename $zipFile
-                Expand-Archive -Path "$zipFile" -DestinationPath "$tempFontFolder" -Force
+                Expand-File -Path "$zipFile" -DestinationPath "$tempFontFolder"
 
                 Remove-Item -Recurse -Force "$zipFile" | Out-Null
                 Write-Host "Removed intermediate archive: '$zipFile'"

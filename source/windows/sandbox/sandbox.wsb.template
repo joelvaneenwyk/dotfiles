@@ -12,6 +12,6 @@ https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-sand
     </MappedFolders>
     <Networking>true</Networking>
     <LogonCommand>
-        <Command>"C:\Windows\System32\cmd.exe" /e:on /v:on /k "start cmd /c /k C:\Workspace\setup.bat"</Command>
+        <Command>"C:\Windows\System32\cmd.exe" /e:on /v:on /d /c start "" cmd /k C:\Workspace\setup.bat</Command>
     </LogonCommand>
 </Configuration>

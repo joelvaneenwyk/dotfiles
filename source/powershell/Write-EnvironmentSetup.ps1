@@ -76,16 +76,23 @@ Function Get-CurrentEnvironment {
 
 $dotfilesRoot = Resolve-Path -Path "$PSScriptRoot\..\.."
 
+if ("$Env:Username" -eq "WDAGUtilityAccount") {
+    if (Test-Path -Path "$Env:UserProfile\dotfiles\setup.bat" -PathType Leaf) {
+        $dotfilesRoot = Resolve-Path -Path "$Env:UserProfile\dotfiles"
+    }
+}
+
 $environmentVariables = @()
 $environmentVariables += "$ENV:UserProfile\.local\bin"
 $environmentVariables += "$ENV:UserProfile\.local\msys64"
 $environmentVariables += "$ENV:UserProfile\.local\go\bin"
+$environmentVariables += "$ENV:UserProfile\.local\perl\c\bin"
+$environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"
+$environmentVariables += "$ENV:UserProfile\.local\perl\perl\site\bin"
 $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
 $environmentVariables += "$dotfilesRoot"
 $environmentVariables += "$dotfilesRoot\source\windows"
 $environmentVariables += "$ENV:UserProfile\.local\msys64\mingw64\bin"
-$environmentVariables += "$ENV:UserProfile\scoop\apps\perl\current\perl\bin"
-$environmentVariables += "$ENV:UserProfile\scoop\apps\perl\current\perl\site\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\shims"
 $environmentVariables += "C:\Program Files\Git\bin"
 $environmentVariables += $(Get-CurrentEnvironment)
@@ -93,7 +100,7 @@ $environmentVariables += $(Get-CurrentEnvironment)
 # This is intentionally at the very end as we want to pick non-MSYS2 (or Cygwin) style
 # versions if at all possible. This is mainly required for tools like 'make' which are
 # only available in the 'usr/bin' folder.
-$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\usr\bin"
+#$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\usr\bin"
 
 $environmentPaths = @()
 $environmentVariables | ForEach-Object {

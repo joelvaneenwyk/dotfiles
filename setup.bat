@@ -78,15 +78,14 @@ setlocal EnableExtensions EnableDelayedExpansion
     set _pwshs=!_pwshs! "C:\Program Files\PowerShell\7\pwsh.exe"
     set _pwshs=!_pwshs! "C:\Program Files\PowerShell\pwsh.exe"
     set _pwshs=!_pwshs! "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-
     for %%p in (!_pwshs!) do (
         set _powershell=%%p
         if exist !_powershell! goto:$PowerShellSet
     )
     :$PowerShellSet
-    !_powershell! -NoLogo -NoProfile -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
 
-    call "%MYCELIO_ROOT%\source\windows\profile.bat"
+    call :Run !_powershell! -NoLogo -NoProfile -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
+    call :Run call "%MYCELIO_ROOT%\source\windows\profile.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Profile setup failed. 1>&2
@@ -118,9 +117,7 @@ setlocal EnableExtensions EnableDelayedExpansion
         docker rm --force "!_container_name!" > nul 2>&1
         docker stop "!_container_instance!" > nul 2>&1
 
-        set _cmd=docker build --progress plain --rm -t "!_container_name!" -f "%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!" !_arg_remainder! !MYCELIO_ROOT!
-        echo ##[cmd] !_cmd!
-        !_cmd!
+        call :Run docker build --progress plain --rm -t "!_container_name!" -f "%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!" !_arg_remainder! !MYCELIO_ROOT!
         if errorlevel 1 (
             echo Docker '!_container_name!' container build failed: '%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!'
         ) else (
@@ -130,19 +127,8 @@ setlocal EnableExtensions EnableDelayedExpansion
         exit /b 0
     )
 
-    echo.
-    echo ======-------
-    echo Initializing PowerShell: !_powershell!
-    echo ======-------
-    echo.
-    !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-PowerShell.ps1"
-
-    echo.
-    echo ======-------
-    echo Installing Windows Dependencies
-    echo ======-------
-    echo.
-    !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Environment.ps1" %*
+    call :Run !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-PowerShell.ps1"
+    call :Run !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Environment.ps1" %*
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
     )
@@ -156,7 +142,12 @@ setlocal EnableExtensions EnableDelayedExpansion
     :: The 'stow' tool should now be installed in our local perl so we can
     :: stow the Windows settings. However, due to limitations in 'stow' on Windows
     :: we need to do this in MSYS2 instead.
-    ::call "%MYCELIO_ROOT%\source\windows\stow\build.bat"
+    call "%MYCELIO_ROOT%\source\stow\tools\make-stow.bat"
+    if not "!ERRORLEVEL!"=="0" (
+        set _error=!ERRORLEVEL!
+        echo ERROR: Failed to build Stow for Windows. 1>&2
+        goto:$InitializeDone
+    )
     ::stow windows
 
     set MSYS2_PATH_TYPE=minimal
@@ -199,6 +190,16 @@ if "%MYCELIO_ERROR%"=="0" (
 )
 
 exit /b %MYCELIO_ERROR%
+
+::
+:: Local functions
+::
+
+:Run %*=Command with arguments
+    setlocal EnableExtensions EnableDelayedExpansion
+    echo ##[cmd] %*
+    %*
+endlocal & exit /b
 
 :CheckSystemFile %1=SystemFilename
     setlocal EnableExtensions EnableDelayedExpansion

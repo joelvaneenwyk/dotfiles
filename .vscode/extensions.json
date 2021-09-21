@@ -9,6 +9,7 @@
         "mhutchie.git-graph",
         "eamodio.gitlens",
         "donjayamanne.githistory",
-        "jetmartin.bats"
+        "jetmartin.bats",
+        "ms-vscode.powershell-preview"
     ]
 }
