@@ -52,9 +52,13 @@ function _get_real_path() {
     return 0
 }
 
-MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
-export MYCELIO_ROOT
+function setup() {
+    local root
 
-source "$MYCELIO_ROOT/source/shell/mycelio.sh"
+    root="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
+    source "$root/source/shell/mycelio.sh"
 
-initialize_environment "$@"
+    initialize_environment "$@"
+}
+
+setup "$@"

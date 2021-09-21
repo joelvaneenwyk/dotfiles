@@ -777,6 +777,8 @@ function install_stow() {
             if ! _run "[stow.cpan.config]" perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
                 echo "[stow.cpan.config] ⚠ CPAN configuration failed to initialize."
             fi
+
+            cpan -T YAML CPAN::DistnameInfo
         else
             echo "[stow.cpan.config] ✔ CPAN already initialized."
         fi

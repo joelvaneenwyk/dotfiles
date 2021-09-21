@@ -1,0 +1,17 @@
+<!--
+https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-sandbox/windows-sandbox-overview
+https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-sandbox/windows-sandbox-configure-using-wsb-file
+!-->
+<Configuration>
+    <MappedFolders>
+        <MappedFolder>
+            <HostFolder>${workspaceFolder}</HostFolder>
+            <SandboxFolder>C:\Workspace</SandboxFolder>
+            <ReadOnly>false</ReadOnly>
+        </MappedFolder>
+    </MappedFolders>
+    <Networking>true</Networking>
+    <LogonCommand>
+        <Command>"C:\Windows\System32\cmd.exe" /e:on /v:on /k "start cmd /c /k C:\Workspace\setup.bat"</Command>
+    </LogonCommand>
+</Configuration>

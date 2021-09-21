@@ -115,12 +115,25 @@ function msys() {
 }
 
 Function Initialize-Environment {
-    $tempFolder = "$ENV:UserProfile\.tmp"
     $mycelioRoot = Resolve-Path -Path "$PSScriptRoot\..\..\"
+
+    $tempFolder = "$ENV:UserProfile\.tmp"
+    if ( -not(Test-Path -Path "$tempFolder") ) {
+        New-Item -ItemType directory -Path "$tempFolder" | Out-Null
+    }
+
+    $mycelioArtifacts = Resolve-Path -Path "$mycelioRoot\artifacts\"
+    if ( -not(Test-Path -Path "$mycelioArtifacts") ) {
+        New-Item -ItemType directory -Path "$mycelioArtifacts" | Out-Null
+    }
+
+
+    $sandboxTemplate = Get-Content -Path "$mycelioRoot\source\windows\sandbox\sandbox.wsb.template" -Raw
+    $sandbox = $sandboxTemplate -replace '${workspaceFolder}', $mycelioRoot
+    Set-Content -Path "$mycelioArtifacts\sandbox.wsb" -Value "$sandbox"
 
     $fontBaseName = "JetBrains Mono"
     $fontBaseFilename = $fontBaseName -replace '\s', ''
-
     $fontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$fontBaseFilename.zip"
     $fontNameOriginal = "$fontBaseName Regular Nerd Font Complete Windows Compatible"
     $fontName = "$fontBaseFilename NF"
@@ -130,10 +143,6 @@ Function Initialize-Environment {
     # We save it to system directory with same path it's the name that needs to be short
     $targetFontPath = "C:\Windows\Fonts\$fontNameOriginal.ttf"
 
-    if ( -not(Test-Path -Path "$tempFolder") ) {
-        New-Item -ItemType directory -Path "$tempFolder" | Out-Null
-    }
-
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
     if ( -not(Test-Path -Path "$Env:UserProfile\.local\msys64\mingw64.exe" -PathType Leaf) ) {
@@ -141,19 +150,20 @@ Function Initialize-Environment {
             New-Item -ItemType directory -Path "$Env:UserProfile\.local" | Out-Null
         }
 
-        $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/nightly-x86_64/msys2-base-x86_64-latest.sfx.exe"
+        $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/2021-07-25/msys2-base-x86_64-20210725.sfx.exe"
 
         if ( -not(Test-Path -Path "$tempFolder\msys2.exe" -PathType Leaf) ) {
+            Write-Host "Downloading MSYS2..."
             Invoke-WebRequest -UseBasicParsing -Uri "$msysInstaller" -OutFile "$tempFolder\msys2.exe"
         }
 
         if ( -not(Test-Path -Path "$Env:UserProfile\.local\msys64\msys2.exe" -PathType Leaf) ) {
             & "$tempFolder\msys2.exe" -y -o"$Env:UserProfile\.local"
 
-            Set-Content -Path '$Env:UserProfile\.local\msys64\etc\post-install\09-dotfiles.post' -Value @"
+            Set-Content -Path "$Env:UserProfile\.local\msys64\etc\post-install\09-dotfiles.post" -Value @"
 MAYBE_FIRST_START=false
 [ -f '/usr/bin/update-ca-trust' ] && sh /usr/bin/update-ca-trust
-echo 'Post-install complete.'
+echo '[mycelio] Post-install complete.'
 "@
 
             msys ' '

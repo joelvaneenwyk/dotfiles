@@ -12,6 +12,7 @@
 .EXAMPLE
 
 `Set-ExecutionPolicy RemoteSigned -scope CurrentUser; iwr -useb git.io/mycelio.ps1 | iex`
+`Set-ExecutionPolicy RemoteSigned -scope CurrentUser; iwr -useb https://gist.github.com/joelvaneenwyk/83d48a63cc1c25fd62fb18a5ba49ff9d/raw/6c42aad839c8bdf0ef8a1a9a5fcb9f21a4a933c7/mycelio.ps1 | iex`
 
 .DESCRIPTION
     Provision the environment with basic set of tools and utilities for common use
