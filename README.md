@@ -1,5 +1,8 @@
 # Portable Configuration
 
+[![Join the chat at https://gitter.im/dotfiles-mycelio/community](https://badges.gitter.im/dotfiles-mycelio/community.svg)](https://gitter.im/dotfiles-mycelio/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+
 ```ansi
       ██            ██     ████ ██  ██
      ░██           ░██    ░██░ ░░  ░██
