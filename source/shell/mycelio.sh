@@ -770,7 +770,7 @@ function install_stow() {
                 echo "no"
                 echo "exit"
             ) | _run "[stow.cpan]" _sudo cpan -T; then
-                echo "[stow.cpan.config] ⚠ Automated CPAN configuration failed."
+                echo "[stow.cpan] ⚠ Automated CPAN configuration failed."
             fi
 
             # If configuration file does not exist yet then we automate configuration with
@@ -779,7 +779,7 @@ function install_stow() {
                 echo "[stow.cpan.config] ⚠ CPAN configuration failed to initialize."
             fi
 
-            cpan -T YAML CPAN::DistnameInfo
+            _run "[stow.cpan.dependencies]" _sudo cpan -i -T YAML CPAN::DistnameInfo
         else
             echo "[stow.cpan.config] ✔ CPAN already initialized."
         fi
