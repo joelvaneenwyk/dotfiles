@@ -210,12 +210,12 @@ Function Initialize-Environment {
         New-Item -ItemType directory -Path "$MycelioTempDir" | Out-Null
     }
 
-    $MycelioArtifactsDir = Resolve-Path -Path "$MycelioRoot\artifacts\"
+    $MycelioArtifactsDir = "$MycelioRoot\artifacts\"
     if ( -not(Test-Path -Path "$MycelioArtifactsDir") ) {
         New-Item -ItemType directory -Path "$MycelioArtifactsDir" | Out-Null
     }
 
-    $MycelioLocalDir = Resolve-Path -Path "$Env:UserProfile\.local\"
+    $MycelioLocalDir = "$Env:UserProfile\.local\"
     if ( -not(Test-Path -Path "$MycelioLocalDir") ) {
         New-Item -ItemType directory -Path "$MycelioLocalDir" | Out-Null
     }
@@ -292,7 +292,6 @@ echo '[mycelio] Post-install complete.'
                 # PowerShell utilities.
                 try {
                     if (-Not (Test-Path -Path "$MycelioLocalDir\perl\portableshell.bat" -PathType Leaf)) {
-                        Write-Host "Downloading Strawberry Perl..."
                         $strawberryPerlVersion = "5.32.1.1"
                         $strawberyPerlUrl = "https://strawberryperl.com/download/$strawberryPerlVersion/strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
                         Get-File -Url "$strawberyPerlUrl" -Filename "$MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
@@ -301,6 +300,19 @@ echo '[mycelio] Post-install complete.'
                 }
                 catch [Exception] {
                     Write-Host "Failed to install Strawberry Perl.", $_.Exception.Message
+                }
+
+                # Install mutagen so that we can synchronize folders much like 'rclone' but better
+                try {
+                    if (-Not (Test-Path -Path "$MycelioLocalDir\mutagen\mutagen.exe" -PathType Leaf)) {
+                        $mutagenVersion = "v0.11.8"
+                        $mutagenUrl = "https://github.com/mutagen-io/mutagen/releases/download/$mutagenVersion/mutagen_windows_amd64_$mutagenVersion.zip"
+                        Get-File -Url "$mutagenUrl" -Filename "$MycelioTempDir\mutagen_windows_amd64_$mutagenVersion.zip"
+                        Expand-File -Path "$MycelioTempDir\mutagen_windows_amd64_$mutagenVersion.zip" -DestinationPath "$MycelioLocalDir\mutagen"
+                    }
+                }
+                catch [Exception] {
+                    Write-Host "Failed to install mutagen.", $_.Exception.Message
                 }
 
                 # gsudo: Run commands as administrator.
@@ -370,20 +382,37 @@ echo '[mycelio] Post-install complete.'
         }
 
         try {
-            # Useful tool for syncing folders (like rsync) which is sometimes necessary with
-            # environments like MSYS which do not work in containerized spaces that mount local
-            # volumes as you can get 'Too many levels of symbolic links'
-            $rclone = "$Env:UserProfile\scoop\apps\rclone\current\rclone.exe"
-            if (Test-Path -Path "$rclone" -PathType Leaf) {
+            $mutagen = "$Env:UserProfile\.local\mutagen\mutagen.exe"
+            if (Test-Path -Path "$mutagen" -PathType Leaf) {
                 if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
-                    & "$rclone" sync "C:\Workspace" "$Env:UserProfile\dotfiles" --copy-links --exclude ".git/" --exclude "fzf_key_bindings.fish" --exclude "clink_history*"
+                    & "$mutagen" terminate "dotfiles"
+                    & "$mutagen" sync create "C:\Workspace\" "$Env:UserProfile\dotfiles" --name "dotfiles" --sync-mode "two-way-safe" --symlink-mode "portable" --ignore-vcs --ignore "fzf_key_bindings.fish" --ignore "clink_history*" --ignore "_Inline/" --ignore "_build/"
+                    & "$mutagen" sync flush --all
                 }
                 else {
                     Write-Host "Skipped 'dotfiles' sync since we are not in container."
                 }
             }
             else {
-                Write-Host "⚠ Missing 'rclone' tool."
+                Write-Host "⚠ Missing 'mutagen' tool."
+
+                # Useful tool for syncing folders (like rsync) which is sometimes necessary with
+                # environments like MSYS which do not work in containerized spaces that mount local
+                # volumes as you can get 'Too many levels of symbolic links'
+                $rclone = "$Env:UserProfile\scoop\apps\rclone\current\rclone.exe"
+                if (Test-Path -Path "$rclone" -PathType Leaf) {
+                    if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
+                        & "$rclone" sync "C:\Workspace" "$Env:UserProfile\dotfiles" --copy-links --exclude ".git/" --exclude "fzf_key_bindings.fish" --exclude "clink_history*"
+                    }
+                    else {
+                        Write-Host "Skipped 'dotfiles' sync since we are not in container."
+                    }
+
+                    mutagen sync create C:\Workspace\ C:\Workspace2\ --sync-mode two-way-safe
+                }
+                else {
+                    Write-Host "⚠ Missing 'rclone' tool."
+                }
             }
         }
         catch [Exception] {

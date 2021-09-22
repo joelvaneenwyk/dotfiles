@@ -115,7 +115,7 @@ $environmentVariables | ForEach-Object {
         }
     }
     catch {
-        Write-Host "Skipped invalid path: '$environmentPath'"
+        Write-Host "[mycelio] Skipped invalid path: '$environmentPath'"
     }
 }
 
@@ -136,12 +136,12 @@ Try {
         $fileStream.WriteLine("set ""MSYS=winsymlinks:nativestrict""")
         $fileStream.WriteLine("set ""MSYS2_PATH_TYPE=inherit""")
 
-        $fileStream.WriteLine("echo Initialized path from generated script.")
+        $fileStream.WriteLine("echo [mycelio] Initialized path from generated script.")
         $fileStream.WriteLine("")
         $fileStream.WriteLine("exit /b 0")
     }
     catch [Exception] {
-        Write-Host "Failed to write setup script.", $_.Exception.Message
+        Write-Host "[mycelio] Failed to write setup script.", $_.Exception.Message
     }
     finally {
         $fileStream.Close()
@@ -149,5 +149,5 @@ Try {
     }
 }
 catch [Exception] {
-    Write-Host "Failed to write environent setup script.", $_.Exception.Message
+    Write-Host "[mycelio] Failed to write environent setup script.", $_.Exception.Message
 }

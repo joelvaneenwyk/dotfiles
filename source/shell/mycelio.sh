@@ -778,8 +778,6 @@ function install_stow() {
             if ! _run "[stow.cpan.config]" _sudo perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
                 echo "[stow.cpan.config] ⚠ CPAN configuration failed to initialize."
             fi
-
-            _run "[stow.cpan.dependencies]" _sudo cpan -i -T YAML CPAN::DistnameInfo
         else
             echo "[stow.cpan.config] ✔ CPAN already initialized."
         fi
@@ -798,6 +796,8 @@ function install_stow() {
         else
             echo "[stow.cpanm.install] ✔ CPANM already installed."
         fi
+
+        _run "[stow.cpanm.dependencies]" _sudo cpanm --notest YAML CPAN::DistnameInfo
     else
         echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
     fi
@@ -819,8 +819,8 @@ function install_stow() {
         return 15
     fi
 
+    # Remove intermediate files
     rm -f "$MYCELIO_STOW_ROOT/configure~" "$MYCELIO_STOW_ROOT/Build.bat" "$MYCELIO_STOW_ROOT/Build" >/dev/null 2>&1 || true
-    git -C "$MYCELIO_STOW_ROOT" checkout -- "$MYCELIO_STOW_ROOT/aclocal.m4" >/dev/null 2>&1 || true
 
     _stow --version
 }
@@ -1245,12 +1245,25 @@ function initialize_linux() {
         pacman -Fy
         pacman -Syu --quiet --noconfirm
         pacman -S --quiet --noconfirm --needed \
-            msys2-keyring curl wget unzip \
+            msys2-keyring \
+            curl wget unzip \
             git gawk perl \
             fish tmux \
             texinfo texinfo-tex \
-            base-devel msys2-runtime-devel make autoconf automake1.16 automake-wrapper libtool \
-            mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils
+            base-devel gcc gcc-libs binutils make autoconf automake1.16 automake-wrapper libtool \
+            msys2-runtime-devel msys2-w32api-headers msys2-w32api-runtime
+
+        if [ "${MSYSTEM:-}" = "MINGW64" ]; then
+            pacman -S --quiet --noconfirm --needed \
+                mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils
+        fi
+
+        # Unsure why but for some reason a link for cc1 is not created which results in errors
+        # during builds of some Perl dependencies.
+        _cc1="/usr/lib/gcc/x86_64-pc-msys/10.2.0/cc1.exe"
+        if [ -f "$_cc1" ] && [ ! -e "/usr/bin/cc1.exe" ]; then
+            ln -s "$_cc1" "/usr/bin/cc1.exe"
+        fi
 
         if [ -f "/etc/pacman.d/gnupg/" ]; then
             rm -rf "/etc/pacman.d/gnupg/"
@@ -1735,7 +1748,7 @@ function _initialize_environment() {
 
     initialize_gitconfig
 
-    if [ -x "$(command -v git)" ]; then
+    if [ -x "$(command -v git)" ] && [ -e "$MYCELIO_ROOT/.git" ]; then
         git submodule update --init --recursive
         _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
         _update_git_repository "packages/vim/.vim/bundle/vundle" "master"

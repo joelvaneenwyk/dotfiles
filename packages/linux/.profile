@@ -407,17 +407,12 @@ initialize_profile() {
     _add_path "prepend" "$HOME/.local/bin"
     _add_path "prepend" "$HOME/.local/sbin"
 
-    # Need library path for 'stow' to work from compiled version
-    _add_path "prepend" "$MYCELIO_ROOT/source/stow/bin"
-    PERL5LIB="$(_add_to_list "${PERL5LIB:-}" "$MYCELIO_ROOT/source/stow/lib")"
-    PERL5LIB="$(_add_to_list "$PERL5LIB" "/mingw64/share/tlpkg")"
-    export PERL5LIB
-
-    # We want usr/bin to be at the end
-    _add_path "append" "/usr/bin"
     _add_path "append" "/mnt/c/Program Files/Microsoft VS Code/bin"
     _add_path "append" "/c/Program Files/Microsoft VS Code/bin"
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
+
+    # We want usr/bin to be at the very end
+    _add_path "append" "/usr/bin"
 
     # Clear out TMP as TEMP may come from Windows and we do not want tools confused
     # if they find both.
@@ -427,7 +422,7 @@ initialize_profile() {
 
     export TEXINPUTS=.:${TEXINPUTS:-}
 
-    if [ -f "/mingw64/bin/tex.exe" ]; then
+    if [ "${MSYSTEM:-}" = "MINGW64" ] && [ -f "/mingw64/bin/tex.exe" ]; then
         export TEX="/mingw64/bin/tex"
         export TEX_OS_NAME="win32"
     fi

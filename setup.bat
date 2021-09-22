@@ -25,6 +25,16 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     :: Keep appending arguments until there are none left
     :$ArgumentParse
+        if "%~1"=="docker" (
+            set COMMAND=%~1
+            goto:$ArgumentNext
+        )
+
+        if "%~1"=="wsl" (
+            set COMMAND=%~1
+            goto:$ArgumentNext
+        )
+
         if not "!COMMAND!"=="docker" goto:$ArgumentParseRemainder
         if not "!_container_platform!"=="" goto:$ArgumentParseRemainder
 
@@ -42,8 +52,8 @@ setlocal EnableExtensions EnableDelayedExpansion
             set "_arg_remainder=%1 !_arg_remainder!"
 
         :$ArgumentNext
-            set "_args=%1 !_args!"
-            shift
+        set "_args=%1 !_args!"
+        shift
     if not "%~1"=="" goto :$ArgumentParse
 
     echo ##[cmd] %SCRIPT% !_args!
@@ -134,7 +144,6 @@ setlocal EnableExtensions EnableDelayedExpansion
         echo ERROR: Failed to build Stow for Windows. 1>&2
         goto:$InitializeDone
     )
-    ::stow windows
 
     set MSYS2_PATH_TYPE=minimal
     set MSYS_SHELL=%USERPROFILE%\.local\msys64\msys2_shell.cmd

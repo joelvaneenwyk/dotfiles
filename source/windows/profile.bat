@@ -114,13 +114,13 @@ doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH
 if "%CLINK_INJECTED%"=="1" goto:$InitializedProfile
 
 :: This must be the last operation we do.
-call clink --version > nul 2>&1
+call clink --version >NUL 2>&1
 if errorlevel 1 (
     echo.
     echo Initialized `dotfiles` environment without clink.
 ) else (
     set CLINK_INJECTED=1
-    clink inject --session dot_mycelio --profile "%~dp0clink" --quiet --nolog
+    call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\windows\clink" --quiet --nolog
 )
 
 :$InitializedProfile
