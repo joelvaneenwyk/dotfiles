@@ -56,6 +56,8 @@
 
 ## Setup
 
+[![Join the chat at https://gitter.im/dotfiles-mycelio/community](https://badges.gitter.im/dotfiles-mycelio/community.svg)](https://gitter.im/dotfiles-mycelio/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Instructions are provided below for each platform, but the high level approach for each is to clone the `git` repository and then run the initialization script for that platform.
 
 To install on platforms with `bash` you can do the following:

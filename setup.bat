@@ -70,21 +70,8 @@ setlocal EnableExtensions EnableDelayedExpansion
         goto:$InitializeDone
     )
 
-    ::
-    :: Initialize each installed PowerShell we find
-    ::
-    set _powershell=
-    set _pwshs=
-    set _pwshs=!_pwshs! "C:\Program Files\PowerShell\7\pwsh.exe"
-    set _pwshs=!_pwshs! "C:\Program Files\PowerShell\pwsh.exe"
-    set _pwshs=!_pwshs! "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-    for %%p in (!_pwshs!) do (
-        set _powershell=%%p
-        if exist !_powershell! goto:$PowerShellSet
-    )
-    :$PowerShellSet
+    call :RunPowerShell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
 
-    call :Run !_powershell! -NoLogo -NoProfile -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
     call :Run call "%MYCELIO_ROOT%\source\windows\profile.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
@@ -127,8 +114,8 @@ setlocal EnableExtensions EnableDelayedExpansion
         exit /b 0
     )
 
-    call :Run !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-PowerShell.ps1"
-    call :Run !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Environment.ps1" %*
+    call :RunPowerShell -File "%MYCELIO_ROOT%\source\powershell\Initialize-PowerShell.ps1"
+    call :RunPowerShell -File "%MYCELIO_ROOT%\source\powershell\Initialize-Environment.ps1" %*
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
     )
@@ -136,7 +123,6 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     :: Re-initialize environment paths now that dependencies are installed
     ::
-
     call "%MYCELIO_ROOT%\source\windows\env.bat"
 
     :: The 'stow' tool should now be installed in our local perl so we can
@@ -162,14 +148,14 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo.
     if not exist "%MSYS_SHELL%" (
         set _error=55
-        echo ERROR: MSYS2 [MINGW64] not installed. Initialization failed. 1>&2
+        echo ERROR: MSYS2 not installed. Initialization failed. 1>&2
         goto:$InitializeDone
     )
 
-    call "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
+    call "%MSYS_SHELL%" -msys2 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
-        echo ERROR: MSYS2 [MINGW64] setup process failed. 1>&2
+        echo ERROR: Shell setup with 'bash' failed. 1>&2
         goto:$InitializeDone
     )
 
@@ -199,6 +185,29 @@ exit /b %MYCELIO_ERROR%
     setlocal EnableExtensions EnableDelayedExpansion
     echo ##[cmd] %*
     %*
+endlocal & exit /b
+
+:RunPowerShell %*=Command with arguments
+    setlocal EnableExtensions EnableDelayedExpansion
+
+    ::
+    :: Initialize each installed PowerShell we find
+    ::
+    set _powershell=
+    set _pwshs=
+    set _pwshs=!_pwshs! "C:\Program Files\PowerShell\7\pwsh.exe"
+    set _pwshs=!_pwshs! "C:\Program Files\PowerShell\pwsh.exe"
+    set _pwshs=!_pwshs! "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    for %%p in (!_pwshs!) do (
+        set _powershell=%%p
+        if exist !_powershell! goto:$PowerShellSet
+    )
+    :$PowerShellSet
+
+    :: By changing character page we prevent parent console from changing
+    :: font, see https://superuser.com/a/1548564
+    chcp 437 > nul
+    call :Run !_powershell! -NoLogo -NoProfile %*
 endlocal & exit /b
 
 :CheckSystemFile %1=SystemFilename

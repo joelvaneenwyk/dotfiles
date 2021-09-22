@@ -1,8 +1,12 @@
 @echo off
 
+::
+:: Generate environment batch file and then execute it.
+::
+
 setlocal EnableDelayedExpansion
     set _powershell=
-    set _mycelio_env=%USERPROFILE%\.local\bin\mycelioEnv.bat
+    set _mycelio_env=%USERPROFILE%\.local\bin\use_mycelio_environment.bat
 
     if exist "C:\Program Files\PowerShell\7\pwsh.exe" (
         set _powershell=C:\Program Files\PowerShell\7\pwsh.exe
@@ -21,6 +25,7 @@ setlocal EnableDelayedExpansion
 
     :$BuildEnvironment
     if exist "!_powershell!" (
+        chcp 437 > nul
         "!_powershell!" -NoLogo -NoProfile -File "%~dp0..\powershell\Write-EnvironmentSetup.ps1" -ScriptPath "%_mycelio_env%"
     )
 endlocal & (

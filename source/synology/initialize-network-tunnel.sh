@@ -5,14 +5,19 @@
 # want logs to go into the home directory where these dot files live.
 #
 
-export MYCELIO_SCRIPT_NAME="synology_initialize_network_tunnel"
+function import_mycelio_library() {
+    MYCELIO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
+    export MYCELIO_ROOT
 
-MYCELIO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
-export MYCELIO_ROOT
+    # shellcheck source=source/shell/mycelio.sh
+    source "$MYCELIO_ROOT/source/shell/mycelio.sh"
 
-source "$MYCELIO_ROOT/source/shell/lib.sh"
+    use_mycelio_library "$@"
+}
 
-initialize_network() {
+function initialize_network() {
+    import_mycelio_library "synology_initialize_network_tunnel"
+
     echo "Initiated network check: '$(date)'" | tee "$MYCELIO_LOG_PATH"
 
     if is_synology; then

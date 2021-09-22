@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -x "$(command -v pacman)" ]; then
-    echo "[mycelio] Initial setup and upgrade of MSYS2."
+    echo "[mycelio] Starting initialization of MSYS2 package manager."
 
     if [ ! -f "/etc/passwd" ]; then
         mkpasswd -l -c >"/etc/passwd"
@@ -30,9 +30,9 @@ if [ -x "$(command -v pacman)" ]; then
 
     # Long version of '-Syuu' gets fresh package databases from server and
     # upgrades the packages while allowing downgrades '-uu' as well if needed.
-    echo "[mycelio] Running upgrade of all packages. This is expected to shutdown terminal if first run."
+    echo "[mycelio] Upgrade of all packages."
     pacman --quiet --sync --refresh -uu --noconfirm
 fi
 
 # Note that if this is the first run on MSYS2 it will likely never get here.
-echo "[mycelio] Initial setup complete."
+echo "[mycelio] Initialized package manager."

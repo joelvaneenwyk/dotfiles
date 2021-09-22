@@ -217,8 +217,9 @@ function _timeout() {
 #   - https://superuser.com/questions/553932/how-to-check-if-i-have-sudo-access
 #
 function _has_admin_rights() {
+    # If 'sudo' does not exist at all then assume we can use it
     if ! _command_exists "sudo"; then
-        return 2
+        return 0
     else
         # -n -> 'non-interactive'
         # -v -> 'validate'
@@ -257,7 +258,7 @@ function _has_admin_rights() {
 }
 
 function _sudo() {
-    if [ -x "$(command -v sudo)" ]; then
+    if [ -x "$(command -v sudo)" ] && [ -z "${MSYSTEM_CARCH:-}" ]; then
         DEBIAN_FRONTEND="noninteractive" sudo "$@"
     else
         "$@"
@@ -762,19 +763,19 @@ function install_stow() {
     if [ -x "$(command -v cpan)" ]; then
         # If configuration file does not exist yet then we automate configuration with
         # answers to standard questions. These may become invalid with newer versions.
-        if [ ! -f "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm" ]; then
+        if [ ! -e "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm" ]; then
             if ! (
                 echo "yes"
                 echo ""
                 echo "no"
                 echo "exit"
-            ) | _run "[stow.cpan]" cpan -T; then
+            ) | _run "[stow.cpan]" _sudo cpan -T; then
                 echo "[stow.cpan.config] ⚠ Automated CPAN configuration failed."
             fi
 
             # If configuration file does not exist yet then we automate configuration with
             # answers to standard questions. These may become invalid with newer versions.
-            if ! _run "[stow.cpan.config]" perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
+            if ! _run "[stow.cpan.config]" _sudo perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
                 echo "[stow.cpan.config] ⚠ CPAN configuration failed to initialize."
             fi
 
@@ -809,8 +810,8 @@ function install_stow() {
             _run "[stow.make.clean]" source "$MYCELIO_STOW_ROOT/tools/make-clean.sh"
         fi
 
-        # shellcheck source=source/stow/tools/make-stow-minimal.sh
-        _run "[stow.make]" source "$MYCELIO_STOW_ROOT/tools/make-stow-minimal.sh"
+        # shellcheck source=source/stow/tools/make-stow.sh
+        _run "[stow.make]" source "$MYCELIO_STOW_ROOT/tools/make-stow.sh"
     ); then
         echo "✔ Successfully built 'stow' from source."
     else
@@ -1131,7 +1132,7 @@ function configure_linux() {
 
     (
         # Not all platforms support '--relative' so go into target directory first
-        cd "$MYCELIO_HOME/.config/fish/functions"
+        cd "$MYCELIO_HOME/.config/fish/functions" || true
 
         # Link fzf (https://github.com/junegunn/fzf) key bindings after we have tried to install it. We intentionally
         # want to create this before we stow packages since we want to make sure the parent folder is not a symbolic
@@ -1147,7 +1148,7 @@ function configure_linux() {
 
     (
         # Not all platforms support '--relative' so go into target directory first
-        cd "$MYCELIO_HOME"
+        cd "$MYCELIO_HOME" || true
         rm -f "$MYCELIO_HOME/.base16_theme"
         ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
     )
@@ -1249,8 +1250,7 @@ function initialize_linux() {
             fish tmux \
             texinfo texinfo-tex \
             base-devel msys2-runtime-devel make autoconf automake1.16 automake-wrapper libtool \
-            mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils \
-            mingw-w64-x86_64-go
+            mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils
 
         if [ -f "/etc/pacman.d/gnupg/" ]; then
             rm -rf "/etc/pacman.d/gnupg/"
@@ -1787,4 +1787,44 @@ function initialize_environment() {
     _initialize_environment "$@"
 
     _remove_error_handling
+}
+
+is_synology() {
+    if uname -a | grep -q "synology"; then
+        return 0
+    fi
+
+    return 1
+}
+
+use_mycelio_library() {
+    export MYCELIO_SCRIPT_NAME="${1:-mycelio_library}"
+
+    if [ "${MYCELIO_LIBRARY_IMPORTED:-}" = "1" ]; then
+        echo "Re-importing Mycelio shell library: '$MYCELIO_ROOT'"
+    else
+        echo "Imported Mycelio shell library: '$MYCELIO_ROOT'"
+    fi
+
+    if [ -n "${MYCELIO_ROOT:-}" ]; then
+        _root_home="$(cd "${MYCELIO_ROOT:-}" >/dev/null 2>&1 && cd ../ && pwd)"
+    fi
+
+    _root_home=${_root_home:-/var/services/homes/$(whoami)}
+    _home=${HOME:-$_root_home}
+    _logs="$_home/.logs"
+    mkdir -p "$_logs"
+
+    MYCELIO_LOG_PATH="$_logs/${MYCELIO_SCRIPT_NAME:-mycelio}.log"
+    export MYCELIO_LOG_PATH
+
+    if [ ! "${MYCELIO_LIBRARY_IMPORTED:-}" = "1" ]; then
+        # We use 'whoami' as 'USER' is not set for scheduled tasks
+        echo "User: '$(whoami)'" | tee "$MYCELIO_LOG_PATH"
+        echo "Home: '$_home'" | tee "$MYCELIO_LOG_PATH"
+        echo "Logs available here: '$MYCELIO_LOG_PATH'" | tee "$MYCELIO_LOG_PATH"
+    fi
+
+    MYCELIO_LIBRARY_IMPORTED="1"
+    export MYCELIO_LIBRARY_IMPORTED
 }

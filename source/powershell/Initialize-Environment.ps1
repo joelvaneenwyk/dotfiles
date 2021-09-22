@@ -76,6 +76,7 @@ Function Expand-File {
     $7zip = "$Env:UserProfile\scoop\apps\7zip\current\7z.exe"
 
     try {
+        Write-Host "Extracting archive: '$Path'"
         if (Test-Path -Path "$7zip" -PathType Leaf) {
             & "$7zip" x "$Path" -aoa -o"$DestinationPath" -r -y
         }
@@ -83,7 +84,7 @@ Function Expand-File {
             $ProgressPreference = 'SilentlyContinue'
             Expand-Archive -Path "$Path" -DestinationPath "$DestinationPath" -Force
         }
-        Write-Host "Extracted archive: '$Path'"
+        Write-Host "Extracted archive to target: '$DestinationPath'"
     }
     catch {
         throw "⚠ Failed to extract archive: $Path"
@@ -114,9 +115,6 @@ Function Get-File {
     if (!$Filename) {
         $Filename = [System.IO.Path]::GetFileName($Url)
     }
-
-    Write-Host "Downloading file from source: $Url"
-    Write-Host "Target file: '$Filename'"
 
     $FilePath = $Filename
 
@@ -170,6 +168,28 @@ Function Get-File {
     }
     else {
         throw "⚠ Failed to download file: $Url"
+    }
+}
+
+Function Install-Tool {
+    <#
+.SYNOPSIS
+    Installs a tool with 'scoop' if it does not exist.
+.DESCRIPTION
+    Installs a tool with 'scoop' if it does not exist.
+.PARAMETER Tool
+    Tool to install and also the command name
+.EXAMPLE
+    C:\PS> Install-Tool sudo
+#>
+
+    Param(
+        [Parameter(Position = 0, mandatory = $true)]
+        [string]$Tool
+    )
+
+    if (-not(Test-CommandValid "$Tool")) {
+        scoop install "$Tool"
     }
 }
 
@@ -236,16 +256,18 @@ MAYBE_FIRST_START=false
 echo '[mycelio] Post-install complete.'
 "@
 
-            msys ' '
-            msys 'pacman --noconfirm -Syuu'
-            msys 'pacman --noconfirm -Syuu'
-            msys 'pacman --noconfirm -Scc'
-            Write-Host 'Finished MSYS2 install.'
-        }
+            # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
+            # as the initial upgrade of msys2 results in it shutting down the console.
+            & cmd /s /c "$Env:UserProfile\.local\msys64\msys2_shell.cmd -mingw64 -defterm -no-start -where $MycelioRoot -shell bash -c ./source/shell/initialize-package-manager.sh"
 
-        # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
-        # as the initial upgrade of msys2 results in it shutting down the console.
-        & cmd /s /c "$Env:UserProfile\.local\msys64\msys2_shell.cmd -mingw64 -defterm -no-start -where $MycelioRoot -shell bash -c ./source/shell/upgrade-package-manager.sh"
+            # Upgrade all packages
+            msys 'pacman --noconfirm -Syuu'
+
+            # Clean entire package cache
+            msys 'pacman --noconfirm -Scc'
+
+            Write-Host '[mycelio] Finished MSYS2 install.'
+        }
     }
 
     try {
@@ -261,27 +283,34 @@ echo '[mycelio] Post-install complete.'
         try {
             if (Test-CommandValid "scoop") {
                 # Make sure git is installed first as scoop uses git to update itself
-                if (-not(Test-CommandValid "git")) {
-                    scoop install "git"
+                Install-Tool "git"
+
+                Install-Tool "7zip"
+
+                # Install Perl which is necessary for 'stow' so that we can run it outside of msys
+                # environment. We install it after 7zip since it extracts much faster than built-in
+                # PowerShell utilities.
+                try {
+                    if (-Not (Test-Path -Path "$MycelioLocalDir\perl\portableshell.bat" -PathType Leaf)) {
+                        Write-Host "Downloading Strawberry Perl..."
+                        $strawberryPerlVersion = "5.32.1.1"
+                        $strawberyPerlUrl = "https://strawberryperl.com/download/$strawberryPerlVersion/strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
+                        Get-File -Url "$strawberyPerlUrl" -Filename "$MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
+                        Expand-File -Path "$MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip" -DestinationPath "$MycelioLocalDir\perl"
+                    }
+                }
+                catch [Exception] {
+                    Write-Host "Failed to install Strawberry Perl.", $_.Exception.Message
                 }
 
                 # gsudo: Run commands as administrator.
+                Install-Tool "gsudo"
+
                 # innounp: Required for unpacking InnoSetup files.
+                Install-Tool "innounp"
+
                 # dark: Unpack installers created with the WiX Toolset.
-                scoop install "gsudo"
-                scoop install "innounp"
-                scoop install "dark"
-
-                $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-                if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-                    # Add SSH client, see https://stackoverflow.com/a/58029292
-                    Add-WindowsCapability -Online -Name "OpenSSH.Client~~~~0.0.1.0"
-
-                    # Windows Defender may slow down or disrupt installs with realtime scanning.
-                    Import-Module Defender
-                    gsudo Add-MpPreference -ExclusionPath "$Env:UserProfile\scoop"
-                    gsudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
-                }
+                Install-Tool "dark"
 
                 # Need this for VSCode
                 scoop bucket add extras "https://github.com/lukesampson/scoop-extras.git"
@@ -298,30 +327,16 @@ echo '[mycelio] Post-install complete.'
                 # Useful tool for syncing folders (like rsync) which is sometimes necessary with
                 # environments like MSYS which do not work in containerized spaces that mount local
                 # volumes as you can get 'Too many levels of symbolic links'
-                if (-not(Test-CommandValid "rclone")) {
-                    scoop install "rclone"
-                }
-
-                if ("$Env:Username" -eq "WDAGUtilityAccount") {
-                    if (Test-Path -Path "C:\Workspace") {
-                        rclone sync "C:\Workspace" "$Env:UserProfile\dotfiles" --copy-links
-                    }
-                }
+                Install-Tool "rclone"
 
                 # 'gsudo' is more robust than 'sudo' package and not just a PowerShell
                 # script, see https://github.com/gerardog/gsudo
-                if (-not(Test-CommandValid "gsudo")) {
-                    scoop install "gsudo"
-                }
+                Install-Tool "gsudo"
 
-                if (-not(Test-CommandValid "nuget")) {
-                    scoop install "nuget"
-                }
+                Install-Tool "nuget"
 
                 # https://github.com/chrisant996/clink
-                if (-not(Test-CommandValid "clink")) {
-                    scoop install "clink"
-                }
+                Install-Tool "clink"
 
                 Write-Host "Verified that dependencies were installed with 'scoop' package manager."
             }
@@ -330,30 +345,38 @@ echo '[mycelio] Post-install complete.'
             Write-Host "Failed to install packages with 'scoop' manager."
         }
 
-        # Install Perl which is necessary for 'stow' so that we can run it outside of msys environment.
         try {
-            if (-Not (Test-Path -Path "$MycelioLocalDir\perl\portableshell.bat" -PathType Leaf)) {
-                Write-Host "Downloading Strawberry Perl..."
-                $strawberryPerlVersion = "5.32.1.1"
-                $strawberyPerlUrl = "https://strawberryperl.com/download/$strawberryPerlVersion/strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
-                Get-File -Url "$strawberyPerlUrl" -Filename "$MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
-                Expand-File -Path "$MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip" -DestinationPath "$MycelioLocalDir\perl"
-                Write-Host "Extracting Strawberry Perl to target: '$MycelioLocalDir\perl'"
+            if (Test-CommandValid "scoop") {
+                $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+                if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+                    # Add SSH client, see https://stackoverflow.com/a/58029292
+                    Add-WindowsCapability -Online -Name "OpenSSH.Client~~~~0.0.1.0"
+
+                    # Windows Defender may slow down or disrupt installs with realtime scanning.
+                    Import-Module Defender
+                    gsudo Add-MpPreference -ExclusionPath "$Env:UserProfile\scoop"
+                    gsudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
+
+                    Write-Host "Initialized administrator settings for 'scoop' package manager."
+                }
+                else {
+                    Write-Host "Skipped initialization of administrator settings."
+                }
+
             }
         }
-        catch [Exception] {
-            Write-Host "Failed to install Strawberry Perl.", $_.Exception.Message
+        catch {
+            Write-Host "Failed to setup administrator settings for 'scoop' package manager."
         }
 
         try {
             # Useful tool for syncing folders (like rsync) which is sometimes necessary with
             # environments like MSYS which do not work in containerized spaces that mount local
             # volumes as you can get 'Too many levels of symbolic links'
-            if (Test-CommandValid "rclone") {
-                if ("$Env:Username" -eq "WDAGUtilityAccount") {
-                    if ((-Not (Test-Path -Path "$Env:UserProfile\dotfiles")) -and (Test-Path -Path "C:\Workspace")) {
-                        rclone sync "C:\Workspace" "$Env:UserProfile\dotfiles" --copy-links
-                    }
+            $rclone = "$Env:UserProfile\scoop\apps\rclone\current\rclone.exe"
+            if (Test-Path -Path "$rclone" -PathType Leaf) {
+                if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
+                    & "$rclone" sync "C:\Workspace" "$Env:UserProfile\dotfiles" --copy-links --exclude ".git/" --exclude "fzf_key_bindings.fish" --exclude "clink_history*"
                 }
                 else {
                     Write-Host "Skipped 'dotfiles' sync since we are not in container."
@@ -364,7 +387,7 @@ echo '[mycelio] Post-install complete.'
             }
         }
         catch [Exception] {
-            Write-Host "Failed to sync dotfiles.", $_.Exception.Message
+            Write-Host "Failed to sync dotfiles to user profile.", $_.Exception.Message
         }
 
         try {

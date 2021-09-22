@@ -5,13 +5,15 @@
 # want logs to go into the home directory where these dot files live.
 #
 
-export MYCELIO_SCRIPT_NAME="synology_update_permissions"
+function import_mycelio_library() {
+    MYCELIO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
+    export MYCELIO_ROOT
 
-MYCELIO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
-export MYCELIO_ROOT
+    # shellcheck source=source/shell/mycelio.sh
+    source "$MYCELIO_ROOT/source/shell/mycelio.sh"
 
-# shellcheck source=source/shell/lib.sh
-source "$MYCELIO_ROOT/source/shell/lib.sh"
+    use_mycelio_library "$@"
+}
 
 function _update_permissions() {
     _target="$1"
@@ -34,10 +36,16 @@ function _update_permissions() {
     fi
 }
 
-_media=/volume1/media
+function update_permissions() {
+    import_mycelio_library "synology_update_permissions"
 
-echo "Initiated permission update: '$(date)'" | tee "$MYCELIO_LOG_PATH"
-_update_permissions "$_media/Downloads/Completed"
-_update_permissions "$_media/Downloads/Incomplete"
-_update_permissions "$_media/Shows"
-_update_permissions "$_media/Movies"
+    _media=/volume1/media
+
+    echo "Initiated permission update: '$(date)'" | tee "$MYCELIO_LOG_PATH"
+    _update_permissions "$_media/Downloads/Completed"
+    _update_permissions "$_media/Downloads/Incomplete"
+    _update_permissions "$_media/Shows"
+    _update_permissions "$_media/Movies"
+}
+
+update_permissions
