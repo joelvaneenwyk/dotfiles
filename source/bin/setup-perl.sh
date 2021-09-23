@@ -24,11 +24,13 @@ function setup_perl() {
 
     _run "[cpanm.perl.critic]" _sudo cpanm --notest Perl::Critic
 
-    _run "[cpanm.perl.aio]" _sudo cpanm --notest ExtUtils::MakeMaker common::sense
-    _run "[cpanm.perl.aio]" git clone -b main https://github.com/joelvaneenwyk/IO-AIO.git "$MYCELIO_TEMP/perl-io-aio" || true
+    _run "[cpanm.perl.aio]" _sudo cpanm --notest ExtUtils::MakeMaker common::sense Canary::Stability
+    if [ ! -d "$MYCELIO_TEMP/perl-io-aio" ]; then
+        _run "[cpanm.perl.aio]" git clone -b main https://github.com/joelvaneenwyk/IO-AIO.git "$MYCELIO_TEMP/perl-io-aio"
+    fi
     (
         cd "$MYCELIO_TEMP/perl-io-aio" || true
-        _run "[cpanm.perl.aio]" perl Makefile.PL
+        PERL_CANARY_STABILITY_NOPROMPT=1 _run "[cpanm.perl.aio]" perl Makefile.PL
         _run "[cpanm.perl.aio]" make
         _run "[cpanm.perl.aio]" _sudo make install
         _run "[cpanm.perl.aio]" make test

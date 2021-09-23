@@ -1657,16 +1657,16 @@ function _update_git_repository() {
     _name=$(basename "$_path")
 
     if [ -n "${_remote:-}" ]; then
-        _run "[git.remote.$_name]" git -C "$MYCELIO_ROOT/$_path" remote set-url "origin" "$_remote"
+        _run "[$_name.git.remote]" git -C "$MYCELIO_ROOT/$_path" remote set-url "origin" "$_remote"
     fi
 
-    _run "[git.fetch.$_name]" git -C "$MYCELIO_ROOT/$_path" fetch
+    _run "[$_name.git.fetch]" git -C "$MYCELIO_ROOT/$_path" fetch
 
-    if git -C "$MYCELIO_ROOT/$_path" symbolic-ref -q HEAD >/dev/null 2>&1; then
-        _run "[git.pull.$_name]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
-    else
-        _run "[git.checkout.$_name]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
+    if ! git -C "$MYCELIO_ROOT/$_path" symbolic-ref -q HEAD >/dev/null 2>&1; then
+        _run "[$_name.git.checkout]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
     fi
+
+    _run "[$_name.git.pull]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
 }
 
 function _initialize_environment() {
