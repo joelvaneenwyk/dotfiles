@@ -21,8 +21,7 @@ echo ##[cmd] !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\power
 !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Sandbox.ps1"
 
 call "%~dp0env.bat"
-set _root=%~dp0..\..
-set _sandbox=%_root%\artifacts\sandbox.wsb
+set _sandbox=%MYCELIO_ROOT%\artifacts\sandbox.wsb
 
 if not exist "%_sandbox%" (
     echo Failed to find sandbox template for dotfiles. Please run 'setup.bat' to create it.

@@ -89,18 +89,29 @@ $environmentVariables += "$ENV:UserProfile\.local\mutagen"
 $environmentVariables += "$ENV:UserProfile\.local\go\bin"
 $environmentVariables += "$ENV:UserProfile\.local\perl\c\bin"
 $environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"
+
+# Expected to contain 'cpan' and other related utilities
 $environmentVariables += "$ENV:UserProfile\.local\perl\perl\site\bin"
+
 $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
+
 $environmentVariables += "$dotfilesRoot"
-$environmentVariables += "$dotfilesRoot\source\windows"
-$environmentVariables += "$ENV:UserProfile\.local\msys64\mingw64\bin"
+$environmentVariables += "$dotfilesRoot\source\windows\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\shims"
-$environmentVariables += "C:\Program Files\Git\bin"
-$environmentVariables += $(Get-CurrentEnvironment)
+
+# Home to tools like 'gcc' and 'make'
+$environmentVariables += "$ENV:UserProfile\.local\msys64\mingw64\bin"
 
 # This is intentionally at the very end as we want to pick non-MSYS2 (or Cygwin) style
 # versions if at all possible. This is mainly required for tools like 'make' which are
 # only available in the 'usr/bin' folder.
+$environmentVariables += "$ENV:UserProfile\.local\msys64\usr\bin"
+
+# This also contains 'bash' and other utilities so put this near the end
+$environmentVariables += "C:\Program Files\Git\bin"
+
+$environmentVariables += $(Get-CurrentEnvironment)
+
 #$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\usr\bin"
 
 $environmentPaths = @()
@@ -135,7 +146,8 @@ Try {
         $fileStream.WriteLine("set ""MYCELIO_ROOT=$dotfilesRoot""")
         $fileStream.WriteLine("set ""HOME=$ENV:UserProfile""")
         $fileStream.WriteLine("set ""MSYS=winsymlinks:nativestrict""")
-        $fileStream.WriteLine("set ""MSYS2_PATH_TYPE=inherit""")
+        $fileStream.WriteLine("set ""MSYS_SHELL=%USERPROFILE%\.local\msys64\msys2_shell.cmd""")
+        $fileStream.WriteLine("set ""MSYS2_PATH_TYPE=minimal""")
 
         $fileStream.WriteLine("echo [mycelio] Initialized path from generated script.")
         $fileStream.WriteLine("")

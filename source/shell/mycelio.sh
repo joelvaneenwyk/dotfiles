@@ -258,8 +258,8 @@ function _has_admin_rights() {
 }
 
 function _sudo() {
-    if [ -x "$(command -v sudo)" ] && [ -z "${MSYSTEM_CARCH:-}" ]; then
-        DEBIAN_FRONTEND="noninteractive" sudo "$@"
+    if [ -x "$(command -v sudo)" ] && [ -z "${MSYSTEM_CARCH:-}" ] && [ ! "${MYCELIO_OS:-}" = "windows" ]; then
+        sudo "$@"
     else
         "$@"
     fi
@@ -451,29 +451,31 @@ function _stow_packages() {
 
 function initialize_gitconfig() {
     _git_config="$MYCELIO_HOME/.gitconfig"
-    rm -f "$_git_config"
-    unlink "$_git_config" >/dev/null 2>&1 || true
-    echo "[include]" >"$_git_config"
 
-    if _is_windows; then
-        {
-            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_common")"
-            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_linux")"
-            echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_windows")"
-        } >>"$_git_config"
-    else
-        {
-            echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_common"
-            echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_linux"
-        } >>"$_git_config"
+    if [ ! -f "$_git_config" ] || rm -f "$_git_config"; then
+        unlink "$_git_config" >/dev/null 2>&1 || true
+        echo "[include]" >"$_git_config"
+
+        if _is_windows; then
+            {
+                echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_common")"
+                echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_linux")"
+                echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_windows")"
+            } >>"$_git_config"
+        else
+            {
+                echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_common"
+                echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_linux"
+            } >>"$_git_config"
+        fi
+
+        if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
+            echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_wsl" >>"$_git_config"
+            echo "Added WSL include to '.gitconfig' file."
+        fi
+
+        echo "Created custom '.gitconfig' with include directives."
     fi
-
-    if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-        echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_wsl" >>"$_git_config"
-        echo "Added WSL include to '.gitconfig' file."
-    fi
-
-    echo "Created custom '.gitconfig' with include directives."
 }
 
 function install_hugo {
@@ -744,7 +746,7 @@ function install_powershell() {
             # Enable the "universe" repositories
             _sudo add-apt-repository universe || true
             # Install PowerShell
-            _sudo apt-get install -y powershell
+            DEBIAN_FRONTEND="noninteractive" _sudo apt-get install -y powershell
         fi
     fi
 }
@@ -753,17 +755,28 @@ function install_powershell() {
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
 function install_stow() {
+    _cpan_temp_bin="$MYCELIO_TEMP/cpanm"
+
+    if [ "${MSYSTEM:-}" = "MINGW64" ]; then
+        _cpan_root="$MYCELIO_HOME/.cpan-w64"
+    else
+        _cpan_root="$MYCELIO_HOME/.cpan"
+    fi
+
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
+        rm -f "$_cpan_temp_bin"
+        rm -rf "$MYCELIO_HOME/.local/bin/cpanm/"
+
         rm -f "$MYCELIO_STOW_ROOT/bin/stow"
         rm -rf "$MYCELIO_HOME/.cpan/"
-        rm -f "$MYCELIO_HOME/.local/bin/cpanm"
         rm -rf "$MYCELIO_HOME/.cpanm/"
+        rm -rf "$MYCELIO_HOME/.cpanm-w64/"
     fi
 
     if [ -x "$(command -v cpan)" ]; then
         # If configuration file does not exist yet then we automate configuration with
         # answers to standard questions. These may become invalid with newer versions.
-        if [ ! -e "$MYCELIO_HOME/.cpan/CPAN/MyConfig.pm" ]; then
+        if [ ! -e "$_cpan_root/CPAN/MyConfig.pm" ]; then
             if ! (
                 echo "yes"
                 echo ""
@@ -782,11 +795,13 @@ function install_stow() {
             echo "[stow.cpan.config] ✔ CPAN already initialized."
         fi
 
-        if [ ! -f "$MYCELIO_HOME/.local/bin/cpanm" ]; then
+        if [ ! -x "$(command -v cpanm)" ]; then
             if [ -x "$(command -v curl)" ]; then
-                curl -L --silent "https://cpanmin.us/" -o "$MYCELIO_HOME/.local/bin/cpanm"
-                chmod +x "$MYCELIO_HOME/.local/bin/cpanm"
-                _run "[stow.cpanm.https.install]" _sudo perl "$MYCELIO_HOME/.local/bin/cpanm" --notest --verbose App::cpanminus
+                rm -f "$_cpan_temp_bin"
+                curl -L --silent "https://cpanmin.us/" -o "$_cpan_temp_bin"
+                chmod +x "$_cpan_temp_bin"
+                _run "[stow.cpanm.https.install]" _sudo perl "$_cpan_temp_bin" --notest --verbose App::cpanminus
+                rm -f "$_cpan_temp_bin"
             fi
 
             # If still not available try installing cpanminus with cpan
@@ -797,7 +812,8 @@ function install_stow() {
             echo "[stow.cpanm.install] ✔ CPANM already installed."
         fi
 
-        _run "[stow.cpanm.dependencies]" _sudo cpanm --notest YAML CPAN::DistnameInfo
+        # Install dependencies but skip tests
+        _run "[stow.cpanm.dependencies]" _sudo cpanm --notest YAML Test::Output CPAN::DistnameInfo
     else
         echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
     fi
@@ -1253,7 +1269,6 @@ function initialize_linux() {
         rm -f /var/lib/pacman/db.lck
 
         pacman -Fy
-        pacman -Syu --quiet --noconfirm
         pacman -S --quiet --noconfirm --needed \
             msys2-keyring \
             curl wget unzip \
@@ -1464,6 +1479,7 @@ function _setup_environment() {
     export MYCELIO_HOME="$HOME"
     export MYCELIO_STOW_ROOT="$MYCELIO_ROOT/source/stow"
     export MYCELIO_DEBUG_TRAP_ENABLED=0
+    export MYCELIO_TEMP="$MYCELIO_HOME/.tmp"
 
     # set -u
     set -o nounset
@@ -1546,39 +1562,26 @@ function _setup_environment() {
 
         # Output trace to file if that is supported
         if [ "$_bash_debug" = "1" ] && [ "$_enable_trace" = "1" ]; then
-            MYCELIO_DEBUG_TRACE_FILE="$MYCELIO_HOME/.logs/init.xtrace.log"
+            MYCELIO_DEBUG_TRACE_FILE="$MYCELIO_HOME/.logs/init.xtrace.$(date +%s).log"
             mkdir -p "$MYCELIO_HOME/.logs"
-            exec 19>"$MYCELIO_DEBUG_TRACE_FILE"
-            export BASH_XTRACEFD=19
-            set -o xtrace
+
+            # Find a free file descriptor
+            log_descriptor=${BASH_XTRACEFD:-19}
+
+            while ((log_descriptor < 31)); do
+                if eval "command >&$log_descriptor" >/dev/null 2>&1; then
+                    eval "exec $log_descriptor>$MYCELIO_DEBUG_TRACE_FILE"
+                    export BASH_XTRACEFD=$log_descriptor
+                    set -o xtrace
+                    break
+                fi
+
+                ((++log_descriptor))
+            done
         fi
 
         export MYCELIO_DEBUG_TRACE_FILE
     fi
-}
-
-function _update_git_repository() {
-    _path="$1"
-    _branch="$2"
-    _remote="${3:-}"
-    _name=$(basename "$_path")
-
-    if [ -n "${_remote:-}" ]; then
-        _run "[$_name][git.remote]" git -C "$MYCELIO_ROOT/$_path" remote set-url "origin" "$_remote"
-    fi
-
-    _run "[$_name][git.fetch]" git -C "$MYCELIO_ROOT/$_path" fetch
-
-    if git -C "$MYCELIO_ROOT/$_path" symbolic-ref -q HEAD >/dev/null 2>&1; then
-        _run "[$_name][git.pull]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
-    else
-        _run "[$_name][git.checkout]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
-    fi
-}
-
-function _initialize_environment() {
-    # Need to setup environment variables before anything else
-    _setup_environment
 
     _load_profile
 
@@ -1645,6 +1648,30 @@ function _initialize_environment() {
         ;;
     esac
     export MYCELIO_OS
+}
+
+function _update_git_repository() {
+    _path="$1"
+    _branch="$2"
+    _remote="${3:-}"
+    _name=$(basename "$_path")
+
+    if [ -n "${_remote:-}" ]; then
+        _run "[git.remote.$_name]" git -C "$MYCELIO_ROOT/$_path" remote set-url "origin" "$_remote"
+    fi
+
+    _run "[git.fetch.$_name]" git -C "$MYCELIO_ROOT/$_path" fetch
+
+    if git -C "$MYCELIO_ROOT/$_path" symbolic-ref -q HEAD >/dev/null 2>&1; then
+        _run "[git.pull.$_name]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
+    else
+        _run "[git.checkout.$_name]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
+    fi
+}
+
+function _initialize_environment() {
+    # Need to setup environment variables before anything else
+    _setup_environment
 
     # Assume we are fine with interactive prompts if necessary
     export MYCELIO_INTERACTIVE=1
@@ -1712,8 +1739,6 @@ function _initialize_environment() {
     echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
     echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
 
-    export MYCELIO_TEMP="$MYCELIO_HOME/.tmp"
-
     if [ "$_skip_initialization" = "1" ]; then
         echo "[mycelio] Skipped initialization."
         return 0
@@ -1743,24 +1768,26 @@ function _initialize_environment() {
     mkdir -p "$MYCELIO_TEMP"
 
     if [ "$MYCELIO_OS" = "windows" ] && [ -d "/etc/" ]; then
-        if [ ! -f "/etc/passwd" ]; then
-            mkpasswd -l -c >"/etc/passwd"
-        fi
+        if touch "/etc/fstab" >/dev/null 2>&1; then
+            if [ ! -f "/etc/passwd" ]; then
+                mkpasswd -l -c >"/etc/passwd"
+            fi
 
-        if [ ! -f "/etc/group" ]; then
-            mkgroup -l -c >"/etc/group"
-        fi
+            if [ ! -f "/etc/group" ]; then
+                mkgroup -l -c >"/etc/group"
+            fi
 
-        if [ ! -L "/etc/nsswitch.conf" ]; then
-            rm -f "/etc/nsswitch.conf"
-            ln -s "$MYCELIO_ROOT/source/windows/msys/nsswitch.conf" "/etc/nsswitch.conf"
+            if [ ! -L "/etc/nsswitch.conf" ]; then
+                rm -f "/etc/nsswitch.conf"
+                ln -s "$MYCELIO_ROOT/source/windows/msys/nsswitch.conf" "/etc/nsswitch.conf"
+            fi
         fi
     fi
 
     initialize_gitconfig
 
     if [ -x "$(command -v git)" ] && [ -e "$MYCELIO_ROOT/.git" ]; then
-        git submodule update --init --recursive
+        _run "[git.submodule.update]" git submodule update --init --recursive
         _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
         _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
         _update_git_repository "packages/macos/Library/Application Support/Resources" "master"

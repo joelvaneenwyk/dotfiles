@@ -26,7 +26,7 @@ setlocal EnableDelayedExpansion
     :$BuildEnvironment
     if exist "!_powershell!" (
         chcp 437 > nul
-        "!_powershell!" -NoLogo -NoProfile -File "%~dp0..\powershell\Write-EnvironmentSetup.ps1" -ScriptPath "%_mycelio_env%"
+        "!_powershell!" -NoLogo -NoProfile -File "%~dp0..\..\powershell\Write-EnvironmentSetup.ps1" -ScriptPath "%_mycelio_env%"
     )
 endlocal & (
     set "MYCELIO_POWERSHELL=%_powershell%"

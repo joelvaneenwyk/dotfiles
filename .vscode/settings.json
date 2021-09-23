@@ -164,7 +164,9 @@
     },
 
     "perl.enable": true,
+    "perl.perlCmd": "${env:USERPROFILE}/.local/perl/perl/bin/perl.exe",
     "perl.perlInc": [
+        "${env:USERPROFILE}/.local/perl/lib",
         "${workspaceFolder}/lib",
         "${workspaceFolder}/bin",
         "${workspaceFolder}/t"

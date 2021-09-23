@@ -6,17 +6,17 @@ setlocal EnableExtensions EnableDelayedExpansion
     set "_mycelio_root=%~dp0"
     set "_starting_directory=%cd%"
 
-    set "MYCELIO_ROOT=%_mycelio_root:~0,-1%"                    &:# Script path, without the trailing \
+    set "MYCELIO_ROOT=%_mycelio_root:~0,-1%"                        &:# Script path, without the trailing \
     set "USER[HKLM]=all users"
     set "USER[HKCU]=%USERNAME%"
     set "HIVE="
     set "HOME=%USERPROFILE%"
     set "COMMENT=echo"
-    set "SCRIPT=%~nx0"                                          &:# Script name
-    set "SNAME=%~n0"                                            &:# Script name, without its extension
-    set ^"ARG0=%0^"                                             &:# Script invokation name
-    set ^"ARGS=%*^"                                             &:# Argument line
-    set "SPROFILE=%MYCELIO_ROOT%\source\windows\profile.bat"    &:# Full path to profile script
+    set "SCRIPT=%~nx0"                                              &:# Script name
+    set "SNAME=%~n0"                                                &:# Script name, without its extension
+    set ^"ARG0=%0^"                                                 &:# Script invokation name
+    set ^"ARGS=%*^"                                                 &:# Argument line
+    set "SPROFILE=%MYCELIO_ROOT%\source\windows\bin\profile.bat"    &:# Full path to profile script
     set "STOW=%MYCELIO_ROOT%\source\stow\bin\stow"
     set "COMMAND=%~1"
 
@@ -82,7 +82,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     call :RunPowerShell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
 
-    call :Run call "%MYCELIO_ROOT%\source\windows\profile.bat"
+    call :Run call "%MYCELIO_ROOT%\source\windows\bin\profile.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Profile setup failed. 1>&2
@@ -111,8 +111,8 @@ setlocal EnableExtensions EnableDelayedExpansion
     :: Initialize an Ubuntu container for testing.
     ::
     if "%COMMAND%"=="docker" (
-        docker rm --force "!_container_name!" > nul 2>&1
-        docker stop "!_container_instance!" > nul 2>&1
+        call :Run docker rm --force "!_container_name!" > nul 2>&1
+        call :Run docker stop "!_container_instance!" > nul 2>&1
 
         call :Run docker build --progress plain --rm -t "!_container_name!" -f "%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!" !_arg_remainder! !MYCELIO_ROOT!
         if errorlevel 1 (
@@ -133,20 +133,17 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     :: Re-initialize environment paths now that dependencies are installed
     ::
-    call "%MYCELIO_ROOT%\source\windows\env.bat"
+    call :Run call "%MYCELIO_ROOT%\source\windows\bin\env.bat"
 
     :: The 'stow' tool should now be installed in our local perl so we can
     :: stow the Windows settings. However, due to limitations in 'stow' on Windows
     :: we need to do this in MSYS2 instead.
-    call "%MYCELIO_ROOT%\source\stow\tools\make-stow.bat"
+    call :Run call "%MYCELIO_ROOT%\source\stow\tools\make-stow.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Failed to build Stow for Windows. 1>&2
         goto:$InitializeDone
     )
-
-    set MSYS2_PATH_TYPE=minimal
-    set MSYS_SHELL=%USERPROFILE%\.local\msys64\msys2_shell.cmd
 
     :: Initialize 'msys2' ("Minimal System") environment with bash script. We call the shim directly because environment
     :: may not read path properly after it has just been installed.
@@ -163,7 +160,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     :: We intentionally use MINGW64 here because binaries that we compile (e.g., golang) need
     :: to be able to run without the MSYS dynamic libraries.
-    call "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
+    call :Run call "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Shell setup with 'bash' failed. 1>&2
@@ -193,7 +190,6 @@ exit /b %MYCELIO_ERROR%
 ::
 
 :Run %*=Command with arguments
-    setlocal EnableExtensions EnableDelayedExpansion
     echo ##[cmd] %*
     %*
 endlocal & exit /b

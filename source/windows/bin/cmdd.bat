@@ -2,7 +2,7 @@
 
 setlocal EnableExtensions EnableDelayedExpansion
 
-set _root=%~dp0..
+call "%~dp0env.bat"
 
 set _action=%~1
 shift
@@ -26,5 +26,5 @@ echo Docker: '!_action!' '!_image!' in '%cd%'
 if "!_action!"=="run" (
     docker run -it --rm  --name "%_folder_name%" -v %cd%:/usr/workspace "%_image%" bash -c "cd /usr/workspace && bash"
 ) else (
-    docker build -t "%_folder_name%" --progress plain -f "%_root%\source\docker\Dockerfile.ubuntu" "%_root%"
+    docker build -t "%_folder_name%" --progress plain -f "%MYCELIO_ROOT%\source\docker\Dockerfile.ubuntu" "%MYCELIO_ROOT%"
 )

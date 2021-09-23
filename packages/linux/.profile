@@ -283,12 +283,13 @@ initialize_interactive_profile() {
         alias l='ls -CF --color=always'
     fi
 
-    echo "▓▓░░"
-    echo "▓▓░░   ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓"
-    echo "▓▓░░   ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃"
-    echo "▓▓░░   ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛"
-    echo "▓▓░░"
-    echo "▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
+    echo "▓├═════════════════════════════════"
+    echo "▓│"
+    echo "▓│   ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓"
+    echo "▓│   ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃"
+    echo "▓│   ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛"
+    echo "▓│"
+    echo "▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░≡≡≡"
     echo ""
     echo "Initialized '${MYCELIO_OS_NAME:-UNKNOWN}:${MYCELIO_OS_VARIANT:-UNKNOWN}' environment: '${MYCELIO_ROOT:-}'"
     echo "Parent Process: $_parent"
@@ -401,23 +402,24 @@ initialize_profile() {
 
     export LD_PRELOAD=
 
+    _set_golang_paths
+
     # Must NOT include /mingw64/bin as we want to rely on the system environment setup
     # to specify those.
-    _add_path "prepend" "$HOME/.asdf/bin"
     _add_path "prepend" "/usr/local/gnupg/bin"
     _add_path "prepend" "$HOME/.local/go/bin"
     _add_path "prepend" "$HOME/.local/bin"
     _add_path "prepend" "$HOME/.local/sbin"
 
-    _add_path "append" "/mnt/c/Program Files/Microsoft VS Code/bin"
-    _add_path "append" "/c/Program Files/Microsoft VS Code/bin"
-    _add_path "append" "$HOME/.config/git-fuzzy/bin"
+    _add_path "append" "$HOME/.asdf/bin"
 
     # Add 'dot' (current directory) to list of inputs which is required on some versions
     # of Tex on some operating systems.
     export TEXINPUTS=.:${TEXINPUTS:-}
 
     if [ "${MSYSTEM:-}" = "MSYS" ]; then
+        _add_path "prepend" "/usr/bin"
+
         if _gcc_version=$(gcc --version | grep gcc | awk '{print $3}' 2>&1); then
             _gcc_lib_root="/usr/lib/gcc/$MSYSTEM_CHOST/$_gcc_version"
         fi
@@ -432,17 +434,22 @@ initialize_profile() {
             export CPATH
         fi
     elif [ "${MSYSTEM:-}" = "MINGW64" ] && [ -f "/mingw64/bin/tex.exe" ]; then
+        _add_path "prepend" "/mingw64/bin"
+        _add_path "prepend" "/usr/bin"
+
         export TEX="/mingw64/bin/tex"
         export TEX_OS_NAME="win32"
     fi
+
+    _add_path "append" "/mnt/c/Program Files/Microsoft VS Code/bin"
+    _add_path "append" "/c/Program Files/Microsoft VS Code/bin"
+    _add_path "append" "$HOME/.config/git-fuzzy/bin"
 
     # Clear out TMP as TEMP may come from Windows and we do not want tools confused
     # if they find both.
     unset TMP
     unset temp
     unset tmp
-
-    _set_golang_paths
 }
 
 initialize() {

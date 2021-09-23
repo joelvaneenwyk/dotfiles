@@ -3,7 +3,6 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 call "%~dp0env.bat"
-set _root=%~dp0../../
 
 :: For loop requires removing trailing backslash from %~dp0 output
 set "_current_directory=%CD%"
