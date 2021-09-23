@@ -383,36 +383,35 @@ echo '[mycelio] Post-install complete.'
 
         try {
             $mutagen = "$Env:UserProfile\.local\mutagen\mutagen.exe"
-            if (Test-Path -Path "$mutagen" -PathType Leaf) {
-                if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
+            $rclone = "$Env:UserProfile\scoop\apps\rclone\current\rclone.exe"
+
+            # Useful tool for syncing folders (like rsync) which is sometimes necessary with
+            # environments like MSYS which do not work in containerized spaces that mount local
+            # volumes as you can get 'Too many levels of symbolic links'
+            if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
+                if (Test-Path -Path "$mutagen" -PathType Leaf) {
                     & "$mutagen" terminate "dotfiles"
                     & "$mutagen" sync create "C:\Workspace\" "$Env:UserProfile\dotfiles" --name "dotfiles" --sync-mode "two-way-safe" --symlink-mode "portable" --ignore-vcs --ignore "fzf_key_bindings.fish" --ignore "clink_history*" --ignore "_Inline/" --ignore "_build/"
                     & "$mutagen" sync flush --all
                 }
                 else {
-                    Write-Host "Skipped 'dotfiles' sync since we are not in container."
+                    Write-Host "⚠ Missing 'mutagen' tool."
+
+                    if (Test-Path -Path "$rclone" -PathType Leaf) {
+                        if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
+                            & "$rclone" sync "C:\Workspace" "$Env:UserProfile\dotfiles" --copy-links --exclude ".git/" --exclude "fzf_key_bindings.fish" --exclude "clink_history*"
+                        }
+                        else {
+                            Write-Host "Skipped 'dotfiles' sync since we are not in container."
+                        }
+                    }
+                    else {
+                        Write-Host "⚠ Missing 'rclone' tool."
+                    }
                 }
             }
             else {
-                Write-Host "⚠ Missing 'mutagen' tool."
-
-                # Useful tool for syncing folders (like rsync) which is sometimes necessary with
-                # environments like MSYS which do not work in containerized spaces that mount local
-                # volumes as you can get 'Too many levels of symbolic links'
-                $rclone = "$Env:UserProfile\scoop\apps\rclone\current\rclone.exe"
-                if (Test-Path -Path "$rclone" -PathType Leaf) {
-                    if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
-                        & "$rclone" sync "C:\Workspace" "$Env:UserProfile\dotfiles" --copy-links --exclude ".git/" --exclude "fzf_key_bindings.fish" --exclude "clink_history*"
-                    }
-                    else {
-                        Write-Host "Skipped 'dotfiles' sync since we are not in container."
-                    }
-
-                    mutagen sync create C:\Workspace\ C:\Workspace2\ --sync-mode two-way-safe
-                }
-                else {
-                    Write-Host "⚠ Missing 'rclone' tool."
-                }
+                Write-Host "Skipped 'dotfiles' sync since we are not in container."
             }
         }
         catch [Exception] {
