@@ -161,7 +161,9 @@ setlocal EnableExtensions EnableDelayedExpansion
         goto:$InitializeDone
     )
 
-    call "%MSYS_SHELL%" -msys2 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
+    :: We intentionally use MINGW64 here because binaries that we compile (e.g., golang) need
+    :: to be able to run without the MSYS dynamic libraries.
+    call "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Shell setup with 'bash' failed. 1>&2

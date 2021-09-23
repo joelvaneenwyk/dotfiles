@@ -85,6 +85,7 @@ if ("$Env:Username" -eq "WDAGUtilityAccount") {
 $environmentVariables = @()
 $environmentVariables += "$ENV:UserProfile\.local\bin"
 $environmentVariables += "$ENV:UserProfile\.local\msys64"
+$environmentVariables += "$ENV:UserProfile\.local\mutagen"
 $environmentVariables += "$ENV:UserProfile\.local\go\bin"
 $environmentVariables += "$ENV:UserProfile\.local\perl\c\bin"
 $environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"

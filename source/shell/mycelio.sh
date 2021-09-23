@@ -930,6 +930,9 @@ function install_go {
                     GOROOT_FINAL="$_local_go_bootstrap_root"
                     export GOROOT_FINAL
 
+                    GOOS="$MYCELIO_OS"
+                    export GOOS
+
                     GOHOSTOS="$MYCELIO_OS"
                     export GOHOSTOS
 
@@ -947,6 +950,13 @@ function install_go {
                     cd "$_local_go_bootstrap_root/src"
 
                     if [ -x "$(command -v cygpath)" ]; then
+                        if [ "${MSYSTEM:-}" = "MSYS" ]; then
+                            #-DWIN32 -Wl,--subsystem,console
+                            #export GOOS=windows
+                            #GOROOT_FINAL=~/.local/gobootstrap/
+                            export GO_LDFLAGS="--subsystem,console"
+                        fi
+
                         _run "[go.bootstrap.make]" cmd /c "make.bat"
                     else
                         _run "[go.bootstrap.make]" ./make.bash
@@ -1551,17 +1561,18 @@ function _update_git_repository() {
     _path="$1"
     _branch="$2"
     _remote="${3:-}"
+    _name=$(basename "$_path")
 
     if [ -n "${_remote:-}" ]; then
-        _run "[$_path][git.remote]" git -C "$MYCELIO_ROOT/$_path" remote set-url "origin" "$_remote"
+        _run "[$_name][git.remote]" git -C "$MYCELIO_ROOT/$_path" remote set-url "origin" "$_remote"
     fi
 
-    _run "[$_path][git.fetch]" git -C "$MYCELIO_ROOT/$_path" fetch
+    _run "[$_name][git.fetch]" git -C "$MYCELIO_ROOT/$_path" fetch
 
     if git -C "$MYCELIO_ROOT/$_path" symbolic-ref -q HEAD >/dev/null 2>&1; then
-        _run "[$_path][git.pull]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
+        _run "[$_name][git.pull]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
     else
-        _run "[$_path][git.checkout]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
+        _run "[$_name][git.checkout]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
     fi
 }
 
@@ -1802,7 +1813,7 @@ function initialize_environment() {
     _remove_error_handling
 }
 
-is_synology() {
+function is_synology() {
     if uname -a | grep -q "synology"; then
         return 0
     fi
@@ -1810,7 +1821,7 @@ is_synology() {
     return 1
 }
 
-use_mycelio_library() {
+function use_mycelio_library() {
     export MYCELIO_SCRIPT_NAME="${1:-mycelio_library}"
 
     if [ "${MYCELIO_LIBRARY_IMPORTED:-}" = "1" ]; then

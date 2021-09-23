@@ -48,7 +48,9 @@ _add_to_list() {
         _action="$1"
         shift
         ;;
-    *) _action='include' ;;
+    *)
+        _action='include'
+        ;;
     esac
 
     for dir in "$@"; do
@@ -411,21 +413,34 @@ initialize_profile() {
     _add_path "append" "/c/Program Files/Microsoft VS Code/bin"
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
 
-    # We want usr/bin to be at the very end
-    _add_path "append" "/usr/bin"
+    # Add 'dot' (current directory) to list of inputs which is required on some versions
+    # of Tex on some operating systems.
+    export TEXINPUTS=.:${TEXINPUTS:-}
+
+    if [ "${MSYSTEM:-}" = "MSYS" ]; then
+        if _gcc_version=$(gcc --version | grep gcc | awk '{print $3}' 2>&1); then
+            _gcc_lib_root="/usr/lib/gcc/$MSYSTEM_CHOST/$_gcc_version"
+        fi
+
+        if [ -d "${_gcc_lib_root:-}" ]; then
+            export GCC_PLUGIN_PATH="$_gcc_lib_root"
+            _add_path "prepend" "$_gcc_lib_root"
+
+            # Add global C and C++ include path. This should be included by default but is
+            # not and results in errors when building Perl dependencies on MSYS.
+            CPATH="/usr/lib/gcc/$MSYSTEM_CHOST/$_gcc_version/include;${CPATH:-}"
+            export CPATH
+        fi
+    elif [ "${MSYSTEM:-}" = "MINGW64" ] && [ -f "/mingw64/bin/tex.exe" ]; then
+        export TEX="/mingw64/bin/tex"
+        export TEX_OS_NAME="win32"
+    fi
 
     # Clear out TMP as TEMP may come from Windows and we do not want tools confused
     # if they find both.
     unset TMP
     unset temp
     unset tmp
-
-    export TEXINPUTS=.:${TEXINPUTS:-}
-
-    if [ "${MSYSTEM:-}" = "MINGW64" ] && [ -f "/mingw64/bin/tex.exe" ]; then
-        export TEX="/mingw64/bin/tex"
-        export TEX_OS_NAME="win32"
-    fi
 
     _set_golang_paths
 }

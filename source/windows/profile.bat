@@ -120,7 +120,7 @@ if errorlevel 1 (
     echo Initialized `dotfiles` environment without clink.
 ) else (
     set CLINK_INJECTED=1
-    call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\windows\clink" --quiet --nolog
+    call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink" --quiet --nolog
 )
 
 :$InitializedProfile

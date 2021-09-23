@@ -191,7 +191,6 @@
         "source/stow/autom4te.cache": true,
         "source/stow/tools/texinfo/**": true,
         "**/_build/**": true,
-        "**/_Inline/**": true,
         "**/blib/**": true
     },
     "files.associations": {
