@@ -139,9 +139,9 @@ function _run() {
 
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         echo "::group::##[cmd] $cmd"
+    else
+        echo "##[cmd] $cmd"
     fi
-
-    echo "##[cmd] $cmd"
 
     (
         MYCELIO_DISABLE_TRAP=1
@@ -163,6 +163,23 @@ function _run() {
     fi
 
     return $?
+}
+
+function task_group() {
+    _name="${1:-}"
+    shift
+
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        echo "::group::$_name"
+    else
+        echo "##[$_name]"
+    fi
+
+    "$@"
+
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        echo "::endgroup::"
+    fi
 }
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
@@ -1229,9 +1246,12 @@ function configure_linux() {
     )
 
     (
-        # Not all platforms support '--relative' so go into target directory first
-        cd "$MYCELIO_HOME" || true
-        rm -f "$MYCELIO_HOME/.base16_theme"
+        # Not all platforms support '--relative' so go into target directory first. Ideally we
+        # could just submit this link but on Windows, the symlink needs to be valid when created
+        # and since 'base16-irblack.sh' is in a submodule, it is not synced/created until after
+        # the repository (including that link) would be created.
+        cd "$MYCELIO_ROOT/packages/fish" || true
+        rm -f ".base16_theme"
         ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
     )
 
@@ -1408,14 +1428,14 @@ function initialize_linux() {
         fi
     fi
 
-    install_stow
+    task_group "Install Stow" install_stow
 
-    install_go
-    install_hugo
-    install_fzf
-    install_oh_my_posh
-    install_powershell
-    install_micro_text_editor
+    task_group "Install Go" install_go
+    task_group "Install Hugo" install_hugo
+    task_group "Install FZF" install_fzf
+    task_group "Install Oh My Posh" install_oh_my_posh
+    task_group "Install PowerShell" install_powershell
+    task_group "Install Micro" install_micro_text_editor
 }
 
 function initialize_macos() {
@@ -1865,14 +1885,14 @@ function _initialize_environment() {
     fi
 
     if [ "$MYCELIO_OS" = "linux" ] || [ "$MYCELIO_OS" = "windows" ]; then
-        initialize_linux "$@"
+        task_group "Initialize Linux" initialize_linux "$@"
     elif [ "$MYCELIO_OS" = "darwin" ]; then
-        initialize_macos "$@"
+        task_group "Initialize macOS" initialize_macos "$@"
     fi
 
     # Always run configure step as it creates links ('stows') important profile
     # setup scripts to home directory.
-    configure_linux "$@"
+    task_group "Configure Linux" configure_linux "$@"
 
     if ! _load_profile; then
         _error "Failed to reload profile."

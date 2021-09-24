@@ -13,6 +13,7 @@ _Inline/
 
 packages/fonts/.fonts/JetBrains*
 
+packages/fish/.base16_theme
 packages/fish/.local/share
 packages/fish/.config/fish/fish_variables
 packages/fish/.config/fish/fishd.*
