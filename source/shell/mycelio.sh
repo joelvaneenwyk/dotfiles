@@ -755,68 +755,70 @@ function install_powershell() {
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
 function install_stow() {
+    MYCELIO_PERL="${MYCELIO_PERL:-$(which perl)}"
+    export MYCELIO_PERL
+
     _cpan_temp_bin="$MYCELIO_TEMP/cpanm"
 
     if [ "${MSYSTEM:-}" = "MINGW64" ]; then
         _cpan_root="$MYCELIO_HOME/.cpan-w64"
+        _cpanm_root="$MYCELIO_HOME/.cpanm-w64"
     else
         _cpan_root="$MYCELIO_HOME/.cpan"
+        _cpanm_root="$MYCELIO_HOME/.cpanm"
     fi
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -f "$_cpan_temp_bin"
-        rm -rf "$MYCELIO_HOME/.local/bin/cpanm/"
+        rm -f "$MYCELIO_HOME/.local/bin/cpanm"
+
+        rm -rf "$_cpan_root"
+        rm -rf "$_cpanm_root"
 
         rm -f "$MYCELIO_STOW_ROOT/bin/stow"
-        rm -rf "$MYCELIO_HOME/.cpan/"
-        rm -rf "$MYCELIO_HOME/.cpanm/"
-        rm -rf "$MYCELIO_HOME/.cpanm-w64/"
+        rm -f "$MYCELIO_STOW_ROOT/bin/chkstow"
     fi
 
-    if [ -x "$(command -v cpan)" ]; then
+    # If configuration file does not exist yet then we automate configuration with
+    # answers to standard questions. These may become invalid with newer versions.
+    if [ ! -e "$_cpan_root/CPAN/MyConfig.pm" ]; then
+        if ! (
+            echo "yes"
+            echo ""
+            echo "no"
+            echo "exit"
+        ) | _run "[stow.cpan]" _sudo "$MYCELIO_PERL" -MCPAN -e "shell"; then
+            echo "[stow.cpan] ⚠ Automated CPAN configuration failed."
+        fi
+
         # If configuration file does not exist yet then we automate configuration with
         # answers to standard questions. These may become invalid with newer versions.
-        if [ ! -e "$_cpan_root/CPAN/MyConfig.pm" ]; then
-            if ! (
-                echo "yes"
-                echo ""
-                echo "no"
-                echo "exit"
-            ) | _run "[stow.cpan]" _sudo cpan -T; then
-                echo "[stow.cpan] ⚠ Automated CPAN configuration failed."
-            fi
-
-            # If configuration file does not exist yet then we automate configuration with
-            # answers to standard questions. These may become invalid with newer versions.
-            if ! _run "[stow.cpan.config]" _sudo perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
-                echo "[stow.cpan.config] ⚠ CPAN configuration failed to initialize."
-            fi
-        else
-            echo "[stow.cpan.config] ✔ CPAN already initialized."
+        if ! _run "[stow.cpan.config]" _sudo perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
+            echo "[stow.cpan.config] ⚠ CPAN configuration failed to initialize."
         fi
-
-        if [ ! -x "$(command -v cpanm)" ]; then
-            if [ -x "$(command -v curl)" ]; then
-                rm -f "$_cpan_temp_bin"
-                curl -L --silent "https://cpanmin.us/" -o "$_cpan_temp_bin"
-                chmod +x "$_cpan_temp_bin"
-                _run "[stow.cpanm.https.install]" _sudo perl "$_cpan_temp_bin" --notest --verbose App::cpanminus
-                rm -f "$_cpan_temp_bin"
-            fi
-
-            # If still not available try installing cpanminus with cpan
-            if [ ! -x "$(command -v cpanm)" ]; then
-                _run "[stow.cpanm.install]" _sudo cpan -i -T App::cpanminus
-            fi
-        else
-            echo "[stow.cpanm.install] ✔ CPANM already installed."
-        fi
-
-        # Install dependencies but skip tests
-        _run "[stow.cpanm.dependencies]" _sudo cpanm --notest YAML Test::Output CPAN::DistnameInfo
     else
-        echo "[stow] WARNING: Package manager 'cpan' not found. There will likely be missing perl dependencies."
+        echo "[stow.cpan.config] ✔ CPAN already initialized."
     fi
+
+    if [ ! -x "$(command -v cpanm)" ]; then
+        if [ -x "$(command -v curl)" ]; then
+            rm -f "$_cpan_temp_bin"
+            curl -L --silent "https://cpanmin.us/" -o "$_cpan_temp_bin"
+            chmod +x "$_cpan_temp_bin"
+            _run "[stow.cpanm.https.install]" _sudo "$MYCELIO_PERL" "$_cpan_temp_bin" --notest --verbose App::cpanminus
+            rm -f "$_cpan_temp_bin"
+        fi
+
+        # If still not available try installing cpanminus with cpan
+        if [ ! -x "$(command -v cpanm)" ]; then
+            _run "[stow.cpanm.install]" _sudo "$MYCELIO_PERL" -MCPAN -e "CPAN::Shell->notest('install', 'App::cpanminus')"
+        fi
+    else
+        echo "[stow.cpanm.install] ✔ CPANM already installed."
+    fi
+
+    # Install dependencies but skip tests
+    _run "[stow.cpanm.dependencies]" _sudo cpanm --notest Carp Test::Output ExtUtils::PL2Bat Inline::C CPAN::DistnameInfo
 
     if [ ! -f "$MYCELIO_STOW_ROOT/configure.ac" ]; then
         echo "❌ 'stow' source missing: '$MYCELIO_STOW_ROOT'"
@@ -922,6 +924,12 @@ function install_go {
         _go_requires_update=1
     fi
 
+    if [ "${MSYSTEM:-}" = "MSYS" ]; then
+        _go_os="linux"
+    else
+        _go_os="$MYCELIO_OS"
+    fi
+
     if [ "$_go_requires_update" = "1" ]; then
         _go_version="1.$_go_required_version_major.1"
         _go_compiled=0
@@ -929,7 +937,16 @@ function install_go {
         if [ ! -x "$(command -v gcc)" ] && [ ! -x "$(command -v make)" ]; then
             echo "❌ Skipped 'go' compile. Missing GCC toolchain."
         else
-            if [ ! -f "$_go_bootstrap_exe" ]; then
+            if [ "${MSYSTEM:-}" = "MSYS" ]; then
+                _go_bootstrap_exe="/mingw64/bin/go"
+                _local_go_bootstrap_root="/mingw64/lib/go"
+
+                if [ -f "$_go_bootstrap_exe" ]; then
+                    echo "✔ Using pre-installed 'go' compiler for MSYS environment."
+                else
+                    echo "❌ Missing required 'go' compiler for MSYS environment."
+                fi
+            elif [ ! -f "$_go_bootstrap_exe" ]; then
                 # https://golang.org/doc/install/source
                 _go_bootstrap_src_archive="$MYCELIO_TEMP/go_bootstrap.tgz"
                 wget --quiet -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
@@ -946,10 +963,10 @@ function install_go {
                     GOROOT_FINAL="$_local_go_bootstrap_root"
                     export GOROOT_FINAL
 
-                    GOOS="$MYCELIO_OS"
+                    GOOS="$_go_os"
                     export GOOS
 
-                    GOHOSTOS="$MYCELIO_OS"
+                    GOHOSTOS="$_go_os"
                     export GOHOSTOS
 
                     GOARCH="$MYCELIO_ARCH"
@@ -967,9 +984,6 @@ function install_go {
 
                     if [ -x "$(command -v cygpath)" ]; then
                         if [ "${MSYSTEM:-}" = "MSYS" ]; then
-                            #-DWIN32 -Wl,--subsystem,console
-                            #export GOOS=windows
-                            #GOROOT_FINAL=~/.local/gobootstrap/
                             export GO_LDFLAGS="--subsystem,console"
                         fi
 
@@ -1002,7 +1016,10 @@ function install_go {
                     GOROOT_BOOTSTRAP="$_local_go_bootstrap_root"
                     export GOROOT_BOOTSTRAP
 
-                    GOHOSTOS="$MYCELIO_OS"
+                    GOOS="$_go_os"
+                    export GOOS
+
+                    GOHOSTOS="$_go_os"
                     export GOHOSTOS
 
                     GOARCH="$MYCELIO_ARCH"
@@ -1269,6 +1286,9 @@ function initialize_linux() {
         rm -f /var/lib/pacman/db.lck
 
         pacman -Fy
+
+        # Note here that we install go-lang (mingw-w64-x86_64-go) even though we build it
+        # later because it is not possible to build gobootstrap in msys environment.
         pacman -S --quiet --noconfirm --needed \
             msys2-keyring \
             curl wget unzip \
@@ -1276,7 +1296,8 @@ function initialize_linux() {
             fish tmux \
             texinfo texinfo-tex \
             base-devel gcc gcc-libs binutils make autoconf automake1.16 automake-wrapper libtool \
-            msys2-runtime-devel msys2-w32api-headers msys2-w32api-runtime
+            msys2-runtime-devel msys2-w32api-headers msys2-w32api-runtime \
+            mingw-w64-x86_64-go
 
         if [ "${MSYSTEM:-}" = "MINGW64" ]; then
             pacman -S --quiet --noconfirm --needed \
@@ -1531,31 +1552,35 @@ function _setup_environment() {
         _enable_trace=0
         _bash_debug=0
 
-        # Redirect only supported in Bash versions after 4.1
-        if [ "$BASH_VERSION_MAJOR" -eq 4 ] && [ "$BASH_VERSION_MINOR" -ge 1 ]; then
-            _enable_trace=1
-        elif [ "$BASH_VERSION_MAJOR" -gt 4 ]; then
-            _enable_trace=1
-        fi
+        # Using debug output is performance intensive as the trap is executed for every single
+        # call so only enable it if specifically requested.
+        if [ "${MYCELIO_ARG_DEBUG:-0}" = "1" ] && [ -z "${BATS_TEST_NAME:-}" ]; then
+            # Redirect only supported in Bash versions after 4.1
+            if [ "$BASH_VERSION_MAJOR" -eq 4 ] && [ "$BASH_VERSION_MINOR" -ge 1 ]; then
+                _enable_trace=1
+            elif [ "$BASH_VERSION_MAJOR" -gt 4 ]; then
+                _enable_trace=1
+            fi
 
-        if [ "$_enable_trace" = "1" ] && [ -z "${BATS_TEST_NAME:-}" ]; then
-            trap '[[ "${FUNCNAME:-}" == "__trap_error" ]] || {
+            if [ "$_enable_trace" = "1" ]; then
+                trap '[[ "${FUNCNAME:-}" == "__trap_error" ]] || {
                     _mycelio_dbg_last_line=${_mycelio_dbg_line:-};
                     _mycelio_dbg_line=${LINENO:-};
                 }' DEBUG || true
 
-            _bash_debug=1
+                _bash_debug=1
 
-            # Error tracing (sub shell errors) only work properly in version >=4.0 so
-            # we enable here as well. Otherwise errors in subshells can result in ERR
-            # trap being called e.g. _my_result="$(errorfunc test)"
-            set -o errtrace
+                # Error tracing (sub shell errors) only work properly in version >=4.0 so
+                # we enable here as well. Otherwise errors in subshells can result in ERR
+                # trap being called e.g. _my_result="$(errorfunc test)"
+                set -o errtrace
 
-            # If set, command substitution inherits the value of the errexit option, instead of unsetting it in the
-            # subshell environment. This option is enabled when POSIX mode is enabled.
-            shopt -s inherit_errexit
+                # If set, command substitution inherits the value of the errexit option, instead of unsetting it in the
+                # subshell environment. This option is enabled when POSIX mode is enabled.
+                shopt -s inherit_errexit
 
-            export MYCELIO_DEBUG_TRAP_ENABLED=1
+                export MYCELIO_DEBUG_TRAP_ENABLED=1
+            fi
         fi
 
         MYCELIO_DEBUG_TRACE_FILE=""
@@ -1648,6 +1673,19 @@ function _setup_environment() {
         ;;
     esac
     export MYCELIO_OS
+
+    if [ -n "${BASH_VERSION:-}" ]; then
+        MYCELIO_SHELL="bash v$BASH_VERSION"
+    elif [ -n "${ZSH_VERSION:-}" ]; then
+        MYCELIO_SHELL="zsh v$ZSH_VERSION"
+    elif [ -n "${KSH_VERSION:-}" ]; then
+        MYCELIO_SHELL="ksh v$KSH_VERSION"
+    elif [ -n "${version:-}" ]; then
+        MYCELIO_SHELL="sh v$version"
+    else
+        MYCELIO_SHELL="N/A"
+    fi
+    export MYCELIO_SHELL
 }
 
 function _update_git_repository() {
@@ -1669,24 +1707,25 @@ function _update_git_repository() {
     _run "[$_name.git.pull]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
 }
 
-function _initialize_environment() {
-    # Need to setup environment variables before anything else
-    _setup_environment
-
+function _parse_arguments() {
     # Assume we are fine with interactive prompts if necessary
     export MYCELIO_INTERACTIVE=1
+
     export MYCELIO_ARG_CLEAN=0
     export MYCELIO_ARG_FORCE=0
+    export MYCELIO_ARG_DEBUG=0
 
-    _skip_initialization=0
-
-    POSITIONAL=()
+    local POSITIONAL=()
     while [[ $# -gt 0 ]]; do
         key="$1"
 
         case $key in
         -c | --clean)
             export MYCELIO_ARG_CLEAN=1
+            shift # past argument
+            ;;
+        -d | --debug)
+            export MYCELIO_ARG_DEBUG=1
             shift # past argument
             ;;
         -f | --force)
@@ -1696,10 +1735,6 @@ function _initialize_environment() {
         -y | --yes)
             # Equivalent to the apt-get "assume yes" of '-y'
             export MYCELIO_INTERACTIVE=0
-            shift # past argument
-            ;;
-        -s | --skip)
-            _skip_initialization=1
             shift # past argument
             ;;
         -h | --home)
@@ -1713,19 +1748,13 @@ function _initialize_environment() {
             ;;
         esac
     done
+}
 
-    if [ -n "${BASH_VERSION:-}" ]; then
-        MYCELIO_SHELL="bash v$BASH_VERSION"
-    elif [ -n "${ZSH_VERSION:-}" ]; then
-        MYCELIO_SHELL="zsh v$ZSH_VERSION"
-    elif [ -n "${KSH_VERSION:-}" ]; then
-        MYCELIO_SHELL="ksh v$KSH_VERSION"
-    elif [ -n "${version:-}" ]; then
-        MYCELIO_SHELL="sh v$version"
-    else
-        MYCELIO_SHELL="N/A"
-    fi
-    export MYCELIO_SHELL
+function _initialize_environment() {
+    _parse_arguments "$@"
+
+    # Need to setup environment variables before anything else
+    _setup_environment
 
     # Note below that we use 'whoami' since 'USER' variable is not set for
     # scheduled tasks on Synology.
@@ -1738,11 +1767,6 @@ function _initialize_environment() {
     echo "║        Shell: '$MYCELIO_SHELL'"
     echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
     echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
-
-    if [ "$_skip_initialization" = "1" ]; then
-        echo "[mycelio] Skipped initialization."
-        return 0
-    fi
 
     # Make sure we have the appropriate permissions to write to home temporary folder
     # otherwise much of this initialization will fail.
@@ -1768,7 +1792,7 @@ function _initialize_environment() {
     mkdir -p "$MYCELIO_TEMP"
 
     if [ "$MYCELIO_OS" = "windows" ] && [ -d "/etc/" ]; then
-        if touch "/etc/fstab" >/dev/null 2>&1; then
+        if touch --no-create "/etc/fstab" >/dev/null 2>&1; then
             if [ ! -f "/etc/passwd" ]; then
                 mkpasswd -l -c >"/etc/passwd"
             fi
