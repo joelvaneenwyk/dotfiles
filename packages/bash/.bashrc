@@ -125,20 +125,21 @@ function _initialize_interactive_bash_profile() {
 
     # shellcheck disable=SC1091
     if [ -f "$HOME/.fzf.bash" ]; then
+        # shellcheck disable=SC1090,SC1091
         source "$HOME/.fzf.bash"
     fi
 
     if [ -x "$(command -v asdf)" ]; then
         if [ -x "$(command -v brew)" ]; then
-            # shellcheck disable=SC1091
+            # shellcheck disable=SC1090,SC1091
             source "$(brew --prefix asdf)/asdf.sh"
         elif [ -f "$HOME/.asdf/asdf.sh" ]; then
-            # shellcheck disable=SC1091
-            . "$HOME/.asdf/asdf.sh"
+            # shellcheck disable=SC1090,SC1091
+            source "$HOME/.asdf/asdf.sh"
 
             if [ -f "$HOME/.asdf/completions/asdf.bash" ]; then
-                # shellcheck disable=SC1091
-                . "$HOME/.asdf/completions/asdf.bash"
+                # shellcheck disable=SC1090,SC1091
+                source "$HOME/.asdf/completions/asdf.bash"
             fi
         fi
     fi

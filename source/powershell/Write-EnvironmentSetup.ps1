@@ -83,6 +83,10 @@ if ("$Env:Username" -eq "WDAGUtilityAccount") {
 }
 
 $environmentVariables = @()
+
+$environmentVariables += "$dotfilesRoot"
+$environmentVariables += "$dotfilesRoot\source\windows\bin"
+
 $environmentVariables += "$ENV:UserProfile\.local\bin"
 $environmentVariables += "$ENV:UserProfile\.local\msys64"
 $environmentVariables += "$ENV:UserProfile\.local\mutagen"
@@ -95,8 +99,6 @@ $environmentVariables += "$ENV:UserProfile\.local\perl\perl\site\bin"
 
 $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
 
-$environmentVariables += "$dotfilesRoot"
-$environmentVariables += "$dotfilesRoot\source\windows\bin"
 $environmentVariables += "$ENV:UserProfile\scoop\shims"
 
 # Home to tools like 'gcc' and 'make'

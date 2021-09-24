@@ -282,8 +282,10 @@ echo '[mycelio] Post-install complete.'
     finally {
         try {
             if (Test-CommandValid "scoop") {
-                # Make sure git is installed first as scoop uses git to update itself
-                Install-Tool "git"
+                # Make sure git is installed first as scoop uses git to update itself. We always install
+                # this version because we do not want the MSYS2 version to take precedence as it is
+                # very slow in comparison.
+                scoop install "git"
 
                 Install-Tool "7zip"
 
@@ -331,10 +333,14 @@ echo '[mycelio] Post-install complete.'
                 scoop update
 
                 # Install portable version even if it is already installed locally
-                scoop install vscode-portable
+                if (-not(Test-CommandValid "code")) {
+                    scoop install vscode-portable
+                }
 
                 # Much better than default Windows terminal
-                scoop install windows-terminal
+                if (-not(Test-CommandValid "wt")) {
+                    scoop install windows-terminal
+                }
 
                 # Useful tool for syncing folders (like rsync) which is sometimes necessary with
                 # environments like MSYS which do not work in containerized spaces that mount local
@@ -391,7 +397,7 @@ echo '[mycelio] Post-install complete.'
             if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
                 if (Test-Path -Path "$mutagen" -PathType Leaf) {
                     & "$mutagen" terminate "dotfiles"
-                    & "$mutagen" sync create "C:\Workspace\" "$Env:UserProfile\dotfiles" --name "dotfiles" --sync-mode "two-way-safe" --symlink-mode "portable" --ignore-vcs --ignore "fzf_key_bindings.fish" --ignore "clink_history*" --ignore "_Inline/" --ignore "_build/"
+                    & "$mutagen" sync create "C:\Workspace\" "$Env:UserProfile\dotfiles" --name "dotfiles" --sync-mode "two-way-resolved" --symlink-mode "portable" --ignore-vcs --ignore "fzf_key_bindings.fish" --ignore "clink_history*" --ignore "_Inline/" --ignore "_build/"
                     & "$mutagen" sync flush --all
                 }
                 else {

@@ -98,7 +98,13 @@ function _filter() {
     _ifs="$IFS"
     IFS=''
     while read -r line; do
-        echo "$_prefix $line"
+        if [ -n "$line" ]; then
+            # Could use the following to remove all surrounding whitespace but this
+            # is performance heavy so just ignore for now.
+            # line=$(echo $line | xargs)
+
+            echo "$_prefix $line"
+        fi
     done
     IFS="$_ifs"
 }
@@ -125,7 +131,11 @@ function _run() {
                 (
                     unset MYCELIO_DISABLE_TRAP
 
-                    echo "##[cmd] $*"
+                    local cmd
+                    cmd="$*"
+                    cmd=${cmd//$'\n'/} # Remove all newlines
+                    cmd=${cmd%$'\n'}   # Remove trailing newline
+                    echo "##[cmd] $cmd"
 
                     #  stdout (#1) -> untouched
                     #  stderr (#2) -> #3
@@ -401,7 +411,7 @@ function _stow() {
 
     if [ -f "$_stow_bin" ] && [[ ! "$*" == *"--delete"* ]]; then
         # NOTE: We filter out spurious 'find_stowed_path' error due to https://github.com/aspiers/stow/issues/65
-        _stow_args=(--dir="$MYCELIO_ROOT/packages" --target="$_target_path" --verbose)
+        _stow_args=("--dir=$MYCELIO_ROOT/packages" "--target=$_target_path" "--verbose")
         _stow_args+=("$@")
 
         rm -rf "$MYCELIO_ROOT/_Inline"
@@ -755,7 +765,7 @@ function install_powershell() {
 # This is the set of instructions neede to get 'stow' built on Windows using 'msys2'
 #
 function install_stow() {
-    MYCELIO_PERL="${MYCELIO_PERL:-$(which perl)}"
+    MYCELIO_PERL="${MYCELIO_PERL:-$(command -v perl)}"
     export MYCELIO_PERL
 
     _cpan_temp_bin="$MYCELIO_TEMP/cpanm"
@@ -800,7 +810,7 @@ function install_stow() {
         echo "[stow.cpan.config] ✔ CPAN already initialized."
     fi
 
-    if [ ! -x "$(command -v cpanm)" ]; then
+    if ! "$MYCELIO_PERL" -MApp::cpanminus -le 1 2>/dev/null; then
         if [ -x "$(command -v curl)" ]; then
             rm -f "$_cpan_temp_bin"
             curl -L --silent "https://cpanmin.us/" -o "$_cpan_temp_bin"
@@ -810,7 +820,7 @@ function install_stow() {
         fi
 
         # If still not available try installing cpanminus with cpan
-        if [ ! -x "$(command -v cpanm)" ]; then
+        if ! "$MYCELIO_PERL" -MApp::cpanminus -le 1 2>/dev/null; then
             _run "[stow.cpanm.install]" _sudo "$MYCELIO_PERL" -MCPAN -e "CPAN::Shell->notest('install', 'App::cpanminus')"
         fi
     else
@@ -818,7 +828,9 @@ function install_stow() {
     fi
 
     # Install dependencies but skip tests
-    _run "[stow.cpanm.dependencies]" _sudo cpanm --notest Carp Test::Output ExtUtils::PL2Bat Inline::C CPAN::DistnameInfo
+    _run "[stow.cpanm.dependencies]" _sudo "$MYCELIO_PERL" -MApp::cpanminus::fatscript -le \
+        'my $c = App::cpanminus::script->new; $c->parse_options(@ARGV); $c->doit;' -- \
+        --notest Carp Test::Output ExtUtils::PL2Bat Inline::C CPAN::DistnameInfo
 
     if [ ! -f "$MYCELIO_STOW_ROOT/configure.ac" ]; then
         echo "❌ 'stow' source missing: '$MYCELIO_STOW_ROOT'"
@@ -836,9 +848,6 @@ function install_stow() {
         echo "❌ Failed to build 'stow' from source."
         return 15
     fi
-
-    # Remove intermediate files
-    rm -f "$MYCELIO_STOW_ROOT/configure~" "$MYCELIO_STOW_ROOT/Build.bat" "$MYCELIO_STOW_ROOT/Build" >/dev/null 2>&1 || true
 
     _stow --version
 }
@@ -938,13 +947,26 @@ function install_go {
             echo "❌ Skipped 'go' compile. Missing GCC toolchain."
         else
             if [ "${MSYSTEM:-}" = "MSYS" ]; then
-                _go_bootstrap_exe="/mingw64/bin/go"
-                _local_go_bootstrap_root="/mingw64/lib/go"
+
+                # https://golang.org/doc/install/source
+                _go_bootstrap_archive="$MYCELIO_TEMP/go1.4.windows-amd64.zip"
+                wget --quiet -O "$_go_bootstrap_archive" "https://golang.org/dl/go1.4.windows-amd64.zip"
+                echo "Extracting 'go' binaries: '$_go_bootstrap_archive'"
+                rm -rf "$MYCELIO_TEMP/go" || true
+                _run "[go.bootstrap.tar]" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_archive"
+                rm -rf "$_local_go_bootstrap_root" || true
+                mv "$MYCELIO_TEMP/go" "$_local_go_bootstrap_root"
+                rm "$_go_bootstrap_src_archive"
 
                 if [ -f "$_go_bootstrap_exe" ]; then
-                    echo "✔ Using pre-installed 'go' compiler for MSYS environment."
+                    echo "✔ Using pre-built 'go' compiler for MSYS environment."
                 else
-                    echo "❌ Missing required 'go' compiler for MSYS environment."
+                    if [ -f "/mingw64/bin/go" ]; then
+                        _go_bootstrap_exe="/mingw64/bin/go"
+                        _local_go_bootstrap_root=$($_go_bootstrap_exe env GOROOT)
+                    else
+                        echo "❌ Missing required 'go' compiler for MSYS environment."
+                    fi
                 fi
             elif [ ! -f "$_go_bootstrap_exe" ]; then
                 # https://golang.org/doc/install/source
@@ -1013,7 +1035,7 @@ function install_go {
                 if (
                     cd "$_local_go_root/src"
 
-                    GOROOT_BOOTSTRAP="$_local_go_bootstrap_root"
+                    GOROOT_BOOTSTRAP="$($_go_bootstrap_exe env GOROOT)"
                     export GOROOT_BOOTSTRAP
 
                     GOOS="$_go_os"
@@ -1287,8 +1309,6 @@ function initialize_linux() {
 
         pacman -Fy
 
-        # Note here that we install go-lang (mingw-w64-x86_64-go) even though we build it
-        # later because it is not possible to build gobootstrap in msys environment.
         pacman -S --quiet --noconfirm --needed \
             msys2-keyring \
             curl wget unzip \
@@ -1296,8 +1316,7 @@ function initialize_linux() {
             fish tmux \
             texinfo texinfo-tex \
             base-devel gcc gcc-libs binutils make autoconf automake1.16 automake-wrapper libtool \
-            msys2-runtime-devel msys2-w32api-headers msys2-w32api-runtime \
-            mingw-w64-x86_64-go
+            msys2-runtime-devel msys2-w32api-headers msys2-w32api-runtime
 
         if [ "${MSYSTEM:-}" = "MINGW64" ]; then
             pacman -S --quiet --noconfirm --needed \
@@ -1811,7 +1830,10 @@ function _initialize_environment() {
     initialize_gitconfig
 
     if [ -x "$(command -v git)" ] && [ -e "$MYCELIO_ROOT/.git" ]; then
-        _run "[git.submodule.update]" git submodule update --init --recursive
+        if [ ! -f "$MYCELIO_ROOT/source/stow/setup.sh" ]; then
+            _run "[git.submodule.update]" git submodule update --init --recursive || true
+        fi
+
         _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
         _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
         _update_git_repository "packages/macos/Library/Application Support/Resources" "master"
@@ -1821,7 +1843,8 @@ function _initialize_environment() {
         _update_git_repository "test/bats" "master"
         _update_git_repository "test/test_helper/bats-support" "master"
         _update_git_repository "test/test_helper/bats-assert" "master"
-        echo "Updated submodules."
+
+        echo "[mycelio] Updated submodules."
     fi
 
     if [ "$MYCELIO_OS" = "linux" ] || [ "$MYCELIO_OS" = "windows" ]; then

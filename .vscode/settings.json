@@ -2,8 +2,12 @@
     "shellcheck.enable": true,
     "shellcheck.run": "onType",
     "shellcheck.enableQuickFix": true,
-    "shellcheck.customArgs": ["--external-sources"],
-    "shellcheck.useWorkspaceRootAsCwd": true,
+    "shellcheck.customArgs": [
+        "--external-sources",
+        "--root=${workspaceFolder}",
+        "--source-path=${workspaceFolder}",
+        "--source-path=${workspaceFolder}/source/stow"
+    ],
     "shellcheck.ignorePatterns": {
         ".gitignore": true,
         "**/.gitignore": true,
@@ -12,7 +16,6 @@
         "**/test_canonicalize_path": true,
         "**/test_readlink_emulation": true,
         "**/default.mustache": true,
-        "**/source/stow/**/*.sh": true,
         "packages/fish/.config/**/*.sh": true,
         "packages/fish/.config/base16-shell/**/*": true,
         "packages/fish/.config/base16-fzf/**/*": true,
@@ -269,6 +272,7 @@
         ".travis.yml"
     ],
     "cSpell.words": [
+        "agnoster",
         "asdf",
         "beaners",
         "buildx",

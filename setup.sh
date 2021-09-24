@@ -56,6 +56,8 @@ function setup() {
     local root
 
     root="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
+
+    # shellcheck source=source/shell/mycelio.sh
     source "$root/source/shell/mycelio.sh"
 
     initialize_environment "$@"
