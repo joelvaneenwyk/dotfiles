@@ -109,6 +109,14 @@ function _filter() {
     IFS="$_ifs"
 }
 
+function _error() {
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        echo "::error::$*"
+    fi
+
+    echo "❌ $*"
+}
+
 #
 # Run command and redirect stdout and stderr to logger at either info level or
 # error level depending. Return error code of the command.
@@ -124,18 +132,23 @@ function _run() {
     _prefix="${1:-}"
     shift
 
+    local cmd
+    cmd="$*"
+    cmd=${cmd//$'\n'/} # Remove all newlines
+    cmd=${cmd%$'\n'}   # Remove trailing newline
+
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        echo "::group::##[cmd] $cmd"
+    fi
+
+    echo "##[cmd] $cmd"
+
     (
         MYCELIO_DISABLE_TRAP=1
         ( 
             ( 
                 (
                     unset MYCELIO_DISABLE_TRAP
-
-                    local cmd
-                    cmd="$*"
-                    cmd=${cmd//$'\n'/} # Remove all newlines
-                    cmd=${cmd%$'\n'}   # Remove trailing newline
-                    echo "##[cmd] $cmd"
 
                     #  stdout (#1) -> untouched
                     #  stderr (#2) -> #3
@@ -144,6 +157,10 @@ function _run() {
             ) 3>&1 1>&4 | _filter "$_prefix [stderr]" >&2 # Redirects stdout to #4 so that it's not run through error log
         ) >&4
     ) 4>&1
+
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        echo "::endgroup::"
+    fi
 
     return $?
 }
@@ -427,7 +444,7 @@ function _stow() {
         if [ "$_return_code" = "0" ]; then
             echo "✔ Stowed."
         else
-            echo "❌ Stow failed."
+            _error "Stow failed."
             return "$_return_code"
         fi
     fi
@@ -507,12 +524,12 @@ function install_hugo {
     fi
 
     if [ ! -x "$(command -v git)" ]; then
-        echo "❌ Failed to install 'hugo' site builder. Required 'git' tool missing."
+        _error "Failed to install 'hugo' site builder. Required 'git' tool missing."
         return 1
     fi
 
     if [ ! -f "$MYCELIO_GOEXE" ]; then
-        echo "❌ Failed to install 'hugo' site builder. Missing 'go' compiler: '$MYCELIO_GOEXE'"
+        _error "Failed to install 'hugo' site builder. Missing 'go' compiler: '$MYCELIO_GOEXE'"
         return 2
     fi
 
@@ -552,7 +569,7 @@ function install_hugo {
     fi
 
     if [ ! -f "$_hugo_exe" ] || ! "$_hugo_exe" version; then
-        echo "❌ Failed to install 'hugo' static site builder."
+        _error "Failed to install 'hugo' static site builder."
         return 3
     fi
 
@@ -633,12 +650,12 @@ function install_oh_my_posh {
 
     if [ ! -f "$_oh_my_posh_exe" ] || ! "$_oh_my_posh_exe" --version; then
         if [ ! -x "$(command -v git)" ]; then
-            echo "❌ Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
+            _error "Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
             return 1
         fi
 
         if [ ! -f "$MYCELIO_GOEXE" ]; then
-            echo "❌ Failed to install 'oh-my-posh' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
+            _error "Failed to install 'oh-my-posh' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
             return 2
         fi
 
@@ -673,7 +690,7 @@ function install_oh_my_posh {
     fi
 
     if [ ! -f "$_oh_my_posh_exe" ] || ! "$_oh_my_posh_exe" --version; then
-        echo "❌ Failed to install 'oh_my_posh' static site builder."
+        _error "Failed to install 'oh_my_posh' static site builder."
         return 3
     fi
 
@@ -700,17 +717,17 @@ function install_fzf {
     fi
 
     if [ ! -x "$(command -v git)" ]; then
-        echo "❌ Failed to install 'fzf' extension. Required 'git' tool missing."
+        _error "Failed to install 'fzf' extension. Required 'git' tool missing."
         return 1
     fi
 
     if [ ! -f "$MYCELIO_GOEXE" ]; then
-        echo "❌ Failed to install 'fzf' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
+        _error "Failed to install 'fzf' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
         return 2
     fi
 
     if [ ! -x "$(command -v make)" ]; then
-        echo "❌ Failed to install 'fzf' extension. Required 'make' tool missing."
+        _error "Failed to install 'fzf' extension. Required 'make' tool missing."
         return 3
     fi
 
@@ -728,7 +745,7 @@ function install_fzf {
     fi
 
     if [ ! -f "$_fzf_exe" ]; then
-        echo "❌ Failed to compile 'fzf' utility."
+        _error "Failed to compile 'fzf' utility."
         return 3
     fi
 
@@ -833,7 +850,7 @@ function install_stow() {
         --notest Carp Test::Output ExtUtils::PL2Bat Inline::C CPAN::DistnameInfo
 
     if [ ! -f "$MYCELIO_STOW_ROOT/configure.ac" ]; then
-        echo "❌ 'stow' source missing: '$MYCELIO_STOW_ROOT'"
+        _error "'stow' source missing: '$MYCELIO_STOW_ROOT'"
     elif (
         if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
             # shellcheck source=source/stow/tools/make-clean.sh
@@ -845,7 +862,7 @@ function install_stow() {
     ); then
         echo "✔ Successfully built 'stow' from source."
     else
-        echo "❌ Failed to build 'stow' from source."
+        _error "Failed to build 'stow' from source."
         return 15
     fi
 
@@ -944,7 +961,7 @@ function install_go {
         _go_compiled=0
 
         if [ ! -x "$(command -v gcc)" ] && [ ! -x "$(command -v make)" ]; then
-            echo "❌ Skipped 'go' compile. Missing GCC toolchain."
+            _error "Skipped 'go' compile. Missing GCC toolchain."
         else
             if [ "${MSYSTEM:-}" = "MSYS" ]; then
 
@@ -965,7 +982,7 @@ function install_go {
                         _go_bootstrap_exe="/mingw64/bin/go"
                         _local_go_bootstrap_root=$($_go_bootstrap_exe env GOROOT)
                     else
-                        echo "❌ Missing required 'go' compiler for MSYS environment."
+                        _error "Missing required 'go' compiler for MSYS environment."
                     fi
                 fi
             elif [ ! -f "$_go_bootstrap_exe" ]; then
@@ -1118,7 +1135,7 @@ function install_go {
                         cp -rf "$_go_tmp" "$_local_go_root"
                         echo "Updated 'go' install: '$_local_go_root'"
                     else
-                        echo "❌ Failed to update 'go' install."
+                        _error "Failed to update 'go' install."
                     fi
 
                     rm -rf "$_go_tmp"
@@ -1139,7 +1156,7 @@ function install_go {
 
         echo "✔ $_go_version"
     else
-        echo "❌ Failed to install 'go' language."
+        _error "Failed to install 'go' language."
         return 5
     fi
 
@@ -1255,12 +1272,12 @@ function configure_linux() {
 
     if [ -x "$(command -v fish)" ]; then
         if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
-            echo "❌ Fundle not installed in home directory: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
+            _error "Fundle not installed in home directory: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
         else
             if fish -c "fundle install"; then
                 echo "✔ Installed 'fundle' package manager for fish."
             else
-                echo "❌ Failed to install 'fundle' package manager for fish."
+                _error "Failed to install 'fundle' package manager for fish."
             fi
         fi
     else
@@ -1858,7 +1875,7 @@ function _initialize_environment() {
     configure_linux "$@"
 
     if ! _load_profile; then
-        echo "❌ Failed to reload profile."
+        _error "Failed to reload profile."
     fi
 
     _supports_neofetch=0

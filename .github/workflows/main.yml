@@ -36,7 +36,7 @@ jobs:
             launch: cmd /c setup.bat
 
             # https://github.com/msys2/setup-msys2/blob/master/main.js
-            logs: C:\Users\runneradmin\.cpanm\work\**\*.log
+            logs: C:\Users\runneradmin\.cpan*\work\**\*.log
 
     # The type of runner that the job will run on
     runs-on: ${{ matrix.platform }}
@@ -61,33 +61,6 @@ jobs:
         with:
           name: cpanm-logs-${{ matrix.platform }}
           path: ${{ matrix.logs }}
-
-  windows_msys2:
-    runs-on: windows-latest
-
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Initialize environment
-        run: |
-          echo 'Running 'Mycelio' environment setup in MSYS2!'
-          pwd
-          rm -rf "$HOME/dotfiles"
-          cp --dereference -af $(cygpath "$GITHUB_WORKSPACE/") "$HOME/dots/" || true
-          cd "$HOME"
-          pwd
-          ./dots/setup.sh --clean --force
 
   docker_build:
     runs-on: ubuntu-latest
