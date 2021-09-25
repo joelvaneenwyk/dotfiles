@@ -673,7 +673,7 @@ function install_oh_my_posh {
         return 0
     fi
 
-    if [ -f "$_oh_my_posh_exe" ] && _version=$("$_oh_my_posh_exe" --version); then
+    if [ -f "$_oh_my_posh_exe" ] && _version=$("$_oh_my_posh_exe" --version 2>&1); then
         echo "✔ 'oh-my-posh' v$_version already installed."
         return 0
     fi
@@ -684,7 +684,7 @@ function install_oh_my_posh {
         chmod +x "$_oh_my_posh_exe"
     fi
 
-    if [ ! -f "$_oh_my_posh_exe" ] || ! "$_oh_my_posh_exe" --version; then
+    if ! _version=$("$_oh_my_posh_exe" --version 2>&1); then
         if [ ! -x "$(command -v git)" ]; then
             _error "Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
             return 1
@@ -725,10 +725,12 @@ function install_oh_my_posh {
         fi
     fi
 
-    if [ ! -f "$_oh_my_posh_exe" ] || ! "$_oh_my_posh_exe" --version; then
+    if ! _version=$("$_oh_my_posh_exe" --version 2>&1); then
         _error "Failed to install 'oh_my_posh' static site builder."
         return 3
     fi
+
+    echo "✔ Installed 'oh-my-posh' v$_version."
 
     return 0
 }
@@ -1280,7 +1282,7 @@ function configure_linux() {
         wget --quiet "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
         if [ -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
             chmod a+x "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
-            echo "Downloaded latest fundle: $MYCELIO_HOME/.config/fish/functions/fundle.fish"
+            echo "✔ Downloaded latest fundle: \'$MYCELIO_HOME/.config/fish/functions/fundle.fish\'"
         fi
     fi
 
@@ -1299,7 +1301,8 @@ function configure_linux() {
     cp "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
     echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
 
-    # Set permissions differently for files and directories
+    # Set permissions for GnuGP otherwise we can get permission errors during use. We
+    # intentionally set permissions differently for files and directories.
     find "$_gnupg_config_root" -type f -exec chmod 600 {} \;
     find "$_gnupg_config_root" -type d -exec chmod 700 {} \;
 
@@ -1415,23 +1418,25 @@ function install_packages() {
 function install_python() {
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped Python setup for root user."
-    else
-        if [ -x "$(command -v python3)" ]; then
-            if ! python3 -m pip --version >/dev/null 2>&1; then
-                curl -sSL "https://bootstrap.pypa.io/get-pip.py" -o "$MYCELIO_TEMP/get-pip.py"
-                chmod a+x "$MYCELIO_TEMP/get-pip.py"
-                python3 "$MYCELIO_TEMP/get-pip.py"
-            fi
+    elif [ -x "$(command -v python3)" ] && _python_version=$(python3 --version); then
+        echo "$_python_version"
 
-            run_command "python.pip.upgrade" python3 -m pip install --user --upgrade pip
-
-            # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
-            # consistency between platforms and not install hacks we just use 'pip3' instead. For
-            # details on the issue, see https://github.com/microsoft/WSL/issues/5126
-            run_command "python.pip.precommit" python3 -m pip install --user pre-commit
-
-            echo "Upgraded 'pip3' and installed 'pre-commit' package."
+        if ! python3 -m pip --version >/dev/null 2>&1; then
+            curl -sSL "https://bootstrap.pypa.io/get-pip.py" -o "$MYCELIO_TEMP/get-pip.py"
+            chmod a+x "$MYCELIO_TEMP/get-pip.py"
+            python3 "$MYCELIO_TEMP/get-pip.py"
         fi
+
+        run_command "python.pip.upgrade" python3 -m pip install --user --upgrade pip
+
+        # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
+        # consistency between platforms and not install hacks we just use 'pip3' instead. For
+        # details on the issue, see https://github.com/microsoft/WSL/issues/5126
+        run_command "python.pip.precommit" python3 -m pip install --user pre-commit
+
+        echo "Upgraded 'pip3' and installed 'pre-commit' package."
+    else
+        _error "Missing or invalid Python 3 install: $(command -v python3)"
     fi
 }
 
