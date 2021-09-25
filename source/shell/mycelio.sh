@@ -191,14 +191,16 @@ function task_group() {
 
 function run_task() {
     _name="${1:-}"
+    _prefix="$(echo "${_name// /.}" | awk '{print tolower($0)}')"
     shift
-    task_group "$_name" run_command "$_name" "$@"
+    task_group "$_name" run_command "$_prefix" "$@"
 }
 
 function run_task_sudo() {
     _name="${1:-}"
+    _prefix="$(echo "${_name// /.}" | awk '{print tolower($0)}')"
     shift
-    task_group "$_name" run_command_sudo "$_name" "$@"
+    task_group "$_name" run_command_sudo "$_prefix" "$@"
 }
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
@@ -467,18 +469,16 @@ function _stow() {
         _stow_args=("--dir=$MYCELIO_ROOT/packages" "--target=$_target_path" "--verbose")
         _stow_args+=("$@")
 
-        rm -rf "$MYCELIO_ROOT/_Inline"
-
         _return_code=0
         echo "##[cmd] perl -I $MYCELIO_STOW_ROOT/lib $_stow_bin ${_stow_args[*]}"
-        if perl -I "$MYCELIO_STOW_ROOT/lib" "$_stow_bin" "${_stow_args[@]}" 2>&1 | grep -v "BUG in find_stowed_path"; then
+        if run_command "stow" perl -I "$MYCELIO_STOW_ROOT/lib" "$_stow_bin" "${_stow_args[@]}" 2>&1 | grep -v "BUG in find_stowed_path"; then
             _return_code="${PIPESTATUS[0]}"
         else
             _return_code="${PIPESTATUS[0]}"
         fi
 
         if [ "$_return_code" = "0" ]; then
-            echo "✔ Stowed."
+            echo "✔ Stow command succeeded."
         else
             _error "Stow failed."
             return "$_return_code"
@@ -489,6 +489,8 @@ function _stow() {
 }
 
 function _stow_packages() {
+    rm -rf "$MYCELIO_ROOT/_Inline"
+
     _stow "$@" linux
     _stow "$@" bash
     _stow "$@" zsh
@@ -598,9 +600,9 @@ function install_hugo {
                 CGO_ENABLED="1" run_task "hugo.build" "$MYCELIO_GOEXE" build -v -tags extended -o "$_hugo_exe"
             fi
         ); then
-            echo "Successfully installed 'hugo' site builder."
+            echo "✔ Successfully installed 'hugo' site builder."
         else
-            echo "Failed to install 'hugo' site builder."
+            _error "Failed to install 'hugo' site builder."
         fi
     fi
 
@@ -769,15 +771,15 @@ function install_fzf {
 
     mkdir -p "$_fzf_root"
     rm -rf "$_fzf_root"
-    run_command "fzf.git.clone" git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_root"
+    run_task "fzf.git.clone" git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_root"
 
     if (
         cd "$_fzf_root"
-        "$MYCELIO_GOEXE" build -a -ldflags "-s -w" -o "$_fzf_exe"
+        run_task "fzf.build" "$MYCELIO_GOEXE" build -a -ldflags "-s -w" -o "$_fzf_exe"
     ); then
-        echo "Successfully generated 'fzf' utility with 'go' compiler."
+        echo "✔ Successfully generated 'fzf' utility with 'go' compiler."
     else
-        echo "Failed to install 'fzf' utility."
+        _error "Failed to install 'fzf' utility."
     fi
 
     if [ ! -f "$_fzf_exe" ]; then
@@ -1026,15 +1028,14 @@ function install_go {
                 # https://golang.org/doc/install/source
                 _go_bootstrap_src_archive="$MYCELIO_TEMP/go_bootstrap.tgz"
                 wget --quiet -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
-                echo "Extracting 'go' source: '$_go_bootstrap_src_archive'"
+                echo "Extract 'go' source: '$_go_bootstrap_src_archive'"
                 rm -rf "$MYCELIO_TEMP/go" || true
                 run_command "go.bootstrap.tar" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
                 rm -rf "$_local_go_bootstrap_root" || true
                 mv "$MYCELIO_TEMP/go" "$_local_go_bootstrap_root"
                 rm "$_go_bootstrap_src_archive"
 
-                echo "Compiling 'go' 1.4 bootstrap from source: '$_local_go_bootstrap_root/src'"
-
+                echo "Compile 'go' 1.4 bootstrap from source: '$_local_go_bootstrap_root/src'"
                 if (
                     GOROOT_FINAL="$_local_go_bootstrap_root"
                     export GOROOT_FINAL
@@ -1081,8 +1082,7 @@ function install_go {
                 _go_src_archive="$MYCELIO_TEMP/go.tgz"
                 wget --quiet -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
 
-                echo "Extracting 'go' source: '$_go_src_archive'"
-                tar -C "$_local_root" -xzf "$_go_src_archive"
+                run_task "go.source.extract" tar -C "$_local_root" -xzf "$_go_src_archive"
                 rm "$_go_src_archive"
 
                 echo "Compiling 'go' from source: '$_local_go_root/src'"
@@ -1118,8 +1118,7 @@ function install_go {
                     fi
 
                     # Pre-compile the standard library, just like the official binary release tarballs do
-                    echo "##[cmd] $MYCELIO_GOEXE install std"
-                    "$MYCELIO_GOEXE" install std
+                    run_command "go.install.std" "$MYCELIO_GOEXE" install std
                 ); then
                     echo "Successfully compiled 'go' from source."
                     _go_compiled=1
@@ -1243,7 +1242,6 @@ function install_macos_apps() {
 
 function configure_linux() {
     if [ "$MYCELIO_ARG_CLEAN" = "1" ] || [ "$MYCELIO_ARG_FORCE" = "1" ]; then
-        echo "Removing leftover mycelium dots..."
         task_group "Stow: Sterilize Target" _stow_packages --delete
     fi
 
@@ -1313,7 +1311,7 @@ function configure_linux() {
         if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
             _error "Fundle not installed in home directory: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
         else
-            if run_command "Install Fundle" fish -c "fundle install"; then
+            if run_task "Install Fundle" fish -c "fundle install"; then
                 echo "✔ Installed 'fundle' package manager for fish."
             else
                 _error "Failed to install 'fundle' package manager for fish."
@@ -1324,7 +1322,7 @@ function configure_linux() {
     fi
 
     if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
-        DEBIAN_FRONTEND="noninteractive" sudo apt-get autoremove -y
+        DEBIAN_FRONTEND="noninteractive" run_task_sudo "Remove Intermediate Package Data" apt-get autoremove -y
     fi
 
     # Remove intermediate files here to reduce size of Docker container layer
@@ -1339,7 +1337,7 @@ function configure_linux() {
     # Left-over sometimes created by 'micro' text editor
     rm -f "$MYCELIO_ROOT/log.txt" || true
 
-    echo "✔ Configured system."
+    echo "✔ Mycelium is configured and operational."
 }
 
 function install_packages() {
@@ -1448,7 +1446,7 @@ function initialize_linux() {
 
     if [ ! -d "$MYCELIO_HOME/.asdf" ]; then
         if [ -x "$(command -v git)" ]; then
-            run_command "asdf.git.clone" git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$MYCELIO_HOME/.asdf" --branch "v0.8.1"
+            run_task "asdf.git.clone" git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$MYCELIO_HOME/.asdf" --branch "v0.8.1"
         else
             echo "Skipped 'asdf' install. Missing required 'git' tool."
         fi
@@ -1874,7 +1872,7 @@ function _initialize_environment() {
     # otherwise much of this initialization will fail.
     mkdir -p "$MYCELIO_TEMP"
     if ! touch "$MYCELIO_TEMP/.test"; then
-        echo "[mycelio] ERROR: Missing permissions to write to temp folder: '$MYCELIO_TEMP'"
+        _error "[mycelio] ERROR: Missing permissions to write to temp folder: '$MYCELIO_TEMP'"
         return 1
     else
         rm -rf "$MYCELIO_TEMP/.test"
@@ -1910,8 +1908,7 @@ function _initialize_environment() {
         fi
     fi
 
-    initialize_gitconfig
-
+    task_group "Initialize Git Config" initialize_gitconfig
     task_group "Update Git Repositories" update_repositories
 
     if [ "$MYCELIO_OS" = "linux" ] || [ "$MYCELIO_OS" = "windows" ]; then

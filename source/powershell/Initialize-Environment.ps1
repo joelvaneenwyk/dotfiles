@@ -38,7 +38,7 @@ Function Test-CommandValid {
     Catch {
         Write-Host "Command '$command' does not exist."
     }
-    Finally {
+    finally {
         $ErrorActionPreference = $oldPreference
     }
 
@@ -356,8 +356,8 @@ echo '[mycelio] Post-install complete.'
             # as the initial upgrade of msys2 results in it shutting down the console.
             Write-Host "::group::Initialize MSYS2 Package Manager"
             $msys2_shell = "$Env:UserProfile\.local\msys64\msys2_shell.cmd"
-            $msys2_shell += "-mingw64 -defterm -no-start -where $script:MycelioRoot -shell bash"
-            $msys2_shell += "-c ./source/shell/initialize-package-manager.sh"
+            $msys2_shell += " -mingw64 -defterm -no-start -where $script:MycelioRoot -shell bash"
+            $msys2_shell += " -c ./source/shell/initialize-package-manager.sh"
             & cmd /d /s /c "$msys2_shell"
             Write-Host "::endgroup::"
 
@@ -379,6 +379,8 @@ Function Install-Scoop {
     param()
 
     try {
+        Write-Host "::group::Install Scoop"
+
         if (-not(Test-CommandValid "scoop")) {
             Write-Host "Installing 'scoop' package manager..."
             Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
@@ -386,6 +388,9 @@ Function Install-Scoop {
     }
     catch {
         Write-Host "Exception caught while installing `scoop` package manager."
+    }
+    finally {
+        Write-Host "::endgroup::"
     }
 }
 
