@@ -26,11 +26,11 @@ jobs:
         include:
           - platform: ubuntu-latest
             launch: bash setup.sh
-            logs: /home/runneradmin/.cpanm/work/**/*.log
+            logs: /home/runneradmin/.cpan*/work/**/*.log
 
           - platform: macos-latest
             launch: bash setup.sh
-            logs: /home/runneradmin/.cpanm/work/**/*.log
+            logs: /home/runneradmin/.cpan*/work/**/*.log
 
           - platform: windows-latest
             launch: cmd /c setup.bat

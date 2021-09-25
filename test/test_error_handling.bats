@@ -24,7 +24,7 @@ function _cause_error() {
 
     _setup_environment
 
-    if _result=$(_run "prefix" _cause_error); then
+    if _result=$(run_command "prefix" _cause_error); then
         assert_failure
     else
         run assert_equal "$_result" "command not found"
@@ -32,7 +32,7 @@ function _cause_error() {
     fi
 
     echo "here we go!"
-    #run assert_equal "$(_run "prefix" _cause_error)" "22"
+    #run assert_equal "$(run_command "prefix" _cause_error)" "22"
 
     echo "done"
 

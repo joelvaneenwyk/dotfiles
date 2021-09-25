@@ -128,7 +128,7 @@ function _error() {
 #   - https://stackoverflow.com/questions/3173131/redirect-copy-of-stdout-to-log-file-from-within-bash-script-itself
 #   - https://unix.stackexchange.com/questions/14270/get-exit-status-of-process-thats-piped-to-another
 #
-function _run() {
+function run_command() {
     _prefix="${1:-}"
     shift
 
@@ -138,7 +138,7 @@ function _run() {
     cmd=${cmd%$'\n'}   # Remove trailing newline
 
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
-        echo "::group::##[cmd] $cmd"
+        echo "[command]$cmd"
     else
         echo "##[cmd] $cmd"
     fi
@@ -153,14 +153,10 @@ function _run() {
                     #  stdout (#1) -> untouched
                     #  stderr (#2) -> #3
                     "$@" 2>&3 3>&-
-                ) | _filter "$_prefix [stdout]"           # Output standard log (stdout)
-            ) 3>&1 1>&4 | _filter "$_prefix [stderr]" >&2 # Redirects stdout to #4 so that it's not run through error log
+                ) | _filter "[$_prefix.out]"           # Output standard log (stdout)
+            ) 3>&1 1>&4 | _filter "[$_prefix.err]" >&2 # Redirects stdout to #4 so that it's not run through error log
         ) >&4
     ) 4>&1
-
-    if [ -n "${GITHUB_ACTIONS:-}" ]; then
-        echo "::endgroup::"
-    fi
 
     return $?
 }
@@ -171,15 +167,19 @@ function task_group() {
 
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         echo "::group::$_name"
+        "$@"
+        echo "::endgroup::"
     else
         echo "##[$_name]"
+        "$@"
     fi
+}
 
-    "$@"
+function run_task() {
+    _name="${1:-}"
+    shift
 
-    if [ -n "${GITHUB_ACTIONS:-}" ]; then
-        echo "::endgroup::"
-    fi
+    task_group "$_name" run_command "$_name" "$@"
 }
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
@@ -573,10 +573,10 @@ function install_hugo {
             # Note that CGO_ENABLED allows the creation of Go packages that call C code. There
             # is no support for GCC on Synology so not able to build extended features.
             if uname -a | grep -q "synology"; then
-                CGO_ENABLED="0" _run "[hugo.build]" "$MYCELIO_GOEXE" build -v -ldflags "-extldflags -static" -o "$_hugo_exe"
+                CGO_ENABLED="0" run_command "hugo.build" "$MYCELIO_GOEXE" build -v -ldflags "-extldflags -static" -o "$_hugo_exe"
             else
                 # https://github.com/gohugoio/hugo/blob/master/goreleaser.yml
-                CGO_ENABLED="1" _run "[hugo.build]" "$MYCELIO_GOEXE" build -v -tags extended -o "$_hugo_exe"
+                CGO_ENABLED="1" run_command "hugo.build" "$MYCELIO_GOEXE" build -v -tags extended -o "$_hugo_exe"
             fi
         ); then
             echo "Successfully installed 'hugo' site builder."
@@ -607,9 +607,9 @@ function install_oh_my_posh {
         wget --quiet "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
 
         if [ -x "$(command -v unzip)" ]; then
-            _run "[posh.themes.unzip]" unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
+            run_command "posh.themes.unzip" unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
         elif [ -x "$(command -v 7z)" ]; then
-            _run "[posh.themes.7z]" 7z e "$_posh_themes/themes.zip" -o"$_posh_themes" -r
+            run_command "posh.themes.7z" 7z e "$_posh_themes/themes.zip" -o"$_posh_themes" -r
         else
             echo "Neither 'unzip' nor '7z' commands available to extract oh-my-posh themes."
         fi
@@ -628,9 +628,9 @@ function install_oh_my_posh {
         wget --quiet "$font_url" -O "$_fonts_path/$font_base_filename.zip"
 
         if [ -x "$(command -v unzip)" ]; then
-            _run "[fonts.unzip]" unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
+            run_command "fonts.unzip" unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
         elif [ -x "$(command -v 7z)" ]; then
-            _run "[fonts.7z]" 7z e "$_fonts_path/$font_base_filename.zip" -o"$_fonts_path" -r
+            run_command "fonts.7z" 7z e "$_fonts_path/$font_base_filename.zip" -o"$_fonts_path" -r
         else
             echo "Neither 'unzip' nor '7z' commands available to extract fonts."
         fi
@@ -697,7 +697,7 @@ function install_oh_my_posh {
                 export GOHOSTARCH
 
                 # https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/.github/workflows/release.yml
-                _run "[oh-my-posh.build]" "$MYCELIO_GOEXE" build -a -ldflags "-extldflags -static" -o "$_oh_my_posh_exe"
+                run_command "oh-my-posh.build" "$MYCELIO_GOEXE" build -a -ldflags "-extldflags -static" -o "$_oh_my_posh_exe"
             ); then
                 echo "Successfully installed 'oh-my-posh' site builder."
             else
@@ -750,7 +750,7 @@ function install_fzf {
 
     mkdir -p "$_fzf_root"
     rm -rf "$_fzf_root"
-    git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_root"
+    run_comand "fzf.git.clone" git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_root"
 
     if (
         cd "$_fzf_root"
@@ -766,7 +766,7 @@ function install_fzf {
         return 3
     fi
 
-    "$_fzf_exe" --version
+    echo "fzf v$("$_fzf_exe" --version)"
 
     return 0
 }
@@ -831,13 +831,13 @@ function install_stow() {
             echo ""
             echo "no"
             echo "exit"
-        ) | _run "[stow.cpan]" _sudo "$MYCELIO_PERL" -MCPAN -e "shell"; then
+        ) | run_task "stow.cpan" _sudo "$MYCELIO_PERL" -MCPAN -e "shell"; then
             echo "[stow.cpan] ⚠ Automated CPAN configuration failed."
         fi
 
         # If configuration file does not exist yet then we automate configuration with
         # answers to standard questions. These may become invalid with newer versions.
-        if ! _run "[stow.cpan.config]" _sudo perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
+        if ! run_task "stow.cpan.config" _sudo perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
             echo "[stow.cpan.config] ⚠ CPAN configuration failed to initialize."
         fi
     else
@@ -849,20 +849,20 @@ function install_stow() {
             rm -f "$_cpan_temp_bin"
             curl -L --silent "https://cpanmin.us/" -o "$_cpan_temp_bin"
             chmod +x "$_cpan_temp_bin"
-            _run "[stow.cpanm.https.install]" _sudo "$MYCELIO_PERL" "$_cpan_temp_bin" --notest --verbose App::cpanminus
+            run_command "stow.cpanm.https.install" _sudo "$MYCELIO_PERL" "$_cpan_temp_bin" --notest --verbose App::cpanminus
             rm -f "$_cpan_temp_bin"
         fi
 
         # If still not available try installing cpanminus with cpan
         if ! "$MYCELIO_PERL" -MApp::cpanminus -le 1 2>/dev/null; then
-            _run "[stow.cpanm.install]" _sudo "$MYCELIO_PERL" -MCPAN -e "CPAN::Shell->notest('install', 'App::cpanminus')"
+            run_task "stow.cpanm.install" _sudo "$MYCELIO_PERL" -MCPAN -e "CPAN::Shell->notest('install', 'App::cpanminus')"
         fi
     else
         echo "[stow.cpanm.install] ✔ CPANM already installed."
     fi
 
     # Install dependencies but skip tests
-    _run "[stow.cpanm.dependencies]" _sudo "$MYCELIO_PERL" -MApp::cpanminus::fatscript -le \
+    run_task "stow.cpanm.dependencies" _sudo "$MYCELIO_PERL" -MApp::cpanminus::fatscript -le \
         'my $c = App::cpanminus::script->new; $c->parse_options(@ARGV); $c->doit;' -- \
         --notest Carp Test::Output ExtUtils::PL2Bat Inline::C CPAN::DistnameInfo
 
@@ -871,11 +871,11 @@ function install_stow() {
     elif (
         if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
             # shellcheck source=source/stow/tools/make-clean.sh
-            _run "[stow.make.clean]" source "$MYCELIO_STOW_ROOT/tools/make-clean.sh"
+            run_task "stow.make.clean" source "$MYCELIO_STOW_ROOT/tools/make-clean.sh"
         fi
 
         # shellcheck source=source/stow/tools/make-stow.sh
-        _run "[stow.make]" source "$MYCELIO_STOW_ROOT/tools/make-stow.sh"
+        run_task "stow.make" source "$MYCELIO_STOW_ROOT/tools/make-stow.sh"
     ); then
         echo "✔ Successfully built 'stow' from source."
     else
@@ -906,11 +906,11 @@ function install_micro_text_editor() {
         _tmp_micro="$MYCELIO_TEMP/micro"
         mkdir -p "$_tmp_micro"
         rm -rf "$_tmp_micro"
-        git -c advice.detachedHead=false clone -b "v2.0.10" "https://github.com/zyedidia/micro" "$_tmp_micro"
+        run_task git -c advice.detachedHead=false clone -b "v2.0.10" "https://github.com/zyedidia/micro" "$_tmp_micro"
 
         if (
             cd "$_tmp_micro"
-            _run "[micro.make]" make build
+            run_task "micro.make" make build
         ); then
             if [ -f "$_tmp_micro/$_micro_exe" ]; then
                 rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
@@ -987,7 +987,7 @@ function install_go {
                 wget --quiet -O "$_go_bootstrap_archive" "https://golang.org/dl/go1.4.windows-amd64.zip"
                 echo "Extracting 'go' binaries: '$_go_bootstrap_archive'"
                 rm -rf "$MYCELIO_TEMP/go" || true
-                _run "[go.bootstrap.tar]" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_archive"
+                run_command "go.bootstrap.tar" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_archive"
                 rm -rf "$_local_go_bootstrap_root" || true
                 mv "$MYCELIO_TEMP/go" "$_local_go_bootstrap_root"
                 rm "$_go_bootstrap_src_archive"
@@ -1008,7 +1008,7 @@ function install_go {
                 wget --quiet -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
                 echo "Extracting 'go' source: '$_go_bootstrap_src_archive'"
                 rm -rf "$MYCELIO_TEMP/go" || true
-                _run "[go.bootstrap.tar]" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
+                run_command "go.bootstrap.tar" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
                 rm -rf "$_local_go_bootstrap_root" || true
                 mv "$MYCELIO_TEMP/go" "$_local_go_bootstrap_root"
                 rm "$_go_bootstrap_src_archive"
@@ -1043,9 +1043,9 @@ function install_go {
                             export GO_LDFLAGS="--subsystem,console"
                         fi
 
-                        _run "[go.bootstrap.make]" cmd /c "make.bat"
+                        run_command "go.bootstrap.make" cmd /c "make.bat"
                     else
-                        _run "[go.bootstrap.make]" ./make.bash
+                        run_command "go.bootstrap.make" ./make.bash
                     fi
 
                     unset GOROOT_FINAL
@@ -1088,9 +1088,9 @@ function install_go {
                     export GOHOSTARCH
 
                     if [ -x "$(command -v cygpath)" ]; then
-                        _run "[go.make]" cmd /c "make.bat"
+                        run_command "go.make" cmd /c "make.bat"
                     else
-                        _run "[go.make]" ./make.bash
+                        run_command "go.make" ./make.bash
                     fi
 
                     if [ ! -f "$MYCELIO_GOEXE" ]; then
@@ -1224,7 +1224,7 @@ function install_macos_apps() {
 function configure_linux() {
     if [ "$MYCELIO_ARG_CLEAN" = "1" ] || [ "$MYCELIO_ARG_FORCE" = "1" ]; then
         echo "Removing leftover mycelium dots..."
-        _stow_packages --delete
+        task_group "Stow Clean" _stow_packages --delete
     fi
 
     mkdir -p "$MYCELIO_HOME/.config/fish/functions"
@@ -1283,18 +1283,17 @@ function configure_linux() {
     find "$_gnupg_config_root" -type d -exec chmod 700 {} \;
 
     # Stow packages after we have installed fundle and setup custom links
-    echo "Connecting the mycelium..."
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
-        _stow_packages --restow
+        task_group "Reconnect Mycelium (Stow)" _stow_packages --restow
     else
-        _stow_packages
+        task_group "Connect Mycelium (Stow)" _stow_packages
     fi
 
     if [ -x "$(command -v fish)" ]; then
         if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
             _error "Fundle not installed in home directory: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
         else
-            if fish -c "fundle install"; then
+            if run_command "Install Fundle" fish -c "fundle install"; then
                 echo "✔ Installed 'fundle' package manager for fish."
             else
                 _error "Failed to install 'fundle' package manager for fish."
@@ -1323,18 +1322,7 @@ function configure_linux() {
     echo "✔ Configured system."
 }
 
-function initialize_linux() {
-    dotenv="$MYCELIO_HOME/.env"
-    if [ ! -f "$dotenv" ]; then
-        echo "# Generated by Mycelio dotfiles project." >"$dotenv"
-        echo "" >>"$dotenv"
-    fi
-
-    if ! grep -q "MYCELIO_ROOT=$MYCELIO_ROOT" "$dotenv"; then
-        echo "MYCELIO_ROOT=$MYCELIO_ROOT" >>"$dotenv"
-        echo "Added 'MYCELIO_ROOT' to dotenv file: '$dotenv'"
-    fi
-
+function install_packages() {
     if uname -a | grep -q "synology"; then
         echo "Skipped installing dependencies. Not supported on Synology platform."
     elif [ -x "$(command -v pacman)" ]; then
@@ -1398,7 +1386,9 @@ function initialize_linux() {
             _sudo dpkg-reconfigure --frontend noninteractive tzdata
         fi
     fi
+}
 
+function install_python() {
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped Python setup for root user."
     else
@@ -1409,33 +1399,49 @@ function initialize_linux() {
                 python3 "$MYCELIO_TEMP/get-pip.py"
             fi
 
-            python3 -m pip install --user --upgrade pip
+            run_command "python.pip.upgrade" python3 -m pip install --user --upgrade pip
 
             # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
             # consistency between platforms and not install hacks we just use 'pip3' instead. For
             # details on the issue, see https://github.com/microsoft/WSL/issues/5126
-            python3 -m pip install --user pre-commit
+            run_command "python.pip.precommit" python3 -m pip install --user pre-commit
 
             echo "Upgraded 'pip3' and installed 'pre-commit' package."
         fi
     fi
+}
+
+function initialize_linux() {
+    dotenv="$MYCELIO_HOME/.env"
+    if [ ! -f "$dotenv" ]; then
+        echo "# Generated by Mycelio dotfiles project." >"$dotenv"
+        echo "" >>"$dotenv"
+    fi
+
+    if ! grep -q "MYCELIO_ROOT=$MYCELIO_ROOT" "$dotenv"; then
+        echo "MYCELIO_ROOT=$MYCELIO_ROOT" >>"$dotenv"
+        echo "Added 'MYCELIO_ROOT' to dotenv file: '$dotenv'"
+    fi
+
+    task_group "Install Packages" install_packages
+    task_group "Install Python" install_python
 
     if [ ! -d "$MYCELIO_HOME/.asdf" ]; then
         if [ -x "$(command -v git)" ]; then
-            git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$MYCELIO_HOME/.asdf" --branch "v0.8.1"
+            run_command "asdf.git.clone" git -c advice.detachedHead=false clone "https://github.com/asdf-vm/asdf.git" "$MYCELIO_HOME/.asdf" --branch "v0.8.1"
         else
             echo "Skipped 'asdf' install. Missing required 'git' tool."
         fi
     fi
 
-    task_group "Install Stow" install_stow
+    install_stow
 
-    task_group "Install Go" install_go
-    task_group "Install Hugo" install_hugo
-    task_group "Install FZF" install_fzf
-    task_group "Install Oh My Posh" install_oh_my_posh
-    task_group "Install PowerShell" install_powershell
-    task_group "Install Micro" install_micro_text_editor
+    install_go
+    install_hugo
+    install_fzf
+    install_oh_my_posh
+    install_powershell
+    install_micro_text_editor
 }
 
 function initialize_macos() {
@@ -1751,16 +1757,16 @@ function _update_git_repository() {
     _name=$(basename "$_path")
 
     if [ -n "${_remote:-}" ]; then
-        _run "[$_name.git.remote]" git -C "$MYCELIO_ROOT/$_path" remote set-url "origin" "$_remote"
+        run_command "$_name.git.remote" git -C "$MYCELIO_ROOT/$_path" remote set-url "origin" "$_remote"
     fi
 
-    _run "[$_name.git.fetch]" git -C "$MYCELIO_ROOT/$_path" fetch
+    run_command "$_name.git.fetch" git -C "$MYCELIO_ROOT/$_path" fetch
 
     if ! git -C "$MYCELIO_ROOT/$_path" symbolic-ref -q HEAD >/dev/null 2>&1; then
-        _run "[$_name.git.checkout]" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
+        run_command "$_name.git.checkout" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
     fi
 
-    _run "[$_name.git.pull]" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
+    run_command "$_name.git.pull" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
 }
 
 function _parse_arguments() {
@@ -1804,6 +1810,26 @@ function _parse_arguments() {
             ;;
         esac
     done
+}
+
+function update_repositories() {
+    if [ -x "$(command -v git)" ] && [ -e "$MYCELIO_ROOT/.git" ]; then
+        if [ ! -f "$MYCELIO_ROOT/source/stow/setup.sh" ]; then
+            run_command "git.submodule.update" git submodule update --init --recursive || true
+        fi
+
+        _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
+        _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
+        _update_git_repository "packages/macos/Library/Application Support/Resources" "master"
+        _update_git_repository "packages/fish/.config/base16-shell" "master"
+        _update_git_repository "packages/fish/.config/base16-fzf" "master"
+        _update_git_repository "packages/fish/.config/git-fuzzy" "master"
+        _update_git_repository "test/bats" "master"
+        _update_git_repository "test/test_helper/bats-support" "master"
+        _update_git_repository "test/test_helper/bats-assert" "master"
+
+        echo "[mycelio] Updated submodules."
+    fi
 }
 
 function _initialize_environment() {
@@ -1866,33 +1892,17 @@ function _initialize_environment() {
 
     initialize_gitconfig
 
-    if [ -x "$(command -v git)" ] && [ -e "$MYCELIO_ROOT/.git" ]; then
-        if [ ! -f "$MYCELIO_ROOT/source/stow/setup.sh" ]; then
-            _run "[git.submodule.update]" git submodule update --init --recursive || true
-        fi
-
-        _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
-        _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
-        _update_git_repository "packages/macos/Library/Application Support/Resources" "master"
-        _update_git_repository "packages/fish/.config/base16-shell" "master"
-        _update_git_repository "packages/fish/.config/base16-fzf" "master"
-        _update_git_repository "packages/fish/.config/git-fuzzy" "master"
-        _update_git_repository "test/bats" "master"
-        _update_git_repository "test/test_helper/bats-support" "master"
-        _update_git_repository "test/test_helper/bats-assert" "master"
-
-        echo "[mycelio] Updated submodules."
-    fi
+    task_group "Update Git Repositories" update_repositories
 
     if [ "$MYCELIO_OS" = "linux" ] || [ "$MYCELIO_OS" = "windows" ]; then
-        task_group "Initialize Linux" initialize_linux "$@"
+        initialize_linux "$@"
     elif [ "$MYCELIO_OS" = "darwin" ]; then
-        task_group "Initialize macOS" initialize_macos "$@"
+        initialize_macos "$@"
     fi
 
     # Always run configure step as it creates links ('stows') important profile
     # setup scripts to home directory.
-    task_group "Configure Linux" configure_linux "$@"
+    configure_linux "$@"
 
     if ! _load_profile; then
         _error "Failed to reload profile."
