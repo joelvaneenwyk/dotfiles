@@ -30,7 +30,11 @@ function run_shellcheck() {
 
     while IFS= read -r -d $'' file; do
         if is_shell_script "$file"; then
-            shellcheck --external-sources --source-path="$root" --source-path="$root/source/stow" -W0 "$file" || continue
+            if shellcheck --external-sources --source-path="$root" --source-path="$root/source/stow" -W0 "$file"; then
+                echo "✔ $file"
+            fi
         fi
     done < <(find "$root" -type f \! -path "$root/.git/*" -print0)
 }
+
+run_shellcheck

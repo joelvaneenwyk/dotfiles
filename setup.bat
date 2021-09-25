@@ -82,7 +82,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     call :RunPowerShell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
 
-    call :Run call "%MYCELIO_ROOT%\source\windows\bin\profile.bat"
+    call :Run "%MYCELIO_ROOT%\source\windows\bin\profile.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Profile setup failed. 1>&2
@@ -133,17 +133,20 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     :: Re-initialize environment paths now that dependencies are installed
     ::
-    call :Run call "%MYCELIO_ROOT%\source\windows\bin\env.bat"
+    call :Run "%MYCELIO_ROOT%\source\windows\bin\env.bat"
 
     :: The 'stow' tool should now be installed in our local perl so we can
     :: stow the Windows settings. However, due to limitations in 'stow' on Windows
     :: we need to do this in MSYS2 instead.
-    call :Run call "%MYCELIO_ROOT%\source\stow\tools\make-stow.bat"
+    call :GroupStart "Make Stow"
+    call :Run "%MYCELIO_ROOT%\source\stow\tools\make-stow.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Failed to build Stow for Windows. 1>&2
+        call :GroupEnd
         goto:$InitializeDone
     )
+    call :GroupEnd
 
     :: Initialize 'msys2' ("Minimal System") environment with bash script. We call the shim directly because environment
     :: may not read path properly after it has just been installed.
@@ -160,7 +163,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     :: We intentionally use MINGW64 here because binaries that we compile (e.g., golang) need
     :: to be able to run without the MSYS dynamic libraries.
-    call :Run call "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
+    call :Run "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Shell setup with 'bash' failed. 1>&2
@@ -190,8 +193,12 @@ exit /b %MYCELIO_ERROR%
 ::
 
 :Run %*=Command with arguments
-    echo ##[cmd] %*
-    %*
+    if "%{GITHUB_ACTIONS%"=="" (
+        echo ##[cmd] %*
+    ) else (
+        echo [command]%*
+    )
+    call %*
 endlocal & exit /b
 
 :RunPowerShell %*=Command with arguments
@@ -215,6 +222,18 @@ endlocal & exit /b
     :: font, see https://superuser.com/a/1548564
     chcp 437 > nul
     call :Run !_powershell! -NoLogo -NoProfile %*
+endlocal & exit /b
+
+:GroupStart
+    if not "%GITHUB_ACTIONS%"=="" (
+        echo ::group::%~1
+    )
+endlocal & exit /b
+
+:GroupEnd
+    if not "%GITHUB_ACTIONS%"=="" (
+        echo ::endgroup::
+    )
 endlocal & exit /b
 
 :CheckSystemFile %1=SystemFilename

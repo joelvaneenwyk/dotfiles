@@ -161,17 +161,31 @@ function run_command() {
     return $?
 }
 
+function run_command_sudo() {
+    _prefix="${1:-}"
+    shift
+
+    if [ -x "$(command -v sudo)" ] && [ -z "${MSYSTEM_CARCH:-}" ] && [ ! "${MYCELIO_OS:-}" = "windows" ]; then
+        run_command "$_prefix" sudo "$@"
+    else
+        run_command "$_prefix" "$@"
+    fi
+}
+
 function task_group() {
     _name="${1:-}"
     shift
 
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         echo "::group::$_name"
-        "$@"
-        echo "::endgroup::"
     else
-        echo "##[$_name]"
-        "$@"
+        echo "##[task] $_name"
+    fi
+
+    "$@"
+
+    if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        echo "::endgroup::"
     fi
 }
 
@@ -750,7 +764,7 @@ function install_fzf {
 
     mkdir -p "$_fzf_root"
     rm -rf "$_fzf_root"
-    run_comand "fzf.git.clone" git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_root"
+    run_command "fzf.git.clone" git -c advice.detachedHead=false clone -b "0.27.2" "https://github.com/junegunn/fzf.git" "$_fzf_root"
 
     if (
         cd "$_fzf_root"
@@ -849,7 +863,7 @@ function install_stow() {
             rm -f "$_cpan_temp_bin"
             curl -L --silent "https://cpanmin.us/" -o "$_cpan_temp_bin"
             chmod +x "$_cpan_temp_bin"
-            run_command "stow.cpanm.https.install" _sudo "$MYCELIO_PERL" "$_cpan_temp_bin" --notest --verbose App::cpanminus
+            run_command_sudo "stow.cpanm.https.install" "$MYCELIO_PERL" "$_cpan_temp_bin" --notest --verbose App::cpanminus
             rm -f "$_cpan_temp_bin"
         fi
 
@@ -862,6 +876,7 @@ function install_stow() {
     fi
 
     # Install dependencies but skip tests
+    # shellcheck disable=SC2016
     run_task "stow.cpanm.dependencies" _sudo "$MYCELIO_PERL" -MApp::cpanminus::fatscript -le \
         'my $c = App::cpanminus::script->new; $c->parse_options(@ARGV); $c->doit;' -- \
         --notest Carp Test::Output ExtUtils::PL2Bat Inline::C CPAN::DistnameInfo
@@ -1224,7 +1239,7 @@ function install_macos_apps() {
 function configure_linux() {
     if [ "$MYCELIO_ARG_CLEAN" = "1" ] || [ "$MYCELIO_ARG_FORCE" = "1" ]; then
         echo "Removing leftover mycelium dots..."
-        task_group "Stow Clean" _stow_packages --delete
+        task_group "Stow: Sterilize Target" _stow_packages --delete
     fi
 
     mkdir -p "$MYCELIO_HOME/.config/fish/functions"
@@ -1284,9 +1299,9 @@ function configure_linux() {
 
     # Stow packages after we have installed fundle and setup custom links
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
-        task_group "Reconnect Mycelium (Stow)" _stow_packages --restow
+        task_group "Stow: Regenerate Mycelium" _stow_packages --restow
     else
-        task_group "Connect Mycelium (Stow)" _stow_packages
+        task_group "Stow: Inoculate Mycelium" _stow_packages
     fi
 
     if [ -x "$(command -v fish)" ]; then
@@ -1766,7 +1781,7 @@ function _update_git_repository() {
         run_command "$_name.git.checkout" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
     fi
 
-    run_command "$_name.git.pull" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash
+    run_command "$_name.git.pull" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash "origin" "$_branch"
 }
 
 function _parse_arguments() {
