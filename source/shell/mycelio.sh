@@ -165,7 +165,10 @@ function run_command_sudo() {
     _prefix="${1:-}"
     shift
 
-    if [ -x "$(command -v sudo)" ] && [ -z "${MSYSTEM_CARCH:-}" ] && [ ! "${MYCELIO_OS:-}" = "windows" ]; then
+    if [ -x "$(command -v sudo)" ] &&
+        [ -z "${MSYSTEM_CARCH:-}" ] &&
+        [ ! "${MYCELIO_OS:-}" = "windows" ] &&
+        _allow_sudo; then
         run_command "$_prefix" sudo "$@"
     else
         run_command "$_prefix" "$@"
@@ -322,8 +325,22 @@ function _has_admin_rights() {
     return 1
 }
 
+function _allow_sudo() {
+    # If we are fine with interactive prompts, then it doesn't matter if we have permission
+    # with sudo or not.
+    if [ "${MYCELIO_INTERACTIVE:-0}" = "1" ]; then
+        return 0
+    fi
+
+    # Returns zero if we have admin rights and can proceed without prompts
+    _has_admin_rights
+}
+
 function _sudo() {
-    if [ -x "$(command -v sudo)" ] && [ -z "${MSYSTEM_CARCH:-}" ] && [ ! "${MYCELIO_OS:-}" = "windows" ]; then
+    if [ -x "$(command -v sudo)" ] &&
+        [ -z "${MSYSTEM_CARCH:-}" ] &&
+        [ ! "${MYCELIO_OS:-}" = "windows" ] &&
+        _allow_sudo; then
         sudo "$@"
     else
         "$@"
@@ -834,14 +851,15 @@ function install_stow() {
     fi
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
-        rm -f "$_cpan_temp_bin"
-        rm -f "$MYCELIO_HOME/.local/bin/cpanm"
+        rm -f "$_cpan_temp_bin" >/dev/null 2>&1
 
-        rm -rf "$_cpan_root"
-        rm -rf "$_cpanm_root"
+        rm -f "$MYCELIO_HOME/.local/bin/cpanm" >/dev/null 2>&1
 
-        rm -f "$MYCELIO_STOW_ROOT/bin/stow"
-        rm -f "$MYCELIO_STOW_ROOT/bin/chkstow"
+        rm -rf "$_cpan_root" >/dev/null 2>&1
+        rm -rf "$_cpanm_root" >/dev/null 2>&1
+
+        rm -f "$MYCELIO_STOW_ROOT/bin/stow" >/dev/null 2>&1
+        rm -f "$MYCELIO_STOW_ROOT/bin/chkstow" >/dev/null 2>&1
     fi
 
     # If configuration file does not exist yet then we automate configuration with
@@ -876,7 +894,7 @@ function install_stow() {
 
         # If still not available try installing cpanminus with cpan
         if ! "$MYCELIO_PERL" -MApp::cpanminus -le 1 2>/dev/null; then
-            run_task_sudo "stow.cpanm.install" _sudo "$MYCELIO_PERL" -MCPAN -e "CPAN::Shell->notest('install', 'App::cpanminus')"
+            run_task_sudo "stow.cpanm.install" "$MYCELIO_PERL" -MCPAN -e "CPAN::Shell->notest('install', 'App::cpanminus')"
         fi
     else
         echo "[stow.cpanm.install] ✔ CPANM already installed."
@@ -1556,6 +1574,10 @@ function configure_macos_finder() {
     echo "Configured Finder."
 }
 
+function _remove_trailing_slash() {
+    echo "$1" | sed 's/\/*$//g'
+}
+
 function configure_macos_system() {
     # Disable Gatekeeper entirely to get rid of "Are you sure you want to open this application?" dialog
     if [ "${MYCELIO_INTERACTIVE:-}" = "1" ]; then
@@ -1585,7 +1607,7 @@ function _setup_environment() {
 
     # Get home path which is hopefully in 'HOME' but if not we use the parent
     # directory of this project as a backup.
-    HOME=${HOME:-"$(cd "$MYCELIO_ROOT" && cd ../ && pwd)"}
+    HOME=$(_remove_trailing_slash "${HOME:-"$(cd "$MYCELIO_ROOT" && cd .. && pwd)"}")
     export HOME
 
     export MYCELIO_HOME="$HOME"

@@ -9,10 +9,12 @@ function is_shell_script() {
     [[ $1 == */config.status ]] && return 2
     [[ $1 == */automake/* ]] && return 2
     [[ $1 == */base16*/* ]] && return 2
+    [[ $1 == */fish/functions/* ]] && return 2
     [[ $1 == */git-fuzzy/* ]] && return 2
     [[ $1 == */test/bats/* ]] && return 2
 
     [[ $1 == */.zshrc ]] && return 3
+    [[ $1 == */*.fish ]] && return 3
 
     [[ $1 == *.sh ]] && return 0
     [[ $1 == */bash-completion/* ]] && return 0

@@ -32,9 +32,9 @@ packages/xmonad/.xmonad/xmonad.errors
 packages/xmonad/.xmonad/xmonad.hi
 packages/xmonad/.xmonad/xmonad.o
 
-source/macos/Brewfile.lock.json
-
 source/vagrant/.vagrant/
+
+Brewfile.lock.json
 
 clink_history*
 clink.log
