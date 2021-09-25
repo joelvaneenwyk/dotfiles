@@ -204,6 +204,8 @@ Function Write-WindowsSandboxTemplate {
 }
 
 Function Initialize-ConsoleFont {
+    Write-Host "::group::Initialize Console Font"
+
     $fontBaseName = "JetBrains Mono"
     $fontBaseFilename = $fontBaseName -replace '\s', ''
     $fontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$fontBaseFilename.zip"
@@ -324,6 +326,8 @@ Function Initialize-ConsoleFont {
     catch [Exception] {
         Write-Host "Failed to update console to '$fontName' font.", $_.Exception.Message
     }
+
+    Write-Host "::endgroup::"
 }
 
 Function Install-MSYS2 {

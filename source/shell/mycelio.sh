@@ -673,8 +673,8 @@ function install_oh_my_posh {
         return 0
     fi
 
-    if [ -f "$_oh_my_posh_exe" ] && "$_oh_my_posh_exe" --version; then
-        echo "✔ 'oh-my-posh' already installed."
+    if [ -f "$_oh_my_posh_exe" ] && _version=$("$_oh_my_posh_exe" --version); then
+        echo "✔ 'oh-my-posh' v$_version already installed."
         return 0
     fi
 
@@ -1271,6 +1271,7 @@ function configure_linux() {
         # and since 'base16-irblack.sh' is in a submodule, it is not synced/created until after
         # the repository (including that link) would be created.
         cd "$MYCELIO_ROOT/packages/fish" || true
+        rm -f "$MYCELIO_HOME/.base16_theme"
         rm -f ".base16_theme"
         ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
     )

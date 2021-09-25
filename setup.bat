@@ -56,6 +56,10 @@ setlocal EnableExtensions EnableDelayedExpansion
         shift
     if not "%~1"=="" goto :$ArgumentParse
 
+    echo ======-------
+    echo Mycelio Environment Setup
+    echo ======-------
+    echo.
     echo ##[cmd] %SCRIPT% !_args!
 
     if "!_clean!"=="1" (
@@ -150,11 +154,6 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     :: Initialize 'msys2' ("Minimal System") environment with bash script. We call the shim directly because environment
     :: may not read path properly after it has just been installed.
-    echo.
-    echo ======-------
-    echo Mycelio Environment Setup
-    echo ======-------
-    echo.
     if not exist "%MSYS_SHELL%" (
         set _error=55
         echo ERROR: MSYS2 not installed. Initialization failed. 1>&2
