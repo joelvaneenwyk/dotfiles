@@ -489,8 +489,6 @@ function _stow() {
 }
 
 function _stow_packages() {
-    rm -rf "$MYCELIO_ROOT/_Inline"
-
     _stow "$@" linux
     _stow "$@" bash
     _stow "$@" zsh
@@ -904,6 +902,10 @@ function install_stow() {
         _error "Failed to build 'stow' from source."
         return 15
     fi
+
+    # Remove intermediate Perl files in case another version of Perl generated
+    # some files that are incompatible with current version.
+    rm -rf "$MYCELIO_ROOT/_Inline"
 
     _stow --version
 }
@@ -1336,6 +1338,9 @@ function configure_linux() {
 
     # Left-over sometimes created by 'micro' text editor
     rm -f "$MYCELIO_ROOT/log.txt" || true
+
+    # Remove intermediate Perl files
+    rm -rf "$MYCELIO_ROOT/_Inline"
 
     echo "✔ Mycelium is configured and operational."
 }
