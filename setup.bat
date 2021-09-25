@@ -193,7 +193,7 @@ exit /b %MYCELIO_ERROR%
 ::
 
 :Run %*=Command with arguments
-    if "%{GITHUB_ACTIONS%"=="" (
+    if "%GITHUB_ACTIONS%"=="" (
         echo ##[cmd] %*
     ) else (
         echo [command]%*

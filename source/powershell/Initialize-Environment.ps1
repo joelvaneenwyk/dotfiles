@@ -331,15 +331,21 @@ Function Install-MSYS2 {
         $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/2021-07-25/msys2-base-x86_64-20210725.sfx.exe"
 
         if ( -not(Test-Path -Path "$script:MycelioTempDir\msys2.exe" -PathType Leaf) ) {
-            Write-Host "Downloading MSYS2..."
+            Write-Host "::group::Download MSYS2"
             Get-File -Url "$msysInstaller" -Filename "$script:MycelioTempDir\msys2.exe"
+            Write-Host "::endgroup::"
         }
 
         $msysDir = "$Env:UserProfile\.local\msys64"
 
         if ( -not(Test-Path -Path "$msysDir\msys2.exe" -PathType Leaf) ) {
+            Write-Host "::group::Install MSYS2"
             & "$script:MycelioTempDir\msys2.exe" -y -o"$Env:UserProfile\.local"
+            Write-Host "::endgroup::"
 
+            # Create a file that gets automatically called after installation which will silence the
+            # clear that happens during a normal install. This may be useful for users by default but
+            # this makes us lose the rest of the console log which is not great for our use case here.
             Set-Content -Path "$msysDir\etc\post-install\09-dotfiles.post" -Value @"
 MAYBE_FIRST_START=false
 [ -f '/usr/bin/update-ca-trust' ] && sh /usr/bin/update-ca-trust
@@ -348,13 +354,20 @@ echo '[mycelio] Post-install complete.'
 
             # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
             # as the initial upgrade of msys2 results in it shutting down the console.
-            & cmd /s /c "$Env:UserProfile\.local\msys64\msys2_shell.cmd -mingw64 -defterm -no-start -where $script:MycelioRoot -shell bash -c ./source/shell/initialize-package-manager.sh"
+            Write-Host "::group::Initialize MSYS2 Package Manager"
+            $msys2_shell = "$Env:UserProfile\.local\msys64\msys2_shell.cmd"
+            $msys2_shell += "-mingw64 -defterm -no-start -where $script:MycelioRoot -shell bash"
+            $msys2_shell += "-c ./source/shell/initialize-package-manager.sh"
+            & cmd /d /s /c "$msys2_shell"
+            Write-Host "::endgroup::"
 
+            Write-Host "::group::Upgrade MSYS2 Packages"
             # Upgrade all packages
             msys 'pacman --noconfirm -Syuu'
 
             # Clean entire package cache
             msys 'pacman --noconfirm -Scc'
+            Write-Host "::endgroup::"
 
             Write-Host '[mycelio] Finished MSYS2 install.'
         }
@@ -379,6 +392,8 @@ Function Install-Scoop {
 Function Install-Toolset {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPositionalParameters', '', Scope = 'Function')]
     param()
+
+    Write-Host "::group::Install Toolset"
 
     try {
         if (Test-CommandValid "scoop") {
@@ -480,12 +495,13 @@ Function Install-Toolset {
             else {
                 Write-Host "Skipped initialization of administrator settings."
             }
-
         }
     }
     catch {
         Write-Host "Failed to setup administrator settings for 'scoop' package manager."
     }
+
+    Write-Host "::endgroup::"
 }
 
 Function Initialize-Environment {

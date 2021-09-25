@@ -192,8 +192,13 @@ function task_group() {
 function run_task() {
     _name="${1:-}"
     shift
-
     task_group "$_name" run_command "$_name" "$@"
+}
+
+function run_task_sudo() {
+    _name="${1:-}"
+    shift
+    task_group "$_name" run_command_sudo "$_name" "$@"
 }
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
@@ -567,7 +572,7 @@ function install_hugo {
     if [ -f "$MYCELIO_GOEXE" ]; then
         mkdir -p "$_hugo_tmp"
         rm -rf "$_hugo_tmp"
-        git -c advice.detachedHead=false clone -b "v0.88.1" "https://github.com/gohugoio/hugo.git" "$_hugo_tmp"
+        run_task "hugo.git.clone" git -c advice.detachedHead=false clone -b "v0.88.1" "https://github.com/gohugoio/hugo.git" "$_hugo_tmp"
 
         if (
             cd "$_hugo_tmp"
@@ -587,10 +592,10 @@ function install_hugo {
             # Note that CGO_ENABLED allows the creation of Go packages that call C code. There
             # is no support for GCC on Synology so not able to build extended features.
             if uname -a | grep -q "synology"; then
-                CGO_ENABLED="0" run_command "hugo.build" "$MYCELIO_GOEXE" build -v -ldflags "-extldflags -static" -o "$_hugo_exe"
+                CGO_ENABLED="0" run_task "hugo.build" "$MYCELIO_GOEXE" build -v -ldflags "-extldflags -static" -o "$_hugo_exe"
             else
                 # https://github.com/gohugoio/hugo/blob/master/goreleaser.yml
-                CGO_ENABLED="1" run_command "hugo.build" "$MYCELIO_GOEXE" build -v -tags extended -o "$_hugo_exe"
+                CGO_ENABLED="1" run_task "hugo.build" "$MYCELIO_GOEXE" build -v -tags extended -o "$_hugo_exe"
             fi
         ); then
             echo "Successfully installed 'hugo' site builder."
@@ -621,9 +626,9 @@ function install_oh_my_posh {
         wget --quiet "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
 
         if [ -x "$(command -v unzip)" ]; then
-            run_command "posh.themes.unzip" unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
+            run_task "posh.themes.unzip" unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
         elif [ -x "$(command -v 7z)" ]; then
-            run_command "posh.themes.7z" 7z e "$_posh_themes/themes.zip" -o"$_posh_themes" -r
+            run_task "posh.themes.7z" 7z e "$_posh_themes/themes.zip" -o"$_posh_themes" -r
         else
             echo "Neither 'unzip' nor '7z' commands available to extract oh-my-posh themes."
         fi
@@ -642,9 +647,9 @@ function install_oh_my_posh {
         wget --quiet "$font_url" -O "$_fonts_path/$font_base_filename.zip"
 
         if [ -x "$(command -v unzip)" ]; then
-            run_command "fonts.unzip" unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
+            run_task "fonts.unzip" unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
         elif [ -x "$(command -v 7z)" ]; then
-            run_command "fonts.7z" 7z e "$_fonts_path/$font_base_filename.zip" -o"$_fonts_path" -r
+            run_task "fonts.7z" 7z e "$_fonts_path/$font_base_filename.zip" -o"$_fonts_path" -r
         else
             echo "Neither 'unzip' nor '7z' commands available to extract fonts."
         fi
@@ -693,7 +698,7 @@ function install_oh_my_posh {
         if [ -f "$MYCELIO_GOEXE" ]; then
             mkdir -p "$_oh_my_posh_tmp"
             rm -rf "$_oh_my_posh_tmp"
-            git -c advice.detachedHead=false clone -b "v3.175.0" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
+            run_task "oh-my-posh.git.clone" git -c advice.detachedHead=false clone -b "v3.175.0" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
 
             if (
                 cd "$_oh_my_posh_tmp/src"
@@ -711,7 +716,7 @@ function install_oh_my_posh {
                 export GOHOSTARCH
 
                 # https://github.com/JanDeDobbeleer/oh-my-posh/blob/main/.github/workflows/release.yml
-                run_command "oh-my-posh.build" "$MYCELIO_GOEXE" build -a -ldflags "-extldflags -static" -o "$_oh_my_posh_exe"
+                run_task "oh-my-posh.build" "$MYCELIO_GOEXE" build -a -ldflags "-extldflags -static" -o "$_oh_my_posh_exe"
             ); then
                 echo "Successfully installed 'oh-my-posh' site builder."
             else
@@ -863,13 +868,13 @@ function install_stow() {
             rm -f "$_cpan_temp_bin"
             curl -L --silent "https://cpanmin.us/" -o "$_cpan_temp_bin"
             chmod +x "$_cpan_temp_bin"
-            run_command_sudo "stow.cpanm.https.install" "$MYCELIO_PERL" "$_cpan_temp_bin" --notest --verbose App::cpanminus
+            run_task_sudo "stow.cpanm.https.install" "$MYCELIO_PERL" "$_cpan_temp_bin" --notest --verbose App::cpanminus
             rm -f "$_cpan_temp_bin"
         fi
 
         # If still not available try installing cpanminus with cpan
         if ! "$MYCELIO_PERL" -MApp::cpanminus -le 1 2>/dev/null; then
-            run_task "stow.cpanm.install" _sudo "$MYCELIO_PERL" -MCPAN -e "CPAN::Shell->notest('install', 'App::cpanminus')"
+            run_task_sudo "stow.cpanm.install" _sudo "$MYCELIO_PERL" -MCPAN -e "CPAN::Shell->notest('install', 'App::cpanminus')"
         fi
     else
         echo "[stow.cpanm.install] ✔ CPANM already installed."
@@ -877,7 +882,7 @@ function install_stow() {
 
     # Install dependencies but skip tests
     # shellcheck disable=SC2016
-    run_task "stow.cpanm.dependencies" _sudo "$MYCELIO_PERL" -MApp::cpanminus::fatscript -le \
+    run_task_sudo "stow.cpanm.dependencies" "$MYCELIO_PERL" -MApp::cpanminus::fatscript -le \
         'my $c = App::cpanminus::script->new; $c->parse_options(@ARGV); $c->doit;' -- \
         --notest Carp Test::Output ExtUtils::PL2Bat Inline::C CPAN::DistnameInfo
 
@@ -1058,9 +1063,9 @@ function install_go {
                             export GO_LDFLAGS="--subsystem,console"
                         fi
 
-                        run_command "go.bootstrap.make" cmd /c "make.bat"
+                        run_task "go.bootstrap.make" cmd /c "make.bat"
                     else
-                        run_command "go.bootstrap.make" ./make.bash
+                        run_task "go.bootstrap.make" ./make.bash
                     fi
 
                     unset GOROOT_FINAL
@@ -1103,9 +1108,9 @@ function install_go {
                     export GOHOSTARCH
 
                     if [ -x "$(command -v cygpath)" ]; then
-                        run_command "go.make" cmd /c "make.bat"
+                        run_task "go.make" cmd /c "make.bat"
                     else
-                        run_command "go.make" ./make.bash
+                        run_task "go.make" ./make.bash
                     fi
 
                     if [ ! -f "$MYCELIO_GOEXE" ]; then
