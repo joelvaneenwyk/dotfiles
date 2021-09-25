@@ -921,7 +921,7 @@ function install_micro_text_editor() {
         _tmp_micro="$MYCELIO_TEMP/micro"
         mkdir -p "$_tmp_micro"
         rm -rf "$_tmp_micro"
-        run_task git -c advice.detachedHead=false clone -b "v2.0.10" "https://github.com/zyedidia/micro" "$_tmp_micro"
+        run_task "micro.git.clone" git -c advice.detachedHead=false clone -b "v2.0.10" "https://github.com/zyedidia/micro" "$_tmp_micro"
 
         if (
             cd "$_tmp_micro"
