@@ -46,6 +46,7 @@ function update_permissions() {
     _update_permissions "$_media/Downloads/Incomplete"
     _update_permissions "$_media/Shows"
     _update_permissions "$_media/Movies"
+    _update_permissions "$_media/Education"
 }
 
 update_permissions
