@@ -15,5 +15,7 @@ else
     echo "Failed to load both '.profile' and '.bashrc' files."
 fi
 
-# shellcheck disable=SC1091
-test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+if [ -e "${HOME}/.iterm2_shell_integration.bash" ]; then
+    # shellcheck disable=SC1090,SC1091
+    source "${HOME}/.iterm2_shell_integration.bash"
+fi

@@ -3,6 +3,7 @@
     "shellcheck.run": "onType",
     "shellcheck.enableQuickFix": true,
     "shellcheck.customArgs": [
+        "-W0",
         "--external-sources",
         "--root=${workspaceFolder}",
         "--source-path=${workspaceFolder}",

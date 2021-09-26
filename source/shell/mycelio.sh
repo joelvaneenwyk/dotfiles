@@ -165,10 +165,7 @@ function run_command_sudo() {
     _prefix="${1:-}"
     shift
 
-    if [ -x "$(command -v sudo)" ] &&
-        [ -z "${MSYSTEM_CARCH:-}" ] &&
-        [ ! "${MYCELIO_OS:-}" = "windows" ] &&
-        _allow_sudo; then
+    if _allow_sudo; then
         run_command "$_prefix" sudo "$@"
     else
         run_command "$_prefix" "$@"
@@ -203,7 +200,11 @@ function run_task_sudo() {
     _name="${1:-}"
     _prefix="$(echo "${_name// /.}" | awk '{print tolower($0)}')"
     shift
-    task_group "$_name" run_command_sudo "$_prefix" "$@"
+    if _allow_sudo; then
+        task_group "$_name" run_command "$_prefix" sudo "$@"
+    else
+        task_group "$_name" run_command "$_prefix" "$@"
+    fi
 }
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
@@ -289,9 +290,11 @@ function _has_admin_rights() {
     if ! _command_exists "sudo"; then
         return 0
     else
+        _user="$(whoami)"
+
         # -n -> 'non-interactive'
         # -v -> 'validate'
-        if _prompt="$(sudo -nv 2>&1)"; then
+        if _prompt="$(sudo -nv -u "$_user" 2>&1)"; then
             # Has sudo password set
             return 0
         fi
@@ -305,7 +308,7 @@ function _has_admin_rights() {
         if _sudo_machine_output="$(uname -s 2>/dev/null)"; then
             case "${_sudo_machine_output:-}" in
             Darwin*)
-                if dscl . -authonly "$(whoami)" "" >/dev/null 2>&1; then
+                if dscl . -authonly "$_user" "" >/dev/null 2>&1; then
                     # Password is empty string.
                     return 0
                 else
@@ -326,21 +329,37 @@ function _has_admin_rights() {
 }
 
 function _allow_sudo() {
+    # If the command does not exist we can't use it
+    if [ ! -x "$(command -v sudo)" ]; then
+        return 1
+    fi
+
+    # Avoid running sudo on Windows even if command exists
+    if [ -n "${MSYSTEM_CARCH:-}" ] || [ "${MYCELIO_OS:-}" = "windows" ]; then
+        return 2
+    fi
+
     # If we are fine with interactive prompts, then it doesn't matter if we have permission
     # with sudo or not.
-    if [ "${MYCELIO_INTERACTIVE:-0}" = "1" ]; then
+    if [ "${MYCELIO_INTERACTIVE:-}" = "1" ]; then
         return 0
     fi
 
-    # Returns zero if we have admin rights and can proceed without prompts
-    _has_admin_rights
+    # If we get here we have everything we need but we want to make sure
+    # we can run sudo without prompt since we are running in non-interactive
+    # mode and do not want to stall CI builds.
+    if _has_admin_rights; then
+        return 0
+    fi
+
+    echo "⚠ Password required for sudo."
+
+    # We must not have admin rights so we are not allowed to sudo
+    return 5
 }
 
-function _sudo() {
-    if [ -x "$(command -v sudo)" ] &&
-        [ -z "${MSYSTEM_CARCH:-}" ] &&
-        [ ! "${MYCELIO_OS:-}" = "windows" ] &&
-        _allow_sudo; then
+function run_sudo() {
+    if _allow_sudo; then
         sudo "$@"
     else
         "$@"
@@ -822,13 +841,13 @@ function install_powershell() {
         # Download the Microsoft repository GPG keys
         if wget --quiet "$_url" -O "$MYCELIO_TEMP/$_packages_production"; then
             # Register the Microsoft repository GPG keys
-            _sudo dpkg -i "$MYCELIO_TEMP/$_packages_production"
+            run_sudo dpkg -i "$MYCELIO_TEMP/$_packages_production"
             # Update the list of products
-            _sudo apt-get update
+            run_sudo apt-get update
             # Enable the "universe" repositories
-            _sudo add-apt-repository universe || true
+            run_sudo add-apt-repository universe || true
             # Install PowerShell
-            DEBIAN_FRONTEND="noninteractive" _sudo apt-get install -y powershell
+            DEBIAN_FRONTEND="noninteractive" run_sudo apt-get install -y powershell
         fi
     fi
 }
@@ -870,13 +889,13 @@ function install_stow() {
             echo ""
             echo "no"
             echo "exit"
-        ) | run_task "stow.cpan" _sudo "$MYCELIO_PERL" -MCPAN -e "shell"; then
+        ) | run_task "stow.cpan" run_sudo "$MYCELIO_PERL" -MCPAN -e "shell"; then
             echo "[stow.cpan] ⚠ Automated CPAN configuration failed."
         fi
 
         # If configuration file does not exist yet then we automate configuration with
         # answers to standard questions. These may become invalid with newer versions.
-        if ! run_task "stow.cpan.config" _sudo perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
+        if ! run_task "stow.cpan.config" run_sudo perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
             echo "[stow.cpan.config] ⚠ CPAN configuration failed to initialize."
         fi
     else
@@ -1346,7 +1365,8 @@ function configure_linux() {
     fi
 
     if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
-        DEBIAN_FRONTEND="noninteractive" run_task_sudo "Remove Intermediate Package Data" apt-get autoremove -y
+        DEBIAN_FRONTEND="noninteractive" run_task_sudo "Remove Intermediate Package Data" \
+            apt-get autoremove -y
     fi
 
     # Remove intermediate files here to reduce size of Docker container layer
@@ -1377,9 +1397,9 @@ function install_packages() {
         # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
         rm -f /var/lib/pacman/db.lck
 
-        pacman -Fy
+        run_command "pacman.update.database" pacman -Fy
 
-        pacman -S --quiet --noconfirm --needed \
+        run_command "pacman.install" pacman -S --quiet --noconfirm --needed \
             msys2-keyring \
             curl wget unzip \
             git gawk perl \
@@ -1389,7 +1409,7 @@ function install_packages() {
             msys2-runtime-devel msys2-w32api-headers msys2-w32api-runtime
 
         if [ "${MSYSTEM:-}" = "MINGW64" ]; then
-            pacman -S --quiet --noconfirm --needed \
+            run_command "pacman.install.mingw64" pacman -S --quiet --noconfirm --needed \
                 mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils
         fi
 
@@ -1404,8 +1424,8 @@ function install_packages() {
             rm -rf "/etc/pacman.d/gnupg/"
         fi
     elif [ -x "$(command -v apk)" ]; then
-        _sudo apk update
-        _sudo apk add \
+        run_command_sudo "apk.update" apk update
+        run_command_sudo "apk.add" apk add \
             sudo tzdata git wget curl unzip xclip \
             build-base gcc g++ make musl-dev openssl-dev zlib-dev \
             perl perl-dev perl-utils \
@@ -1413,12 +1433,12 @@ function install_packages() {
             python3 py3-pip \
             fontconfig openssl gnupg
     elif [ -x "$(command -v apt-get)" ]; then
-        _sudo apt-get update
+        run_command_sudo "apt.update" apt-get update
 
         # Needed to prevent interactive questions during 'tzdata' install, see https://stackoverflow.com/a/44333806
-        _sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
+        run_sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
 
-        DEBIAN_FRONTEND="noninteractive" _sudo apt-get install -y --no-install-recommends \
+        DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install" apt-get install -y --no-install-recommends \
             sudo tzdata git wget curl unzip xclip libnotify-bin \
             software-properties-common apt-transport-https \
             build-essential gcc g++ make automake autoconf \
@@ -1428,7 +1448,7 @@ function install_packages() {
             fontconfig
 
         if [ -x "$(command -v dpkg-reconfigure)" ]; then
-            _sudo dpkg-reconfigure --frontend noninteractive tzdata
+            run_sudo dpkg-reconfigure --frontend noninteractive tzdata
         fi
     fi
 }
@@ -1821,7 +1841,7 @@ function _update_git_repository() {
 }
 
 function _parse_arguments() {
-    # Assume we are fine with interactive prompts if necessary
+    # Assume we are fine with interactive prompts (e.g., request for password) if necessary
     export MYCELIO_INTERACTIVE=1
 
     export MYCELIO_ARG_CLEAN=0

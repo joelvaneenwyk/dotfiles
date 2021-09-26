@@ -22,6 +22,8 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     set _error=0
     set _clean=0
+    set _args=
+    set _arg_remainder=
 
     :: Keep appending arguments until there are none left
     :$ArgumentParse
@@ -40,8 +42,8 @@ setlocal EnableExtensions EnableDelayedExpansion
 
         :: Setup Docker arguments
         set _container_platform=%~1
-        set _container_name=menv:!_container_platform!
-        set _container_instance=menv_!_container_platform!
+        set _container_name=mycelio:!_container_platform!
+        set _container_instance=mycelio_!_container_platform!
         goto:$ArgumentNext
 
         :$ArgumentParseRemainder
@@ -49,10 +51,10 @@ setlocal EnableExtensions EnableDelayedExpansion
             if "%~1"=="--clean" set _clean=1
             if "%~1"=="clean" set _clean=1
             if "%~1"=="cls" set _clean=1
-            set "_arg_remainder=%1 !_arg_remainder!"
+            set "_arg_remainder=!_arg_remainder! %1"
 
         :$ArgumentNext
-        set "_args=%1 !_args!"
+        set "_args=!_args! %1"
         shift
     if not "%~1"=="" goto :$ArgumentParse
 
@@ -60,7 +62,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo Mycelio Environment Setup
     echo ======-------
     echo.
-    echo ##[cmd] %SCRIPT% !_args!
+    echo ##[cmd] %SCRIPT%!_args!
 
     if "!_clean!"=="1" (
         set MYCELIO_PROFILE_INITIALIZED=
@@ -118,11 +120,14 @@ setlocal EnableExtensions EnableDelayedExpansion
         call :Run docker rm --force "!_container_name!" > nul 2>&1
         call :Run docker stop "!_container_instance!" > nul 2>&1
 
-        call :Run docker build --progress plain --rm -t "!_container_name!" -f "%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!" !_arg_remainder! !MYCELIO_ROOT!
+        if "!_arg_remainder!"=="" set _arg_remainder=bash
+        set _shell_cmd=cd /usr/workspace ^&^& !_arg_remainder!
+
+        call :Run docker build --progress plain --rm -t "!_container_name!" -f "%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!" !MYCELIO_ROOT!
         if errorlevel 1 (
             echo Docker '!_container_name!' container build failed: '%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!'
         ) else (
-            docker run --name "!_container_instance!" -it --rm "!_container_name!"
+            call :Run docker run -it --rm  --name "!_container_instance!" -v %cd%:/usr/workspace "%_container_name%" bash -c "!_shell_cmd!"
         )
 
         exit /b 0
