@@ -203,6 +203,7 @@
         "*.json.git": "cjson",
         "*.in": "perl",
         "*.bats": "shellscript",
+        "setup": "shellscript",
         "stow": "perl",
         "chkstow": "perl",
         "get-version": "perl",

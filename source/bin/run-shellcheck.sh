@@ -25,7 +25,9 @@ function is_shell_script() {
 
 function install_shellcheck() {
     if [ ! -x "$(command -v shellcheck)" ]; then
-        if [ -x "$(command -v apt-get)" ]; then
+        if [ -x "$(command -v brew)" ]; then
+            brew install shellcheck
+        elif [ -x "$(command -v apt-get)" ]; then
             sudo apt-get install shellcheck
         fi
     fi

@@ -1,4 +1,12 @@
-# Portable Configuration
+# `dotfiles` 🍄
+
+```ansi
+ ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓
+ ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃
+ ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
+```
+
+Custom config files (aka. "dotfiles") for Linux, macOS, and Windows that are deployed to target with [GNU Stow](https://www.gnu.org/software/stow/). It also contains scripts for basic provisioning to install useful applications for developers (e.g., VSCode, gcc, mutagen, go, etc.) and environment tweaks (e.g., nerd fonts).
 
 ```ansi
       ██            ██     ████ ██  ██
@@ -37,22 +45,21 @@
 
 ## Table of Contents
 
-- [Portable Configuration](#portable-configuration)
-  - [Table of Contents](#table-of-contents)
-  - [Setup](#setup)
-    - [Windows](#windows)
-    - [macOS](#macos)
-    - [Linux](#linux)
-    - [Synology](#synology)
-    - [Raspberry PI](#raspberry-pi)
-    - [Secrets](#secrets)
-  - [Introduction](#introduction)
-  - [Management](#management)
-  - [Installation](#installation)
-  - [Implementation](#implementation)
-  - [Details](#details)
-    - [x11](#x11)
-  - [Resources](#resources)
+- [Table of Contents](#table-of-contents)
+- [Setup](#setup)
+  - [Windows](#windows)
+  - [macOS](#macos)
+  - [Linux](#linux)
+  - [Synology](#synology)
+  - [Raspberry PI](#raspberry-pi)
+  - [Secrets](#secrets)
+- [Introduction](#introduction)
+- [Management](#management)
+- [Installation](#installation)
+- [Implementation](#implementation)
+- [Details](#details)
+  - [x11](#x11)
+- [Resources](#resources)
 
 ## Setup
 
@@ -105,23 +112,34 @@ Most versions of MacOS will already have Git installed, and you can activate it 
 
 ### Synology
 
-1. Update Synology to allow TCP port forwarding. Add the following to `/etc/ssh/sshd_config`.
+1. Update Synology to allow TCP port forwarding by adding the following to `/etc/ssh/sshd_config`:
+
     > `AllowTcpForwarding yes`
+
 2. Restart SSH `sudo synoservicectl --restart sshd`
 3. Clone the repo from your home directory:
+
    > `git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
+
 4. Initialize environment.
    > `./setup.sh`
+
 5. Install bash settings for the root user
+
    > `sudo stow bash -t /root`
 
 ### Raspberry PI
 
 1. Clone the repo from your home directory:
+
    > `git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
+
 2. Navigate to `dotfiles` project.
+
    > `cd dotfiles`
+
 3. Initialize the environment.
+
    > `./setup.sh`
 
 ### Secrets
@@ -151,9 +169,7 @@ This is because these files dictate how the system will look, feel, and function
 
 ## Management
 
-This repository was designed to be used with [gnu stow](http://www.gnu.org/software/stow/), a free, portable, lightweight symlink farm manager. this allows me to keep a versioned directory of all my config files that are virtually linked into place via a single command. this makes sharing these files among many users (root) and computers super simple. and does not clutter your home directory with version control files.
-
-## Installation
+This repository was designed to be used with [GNU Stow](http://www.gnu.org/software/stow/), a free, portable, lightweight symlink farm manager. this allows me to keep a versioned directory of all my config files that are virtually linked into place via a single command. this makes sharing these files among many users (root) and computers super simple. and does not clutter your home directory with version control files.
 
 [Stow](https://www.gnu.org/software/stow/) is available for all linux and most other unix-like distributions via your favorite package manager.
 
@@ -161,7 +177,7 @@ This repository was designed to be used with [gnu stow](http://www.gnu.org/softw
 - `sudo apt-get -y install stow`
 - `brew install stow`
 
-or clone it [from source](https://savannah.gnu.org/git/?group=stow) and [build it](http://git.savannah.gnu.org/cgit/stow.git/tree/INSTALL) yourself.
+This repository, however, has Stow as a submodule and builds it [from source](https://savannah.gnu.org/git/?group=stow) on all platforms using a [modified version](https://github.com/joelvaneenwyk/stow) that fully supports Windows.
 
 ## Implementation
 
@@ -179,11 +195,9 @@ This will symlink files to `~/` and various other places. You can override the d
 
 **Note:** `stow` can only create a symlink if a config file does not already exist. If a default file was created upon program installation, you can add the `--adopt` flag which will delete the existing configuration settings before you install a new one with stow.
 
-## Details
-
 ### x11
 
-to install the **x11** config you need to execute the command:
+To install the **x11** config you need to execute the command:
 
 ```bash
 stow -t / x11

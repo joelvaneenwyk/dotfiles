@@ -109,7 +109,7 @@ function _filter() {
     IFS="$_ifs"
 }
 
-function _error() {
+function log_error() {
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         echo "::error::$*"
     fi
@@ -506,7 +506,6 @@ function _stow() {
         _stow_args+=("$@")
 
         _return_code=0
-        echo "##[cmd] perl -I $MYCELIO_STOW_ROOT/lib $_stow_bin ${_stow_args[*]}"
         if run_command "stow" perl -I "$MYCELIO_STOW_ROOT/lib" "$_stow_bin" "${_stow_args[@]}" 2>&1 | grep -v "BUG in find_stowed_path"; then
             _return_code="${PIPESTATUS[0]}"
         else
@@ -516,7 +515,7 @@ function _stow() {
         if [ "$_return_code" = "0" ]; then
             echo "✔ Stow command succeeded."
         else
-            _error "Stow failed."
+            log_error "Stow failed."
             return "$_return_code"
         fi
     fi
@@ -596,12 +595,12 @@ function install_hugo {
     fi
 
     if [ ! -x "$(command -v git)" ]; then
-        _error "Failed to install 'hugo' site builder. Required 'git' tool missing."
+        log_error "Failed to install 'hugo' site builder. Required 'git' tool missing."
         return 1
     fi
 
     if [ ! -f "$MYCELIO_GOEXE" ]; then
-        _error "Failed to install 'hugo' site builder. Missing 'go' compiler: '$MYCELIO_GOEXE'"
+        log_error "Failed to install 'hugo' site builder. Missing 'go' compiler: '$MYCELIO_GOEXE'"
         return 2
     fi
 
@@ -636,12 +635,12 @@ function install_hugo {
         ); then
             echo "✔ Successfully installed 'hugo' site builder."
         else
-            _error "Failed to install 'hugo' site builder."
+            log_error "Failed to install 'hugo' site builder."
         fi
     fi
 
     if [ ! -f "$_hugo_exe" ] || ! "$_hugo_exe" version; then
-        _error "Failed to install 'hugo' static site builder."
+        log_error "Failed to install 'hugo' static site builder."
         return 3
     fi
 
@@ -722,12 +721,12 @@ function install_oh_my_posh {
 
     if ! _version=$("$_oh_my_posh_exe" --version 2>&1); then
         if [ ! -x "$(command -v git)" ]; then
-            _error "Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
+            log_error "Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
             return 1
         fi
 
         if [ ! -f "$MYCELIO_GOEXE" ]; then
-            _error "Failed to install 'oh-my-posh' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
+            log_error "Failed to install 'oh-my-posh' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
             return 2
         fi
 
@@ -762,7 +761,7 @@ function install_oh_my_posh {
     fi
 
     if ! _version=$("$_oh_my_posh_exe" --version 2>&1); then
-        _error "Failed to install 'oh_my_posh' static site builder."
+        log_error "Failed to install 'oh_my_posh' static site builder."
         return 3
     fi
 
@@ -791,17 +790,17 @@ function install_fzf {
     fi
 
     if [ ! -x "$(command -v git)" ]; then
-        _error "Failed to install 'fzf' extension. Required 'git' tool missing."
+        log_error "Failed to install 'fzf' extension. Required 'git' tool missing."
         return 1
     fi
 
     if [ ! -f "$MYCELIO_GOEXE" ]; then
-        _error "Failed to install 'fzf' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
+        log_error "Failed to install 'fzf' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
         return 2
     fi
 
     if [ ! -x "$(command -v make)" ]; then
-        _error "Failed to install 'fzf' extension. Required 'make' tool missing."
+        log_error "Failed to install 'fzf' extension. Required 'make' tool missing."
         return 3
     fi
 
@@ -815,11 +814,11 @@ function install_fzf {
     ); then
         echo "✔ Successfully generated 'fzf' utility with 'go' compiler."
     else
-        _error "Failed to install 'fzf' utility."
+        log_error "Failed to install 'fzf' utility."
     fi
 
     if [ ! -f "$_fzf_exe" ]; then
-        _error "Failed to compile 'fzf' utility."
+        log_error "Failed to compile 'fzf' utility."
         return 3
     fi
 
@@ -841,14 +840,16 @@ function install_powershell() {
         # Download the Microsoft repository GPG keys
         if wget --quiet "$_url" -O "$MYCELIO_TEMP/$_packages_production"; then
             # Register the Microsoft repository GPG keys
-            run_sudo dpkg -i "$MYCELIO_TEMP/$_packages_production"
+            run_command_sudo "dpkg.register.microsoft" dpkg -i "$MYCELIO_TEMP/$_packages_production"
             # Update the list of products
-            run_sudo apt-get update
+            run_command_sudo "apt.update" apt-get update
             # Enable the "universe" repositories
-            run_sudo add-apt-repository universe || true
+            run_command_sudo "apt.add.repository" add-apt-repository universe || true
             # Install PowerShell
-            DEBIAN_FRONTEND="noninteractive" run_sudo apt-get install -y powershell
+            DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install.powershell" apt-get install -y powershell
         fi
+    else
+        echo "Skipped PowerShell install "
     fi
 }
 
@@ -882,7 +883,7 @@ function install_stow() {
     fi
 
     if [ ! -f "$MYCELIO_STOW_ROOT/configure.ac" ]; then
-        _error "'stow' source missing: '$MYCELIO_STOW_ROOT'"
+        log_error "'stow' source missing: '$MYCELIO_STOW_ROOT'"
         return 20
     elif (
         if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
@@ -895,7 +896,7 @@ function install_stow() {
     ); then
         echo "✔ Successfully built 'stow' from source."
     else
-        _error "Failed to build 'stow' from source."
+        log_error "Failed to build 'stow' from source."
         return 15
     fi
 
@@ -999,7 +1000,7 @@ function install_go {
         _go_compiled=0
 
         if [ ! -x "$(command -v gcc)" ] && [ ! -x "$(command -v make)" ]; then
-            _error "Skipped 'go' compile. Missing GCC toolchain."
+            log_error "Skipped 'go' compile. Missing GCC toolchain."
         else
             if [ "${MSYSTEM:-}" = "MSYS" ]; then
 
@@ -1020,21 +1021,19 @@ function install_go {
                         _go_bootstrap_exe="/mingw64/bin/go"
                         _local_go_bootstrap_root=$($_go_bootstrap_exe env GOROOT)
                     else
-                        _error "Missing required 'go' compiler for MSYS environment."
+                        log_error "Missing required 'go' compiler for MSYS environment."
                     fi
                 fi
             elif [ ! -f "$_go_bootstrap_exe" ]; then
                 # https://golang.org/doc/install/source
                 _go_bootstrap_src_archive="$MYCELIO_TEMP/go_bootstrap.tgz"
                 wget --quiet -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
-                echo "Extract 'go' source: '$_go_bootstrap_src_archive'"
                 rm -rf "$MYCELIO_TEMP/go" || true
                 run_command "go.bootstrap.tar" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
                 rm -rf "$_local_go_bootstrap_root" || true
                 mv "$MYCELIO_TEMP/go" "$_local_go_bootstrap_root"
                 rm "$_go_bootstrap_src_archive"
 
-                echo "Compile 'go' 1.4 bootstrap from source: '$_local_go_bootstrap_root/src'"
                 if (
                     GOROOT_FINAL="$_local_go_bootstrap_root"
                     export GOROOT_FINAL
@@ -1070,9 +1069,9 @@ function install_go {
 
                     unset GOROOT_FINAL
                 ); then
-                    echo "Successfully compiled 'go' bootstrap from source."
+                    echo "Compiled 'go' bootstrap from source: '$_local_go_bootstrap_root/src'"
                 else
-                    echo "Failed to compile 'go' bootstrap from source."
+                    log_error "Failed to compile 'go' bootstrap from source."
                 fi
             fi
 
@@ -1084,7 +1083,6 @@ function install_go {
                 run_task "go.source.extract" tar -C "$_local_root" -xzf "$_go_src_archive"
                 rm "$_go_src_archive"
 
-                echo "Compiling 'go' from source: '$_local_go_root/src'"
                 if (
                     cd "$_local_go_root/src"
 
@@ -1119,7 +1117,7 @@ function install_go {
                     # Pre-compile the standard library, just like the official binary release tarballs do
                     run_command "go.install.std" "$MYCELIO_GOEXE" install std
                 ); then
-                    echo "Successfully compiled 'go' from source."
+                    echo "✔ Compiled 'go' from source.: '$_local_go_root/src'"
                     _go_compiled=1
                 else
                     echo "⚠ Failed to compile 'go' from source."
@@ -1170,7 +1168,7 @@ function install_go {
                         cp -rf "$_go_tmp" "$_local_go_root"
                         echo "Updated 'go' install: '$_local_go_root'"
                     else
-                        _error "Failed to update 'go' install."
+                        log_error "Failed to update 'go' install."
                     fi
 
                     rm -rf "$_go_tmp"
@@ -1191,7 +1189,7 @@ function install_go {
 
         echo "✔ $_go_version"
     else
-        _error "Failed to install 'go' language."
+        log_error "Failed to install 'go' language."
         return 5
     fi
 
@@ -1310,12 +1308,12 @@ function configure_linux() {
 
     if [ -x "$(command -v fish)" ]; then
         if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
-            _error "Fundle not installed in home directory: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
+            log_error "Fundle not installed in home directory: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
         else
             if run_task "Install Fundle" fish -c "fundle install"; then
                 echo "✔ Installed 'fundle' package manager for fish."
             else
-                _error "Failed to install 'fundle' package manager for fish."
+                log_error "Failed to install 'fundle' package manager for fish."
             fi
         fi
     else
@@ -1342,7 +1340,7 @@ function configure_linux() {
     # Remove intermediate Perl files
     rm -rf "$MYCELIO_ROOT/_Inline"
 
-    echo "✔ Mycelium is configured and operational."
+    echo "🍄 Mycelium is configured and healthy."
 }
 
 function install_packages() {
@@ -1433,7 +1431,7 @@ function install_python() {
 
         echo "Upgraded 'pip3' and installed 'pre-commit' package."
     else
-        _error "Missing or invalid Python 3 install: $(command -v python3)"
+        log_error "Missing or invalid Python 3 install: $(command -v python3)"
     fi
 }
 
@@ -1884,7 +1882,7 @@ function _initialize_environment() {
     # otherwise much of this initialization will fail.
     mkdir -p "$MYCELIO_TEMP"
     if ! touch "$MYCELIO_TEMP/.test"; then
-        _error "[mycelio] ERROR: Missing permissions to write to temp folder: '$MYCELIO_TEMP'"
+        log_error "[mycelio] ERROR: Missing permissions to write to temp folder: '$MYCELIO_TEMP'"
         return 1
     else
         rm -rf "$MYCELIO_TEMP/.test"
@@ -1934,7 +1932,7 @@ function _initialize_environment() {
     configure_linux "$@"
 
     if ! _load_profile; then
-        _error "Failed to reload profile."
+        log_error "Failed to reload profile."
     fi
 
     _supports_neofetch=0
