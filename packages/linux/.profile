@@ -407,6 +407,11 @@ initialize_profile() {
 
     export LD_PRELOAD=
 
+    if [ -f "$HOME/.cargo/env" ]; then
+        # shellcheck disable=SC1091
+        . "$HOME/.cargo/env"
+    fi
+
     _set_golang_paths
 
     # Must NOT include /mingw64/bin as we want to rely on the system environment setup

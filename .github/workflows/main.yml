@@ -32,6 +32,11 @@ jobs:
             launch: bash setup.sh
             logs: /home/runneradmin/.cpan*/work/**/*.log
 
+          # The following are known errors/warnings when running on Windows:
+          #
+          #   cp: cannot create symbolic link '/home/runneradmin/dots/test/bats/test/fixtures/parallel/setup_file/helper.bash': No such file or directory
+          #   cp: cannot create symbolic link '/home/runneradmin/dots/test/bats/test/fixtures/parallel/suite/helper.bash': No such file or directory
+          #   cp: cannot create symbolic link '/home/runneradmin/dots/vim/.config/nvim/init.vim': No such file or directory
           - platform: windows-latest
             launch: cmd /c setup.bat
 
