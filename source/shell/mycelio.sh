@@ -145,8 +145,8 @@ function run_command() {
 
     (
         MYCELIO_DISABLE_TRAP=1
-        ( 
-            ( 
+        (
+            (
                 (
                     unset MYCELIO_DISABLE_TRAP
 
@@ -881,52 +881,9 @@ function install_stow() {
         rm -f "$MYCELIO_STOW_ROOT/bin/chkstow" >/dev/null 2>&1
     fi
 
-    # If configuration file does not exist yet then we automate configuration with
-    # answers to standard questions. These may become invalid with newer versions.
-    if [ ! -e "$_cpan_root/CPAN/MyConfig.pm" ]; then
-        if ! (
-            echo "yes"
-            echo ""
-            echo "no"
-            echo "exit"
-        ) | run_task "stow.cpan" run_sudo "$MYCELIO_PERL" -MCPAN -e "shell"; then
-            echo "[stow.cpan] ⚠ Automated CPAN configuration failed."
-        fi
-
-        # If configuration file does not exist yet then we automate configuration with
-        # answers to standard questions. These may become invalid with newer versions.
-        if ! run_task "stow.cpan.config" run_sudo perl "$MYCELIO_ROOT/source/perl/initialize-cpan-config.pl"; then
-            echo "[stow.cpan.config] ⚠ CPAN configuration failed to initialize."
-        fi
-    else
-        echo "[stow.cpan.config] ✔ CPAN already initialized."
-    fi
-
-    if ! "$MYCELIO_PERL" -MApp::cpanminus -le 1 2>/dev/null; then
-        if [ -x "$(command -v curl)" ]; then
-            rm -f "$_cpan_temp_bin"
-            curl -L --silent "https://cpanmin.us/" -o "$_cpan_temp_bin"
-            chmod +x "$_cpan_temp_bin"
-            run_task_sudo "stow.cpanm.https.install" "$MYCELIO_PERL" "$_cpan_temp_bin" --notest --verbose App::cpanminus
-            rm -f "$_cpan_temp_bin"
-        fi
-
-        # If still not available try installing cpanminus with cpan
-        if ! "$MYCELIO_PERL" -MApp::cpanminus -le 1 2>/dev/null; then
-            run_task_sudo "stow.cpanm.install" "$MYCELIO_PERL" -MCPAN -e "CPAN::Shell->notest('install', 'App::cpanminus')"
-        fi
-    else
-        echo "[stow.cpanm.install] ✔ CPANM already installed."
-    fi
-
-    # Install dependencies but skip tests
-    # shellcheck disable=SC2016
-    run_task_sudo "stow.cpanm.dependencies" "$MYCELIO_PERL" -MApp::cpanminus::fatscript -le \
-        'my $c = App::cpanminus::script->new; $c->parse_options(@ARGV); $c->doit;' -- \
-        --notest Carp Test::Output ExtUtils::PL2Bat Inline::C CPAN::DistnameInfo
-
     if [ ! -f "$MYCELIO_STOW_ROOT/configure.ac" ]; then
         _error "'stow' source missing: '$MYCELIO_STOW_ROOT'"
+        return 20
     elif (
         if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
             # shellcheck source=source/stow/tools/make-clean.sh
@@ -945,6 +902,7 @@ function install_stow() {
     # Remove intermediate Perl files in case another version of Perl generated
     # some files that are incompatible with current version.
     rm -rf "$MYCELIO_ROOT/_Inline"
+    rm -rf "$MYCELIO_STOW_ROOT/_Inline"
 
     _stow --version
 }

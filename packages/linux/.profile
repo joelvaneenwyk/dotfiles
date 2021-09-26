@@ -206,15 +206,20 @@ initialize_interactive_profile() {
     export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
     if [ -x "$(command -v oh-my-posh)" ] && [ "$MYCELIO_OH_MY_POSH" = "1" ]; then
-        _shell=$(oh-my-posh --print-shell)
         _theme="$HOME/.poshthemes/mycelio.omp.json"
-        if [ ! -f "$_theme" ] && [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
-            _theme="$HOME/.poshthemes/stelbent.minimal.omp.json"
+        if [ ! -f "$_theme" ]; then
+            if [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
+                _theme="$HOME/.poshthemes/stelbent.minimal.omp.json"
+            else
+                _theme=""
+            fi
         fi
 
-        if [ -n "$_shell" ] && [ -f "$_theme" ]; then
-            if ! eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")"; then
-                echo "❌ Failed to initialize Oh My Posh."
+        if [ -n "$_theme" ]; then
+            if _shell="$(oh-my-posh --print-shell 2>&1)"; then
+                if ! eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")"; then
+                    echo "❌ Failed to initialize Oh My Posh."
+                fi
             fi
         fi
     fi
