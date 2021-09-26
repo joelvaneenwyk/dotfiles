@@ -148,6 +148,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     :: stow the Windows settings. However, due to limitations in 'stow' on Windows
     :: we need to do this in MSYS2 instead.
     call :GroupStart "Make Stow"
+    call :Run "%MYCELIO_ROOT%\source\stow\tools\install-dependencies.bat"
     call :Run "%MYCELIO_ROOT%\source\stow\tools\make-stow.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
