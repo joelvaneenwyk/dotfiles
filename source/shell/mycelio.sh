@@ -145,8 +145,8 @@ function run_command() {
 
     (
         MYCELIO_DISABLE_TRAP=1
-        (
-            (
+        ( 
+            ( 
                 (
                     unset MYCELIO_DISABLE_TRAP
 
@@ -1277,7 +1277,7 @@ function configure_linux() {
         wget --quiet "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
         if [ -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
             chmod a+x "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
-            echo "✔ Downloaded latest fundle: \'$MYCELIO_HOME/.config/fish/functions/fundle.fish\'"
+            echo "✔ Downloaded latest fundle: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
         fi
     fi
 
@@ -1403,6 +1403,7 @@ function install_packages() {
             perl cpanminus \
             stow tmux neofetch fish \
             python3 python3-pip \
+            shellcheck \
             fontconfig
 
         if [ -x "$(command -v dpkg-reconfigure)" ]; then
