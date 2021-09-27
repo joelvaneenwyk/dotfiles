@@ -1237,6 +1237,31 @@ function install_macos_apps() {
     echo "Installed dependencies with 'brew' package manager."
 }
 
+function generate_gnugp_config() {
+    _gnupg_config_root="$1"
+
+    if [ -d "$_gnupg_config_root" ]; then
+        _gnupg_templates_root="$MYCELIO_ROOT/source/gnupg"
+        mkdir -p "$_gnupg_config_root"
+
+        rm -f "$_gnupg_config_root/gpg-agent.conf"
+        cp "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
+        if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
+            echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gnupg_config_root/gpg-agent.conf"
+        fi
+        echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"
+
+        rm -f "$_gnupg_config_root/gpg.conf"
+        cp "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
+        echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
+
+        # Set permissions for GnuGP otherwise we can get permission errors during use. We
+        # intentionally set permissions differently for files and directories.
+        find "$_gnupg_config_root" -type f -exec chmod 600 {} \;
+        find "$_gnupg_config_root" -type d -exec chmod 700 {} \;
+    fi
+}
+
 function configure_linux() {
     if [ "$MYCELIO_ARG_CLEAN" = "1" ] || [ "$MYCELIO_ARG_FORCE" = "1" ]; then
         task_group "Stow: Sterilize Target" _stow_packages --delete
@@ -1279,25 +1304,13 @@ function configure_linux() {
         fi
     fi
 
-    _gnupg_config_root="$MYCELIO_HOME/.gnupg"
-    _gnupg_templates_root="$MYCELIO_ROOT/source/gnupg"
-    mkdir -p "$_gnupg_config_root"
+    generate_gnugp_config "$MYCELIO_HOME/.gnupg"
 
-    rm -f "$_gnupg_config_root/gpg-agent.conf"
-    cp "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
-    if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-        echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gnupg_config_root/gpg-agent.conf"
-    fi
-    echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"
+    # GPG4Win: homedir
+    generate_gnugp_config "/c/Users/$(whoami)/AppData/Roaming/gnupg"
 
-    rm -f "$_gnupg_config_root/gpg.conf"
-    cp "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
-    echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
-
-    # Set permissions for GnuGP otherwise we can get permission errors during use. We
-    # intentionally set permissions differently for files and directories.
-    find "$_gnupg_config_root" -type f -exec chmod 600 {} \;
-    find "$_gnupg_config_root" -type d -exec chmod 700 {} \;
+    # GPG4Win: sysconfdir
+    generate_gnugp_config "/c/ProgramData/GNU/etc/gnupg"
 
     # Stow packages after we have installed fundle and setup custom links
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then

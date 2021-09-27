@@ -97,7 +97,9 @@ $environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"
 # Expected to contain 'cpan' and other related utilities
 $environmentVariables += "$ENV:UserProfile\.local\perl\perl\site\bin"
 
+# If installed, will give you access to 'gpg' and 'gpgconf' as well as 'Kleopatra'
 $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
+$environmentVariables += "C:\Program Files (x86)\Gpg4win\bin"
 
 $environmentVariables += "$ENV:UserProfile\scoop\shims"
 
