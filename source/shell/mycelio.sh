@@ -46,9 +46,6 @@ function __trap_error() {
     _retval=$?
 
     if [ ! "${MYCELIO_DISABLE_TRAP:-}" == "1" ]; then
-        # Stop tracing once we hit the error
-        #set +o xtrace || true
-
         _line=${_mycelio_dbg_last_line:-}
 
         if [ "${_line:-}" = "" ]; then
@@ -1405,7 +1402,7 @@ function install_packages() {
         run_command_sudo "apt.update" apt-get update
 
         # Needed to prevent interactive questions during 'tzdata' install, see https://stackoverflow.com/a/44333806
-        run_sudo ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
+        run_command_sudo "timezone.set" ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
 
         DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install" apt-get install -y --no-install-recommends \
             sudo tzdata git wget curl unzip xclip libnotify-bin \
@@ -1442,7 +1439,7 @@ function install_python() {
         # details on the issue, see https://github.com/microsoft/WSL/issues/5126
         run_command "python.pip.precommit" python3 -m pip install --user pre-commit
 
-        echo "Upgraded 'pip3' and installed 'pre-commit' package."
+        echo "✔ Upgraded 'pip3' and installed 'pre-commit' package."
     else
         log_error "Missing or invalid Python 3 install: $(command -v python3)"
     fi
