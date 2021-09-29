@@ -13,9 +13,9 @@ elseif not os.isfile(mycelio_config) then
 else
     io.popen(local_ohmyposh_executable .. " --version")
     if not os.geterrorlevel == 0 then
-        print('[clink] ⚠ Oh My Posh version test failed: \'' .. local_ohmyposh_executable .. '\'')
+        print('[clink] WARNING: Oh My Posh version test failed: \'' .. local_ohmyposh_executable .. '\'')
     else
-        print('[clink] ✔ Using Oh My Posh: \'' .. local_ohmyposh_executable .. '\'')
+        print('[clink] Using Oh My Posh: \'' .. local_ohmyposh_executable .. '\'')
         ohmyposh_executable = local_ohmyposh_executable
     end
 end
