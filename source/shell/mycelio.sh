@@ -571,6 +571,25 @@ function initialize_gitconfig() {
 
         echo "Created custom '.gitconfig' with include directives."
     fi
+
+    generate_gnugp_config "$MYCELIO_HOME/.gnupg"
+
+    local windows_root=""
+
+    if [ -d "/c/ProgramData/Microsoft" ]; then
+        windows_root="/c"
+    elif [ -d "/mnt/c/ProgramData/Microsoft" ]; then
+        windows_root="/mnt/c"
+    fi
+
+    if [ -n "$windows_root" ]; then
+        # GPG4Win: homedir
+        generate_gnugp_config "$windows_root/Users/$(whoami)/AppData/Roaming/gnupg"
+
+        # GPG4Win: sysconfdir
+        mkdir -p "$windows_root/ProgramData/GNU/etc/gnupg" || true
+        generate_gnugp_config "$windows_root/ProgramData/GNU/etc/gnupg"
+    fi
 }
 
 function install_hugo {
@@ -1300,14 +1319,6 @@ function configure_linux() {
             echo "✔ Downloaded latest fundle: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
         fi
     fi
-
-    generate_gnugp_config "$MYCELIO_HOME/.gnupg"
-
-    # GPG4Win: homedir
-    generate_gnugp_config "/c/Users/$(whoami)/AppData/Roaming/gnupg"
-
-    # GPG4Win: sysconfdir
-    generate_gnugp_config "/c/ProgramData/GNU/etc/gnupg"
 
     # Stow packages after we have installed fundle and setup custom links
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then

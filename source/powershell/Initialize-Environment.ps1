@@ -406,10 +406,13 @@ Function Install-Toolset {
 
     try {
         if (Test-CommandValid "scoop") {
-            # Make sure git is installed first as scoop uses git to update itself. We always install
-            # this version because we do not want the MSYS2 version to take precedence as it is
-            # very slow in comparison.
-            scoop install "git"
+            # Install first as this gives us faster multi-connection downloads
+            Install-Tool "aria2"
+
+            # Make sure git is installed first as scoop uses git to update itself. We actually would
+            # prefer the 'mingw64' version if that is installed so we check that first. There are times
+            # when the scoop shims do not work and result in slowdowns.
+            Install-Tool "git"
 
             Install-Tool "7zip"
 
