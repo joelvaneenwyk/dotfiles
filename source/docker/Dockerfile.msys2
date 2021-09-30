@@ -45,7 +45,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 
 RUN Write-Host 'Initiating configuration steps.'
 
-SHELL ["cmd", "/s", "/c"]
+SHELL ["cmd.exe", "/s", "/c"]
 
 # Create post-load function so that screen (and log) are not cleared after initialization
 #RUN `
@@ -70,7 +70,7 @@ RUN call %MSYS_ROOT%\usr\bin\bash -lc " "
 #RUN echo cmd /s /c C:\\msys64\\msys2_shell.cmd -where %HOME% -here -no-start -msys2 -defterm -shell bash -lc "%*" >"C:\bash.bat"
 
 # https://www.msys2.org/docs/ci/#docker
-#SHELL ["cmd", "/s", "/c", "C:\\bash.bat"]
+#SHELL ["cmd.exe", "/s", "/c", "C:\\bash.bat"]
 
 RUN pacman --noconfirm -Syuu
 RUN pacman --noconfirm -Syuu
@@ -91,7 +91,7 @@ COPY ./ ./
 RUN ./setup.sh
 
 ENTRYPOINT [ `
-    "cmd", "/s", "/c" `
+    "cmd.exe", "/s", "/c" `
 ]
 
 CMD [ `

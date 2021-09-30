@@ -129,15 +129,15 @@ function run_command() {
     _prefix="${1:-}"
     shift
 
-    local cmd
-    cmd="$*"
-    cmd=${cmd//$'\n'/} # Remove all newlines
-    cmd=${cmd%$'\n'}   # Remove trailing newline
+    local command_display
+    command_display="$*"
+    command_display=${command_display//$'\n'/} # Remove all newlines
+    command_display=${command_display%$'\n'}   # Remove trailing newline
 
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
-        echo "[command]$cmd"
+        echo "[command]$command_display"
     else
-        echo "##[cmd] $cmd"
+        echo "##[cmd] $command_display"
     fi
 
     (

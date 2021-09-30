@@ -67,7 +67,7 @@ RUN pwsh `
             Start-Sleep -Seconds 6 ; `
         }"
 
-SHELL ["cmd", "/S", "/C"]
+SHELL ["cmd.exe", "/S", "/C"]
 
 WORKDIR C:\\
 COPY ./ ./dotfiles

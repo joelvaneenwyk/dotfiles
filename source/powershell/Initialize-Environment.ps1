@@ -362,7 +362,7 @@ echo '[mycelio] Post-install complete.'
             $msys2_shell = "$Env:UserProfile\.local\msys64\msys2_shell.cmd"
             $msys2_shell += " -mingw64 -defterm -no-start -where $script:MycelioRoot -shell bash"
             $msys2_shell += " -c ./source/shell/initialize-package-manager.sh"
-            & cmd /d /s /c "$msys2_shell"
+            & "C:\Windows\System32\cmd.exe" /d /s /c "$msys2_shell"
             Write-Host "::endgroup::"
 
             Write-Host "::group::Upgrade MSYS2 Packages"

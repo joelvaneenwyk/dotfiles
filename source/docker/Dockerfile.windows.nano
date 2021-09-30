@@ -87,7 +87,7 @@ RUN pwsh `
 # re-enable telemetry
 ENV POWERSHELL_TELEMETRY_OPTOUT="0"
 
-SHELL ["cmd", "/S", "/C"]
+SHELL ["cmd.exe", "/S", "/C"]
 
 WORKDIR C:\\
 COPY ./ ./dotfiles
