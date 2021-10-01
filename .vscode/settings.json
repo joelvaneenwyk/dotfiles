@@ -186,6 +186,33 @@
         "html": ["htm", "html"]
     },
 
+    "taskExplorer.autoRefresh": true,
+    "taskExplorer.showFavoritesButton": true,
+    "taskExplorer.enableNsis": false,
+    "taskExplorer.enableGradle": false,
+    "taskExplorer.showLastTasks": false,
+    "taskExplorer.enableAnsiconForAnt": false,
+    "taskExplorer.enableAnt": false,
+    "taskExplorer.enableAppPublisher": false,
+    "taskExplorer.enableBash": true,
+    "taskExplorer.enableBatch": true,
+    "taskExplorer.enableGrunt": false,
+    "taskExplorer.enableGulp": false,
+    "taskExplorer.enablePerl": true,
+    "taskExplorer.enableRuby": false,
+    "taskExplorer.enableMaven": false,
+    "taskExplorer.enableMake": false,
+    "taskExplorer.exclude": [
+        "**/_Inline/**",
+        "**/.mypy_cache/**",
+        "**/.pytest_cache/**",
+        "**/node_modules/**",
+        "artifacts/**",
+        "**/.config/**",
+        "**/.tmp/**",
+        "**/.vagrant/**"
+    ],
+
     "files.exclude": {
         "**/.git": true,
         "**/.svn": true,

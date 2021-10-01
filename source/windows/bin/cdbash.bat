@@ -32,9 +32,7 @@ goto :$ArgumentParse
     set _name=!_name:.=_!
 
     if "!_args!"=="" set _args=bash
-    set _shell_cmd=cd /usr/workspace ^&^& !_args!
-    set _cmd=docker run -it --rm  --name "!_name!" -v %cd%:/usr/workspace "%_image%" sh -c "!_shell_cmd!"
+    set _shell_cmd=cd /usr/workspace ^&^& !_args
     echo Docker: '!_action!' '!_image!' in '%cd%'
-    echo ##[cmd] !_cmd!
-    !_cmd!
+    call "%~dp0run.bat" docker run -it --rm  --name "!_name!" -v %cd%:/usr/workspace "%_image%" sh -c "!_shell_cmd!"
 exit /b

@@ -1200,8 +1200,7 @@ function install_go {
         # possible to use the network without cgo, and useful to do so, for instance
         # to avoid dynamic linking. The new build tag netgo (off by default) allows
         # the construction of a net package in pure Go on those systems where it is possible.
-        #echo "##[cmd] $MYCELIO_GOEXE build -tags netgo -a -v"
-        #"$MYCELIO_GOEXE" build -tags netgo -a -v
+        #   "$MYCELIO_GOEXE" build -tags netgo -a -v
 
         echo "✔ $_go_version"
     else
@@ -1410,13 +1409,16 @@ function install_packages() {
             python3 py3-pip \
             fontconfig openssl gnupg
     elif [ -x "$(command -v apt-get)" ]; then
-        run_command_sudo "apt.update" apt-get update
+        run_command_sudo "apt.update" \
+            apt-get update
 
         # Needed to prevent interactive questions during 'tzdata' install, see https://stackoverflow.com/a/44333806
-        run_command_sudo "timezone.set" ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
+        run_command_sudo "timezone.set" \
+            ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
 
-        DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install" apt-get install -y --no-install-recommends \
-            sudo tzdata git wget curl unzip xclip libnotify-bin \
+        DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install" \
+            apt-get install -y --no-install-recommends \
+            sudo ca-certificates tzdata git wget curl unzip xclip libnotify-bin \
             software-properties-common apt-transport-https \
             build-essential gcc g++ make automake autoconf \
             perl cpanminus \

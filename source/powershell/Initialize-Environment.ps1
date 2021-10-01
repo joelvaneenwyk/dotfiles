@@ -193,10 +193,6 @@ Function Install-Tool {
     }
 }
 
-Function msys() {
-    & "$Env:UserProfile\.local\msys64\usr\bin\bash.exe" @('-lc') + @Args
-}
-
 Function Write-WindowsSandboxTemplate {
     $sandboxTemplate = Get-Content -Path "$script:MycelioRoot\source\windows\sandbox\sandbox.wsb.template" -Raw
     $sandbox = $sandboxTemplate -replace '${workspaceFolder}', $script:MycelioRoot
@@ -330,6 +326,15 @@ Function Initialize-ConsoleFont {
     Write-Host "::endgroup::"
 }
 
+Function Start-Bash() {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSUseShouldProcessForStateChangingFunctions', '', Scope = 'Function')]
+    param()
+
+    Write-Host "bash -c '$Args'"
+    & "$script:MsysTargetDir\usr\bin\bash.exe" @('--noprofile', '--norc', '-lc') + @Args
+}
+
 Function Install-MSYS2 {
     if ( -not(Test-Path -Path "$Env:UserProfile\.local\msys64\mingw64.exe" -PathType Leaf) ) {
         $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/2021-07-25/msys2-base-x86_64-20210725.sfx.exe"
@@ -367,10 +372,10 @@ echo '[mycelio] Post-install complete.'
 
             Write-Host "::group::Upgrade MSYS2 Packages"
             # Upgrade all packages
-            msys 'pacman --noconfirm -Syuu'
+            Start-Bash 'pacman --noconfirm -Syuu'
 
             # Clean entire package cache
-            msys 'pacman --noconfirm -Scc'
+            Start-Bash 'pacman --noconfirm -Scc'
             Write-Host "::endgroup::"
 
             Write-Host '[mycelio] Finished MSYS2 install.'
@@ -416,7 +421,7 @@ Function Install-Toolset {
 
             Install-Tool "7zip"
 
-            # Install Perl which is necessary for 'stow' so that we can run it outside of msys
+            # Install Perl which is necessary for 'stow' so that we can run it outside of Start-Bash
             # environment. We install it after 7zip since it extracts much faster than built-in
             # PowerShell utilities.
             try {

@@ -17,8 +17,7 @@ for %%p in (!_pwshs!) do (
 )
 :$PowerShellSet
 
-echo ##[cmd] !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Sandbox.ps1"
-!_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Sandbox.ps1"
+call "%~dp0run.bat" !_powershell! -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Initialize-Sandbox.ps1"
 
 call "%~dp0env.bat"
 set _sandbox=%MYCELIO_ROOT%\artifacts\sandbox.wsb
