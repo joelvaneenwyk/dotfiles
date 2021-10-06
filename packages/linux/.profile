@@ -307,6 +307,27 @@ initialize_interactive_profile() {
     return 0
 }
 
+# Modified from '/usr/bin/wslvar' to support MSYS2 environments as well.
+windows_interop_prefix() {
+    out_prefix=""
+
+    if [ -f /etc/wsl.conf ]; then
+        tmp=$(awk -F '=' '/root/ {print $2}' /etc/wsl.conf | awk '{$1=$1;print}')
+        if [ "$tmp" = "" ]; then
+            out_prefix="/mnt/"
+        else
+            out_prefix="$tmp"
+        fi
+    elif [ -n "${MSYSTEM:-}" ]; then
+        out_prefix="/"
+    else
+        out_prefix="/mnt/"
+    fi
+
+    # Remove trailing slash
+    echo "$out_prefix" | sed 's/\/*$//g'
+}
+
 initialize_profile() {
     export EDITOR="micro"
     export PAGER="less -r"
@@ -451,8 +472,18 @@ initialize_profile() {
         export TEX_OS_NAME="win32"
     fi
 
-    _add_path "append" "/mnt/c/Program Files/Microsoft VS Code/bin"
-    _add_path "append" "/c/Program Files/Microsoft VS Code/bin"
+    if ! _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"; then
+        if _user_profile="$(cmd.exe /c "<nul set /p=%UserProfile%" 2>/dev/null)"; then
+            _win_userprofile_drive="${_user_profile%%:*}:"
+            _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"
+            _win_userprofile_dir="${_user_profile#*:}"
+            _user_profile="$(echo "${_userprofile_mount}${_win_userprofile_dir}" | sed 's/\\/\//g')"
+        fi
+    fi
+    _add_path "append" "$_user_profile/AppData/Local/Programs/Microsoft VS Code/bin"
+
+    _add_path "append" "$(windows_interop_prefix)/c/Program Files/Microsoft VS Code/bin"
+
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
 
     # Clear out TMP as TEMP may come from Windows and we do not want tools confused

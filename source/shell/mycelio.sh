@@ -569,6 +569,13 @@ function initialize_gitconfig() {
             echo "Added WSL include to '.gitconfig' file."
         fi
 
+        echo "    path = $MYCELIO_HOME/.gitconfig_mycelio" >>"$_git_config"
+
+        {
+            echo "[gpg]"
+            echo "    program = \"$(windows_interop_prefix)/c/Program Files (x86)/GnuPG/bin/gpg.exe\""
+        } >"$MYCELIO_HOME/.gitconfig_mycelio"
+
         echo "Created custom '.gitconfig' with include directives."
     fi
 

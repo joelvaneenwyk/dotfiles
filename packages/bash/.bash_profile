@@ -19,3 +19,8 @@ if [ -e "${HOME}/.iterm2_shell_integration.bash" ]; then
     # shellcheck disable=SC1090,SC1091
     source "${HOME}/.iterm2_shell_integration.bash"
 fi
+
+if [ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
+    # shellcheck disable=SC1090,SC1091
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
