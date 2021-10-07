@@ -593,10 +593,12 @@ function initialize_gitconfig() {
         fi
 
         echo "    path = $MYCELIO_HOME/.gitconfig_mycelio" >>"$_git_config"
-
         {
-            echo "[gpg]"
-            echo "    program = '$windows_root/Program Files (x86)/GnuPG/bin/gpg.exe'"
+            _gpg="$windows_root/Program Files (x86)/GnuPG/bin/gpg.exe"
+            if ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null && [ -f "$_gpg" ]; then
+                echo "[gpg]"
+                echo "    program = \"$_gpg\""
+            fi
         } >"$MYCELIO_HOME/.gitconfig_mycelio"
 
         echo "Created custom '.gitconfig' with include directives."
@@ -1291,6 +1293,7 @@ function generate_gnugp_config() {
         if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
             _pin_entry="$(_get_windows_root)/Program Files (x86)/GnuPG/bin/pinentry-basic.exe"
             if [ -f "$_pin_entry" ]; then
+                # Must use double quotes and not single quotes here or it fails
                 echo "pinentry-program \"$_pin_entry\"" | tee --append "$_gnupg_config_root/gpg-agent.conf"
             else
                 log_error "Failed to find pinentry program: '$_pin_entry'"
