@@ -1,0 +1,27 @@
+#
+# [mycelio] Expected to be in Windows instance at '${USERPROFILE}/.wslconfig'
+#
+
+[wsl2]
+
+# How much memory to assign to the WSL2 VM.
+memory=8GB
+
+# How many processors to assign to the WSL2 VM.
+processors=4
+
+# Boolean specifying if ports bound to wildcard or localhost in the WSL2 VM should
+# be connectable from the host via localhost:port (default true).
+localhostForwarding=true
+
+# How much swap space to add to the WSL2 VM. 0 for no swap file.
+swap=50gb
+
+# An absolute Windows path to the swap vhd.
+swapFile=D:\\Virtual Machines\\WSL\\wsl-swap.vhdx
+
+# An absolute Windows path to a custom Linux kernel.
+# kernel=<path>
+
+[user]
+default=${USERNAME}
