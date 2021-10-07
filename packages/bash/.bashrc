@@ -27,9 +27,9 @@ function _get_real_path() {
 function _start_tmux() {
     if ! { [ "$TERM" = "screen" ] && [ -n "$TMUX" ]; }; then
         tmux new-session -d -s mycelio -n mycowin
-        tmux send-keys -t mycelio:mycowin "cd ~/workspace" Enter
-        tmux source-file ~/.tmux.conf
-        tmux attach -t mycelio:mycowin
+        tmux send-keys -t "mycelio:mycowin" "cd $MYCELIO_ROOT" Enter
+        tmux source-file "$HOME/.tmux.conf"
+        tmux attach -t "mycelio:mycowin"
         setw -g mouse on
         tmux
         return 0
@@ -130,16 +130,23 @@ function _initialize_interactive_bash_profile() {
     fi
 
     if [ -x "$(command -v asdf)" ]; then
-        if [ -x "$(command -v brew)" ]; then
-            # shellcheck disable=SC1090,SC1091
-            source "$(brew --prefix asdf)/asdf.sh"
-        elif [ -f "$HOME/.asdf/asdf.sh" ]; then
-            # shellcheck disable=SC1090,SC1091
-            source "$HOME/.asdf/asdf.sh"
+        _asdf_root=""
 
-            if [ -f "$HOME/.asdf/completions/asdf.bash" ]; then
+        if [ -x "$(command -v brew)" ]; then
+            _asdf_root="$(brew --prefix asdf)"
+        fi
+
+        if [ ! -f "$_asdf" ] && [ -f "$HOME/.asdf/asdf.sh" ]; then
+            _asdf_root="$HOME/.asdf"
+        fi
+
+        if [ -f "$_asdf_root/asdf.sh" ]; then
+            # shellcheck disable=SC1090,SC1091
+            source "$_asdf_root/asdf.sh"
+
+            if [ -f "$_asdf_root/completions/asdf.bash" ]; then
                 # shellcheck disable=SC1090,SC1091
-                source "$HOME/.asdf/completions/asdf.bash"
+                source "$_asdf_root/completions/asdf.bash"
             fi
         fi
     fi
@@ -162,11 +169,6 @@ function _initialize_bash_profile() {
         MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
         export MYCELIO_ROOT
     fi
-
-    #if ! _start_tmux; then
-    #    export WORKSPACE_ROOT=/volume1/homes/jvaneenwyk/workspace
-    #    . "${WORKSPACE_ROOT:-}/entrypoint"
-    #fi
 
     # If not running interactively, don't do anything else.
     case $- in

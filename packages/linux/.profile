@@ -311,7 +311,9 @@ initialize_interactive_profile() {
 windows_interop_prefix() {
     out_prefix=""
 
-    if [ -f /etc/wsl.conf ]; then
+    if [ -f "/mnt/c/Windows/explorer.exe" ]; then
+        out_prefix="/mnt/"
+    elif [ -f "/etc/wsl.conf" ]; then
         tmp=$(awk -F '=' '/root/ {print $2}' /etc/wsl.conf | awk '{$1=$1;print}')
         if [ "$tmp" = "" ]; then
             out_prefix="/mnt/"

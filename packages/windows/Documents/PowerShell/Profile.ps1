@@ -9,8 +9,8 @@
     Set the font and theme. This file should have been been linked to the
     following paths:
 
-        - C:\Users\jovaneen\Documents\PowerShell\Profile.ps1
-        - C:\Users\jovaneen\OneDrive - Microsoft\Documents\PowerShell\Profile.ps1
+        - C:\Users\username\Documents\PowerShell\Profile.ps1
+        - C:\Users\username\OneDrive - Microsoft\Documents\PowerShell\Profile.ps1
 #>
 
 Function Get-CurrentEnvironment {

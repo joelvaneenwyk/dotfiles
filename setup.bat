@@ -104,7 +104,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     :$CheckArguments
     ::
-    :: e.g. init wsl --user jvaneenwyk --distribution Ubuntu
+    :: e.g. init wsl --user username --distribution Ubuntu
     ::
     :: https://docs.microsoft.com/en-us/windows/wsl/reference
     ::

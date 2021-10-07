@@ -384,6 +384,27 @@ function _load_profile() {
     return 0
 }
 
+# Modified from '/usr/bin/wslvar' to support MSYS2 environments as well.
+_get_windows_root() {
+    out_prefix="/mnt/c/"
+
+    if [ -f "/etc/wsl.conf" ]; then
+        _tmp=$(awk -F '=' '/root/ {print $2}' /etc/wsl.conf | awk '{$1=$1;print}' | sed 's/\/*$//g')
+        if [ -f "$_tmp/c/Windows/explorer.exe" ]; then
+            out_prefix="$_tmp/c/"
+        fi
+    elif [ -f "/c/Windows/explorer.exe" ]; then
+        out_prefix="/c/"
+    fi
+
+    if [ -f "$out_prefix/Windows/explorer.exe" ]; then
+        # Remove trailing slash
+        echo "$out_prefix" | sed 's/\/*$//g'
+    else
+        echo ""
+    fi
+}
+
 function _is_windows() {
     case "$(uname -s)" in
     CYGWIN*)
@@ -547,6 +568,8 @@ function _stow_packages() {
 function initialize_gitconfig() {
     _git_config="$MYCELIO_HOME/.gitconfig"
 
+    local windows_root="$(_get_windows_root)"
+
     if [ ! -f "$_git_config" ] || rm -f "$_git_config"; then
         unlink "$_git_config" >/dev/null 2>&1 || true
         echo "[include]" >"$_git_config"
@@ -573,23 +596,17 @@ function initialize_gitconfig() {
 
         {
             echo "[gpg]"
-            echo "    program = \"$(windows_interop_prefix)/c/Program Files (x86)/GnuPG/bin/gpg.exe\""
+            echo "    program = '$windows_root/Program Files (x86)/GnuPG/bin/gpg.exe'"
         } >"$MYCELIO_HOME/.gitconfig_mycelio"
 
         echo "Created custom '.gitconfig' with include directives."
     fi
 
+    # We only create the local version and never global config at '/etc/gnupg' since typical
+    # user does not have access.
     generate_gnugp_config "$MYCELIO_HOME/.gnupg"
 
-    local windows_root=""
-
-    if [ -d "/c/ProgramData/Microsoft" ]; then
-        windows_root="/c"
-    elif [ -d "/mnt/c/ProgramData/Microsoft" ]; then
-        windows_root="/mnt/c"
-    fi
-
-    if [ -n "$windows_root" ]; then
+    if ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
         # GPG4Win: homedir
         generate_gnugp_config "$windows_root/Users/$(whoami)/AppData/Roaming/gnupg"
 
@@ -597,6 +614,11 @@ function initialize_gitconfig() {
         mkdir -p "$windows_root/ProgramData/GNU/etc/gnupg" || true
         generate_gnugp_config "$windows_root/ProgramData/GNU/etc/gnupg"
     fi
+
+    export GPG_TTY=$(tty)
+    gpgconf --kill gpg-agent
+    gpgconf --reload
+    gpg-connect-agent updatestartuptty /bye >/dev/null
 }
 
 function install_hugo {
@@ -712,7 +734,7 @@ function install_oh_my_posh {
             echo "Neither 'unzip' nor '7z' commands available to extract fonts."
         fi
 
-        chmod u+rw ~/.fonts
+        chmod u+rw "$MYCELIO_HOME/.fonts"
         rm -f "$_fonts_path/$font_base_filename.zip"
 
         if [ -x "$(command -v fc-cache)" ]; then
@@ -1264,17 +1286,19 @@ function generate_gnugp_config() {
 
     if [ -d "$_gnupg_config_root" ]; then
         _gnupg_templates_root="$MYCELIO_ROOT/source/gnupg"
-        mkdir -p "$_gnupg_config_root"
 
-        rm -f "$_gnupg_config_root/gpg-agent.conf"
-        cp "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
+        cp --force "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
         if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-            echo "pinentry-program \"/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe\"" >>"$_gnupg_config_root/gpg-agent.conf"
+            _pin_entry="$(_get_windows_root)/Program Files (x86)/GnuPG/bin/pinentry-basic.exe"
+            if [ -f "$_pin_entry" ]; then
+                echo "pinentry-program \"$_pin_entry\"" | tee --append "$_gnupg_config_root/gpg-agent.conf"
+            else
+                log_error "Failed to find pinentry program: '$_pin_entry'"
+            fi
         fi
         echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"
 
-        rm -f "$_gnupg_config_root/gpg.conf"
-        cp "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
+        cp --force "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
         echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
 
         # Set permissions for GnuGP otherwise we can get permission errors during use. We
@@ -1435,7 +1459,7 @@ function install_packages() {
             fontconfig
 
         if [ -x "$(command -v dpkg-reconfigure)" ]; then
-            run_sudo dpkg-reconfigure --frontend noninteractive tzdata
+            run_command_sudo "timezone.reconfigure" dpkg-reconfigure --frontend noninteractive tzdata
         fi
     fi
 }
@@ -1974,8 +1998,11 @@ function _initialize_environment() {
 
     _displayed_details=0
 
-    if [ -x "$(command -v neofetch)" ] && [ "$_supports_neofetch" = "1" ] && neofetch; then
-        _displayed_details=1
+    if [ -x "$(command -v neofetch)" ] && [ "$_supports_neofetch" = "1" ]; then
+        echo ""
+        if neofetch; then
+            _displayed_details=1
+        fi
     fi
 
     if [ ! "$_displayed_details" = "1" ]; then

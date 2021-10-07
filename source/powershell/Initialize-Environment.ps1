@@ -295,7 +295,7 @@ Function Initialize-ConsoleFont {
     # TODO Add to local local data
     #    - Computer\HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts
     #    - JetBrains Mono ExtraLight (TrueType)
-    #    - C:\Users\jovaneen\AppData\Local\Microsoft\Windows\Fonts\JetBrainsMono-BoldItalic.ttf
+    #    - C:\Users\username\AppData\Local\Microsoft\Windows\Fonts\JetBrainsMono-BoldItalic.ttf
 
     try {
         Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue >$null
