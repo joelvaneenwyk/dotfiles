@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:20.04
 
 ARG USERNAME=default
 
@@ -27,7 +27,7 @@ RUN sudo apt-get update
 COPY --chown=${USERNAME} ./ ./dotfiles/
 
 # This will delete existing '.profile' or other configuration files when stowing
-RUN ./dotfiles/setup.sh --clean --yes
+RUN ./dotfiles/setup.sh --clean --force --yes
 
 ENTRYPOINT [ "/bin/bash", "-c" ]
 CMD ["neofetch && bash"]

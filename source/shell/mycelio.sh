@@ -628,9 +628,14 @@ function initialize_gitconfig() {
         export GPG_TTY
     fi
 
-    run_command "gpgconf.kill" gpgconf --kill gpg-agent
-    run_command "gpgconf.reload" gpgconf --reload
-    run_command "gpg.connect" gpg-connect-agent updatestartuptty /bye >/dev/null
+    if [ -x "$(command -v gpgconf)" ]; then
+        run_command "gpgconf.kill" gpgconf --kill gpg-agent
+        run_command "gpgconf.reload" gpgconf --reload
+    fi
+
+    if [ -x "$(command -v gpg-connect-agent)" ]; then
+        run_command "gpg.connect" gpg-connect-agent updatestartuptty /bye >/dev/null
+    fi
 }
 
 function install_hugo {
@@ -715,7 +720,7 @@ function install_oh_my_posh {
     if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
         _posh_themes="$MYCELIO_HOME/.poshthemes"
         mkdir -p "$_posh_themes"
-        wget --quiet "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
+        wget -q "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
 
         if [ -x "$(command -v unzip)" ]; then
             run_task "posh.themes.unzip" unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
@@ -736,7 +741,7 @@ function install_oh_my_posh {
 
     if [ ! -f "$_fonts_path/JetBrains Mono Regular Nerd Font Complete.ttf" ]; then
         mkdir -p "$_fonts_path"
-        wget --quiet "$font_url" -O "$_fonts_path/$font_base_filename.zip"
+        wget -q "$font_url" -O "$_fonts_path/$font_base_filename.zip"
 
         if [ -x "$(command -v unzip)" ]; then
             run_task "fonts.unzip" unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
@@ -772,7 +777,7 @@ function install_oh_my_posh {
 
     _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$MYCELIO_OS_APP_EXTENSION"
     _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
-    if wget --quiet "$_posh_url" -O "$_oh_my_posh_exe"; then
+    if wget -q "$_posh_url" -O "$_oh_my_posh_exe"; then
         chmod +x "$_oh_my_posh_exe"
     fi
 
@@ -895,7 +900,7 @@ function install_powershell() {
         _url="https://packages.microsoft.com/config/ubuntu/${VERSION_ID:-0.0}/$_packages_production"
 
         # Download the Microsoft repository GPG keys
-        if wget --quiet "$_url" -O "$MYCELIO_TEMP/$_packages_production"; then
+        if wget -q "$_url" -O "$MYCELIO_TEMP/$_packages_production"; then
             # Register the Microsoft repository GPG keys
             run_command_sudo "dpkg.register.microsoft" dpkg -i "$MYCELIO_TEMP/$_packages_production"
             # Update the list of products
@@ -1060,10 +1065,9 @@ function install_go {
             log_error "Skipped 'go' compile. Missing GCC toolchain."
         else
             if [ "${MSYSTEM:-}" = "MSYS" ]; then
-
                 # https://golang.org/doc/install/source
                 _go_bootstrap_archive="$MYCELIO_TEMP/go1.4.windows-amd64.zip"
-                wget --quiet -O "$_go_bootstrap_archive" "https://golang.org/dl/go1.4.windows-amd64.zip"
+                run_command "go.bootstrap.wget" wget -q -O "$_go_bootstrap_archive" "https://golang.org/dl/go1.4.windows-amd64.zip"
                 echo "Extracting 'go' binaries: '$_go_bootstrap_archive'"
                 rm -rf "$MYCELIO_TEMP/go" || true
                 run_command "go.bootstrap.tar" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_archive"
@@ -1084,7 +1088,7 @@ function install_go {
             elif [ ! -f "$_go_bootstrap_exe" ]; then
                 # https://golang.org/doc/install/source
                 _go_bootstrap_src_archive="$MYCELIO_TEMP/go_bootstrap.tgz"
-                wget --quiet -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
+                run_command "go.bootstrap.wget" wget -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
                 rm -rf "$MYCELIO_TEMP/go" || true
                 run_command "go.bootstrap.tar" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
                 rm -rf "$_local_go_bootstrap_root" || true
@@ -1135,7 +1139,7 @@ function install_go {
             # https://golang.org/doc/install/source
             if [ -f "$_go_bootstrap_exe" ]; then
                 _go_src_archive="$MYCELIO_TEMP/go.tgz"
-                wget --quiet -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
+                wget -q -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
 
                 run_task "go.source.extract" tar -C "$_local_root" -xzf "$_go_src_archive"
                 rm "$_go_src_archive"
@@ -1356,7 +1360,7 @@ function configure_linux() {
     )
 
     if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
-        wget --quiet "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
+        wget -q "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
         if [ -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
             chmod a+x "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
             echo "✔ Downloaded latest fundle: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
@@ -1462,7 +1466,7 @@ function install_packages() {
 
         DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install" \
             apt-get install -y --no-install-recommends \
-            sudo ca-certificates tzdata git wget curl unzip xclip libnotify-bin \
+            sudo gpgconf ca-certificates tzdata git wget curl unzip xclip libnotify-bin \
             software-properties-common apt-transport-https \
             build-essential gcc g++ make automake autoconf \
             perl cpanminus \

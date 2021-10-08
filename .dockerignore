@@ -1,4 +1,6 @@
 source/vagrant/.vagrant/
+source/stow/.tmp
+
 _Inline/
 
 .git/
