@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # Usage: ./setup.sh
 #
@@ -9,7 +9,7 @@
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
 # so we define our own version here.
-function _get_real_path() {
+_get_real_path() {
     _pwd="$(pwd)"
     _path="$1"
     _offset=""
@@ -52,15 +52,47 @@ function _get_real_path() {
     return 0
 }
 
-function setup() {
-    local root
+use_sudo() {
+    if [ -x "$(command -v sudo)" ] && [ ! -x "$(command -v cygpath)" ]; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}
 
-    root="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
+setup() {
+    # Standard safety protocol
+    set -eu
 
-    # shellcheck source=source/shell/mycelio.sh
-    source "$root/source/shell/mycelio.sh"
+    if [ -n "${BASH_VERSION:-}" ]; then
+        echo "[mycelio] Bash v$BASH_VERSION"
 
-    initialize_environment "$@"
+        # shellcheck disable=SC3028,SC3054,SC2039
+        _root="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+        # shellcheck source=source/shell/mycelio.sh
+        . "$_root/source/shell/mycelio.sh"
+
+        initialize_environment "$@"
+    else
+        _root="$(cd -P -- "$(dirname -- "$0")" && pwd)"
+
+        if [ ! -x "$(command -v bash)" ]; then
+            if [ -x "$(command -v apk)" ]; then
+                use_sudo apk update
+                use_sudo apk add bash
+            elif [ -x "$(command -v apt-get)" ]; then
+                use_sudo apt-get update
+                use_sudo apt-get install -y --no-install-recommends bash
+            fi
+        fi
+
+        echo "[mycelio] Re-launching with Bash: '$_root/setup.sh'"
+
+        # Re-launch with bash
+        # shellcheck source=setup.sh
+        bash "$_root/setup.sh"
+    fi
 }
 
 setup "$@"

@@ -568,7 +568,8 @@ function _stow_packages() {
 function initialize_gitconfig() {
     _git_config="$MYCELIO_HOME/.gitconfig"
 
-    local windows_root="$(_get_windows_root)"
+    local windows_root
+    windows_root="$(_get_windows_root)"
 
     if [ ! -f "$_git_config" ] || rm -f "$_git_config"; then
         unlink "$_git_config" >/dev/null 2>&1 || true
@@ -617,7 +618,11 @@ function initialize_gitconfig() {
         generate_gnugp_config "$windows_root/ProgramData/GNU/etc/gnupg"
     fi
 
-    export GPG_TTY=$(tty)
+    if _tty="$(tty)"; then
+        GPG_TTY="$_tty"
+        export GPG_TTY
+    fi
+
     gpgconf --kill gpg-agent
     gpgconf --reload
     gpg-connect-agent updatestartuptty /bye >/dev/null
@@ -1394,7 +1399,7 @@ function configure_linux() {
     # Remove intermediate Perl files
     rm -rf "$MYCELIO_ROOT/_Inline"
 
-    echo "🍄 Mycelium is configured and healthy."
+    printf "🍄 Mycelium is configured and healthy.\n\n"
 }
 
 function install_packages() {

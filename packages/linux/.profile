@@ -150,7 +150,14 @@ _initialize_synology() {
 
 initialize_interactive_profile() {
     # Make less more friendly for non-text input files, see lesspipe(1)
-    [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+    if [ -x "$(command -v lesspipe)" ]; then
+        eval "$(SHELL=/bin/sh lesspipe)"
+    fi
+
+    # Colored GCC warnings and errors
+    export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
+
+    debian_chroot=""
 
     # Set variable identifying the chroot you work in (used in the prompt below)
     if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
@@ -158,7 +165,7 @@ initialize_interactive_profile() {
     fi
 
     # Set a fancy prompt (non-color, unless we know we "want" color)
-    case "$TERM" in
+    case "${TERM:-}" in
     xterm-color | *-256color)
         color_prompt=yes
         ;;
@@ -185,8 +192,8 @@ initialize_interactive_profile() {
     fi
     unset color_prompt force_color_prompt
 
-    # If this is an xterm set the title to user@host:dir
-    case "$TERM" in
+    # If this is an xterm, prefix title with 'user@host:dir'
+    case "${TERM:-}" in
     xterm* | rxvt*)
         PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
         ;;
@@ -194,7 +201,7 @@ initialize_interactive_profile() {
     esac
 
     # Enable color support for 'ls'
-    if [ -x /usr/bin/dircolors ]; then
+    if [ -x "$(command -v dircolors)" ]; then
         if [ -r "$HOME/.dircolors" ]; then
             eval "$(dircolors -b "$HOME/.dircolors")"
         else
@@ -202,10 +209,17 @@ initialize_interactive_profile() {
         fi
     fi
 
-    # Colored GCC warnings and errors
-    export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
-    if [ -x "$(command -v oh-my-posh)" ] && [ "$MYCELIO_OH_MY_POSH" = "1" ]; then
+    if [ "$0" = "sh" ]; then
+        PS1='$(
+            printf "[mycelio] `whoami`@`hostname` | "
+            if [ ! "${PWD#$HOME}" = "$PWD" ]; then
+                printf "~${PWD#$HOME}"
+            else
+                printf "$PWD"
+            fi
+            printf "\n$ "
+        )'
+    elif [ -x "$(command -v oh-my-posh)" ] && [ "$MYCELIO_OH_MY_POSH" = "1" ]; then
         _theme="$HOME/.poshthemes/mycelio.omp.json"
         if [ ! -f "$_theme" ]; then
             if [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
@@ -253,7 +267,7 @@ initialize_interactive_profile() {
     alias .4='cd ../../../../'
     alias .5='cd ../../../../..'
 
-    alias refresh='git -C "$MYCELIO_ROOT" pull >/dev/null 2>&1 || true; source "$MYCELIO_ROOT/packages/linux/.profile"'
+    alias refresh='git -C "$MYCELIO_ROOT" pull >/dev/null 2>&1 || true; . "$MYCELIO_ROOT/packages/linux/.profile"'
 
     alias less='less -r'
     alias more='less -r'
@@ -335,7 +349,9 @@ _get_profile_root() {
 
     if [ -x "$(command -v wslpath)" ]; then
         _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"
-    elif [ -f "$_cmd" ]; then
+    fi
+
+    if [ ! -d "$_user_profile" ] && [ -f "$_cmd" ]; then
         if _user_profile="$($_cmd /c "<nul set /p=%UserProfile%" 2>/dev/null)"; then
             _win_userprofile_drive="${_user_profile%%:*}:"
             _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"

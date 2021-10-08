@@ -136,7 +136,7 @@ function _initialize_interactive_bash_profile() {
             _asdf_root="$(brew --prefix asdf)"
         fi
 
-        if [ ! -f "$_asdf" ] && [ -f "$HOME/.asdf/asdf.sh" ]; then
+        if [ ! -d "$_asdf_root" ] && [ -f "$HOME/.asdf/asdf.sh" ]; then
             _asdf_root="$HOME/.asdf"
         fi
 
