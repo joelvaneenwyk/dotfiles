@@ -367,6 +367,7 @@ function _load_profile() {
     if [[ $(type -t initialize_interactive_profile) == function ]]; then
         initialize_profile
         initialize_interactive_profile
+        echo "[mycelio] Reloaded shell profile."
     elif [ -f "$MYCELIO_ROOT/packages/linux/.profile" ]; then
         # Loading the profile may overwrite the root after it reads the '.env' file
         # so we restore it afterwards.
@@ -377,9 +378,9 @@ function _load_profile() {
 
         # Restore previous root folder
         export MYCELIO_ROOT="${_root:-MYCELIO_ROOT}"
-    fi
 
-    echo "Reloaded shell profile."
+        echo "[mycelio] Loaded shell profile."
+    fi
 
     return 0
 }
@@ -596,9 +597,11 @@ function initialize_gitconfig() {
         echo "    path = $MYCELIO_HOME/.gitconfig_mycelio" >>"$_git_config"
         {
             _gpg="$windows_root/Program Files (x86)/GnuPG/bin/gpg.exe"
-            if ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null && [ -f "$_gpg" ]; then
+            if [ -f "$_gpg" ] && ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
                 echo "[gpg]"
                 echo "    program = \"$_gpg\""
+            else
+                echo ""
             fi
         } >"$MYCELIO_HOME/.gitconfig_mycelio"
 
@@ -609,13 +612,14 @@ function initialize_gitconfig() {
     # user does not have access.
     generate_gnugp_config "$MYCELIO_HOME/.gnupg"
 
-    if ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
+    if [ -n "$windows_root" ] && ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
         # GPG4Win: homedir
         generate_gnugp_config "$windows_root/Users/$(whoami)/AppData/Roaming/gnupg"
 
         # GPG4Win: sysconfdir
-        mkdir -p "$windows_root/ProgramData/GNU/etc/gnupg" || true
-        generate_gnugp_config "$windows_root/ProgramData/GNU/etc/gnupg"
+        if mkdir -p "$windows_root/ProgramData/GNU/etc/gnupg"; then
+            generate_gnugp_config "$windows_root/ProgramData/GNU/etc/gnupg"
+        fi
     fi
 
     if _tty="$(tty)"; then
