@@ -141,7 +141,9 @@
     "terminal.integrated.profiles.linux": {
         "sh": {
             "path": "sh",
-            "args": []
+            "args": [
+                "-l"
+            ]
         },
         "bash": {
             "path": "sh",

@@ -484,8 +484,11 @@ function _stow_internal() {
         fi
 
         if [ -f "$_source" ] || [ -d "$_source" ]; then
-            ln -s "$_source" "$_target"
-            echo "✔ Stowed target: '$_target'"
+            if ln -s "$_source" "$_target"; then
+                echo "✔ Stowed target: '$_target'"
+            else
+                log_error "Unable to stow target: '$_target'"
+            fi
         fi
     fi
 }
@@ -1539,10 +1542,10 @@ function initialize_macos() {
     # dependencies needed for this step.
     initialize_linux
 
-    configure_macos_dock
-    configure_macos_finder
-    configure_macos_apps
-    configure_macos_system
+    run_task 'configure.dock' configure_macos_dock
+    run_task 'configure.finder' configure_macos_finder
+    run_task 'configure.apps' configure_macos_apps
+    run_task 'configure.system' configure_macos_system
 }
 
 function configure_macos_apps() {
@@ -1555,7 +1558,7 @@ function configure_macos_apps() {
         defaults import "$plist" "$f"
     done
 
-    echo "Configured applications with settings."
+    echo "✔ Configured macOS applications with settings"
 }
 
 function configure_macos_dock() {
@@ -1590,7 +1593,7 @@ function configure_macos_dock() {
     defaults write com.apple.dock wvous-br-corner -int 5
     defaults write com.apple.dock wvous-br-modifier -int 0
 
-    echo "Configured Dock."
+    echo "✔ Configured 'Dock'"
 }
 
 function configure_macos_finder() {
@@ -1612,7 +1615,7 @@ function configure_macos_finder() {
     # Four-letter codes for the other view modes: 'icnv', 'clmv', 'Flwv'
     defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 
-    echo "Configured Finder."
+    echo "✔ Configured 'Finder'"
 }
 
 function _remove_trailing_slash() {

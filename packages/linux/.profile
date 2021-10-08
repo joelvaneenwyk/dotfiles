@@ -209,7 +209,17 @@ initialize_interactive_profile() {
         fi
     fi
 
-    if [ "$0" = "sh" ]; then
+    if [ -x "$(command -v oh-my-posh)" ]; then
+        if ! _shell="$(oh-my-posh --print-shell 2>&1)"; then
+            _shell=""
+        fi
+    fi
+
+    if [ -z "${_shell:-}" ]; then
+        _shell= "$(basename "$0")"
+    fi
+
+    if [ "$_shell" = "sh" ]; then
         PS1='$(
             printf "[mycelio] `whoami`@`hostname` | "
             if [ ! "${PWD#$HOME}" = "$PWD" ]; then
@@ -221,6 +231,7 @@ initialize_interactive_profile() {
         )'
     elif [ -x "$(command -v oh-my-posh)" ] && [ "$MYCELIO_OH_MY_POSH" = "1" ]; then
         _theme="$HOME/.poshthemes/mycelio.omp.json"
+
         if [ ! -f "$_theme" ]; then
             if [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
                 _theme="$HOME/.poshthemes/stelbent.minimal.omp.json"
@@ -230,10 +241,8 @@ initialize_interactive_profile() {
         fi
 
         if [ -n "$_theme" ]; then
-            if _shell="$(oh-my-posh --print-shell 2>&1)"; then
-                if ! eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")"; then
-                    echo "❌ Failed to initialize Oh My Posh."
-                fi
+            if ! eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")"; then
+                echo "❌ Failed to initialize Oh My Posh."
             fi
         fi
     fi

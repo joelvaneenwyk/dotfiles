@@ -21,7 +21,7 @@ end
 
 set -gx PATH ./node_modules/.bin $PATH
 
-# color stderr in red
+# Color STDERR in red
 set -e LD_PRELOAD
 
 # Use java 1.8 by default if it exists
@@ -100,9 +100,20 @@ if status --is-interactive && test -e $profile_helper
     source $profile_helper
 end
 
-set theme (echo $HOME/.config/base16-fzf/fish/(basename $HOME/(readlink $HOME/.base16_theme) .sh).fish)
+if test -e "$HOME/.base16_theme"
+    set theme_shell (readlink -f "$HOME/.base16_theme")
+    if test -e "$theme_shell"
+        set theme (echo $HOME/.config/base16-fzf/fish/(basename "$theme_shell" .sh).fish)
+    else
+        echo "❌ Theme target does not exist: '$theme_shell'"
+    end
+else
+    echo "❌ Missing base theme link: '.base16_theme'"
+end
+
 if test -e $theme
     source $theme
+    echo "✔ Theme: '$theme'"
 else
     echo "❌ Theme not found: '$theme'"
 end
@@ -118,7 +129,17 @@ if type -q conda
     source (conda info --root)/etc/fish/conf.d/conda.fish
 end
 
+if test -d $HOME/.asdf/bin
+    set -gx PATH $HOME/.asdf/bin $PATH
+end
+
 # Enable asdf for managing runtimes.
-if type -q asdf && test -e /usr/local/opt/asdf/asdf.fish
-    source /usr/local/opt/asdf/asdf.fish
+if type -q asdf
+    if test -e $HOME/.asdf/asdf.fish
+        source $HOME/.asdf/asdf.fish
+    else
+        if test -e /usr/local/opt/asdf/asdf.fish
+            source /usr/local/opt/asdf/asdf.fish
+        end
+    end
 end
