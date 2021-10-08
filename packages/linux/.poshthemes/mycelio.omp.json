@@ -40,11 +40,41 @@
             "alignment": "left",
             "newline": true,
             "segments": [{
+                    "type": "text",
+                    "style": "plain",
+                    "foreground": "#a3a3a3",
+                    "properties": {
+                        "prefix": "",
+                        "text": "\u250c mycelio 🍄 | "
+                    }
+                }, {
+                    "type": "os",
+                    "style": "plain",
+                    "foreground": "#757575",
+                    "properties": {
+                        "color_background": true,
+                        "prefix": "",
+                        "postfix": " \uE0B1",
+                        "display_distro_name": true,
+                        "macos": "mac"
+                    }
+                }, {
+                    "type": "shell",
+                    "style": "powerline",
+                    "powerline_symbol": "\uE0B0",
+                    "foreground": "#ffffff",
+                    "background": "#0077c2",
+                    "properties": {
+                        "mapped_shell_names": {
+                            "pwsh": "PS"
+                        }
+                    }
+                }, {
                     "type": "session",
                     "style": "plain",
                     "foreground": "#757575",
                     "properties": {
-                        "prefix": "\u250c ",
+                        "prefix": " ",
                         "display_host": true,
                         "ssh_icon": "[SSH] "
                     }
@@ -124,7 +154,7 @@
             "segments": [{
                     "type": "text",
                     "style": "plain",
-                    "foreground": "#757575",
+                    "foreground": "#a3a3a3",
                     "properties": {
                         "prefix": "",
                         "postfix": "",
