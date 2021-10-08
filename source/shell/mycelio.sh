@@ -617,9 +617,7 @@ function initialize_gitconfig() {
         generate_gnugp_config "$windows_root/Users/$(whoami)/AppData/Roaming/gnupg"
 
         # GPG4Win: sysconfdir
-        if mkdir -p "$windows_root/ProgramData/GNU/etc/gnupg"; then
-            generate_gnugp_config "$windows_root/ProgramData/GNU/etc/gnupg"
-        fi
+        generate_gnugp_config "$windows_root/ProgramData/GNU/etc/gnupg"
     fi
 
     if _tty="$(tty)"; then
@@ -627,9 +625,9 @@ function initialize_gitconfig() {
         export GPG_TTY
     fi
 
-    gpgconf --kill gpg-agent
-    gpgconf --reload
-    gpg-connect-agent updatestartuptty /bye >/dev/null
+    run_command "gpgconf.kill" gpgconf --kill gpg-agent
+    run_command "gpgconf.reload" gpgconf --reload
+    run_command "gpg.connect" gpg-connect-agent updatestartuptty /bye >/dev/null
 }
 
 function install_hugo {
@@ -1295,7 +1293,7 @@ function install_macos_apps() {
 function generate_gnugp_config() {
     _gnupg_config_root="$1"
 
-    if [ -d "$_gnupg_config_root" ]; then
+    if mkdir -p "$_gnupg_config_root" &>/dev/null; then
         _gnupg_templates_root="$MYCELIO_ROOT/source/gnupg"
 
         cp --force "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"

@@ -45,7 +45,8 @@
                     "foreground": "#a3a3a3",
                     "properties": {
                         "prefix": "",
-                        "text": "\u250c mycelio 🍄 | "
+                        "postfix": "",
+                        "text": "\u250c mycelio 🍄"
                     }
                 }, {
                     "type": "os",
@@ -53,7 +54,7 @@
                     "foreground": "#757575",
                     "properties": {
                         "color_background": true,
-                        "prefix": "",
+                        "prefix": " | ",
                         "postfix": " \uE0B1",
                         "display_distro_name": true,
                         "macos": "mac"
