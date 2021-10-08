@@ -385,7 +385,7 @@ function _load_profile() {
 }
 
 # Modified from '/usr/bin/wslvar' to support MSYS2 environments as well.
-_get_windows_root() {
+function _get_windows_root() {
     out_prefix="/mnt/c/"
 
     if [ -f "/etc/wsl.conf" ]; then

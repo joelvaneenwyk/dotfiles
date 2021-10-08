@@ -308,26 +308,43 @@ initialize_interactive_profile() {
 }
 
 # Modified from '/usr/bin/wslvar' to support MSYS2 environments as well.
-windows_interop_prefix() {
-    out_prefix=""
+_get_windows_root() {
+    out_prefix="/mnt/c/"
 
-    if [ -f "/mnt/c/Windows/explorer.exe" ]; then
-        out_prefix="/mnt/"
-    elif [ -f "/etc/wsl.conf" ]; then
-        tmp=$(awk -F '=' '/root/ {print $2}' /etc/wsl.conf | awk '{$1=$1;print}')
-        if [ "$tmp" = "" ]; then
-            out_prefix="/mnt/"
-        else
-            out_prefix="$tmp"
+    if [ -f "/etc/wsl.conf" ]; then
+        _tmp=$(awk -F '=' '/root/ {print $2}' /etc/wsl.conf | awk '{$1=$1;print}' | sed 's/\/*$//g')
+        if [ -f "$_tmp/c/Windows/explorer.exe" ]; then
+            out_prefix="$_tmp/c/"
         fi
-    elif [ -n "${MSYSTEM:-}" ]; then
-        out_prefix="/"
-    else
-        out_prefix="/mnt/"
+    elif [ -f "/c/Windows/explorer.exe" ]; then
+        out_prefix="/c/"
     fi
 
-    # Remove trailing slash
-    echo "$out_prefix" | sed 's/\/*$//g'
+    if [ -f "$out_prefix/Windows/explorer.exe" ]; then
+        # Remove trailing slash
+        echo "$out_prefix" | sed 's/\/*$//g'
+    else
+        echo ""
+    fi
+}
+
+_get_profile_root() {
+    _user_profile="$MYCELIO_HOME"
+    _windows_root="$(_get_windows_root)"
+    _cmd="$_windows_root/Windows/System32/cmd.exe"
+
+    if [ -x "$(command -v wslpath)" ]; then
+        _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"
+    elif [ -f "$_cmd" ]; then
+        if _user_profile="$($_cmd /c "<nul set /p=%UserProfile%" 2>/dev/null)"; then
+            _win_userprofile_drive="${_user_profile%%:*}:"
+            _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"
+            _win_userprofile_dir="${_user_profile#*:}"
+            _user_profile="$(echo "${_userprofile_mount}${_win_userprofile_dir}" | sed 's/\\/\//g')"
+        fi
+    fi
+
+    echo "$_user_profile"
 }
 
 initialize_profile() {
@@ -466,25 +483,19 @@ initialize_profile() {
             CPATH="/usr/lib/gcc/$MSYSTEM_CHOST/$_gcc_version/include;${CPATH:-}"
             export CPATH
         fi
-    elif [ "${MSYSTEM:-}" = "MINGW64" ] && [ -f "/mingw64/bin/tex.exe" ]; then
-        _add_path "prepend" "/mingw64/bin"
+    elif [ -f "${MSYSTEM_PREFIX:-}/bin/tex.exe" ]; then
+        _add_path "prepend" "${MSYSTEM_PREFIX:-}/bin"
         _add_path "prepend" "/usr/bin"
 
-        export TEX="/mingw64/bin/tex"
+        export TEX="${MSYSTEM_PREFIX:-}/bin/tex"
         export TEX_OS_NAME="win32"
     fi
 
-    if ! _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"; then
-        if _user_profile="$(cmd.exe /c "<nul set /p=%UserProfile%" 2>/dev/null)"; then
-            _win_userprofile_drive="${_user_profile%%:*}:"
-            _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"
-            _win_userprofile_dir="${_user_profile#*:}"
-            _user_profile="$(echo "${_userprofile_mount}${_win_userprofile_dir}" | sed 's/\\/\//g')"
-        fi
+    if _user_profile="$(_get_profile_root)"; then
+        _add_path "append" "$_user_profile/AppData/Local/Programs/Microsoft VS Code/bin"
     fi
-    _add_path "append" "$_user_profile/AppData/Local/Programs/Microsoft VS Code/bin"
 
-    _add_path "append" "$(windows_interop_prefix)/c/Program Files/Microsoft VS Code/bin"
+    _add_path "append" "$(_get_windows_root)/c/Program Files/Microsoft VS Code/bin"
 
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
 

@@ -9,13 +9,15 @@
 	default = simple
 [pull]
 	rebase = true
+[rebase]
+	autoStash = true
 [diff]
 	renamelimit = 10000
 [commit]
 	verbose = true
 	gpgsign = true
 [alias]
-	spull = submodule update --init --recursive
+	subup = submodule update --init --recursive
 	co = checkout
 	br = branch
 	ci = commit

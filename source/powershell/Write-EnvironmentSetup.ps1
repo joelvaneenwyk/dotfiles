@@ -14,7 +14,10 @@
     specific commands e.g., "gpgtest"
 #>
 
-param([string]$ScriptPath = "")
+param(
+    [string]$ScriptPath = "",
+    [bool]$Verbose = $false
+)
 
 Function Get-CurrentEnvironment {
     <#
@@ -103,21 +106,30 @@ $environmentVariables += "C:\Program Files (x86)\Gpg4win\bin"
 
 $environmentVariables += "$ENV:UserProfile\scoop\shims"
 
-# Home to tools like 'gcc' and 'make'
-$environmentVariables += "$ENV:UserProfile\.local\msys64\mingw64\bin"
+# Initially seemed like a good idea to include these tools in the environment, but there are a
+# lot of dependencies between these tools from dynamic libraries to just include folders that
+# end up resulting in a lot of conflict and some tools just "not working" in some cases for
+# seemingly strange reasons with even stranger error messages. It gets worse if you have multiple
+# versions of MSYS2 installed (or Cygwin) and then the installations become overlapped resulting
+# in even more obscure errors.
+$includeUnixTools = $false
 
-# This is intentionally at the very end as we want to pick non-MSYS2 (or Cygwin) style
-# versions if at all possible. This is mainly required for tools like 'make' which are
-# only available in the 'usr/bin' folder.
-$environmentVariables += "$ENV:UserProfile\.local\msys64\usr\bin"
+if ($includeUnixTools) {
+    # Home to tools like 'gcc' and 'make'
+    $environmentVariables += "$ENV:UserProfile\.local\msys64\mingw64\bin"
+
+    # This is intentionally at the very end as we want to pick non-MSYS2 (or Cygwin) style
+    # versions if at all possible. This is mainly required for tools like 'make' which are
+    # only available in the 'usr/bin' folder.
+    $environmentVariables += "$ENV:UserProfile\.local\msys64\usr\bin"
+}
 
 # This also contains 'bash' and other utilities so put this near the end
 $environmentVariables += "C:\Program Files\Git\bin"
 
 $environmentVariables += $(Get-CurrentEnvironment)
 
-#$environmentVariables += "$ENV:UserProfile\scoop\apps\msys2\current\usr\bin"
-
+# Gather all valid paths into one array which we will output at the end.
 $environmentPaths = @()
 $environmentVariables | ForEach-Object {
     $environmentPath = "$_"
@@ -154,7 +166,12 @@ Try {
         $fileStream.WriteLine("set ""MSYS_SHELL=%USERPROFILE%\.local\msys64\msys2_shell.cmd""")
         $fileStream.WriteLine("set ""MSYS2_PATH_TYPE=minimal""")
 
-        $fileStream.WriteLine("echo [mycelio] Initialized path from generated script.")
+        # We intentionally do not output anything in this script as we want to be able to
+        # run this in subshells if needed which means we can't have the output cluttered.
+        if ($Verbose) {
+            $fileStream.WriteLine("echo [mycelio] Initialized path from generated script.")
+        }
+
         $fileStream.WriteLine("")
         $fileStream.WriteLine("exit /b 0")
     }
