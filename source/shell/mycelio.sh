@@ -1296,7 +1296,7 @@ function generate_gnugp_config() {
     if mkdir -p "$_gnupg_config_root" &>/dev/null; then
         _gnupg_templates_root="$MYCELIO_ROOT/source/gnupg"
 
-        cp --force "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
+        cp -f "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
         if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
             _pin_entry="$(_get_windows_root)/Program Files (x86)/GnuPG/bin/pinentry-basic.exe"
             if [ -f "$_pin_entry" ]; then
@@ -1308,7 +1308,7 @@ function generate_gnugp_config() {
         fi
         echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"
 
-        cp --force "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
+        cp -f "$_gnupg_templates_root/gpg.template.conf" "$_gnupg_config_root/gpg.conf"
         echo "Created config from template: '$_gnupg_config_root/gpg.conf'"
 
         # Set permissions for GnuGP otherwise we can get permission errors during use. We
