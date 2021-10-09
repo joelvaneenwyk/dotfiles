@@ -720,7 +720,7 @@ function install_oh_my_posh {
     if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
         _posh_themes="$MYCELIO_HOME/.poshthemes"
         mkdir -p "$_posh_themes"
-        wget -q "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip" -O "$_posh_themes/themes.zip"
+        run_command "posh.themes.wget" wget -q -O "$_posh_themes/themes.zip" "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip"
 
         if [ -x "$(command -v unzip)" ]; then
             run_task "posh.themes.unzip" unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
@@ -741,7 +741,7 @@ function install_oh_my_posh {
 
     if [ ! -f "$_fonts_path/JetBrains Mono Regular Nerd Font Complete.ttf" ]; then
         mkdir -p "$_fonts_path"
-        wget -q "$font_url" -O "$_fonts_path/$font_base_filename.zip"
+        run_command "font.jetbrains.wget" wget -q "$font_url" -O "$_fonts_path/$font_base_filename.zip"
 
         if [ -x "$(command -v unzip)" ]; then
             run_task "fonts.unzip" unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
@@ -777,7 +777,7 @@ function install_oh_my_posh {
 
     _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$MYCELIO_OS_APP_EXTENSION"
     _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
-    if wget -q "$_posh_url" -O "$_oh_my_posh_exe"; then
+    if wget -q -O "$_oh_my_posh_exe" "$_posh_url"; then
         chmod +x "$_oh_my_posh_exe"
     fi
 
@@ -900,7 +900,7 @@ function install_powershell() {
         _url="https://packages.microsoft.com/config/ubuntu/${VERSION_ID:-0.0}/$_packages_production"
 
         # Download the Microsoft repository GPG keys
-        if wget -q "$_url" -O "$MYCELIO_TEMP/$_packages_production"; then
+        if wget -q -O "$MYCELIO_TEMP/$_packages_production" "$_url"; then
             # Register the Microsoft repository GPG keys
             run_command_sudo "dpkg.register.microsoft" dpkg -i "$MYCELIO_TEMP/$_packages_production"
             # Update the list of products
@@ -1360,7 +1360,8 @@ function configure_linux() {
     )
 
     if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
-        wget -q "https://git.io/fundle" -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
+        mkdir -p "$MYCELIO_HOME/.config/fish/functions"
+        wget -q -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish" "https://git.io/fundle"
         if [ -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
             chmod a+x "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
             echo "✔ Downloaded latest fundle: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
@@ -1470,7 +1471,7 @@ function install_packages() {
             software-properties-common apt-transport-https \
             build-essential gcc g++ make automake autoconf \
             perl cpanminus \
-            stow tmux neofetch fish \
+            tmux neofetch fish zsh bash \
             python3 python3-pip \
             shellcheck \
             fontconfig

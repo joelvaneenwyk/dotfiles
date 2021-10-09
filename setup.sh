@@ -91,7 +91,7 @@ setup() {
 
         # Re-launch with bash
         # shellcheck source=setup.sh
-        bash "$_root/setup.sh"
+        bash "$_root/setup.sh" "$@"
     fi
 }
 

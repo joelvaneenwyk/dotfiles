@@ -140,7 +140,7 @@
                     "foreground": "#ffffff",
                     "background": "#ff8080",
                     "properties": {
-                        "display_exit_code": false,
+                        "display_exit_code": true,
                         "prefix": " ",
                         "postfix": " ",
                         "error_icon": "error"
