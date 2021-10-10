@@ -87,6 +87,10 @@ if ("$Env:Username" -eq "WDAGUtilityAccount") {
 
 $environmentVariables = @()
 
+# We put this here because we want the global install to take precedence even if
+# there is a 'scoop' portable version installed.
+$environmentVariables += "C:\Program Files\Microsoft VS Code\bin"
+
 $environmentVariables += "$dotfilesRoot"
 $environmentVariables += "$dotfilesRoot\source\windows\bin"
 

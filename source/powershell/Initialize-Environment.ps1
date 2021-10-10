@@ -465,7 +465,7 @@ Function Install-Toolset {
             scoop update
 
             # Install portable version even if it is already installed locally
-            if (-not(Test-CommandValid "code")) {
+            if (-not (Test-Path -Path "C:\Program Files\Microsoft VS Code\Code.exe" -PathType Leaf)) {
                 scoop install vscode-portable
             }
 

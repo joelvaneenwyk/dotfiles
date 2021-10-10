@@ -114,6 +114,34 @@ function log_error() {
     echo "❌ $*"
 }
 
+# get_file [output_path] [url]
+function get_file() {
+    output_path=$1
+    url=$2
+    return_value=0
+    if [ -x "$(command -v wget)" ]; then
+        if wget -O "$output_path" "$url"; then
+            echo "✔ [wget] Downloaded file: '$output_path'"
+        else
+            return_value=$?
+            log_error "[wget] Failed to download file: '$output_path'"
+            rm -f "$output_path"
+        fi
+    elif [ -x "$(command -v curl)" ]; then
+        if curl -sSLf -o "$output_path" "$url"; then
+            echo "✔ [curl] Downloaded file: '$output_path'"
+        else
+            return_value=$?
+            log_error "[curl] Failed to download file: '$output_path'"
+            rm -f "$output_path"
+        fi
+    else
+        log_error "Missing both 'wget' and 'curl'. Failed to download file: '$url'"
+        return_value=55
+    fi
+
+    return "$return_value"
+}
 #
 # Run command and redirect stdout and stderr to logger at either info level or
 # error level depending. Return error code of the command.
@@ -720,7 +748,7 @@ function install_oh_my_posh {
     if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
         _posh_themes="$MYCELIO_HOME/.poshthemes"
         mkdir -p "$_posh_themes"
-        run_command "posh.themes.wget" wget -q -O "$_posh_themes/themes.zip" "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip"
+        run_task "posh.themes.get" get_file "$_posh_themes/themes.zip" "https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/themes.zip"
 
         if [ -x "$(command -v unzip)" ]; then
             run_task "posh.themes.unzip" unzip -o "$_posh_themes/themes.zip" -d "$_posh_themes"
@@ -741,7 +769,7 @@ function install_oh_my_posh {
 
     if [ ! -f "$_fonts_path/JetBrains Mono Regular Nerd Font Complete.ttf" ]; then
         mkdir -p "$_fonts_path"
-        run_command "font.jetbrains.wget" wget -q "$font_url" -O "$_fonts_path/$font_base_filename.zip"
+        run_task "font.jetbrains.get" get_file "$_fonts_path/$font_base_filename.zip" "$font_url"
 
         if [ -x "$(command -v unzip)" ]; then
             run_task "fonts.unzip" unzip -o "$_fonts_path/$font_base_filename.zip" -d "$_fonts_path"
@@ -777,7 +805,7 @@ function install_oh_my_posh {
 
     _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$MYCELIO_OS_APP_EXTENSION"
     _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
-    if wget -q -O "$_oh_my_posh_exe" "$_posh_url"; then
+    if run_task "posh.get" get_file "$_oh_my_posh_exe" "$_posh_url"; then
         chmod +x "$_oh_my_posh_exe"
     fi
 
@@ -900,7 +928,7 @@ function install_powershell() {
         _url="https://packages.microsoft.com/config/ubuntu/${VERSION_ID:-0.0}/$_packages_production"
 
         # Download the Microsoft repository GPG keys
-        if wget -q -O "$MYCELIO_TEMP/$_packages_production" "$_url"; then
+        if run_task "powershell.key.get" get_file "$MYCELIO_TEMP/$_packages_production" "$_url"; then
             # Register the Microsoft repository GPG keys
             run_command_sudo "dpkg.register.microsoft" dpkg -i "$MYCELIO_TEMP/$_packages_production"
             # Update the list of products
@@ -1009,7 +1037,10 @@ function install_micro_text_editor() {
         if (
             mkdir -p "$MYCELIO_HOME/.local/bin/"
             cd "$MYCELIO_HOME/.local/bin/"
-            curl -sSL "https://getmic.ro" | bash
+            install_micro="$MYCELIO_HOME/.local/bin/micro_install.sh"
+            run_task "micro.get" get_file "$install_micro" "https://getmic.ro"
+            chmod a+x "$install_micro"
+            run_task "micro.install" "$install_micro"
         ); then
             echo "[mycelio] Successfully installed 'micro' text editor."
         else
@@ -1067,10 +1098,10 @@ function install_go {
             if [ "${MSYSTEM:-}" = "MSYS" ]; then
                 # https://golang.org/doc/install/source
                 _go_bootstrap_archive="$MYCELIO_TEMP/go1.4.windows-amd64.zip"
-                run_command "go.bootstrap.wget" wget -q -O "$_go_bootstrap_archive" "https://golang.org/dl/go1.4.windows-amd64.zip"
+                run_task "go.bootstrap.get" get_file "$_go_bootstrap_archive" "https://golang.org/dl/go1.4.windows-amd64.zip"
                 echo "Extracting 'go' binaries: '$_go_bootstrap_archive'"
                 rm -rf "$MYCELIO_TEMP/go" || true
-                run_command "go.bootstrap.tar" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_archive"
+                run_task "go.bootstrap.tar" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_archive"
                 rm -rf "$_local_go_bootstrap_root" || true
                 mv "$MYCELIO_TEMP/go" "$_local_go_bootstrap_root"
                 rm "$_go_bootstrap_src_archive"
@@ -1088,9 +1119,9 @@ function install_go {
             elif [ ! -f "$_go_bootstrap_exe" ]; then
                 # https://golang.org/doc/install/source
                 _go_bootstrap_src_archive="$MYCELIO_TEMP/go_bootstrap.tgz"
-                run_command "go.bootstrap.wget" wget -O "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
+                run_task "go.bootstrap.get" get_file "$_go_bootstrap_src_archive" "https://dl.google.com/go/go1.4-bootstrap-20171003.tar.gz"
                 rm -rf "$MYCELIO_TEMP/go" || true
-                run_command "go.bootstrap.tar" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
+                run_task "go.bootstrap.tar" tar -C "$MYCELIO_TEMP" -xzf "$_go_bootstrap_src_archive"
                 rm -rf "$_local_go_bootstrap_root" || true
                 mv "$MYCELIO_TEMP/go" "$_local_go_bootstrap_root"
                 rm "$_go_bootstrap_src_archive"
@@ -1139,7 +1170,7 @@ function install_go {
             # https://golang.org/doc/install/source
             if [ -f "$_go_bootstrap_exe" ]; then
                 _go_src_archive="$MYCELIO_TEMP/go.tgz"
-                wget -q -O "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
+                run_task "go.get" get_file "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
 
                 run_task "go.source.extract" tar -C "$_local_root" -xzf "$_go_src_archive"
                 rm "$_go_src_archive"
@@ -1213,7 +1244,7 @@ function install_go {
                 echo "⚠ Unsupported platform for installing 'go' language."
             else
                 echo "Downloading archive: 'https://dl.google.com/go/$_go_archive'"
-                curl -sSL -o "$MYCELIO_TEMP/$_go_archive" "https://dl.google.com/go/$_go_archive"
+                run_task "go.source.get" get_file "$MYCELIO_TEMP/$_go_archive" "https://dl.google.com/go/$_go_archive"
                 if [ ! -f "$MYCELIO_TEMP/$_go_archive" ]; then
                     echo "Failed to download 'go' archive."
                 else
@@ -1258,31 +1289,33 @@ function install_go {
 
 function install_macos_apps() {
     if ! [ -x "$(command -v brew)" ]; then
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+        run_task "brew.install.get" get_file "$MYCELIO_TEMP/brew_install.sh" "https://raw.githubusercontent.com/Homebrew/install/master/install.sh"
+        chmod a+x "$MYCELIO_TEMP/brew_install.sh"
+        run_task "brew.install" "$MYCELIO_TEMP/brew_install.sh"
     fi
 
     brew upgrade
 
-    if ! brew bundle --file="$MYCELIO_ROOT/source/macos/Brewfile"; then
-        echo "Install with 'brew' failed with errors, but continuing."
+    if ! run_task "brew.bundle" brew bundle --file="$MYCELIO_ROOT/source/macos/Brewfile"; then
+        log_error "Install with 'brew' failed with errors, but continuing."
     fi
 
-    cask upgrade
+    run_task "cask.upgrade" cask upgrade
 
     #
     # We install these seprately as they can fail if already installed.
     #
     if [ ! -d "/Applications/Google Chrome.app" ]; then
-        brew install --cask "google-chrome" || true
+        run_task "cask.google.chrome" brew install --cask "google-chrome" || true
     fi
 
     # https://github.com/JetBrains/JetBrainsMono
     if [ ! -f "/Users/$(whoami)/Library/Fonts/JetBrainsMono-BoldItalic.ttf" ]; then
-        brew install --cask "font-jetbrains-mono" || true
+        run_task "cask.font.jetbrains" brew install --cask "font-jetbrains-mono" || true
     fi
 
     if [ ! -d "/Applications/Visual Studio Code.app" ]; then
-        brew install --cask "visual-studio-code" || true
+        run_task "cask.vscode" brew install --cask "visual-studio-code" || true
     fi
 
     # If user is not signed into the Apple store, notify them and skip install
@@ -1291,7 +1324,7 @@ function install_macos_apps() {
     else
         # Powerful keep-awake utility, see https://apps.apple.com/us/app/amphetamine/id937984704
         # 'Amphetamine', id: 937984704
-        mas install 937984704 || true
+        run_task "mas.install.amphetamine" mas install 937984704 || true
     fi
 
     echo "Installed dependencies with 'brew' package manager."
@@ -1359,12 +1392,13 @@ function configure_linux() {
         ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
     )
 
-    if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
+    _fundle_fish="$MYCELIO_HOME/.config/fish/functions/fundle.fish"
+    if [ ! -f "$_fundle_fish" ]; then
         mkdir -p "$MYCELIO_HOME/.config/fish/functions"
-        wget -q -O "$MYCELIO_HOME/.config/fish/functions/fundle.fish" "https://git.io/fundle"
-        if [ -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
-            chmod a+x "$MYCELIO_HOME/.config/fish/functions/fundle.fish"
-            echo "✔ Downloaded latest fundle: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
+        run_task "fundle.get" get_file "$_fundle_fish" "https://git.io/fundle" || true
+
+        if [ -f "$_fundle_fish" ]; then
+            chmod a+x "$_fundle_fish"
         fi
     fi
 
@@ -1376,7 +1410,7 @@ function configure_linux() {
     fi
 
     if [ -x "$(command -v fish)" ]; then
-        if [ ! -f "$MYCELIO_HOME/.config/fish/functions/fundle.fish" ]; then
+        if [ ! -f "$_fundle_fish" ]; then
             log_error "Fundle not installed in home directory: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
         else
             if run_task "Install Fundle" fish -c "fundle install"; then
@@ -1386,7 +1420,7 @@ function configure_linux() {
             fi
         fi
     else
-        echo "Skipped fish shell initialization as it is not installed."
+        echo "⚠ Skipped fish shell initialization as it is not installed."
     fi
 
     if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
@@ -1489,9 +1523,9 @@ function install_python() {
         echo "$_python_version"
 
         if ! python3 -m pip --version >/dev/null 2>&1; then
-            curl -sSL "https://bootstrap.pypa.io/get-pip.py" -o "$MYCELIO_TEMP/get-pip.py"
+            run_task "pip.get" get_file "$MYCELIO_TEMP/get-pip.py" "https://bootstrap.pypa.io/get-pip.py"
             chmod a+x "$MYCELIO_TEMP/get-pip.py"
-            python3 "$MYCELIO_TEMP/get-pip.py"
+            run_task "pip.install" python3 "$MYCELIO_TEMP/get-pip.py"
         fi
 
         run_command "python.pip.upgrade" python3 -m pip install --user --upgrade pip
