@@ -231,7 +231,9 @@
     "files.associations": {
         "*.json.git": "cjson",
         "*.in": "perl",
+        "*.shbat": "shellscript",
         "*.bats": "shellscript",
+        "*.post": "shellscript",
         "setup": "shellscript",
         "stow": "perl",
         "chkstow": "perl",
@@ -266,7 +268,7 @@
     "powershell.integratedConsole.showOnStartup": false,
     "powershell.integratedConsole.suppressStartupBanner": true,
     "powershell.scriptAnalysis.enable": true,
-    "powershell.scriptAnalysis.settingsPath": "source/powershell/PSScriptAnalyzerSettings.psd1",
+    "powershell.scriptAnalysis.settingsPath": "source/config/PSScriptAnalyzerSettings.psd1",
     "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
     "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
     "powershell.codeFormatting.whitespaceAroundOperator": true,

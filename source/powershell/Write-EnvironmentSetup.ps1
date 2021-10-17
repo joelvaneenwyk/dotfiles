@@ -13,10 +13,9 @@
     After running the above, the environment will be setup such that you can now run Mycelio
     specific commands e.g., "gpgtest"
 #>
-
 param(
     [string]$ScriptPath = "",
-    [bool]$Verbose = $false
+    [switch]$Verbose = $false
 )
 
 Function Get-CurrentEnvironment {
@@ -77,116 +76,135 @@ Function Get-CurrentEnvironment {
     Return $PathArray
 }
 
-$dotfilesRoot = Resolve-Path -Path "$PSScriptRoot\..\.."
+Function Get-Environment {
+    $script:MycelioRoot = Resolve-Path -Path "$PSScriptRoot\..\.."
 
-if ("$Env:Username" -eq "WDAGUtilityAccount") {
-    if (Test-Path -Path "$Env:UserProfile\dotfiles\setup.bat" -PathType Leaf) {
-        $dotfilesRoot = Resolve-Path -Path "$Env:UserProfile\dotfiles"
-    }
-}
-
-$environmentVariables = @()
-
-# We put this here because we want the global install to take precedence even if
-# there is a 'scoop' portable version installed.
-$environmentVariables += "C:\Program Files\Microsoft VS Code\bin"
-
-$environmentVariables += "$dotfilesRoot"
-$environmentVariables += "$dotfilesRoot\source\windows\bin"
-
-$environmentVariables += "$ENV:UserProfile\.local\bin"
-$environmentVariables += "$ENV:UserProfile\.local\msys64"
-$environmentVariables += "$ENV:UserProfile\.local\mutagen"
-$environmentVariables += "$ENV:UserProfile\.local\go\bin"
-$environmentVariables += "$ENV:UserProfile\.local\perl\c\bin"
-$environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"
-
-# Expected to contain 'cpan' and other related utilities
-$environmentVariables += "$ENV:UserProfile\.local\perl\perl\site\bin"
-
-# If installed, will give you access to 'gpg' and 'gpgconf' as well as 'Kleopatra'
-$environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
-$environmentVariables += "C:\Program Files (x86)\Gpg4win\bin"
-
-$environmentVariables += "$ENV:UserProfile\scoop\shims"
-
-# Initially seemed like a good idea to include these tools in the environment, but there are a
-# lot of dependencies between these tools from dynamic libraries to just include folders that
-# end up resulting in a lot of conflict and some tools just "not working" in some cases for
-# seemingly strange reasons with even stranger error messages. It gets worse if you have multiple
-# versions of MSYS2 installed (or Cygwin) and then the installations become overlapped resulting
-# in even more obscure errors.
-$includeUnixTools = $false
-
-if ($includeUnixTools) {
-    # Home to tools like 'gcc' and 'make'
-    $environmentVariables += "$ENV:UserProfile\.local\msys64\mingw64\bin"
-
-    # This is intentionally at the very end as we want to pick non-MSYS2 (or Cygwin) style
-    # versions if at all possible. This is mainly required for tools like 'make' which are
-    # only available in the 'usr/bin' folder.
-    $environmentVariables += "$ENV:UserProfile\.local\msys64\usr\bin"
-}
-
-# This also contains 'bash' and other utilities so put this near the end
-$environmentVariables += "C:\Program Files\Git\bin"
-
-$environmentVariables += $(Get-CurrentEnvironment)
-
-# Gather all valid paths into one array which we will output at the end.
-$environmentPaths = @()
-$environmentVariables | ForEach-Object {
-    $environmentPath = "$_"
-    try {
-        $resolvedPath = Resolve-Path -ErrorAction SilentlyContinue -Path "$_"
-        if ($null -ne $resolvedPath) {
-            $path = $resolvedPath.Path
-            $path = $path.TrimEnd("\\")
-            $path = $path.TrimEnd("/")
-            $environmentPaths += $path
+    if ("$Env:Username" -eq "WDAGUtilityAccount") {
+        if (Test-Path -Path "$Env:UserProfile\dotfiles\setup.bat" -PathType Leaf) {
+            $script:MycelioRoot = Resolve-Path -Path "$Env:UserProfile\dotfiles"
         }
     }
-    catch {
-        Write-Host "[mycelio] Skipped invalid path: '$environmentPath'"
+
+    $environmentVariables = @()
+
+    # We put this here because we want the global install to take precedence even if
+    # there is a 'scoop' portable version installed.
+    $environmentVariables += "C:\Program Files\Microsoft VS Code\bin"
+
+    $environmentVariables += "$script:MycelioRoot"
+    $environmentVariables += "$script:MycelioRoot\source\windows\bin"
+
+    $environmentVariables += "$ENV:UserProfile\.local\texlive\bin\win32"
+    $environmentVariables += "$ENV:UserProfile\.local\git\cmd"
+    $environmentVariables += "$ENV:UserProfile\.local\bin"
+    $environmentVariables += "$ENV:UserProfile\.local\msys64"
+    $environmentVariables += "$ENV:UserProfile\.local\mutagen"
+    $environmentVariables += "$ENV:UserProfile\.local\go\bin"
+    $environmentVariables += "$ENV:UserProfile\.local\perl\c\bin"
+    $environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"
+
+    # Expected to contain 'cpan' and other related utilities
+    $environmentVariables += "$ENV:UserProfile\.local\perl\perl\site\bin"
+
+    # If installed, will give you access to 'gpg' and 'gpgconf' as well as 'Kleopatra'
+    $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
+    $environmentVariables += "C:\Program Files (x86)\Gpg4win\bin"
+
+    $environmentVariables += "$ENV:UserProfile\scoop\shims"
+
+    # Initially seemed like a good idea to include these tools in the environment, but there are a
+    # lot of dependencies between these tools from dynamic libraries to just include folders that
+    # end up resulting in a lot of conflict and some tools just "not working" in some cases for
+    # seemingly strange reasons with even stranger error messages. It gets worse if you have multiple
+    # versions of MSYS2 installed (or Cygwin) and then the installations become overlapped resulting
+    # in even more obscure errors.
+    $includeUnixTools = $false
+
+    if ($includeUnixTools) {
+        # Home to tools like 'gcc' and 'make'
+        $environmentVariables += "$ENV:UserProfile\.local\msys64\mingw64\bin"
+
+        # This is intentionally at the very end as we want to pick non-MSYS2 (or Cygwin) style
+        # versions if at all possible. This is mainly required for tools like 'make' which are
+        # only available in the 'usr/bin' folder.
+        $environmentVariables += "$ENV:UserProfile\.local\msys64\usr\bin"
     }
+
+    # This also contains 'bash' and other utilities so put this near the end
+    $environmentVariables += "C:\Program Files\Git\bin"
+
+    $environmentVariables += $(Get-CurrentEnvironment)
+
+    # Gather all valid paths into one array which we will output at the end.
+    $environmentPaths = @()
+    $environmentVariables | ForEach-Object {
+        $environmentPath = "$_"
+        try {
+            $resolvedPath = Resolve-Path -ErrorAction SilentlyContinue -Path "$_"
+            if ($null -ne $resolvedPath) {
+                $path = $resolvedPath.Path
+                $path = $path.TrimEnd("\\")
+                $path = $path.TrimEnd("/")
+                $environmentPaths += $path
+            }
+        }
+        catch {
+            Write-Host "[mycelio] Skipped invalid path: '$environmentPath'"
+        }
+    }
+
+    return $environmentPaths | Select-Object -Unique
 }
 
-$environmentPaths = $environmentPaths | Select-Object -Unique
+Function Save-Environment {
+    param(
+        [string]$ScriptPath = "",
+        [switch]$Verbose = $false
+    )
 
-Try {
-    New-Item -Path "$ENV:UserProfile\.local\bin" -type directory -ErrorAction SilentlyContinue | Out-Null
+    if ([String]::IsNullOrEmpty("$ScriptPath")) {
+        $ScriptPath = "$ENV:UserProfile/.local/bin/use_mycelio_environment.bat"
+    }
 
-    $fileStream = [System.IO.File]::CreateText($ScriptPath)
+    $environmentPaths = Get-Environment
 
-    try {
-        $fileStream.WriteLine("@echo off")
-        $fileStream.WriteLine("")
+    Try {
+        New-Item -Path "$ENV:UserProfile/.local/bin" -type directory -ErrorAction SilentlyContinue | Out-Null
 
-        $fileStream.WriteLine("set ""PATH=$($environmentPaths -join ";")""")
-        $fileStream.WriteLine("set ""MYCELIO_ROOT=$dotfilesRoot""")
-        $fileStream.WriteLine("set ""HOME=$ENV:UserProfile""")
-        $fileStream.WriteLine("set ""PERL=$ENV:UserProfile\.local\perl\perl\bin\perl.exe""")
-        $fileStream.WriteLine("set ""MSYS=winsymlinks:nativestrict""")
-        $fileStream.WriteLine("set ""MSYS_SHELL=%USERPROFILE%\.local\msys64\msys2_shell.cmd""")
-        $fileStream.WriteLine("set ""MSYS2_PATH_TYPE=minimal""")
+        $fileStream = [System.IO.File]::CreateText($ScriptPath)
 
-        # We intentionally do not output anything in this script as we want to be able to
-        # run this in subshells if needed which means we can't have the output cluttered.
-        if ($Verbose) {
-            $fileStream.WriteLine("echo [mycelio] Initialized path from generated script.")
+        try {
+            $fileStream.WriteLine("@echo off")
+            $fileStream.WriteLine("")
+
+            $fileStream.WriteLine("set ""PATH=$($environmentPaths -join ";")""")
+            $fileStream.WriteLine("set ""MYCELIO_ROOT=$script:MycelioRoot""")
+            $fileStream.WriteLine("set ""HOME=$ENV:UserProfile""")
+            $fileStream.WriteLine("set ""PERL=$ENV:UserProfile\.local\perl\perl\bin\perl.exe""")
+            $fileStream.WriteLine("set ""MSYS=winsymlinks:nativestrict""")
+            $fileStream.WriteLine("set ""MSYS_SHELL=%USERPROFILE%\.local\msys64\msys2_shell.cmd""")
+            $fileStream.WriteLine("set ""MSYS2_PATH_TYPE=minimal""")
+
+            # We intentionally do not output anything in this script as we want to be able to
+            # run this in subshells if needed which means we can't have the output cluttered.
+            if ($Verbose) {
+                $fileStream.WriteLine("echo [mycelio] Initialized path from generated script.")
+            }
+
+            $fileStream.WriteLine("")
+            $fileStream.WriteLine("exit /b 0")
         }
-
-        $fileStream.WriteLine("")
-        $fileStream.WriteLine("exit /b 0")
+        catch [Exception] {
+            Write-Host "[mycelio] Failed to write setup script.", $_.Exception.Message
+        }
+        finally {
+            $fileStream.Close()
+            $fileStream.Dispose()
+        }
     }
     catch [Exception] {
-        Write-Host "[mycelio] Failed to write setup script.", $_.Exception.Message
-    }
-    finally {
-        $fileStream.Close()
-        $fileStream.Dispose()
+        Write-Host "[mycelio] Failed to write environent setup script.", $_.Exception.Message
     }
 }
-catch [Exception] {
-    Write-Host "[mycelio] Failed to write environent setup script.", $_.Exception.Message
-}
+
+Save-Environment -ScriptPath "$ScriptPath" -Verbose $Verbose

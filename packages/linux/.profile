@@ -495,8 +495,10 @@ initialize_profile() {
     if [ "${MSYSTEM:-}" = "MSYS" ]; then
         _add_path "prepend" "/usr/bin"
 
-        if _gcc_version=$(gcc --version | grep gcc | awk '{print $3}' 2>&1); then
-            _gcc_lib_root="/usr/lib/gcc/$MSYSTEM_CHOST/$_gcc_version"
+        if [ -x "$(command -v gcc)" ]; then
+            if _gcc_version=$(gcc --version | grep gcc | awk '{print $3}' 2>&1); then
+                _gcc_lib_root="/usr/lib/gcc/$MSYSTEM_CHOST/$_gcc_version"
+            fi
         fi
 
         if [ -d "${_gcc_lib_root:-}" ]; then

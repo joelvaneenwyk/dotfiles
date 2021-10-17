@@ -144,11 +144,9 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     call :Run "%MYCELIO_ROOT%\source\windows\bin\env.bat"
 
-    :: The 'stow' tool should now be installed in our local perl so we can
-    :: stow the Windows settings. However, due to limitations in 'stow' on Windows
-    :: we need to do this in MSYS2 instead.
+    :: The 'stow' tool should now be installed in our local Perl so we can
+    :: stow the Windows settings.
     call :GroupStart "Make Stow"
-    call :Run "%MYCELIO_ROOT%\source\stow\tools\install-dependencies.bat"
     call :Run "%MYCELIO_ROOT%\source\stow\tools\make-stow.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!

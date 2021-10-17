@@ -77,5 +77,3 @@ if (Test-Path -Path $Path -PathType Leaf) {
 else {
     Write-Host "ERROR: Script not found: '$Path'"
 }
-
-

@@ -43,8 +43,7 @@ Function Test-CommandValid {
     }
 
     return $IsValid
-} #end function Test-CommandValid
-
+}
 Function Expand-File {
     <#
 .SYNOPSIS
@@ -57,8 +56,7 @@ Function Expand-File {
     file to save it as locally
 .EXAMPLE
     C:\PS> Get-File -Name "mynuget.exe" -Url https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-#>
-
+    #>
     Param(
         [Parameter(Position = 0, mandatory = $true)]
         [string]$DestinationPath,
@@ -66,19 +64,84 @@ Function Expand-File {
     )
 
     if (![System.IO.Path]::IsPathRooted($DestinationPath)) {
-        $DestinationPath = Join-Path (Get-Item -Path ".\" -Verbose).FullName $DestinationPath
+        $DestinationPath = Join-Path (Get-Item -Path "./" -Verbose).FullName $DestinationPath
     }
 
     if (![System.IO.Path]::IsPathRooted($Path)) {
-        $Path = Join-Path (Get-Item -Path ".\" -Verbose).FullName $Path
+        $Path = Join-Path (Get-Item -Path "./" -Verbose).FullName $Path
     }
 
-    $7zip = "$Env:UserProfile\scoop\apps\7zip\current\7z.exe"
+    $7zip = ""
+
+    if ($IsWindows -or $ENV:OS) {
+        $7za920zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7za920.zip"
+        $7za920 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7za920"
+
+        # Download 7zip that was stored in a zip file so that we can extract the latest version stored in 7z format
+        if (-not(Test-Path -Path "$7za920zip" -PathType Leaf)) {
+            Get-File -Url "https://www.7-zip.org/a/7za920.zip" -Filename "$7za920zip"
+        }
+
+        # Extract previous version of 7zip first
+        if (Test-Path -Path "$7za920zip" -PathType Leaf) {
+            if (-not(Test-Path -Path "$7za920/7za.exe" -PathType Leaf)) {
+                $ProgressPreference = 'SilentlyContinue'
+                Expand-Archive -Path "$7za920zip" -DestinationPath "$7za920"
+            }
+        }
+
+        # If older vresion is available, download and extract latest
+        if (Test-Path -Path "$7za920/7za.exe" -PathType Leaf) {
+            $7z2103zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2103-extra.7z"
+            $7z2103 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2103"
+
+            # Download latest version of 7zip
+            if (-not(Test-Path -Path "$7z2103zip" -PathType Leaf)) {
+                Get-File -Url "https://www.7-zip.org/a/7z2103-extra.7z" -Filename "$7z2103zip"
+            }
+
+            # Extract latest vesrion using old version
+            if (Test-Path -Path "$7z2103zip" -PathType Leaf) {
+                if (-not(Test-Path -Path "$7z2103/7za.exe" -PathType Leaf)) {
+                    & "$7za920/7za.exe" x "$7z2103zip" -aoa -o"$7z2103" -r -y | Out-Default
+                }
+            }
+        }
+
+        # Specify latest version of 7zip so that we can use it below
+        if (Test-Path -Path "$7z2103/x64/7za.exe" -PathType Leaf) {
+            $7zip = "$7z2103/x64/7za.exe"
+        }
+    }
+    else {
+        $7z2103zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2103-linux-x64.tar.xz"
+        $7z2103 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2103"
+
+        # Download 7zip that was stored in a zip file so that we can extract the latest version stored in 7z format
+        if (-not(Test-Path -Path "$7z2103zip" -PathType Leaf)) {
+            Get-File -Url "https://www.7-zip.org/a/7z2103-linux-x64.tar.xz" -Filename "$7z2103zip"
+        }
+
+        # Extract previous version of 7zipTempDir first
+        if (Test-Path -Path "$7z2103zip" -PathType Leaf) {
+            if ( -not(Test-Path -Path "$7z2103") ) {
+                New-Item -ItemType directory -Path "$7z2103" | Out-Null
+            }
+
+            if (-not(Test-Path -Path "$7z2103/7zz" -PathType Leaf)) {
+                tar -xvf "$7z2103zip" -C "$7z2103"
+            }
+        }
+
+        if (Test-Path -Path "$7z2103/7zz" -PathType Leaf) {
+            $7zip = "$7z2103/7zz"
+        }
+    }
 
     try {
         Write-Host "Extracting archive: '$Path'"
         if (Test-Path -Path "$7zip" -PathType Leaf) {
-            & "$7zip" x "$Path" -aoa -o"$DestinationPath" -r -y
+            & "$7zip" x "$Path" -aoa -o"$DestinationPath" -r -y | Out-Default
         }
         else {
             $ProgressPreference = 'SilentlyContinue'
@@ -87,7 +150,7 @@ Function Expand-File {
         Write-Host "Extracted archive to target: '$DestinationPath'"
     }
     catch {
-        throw "⚠ Failed to extract archive: $Path"
+        throw "Failed to extract archive: $Path"
     }
 }
 
@@ -116,58 +179,118 @@ Function Get-File {
         $Filename = [System.IO.Path]::GetFileName($Url)
     }
 
-    $FilePath = $Filename
-
-    # Make absolute local path
+    # Convert local/relative path to absolute path
     if (![System.IO.Path]::IsPathRooted($Filename)) {
-        $FilePath = Join-Path (Get-Item -Path ".\" -Verbose).FullName $Filename
+        $FilePath = Join-Path (Get-Item -Path "./" -Verbose).FullName $Filename
+    }
+    else {
+        $FilePath = $Filename
     }
 
+    $FilePathOut = "$FilePath.out"
 
-    $handler = $null
-    try {
-        $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
-        Write-Host "Downloading with invoke web request: $Url"
+    if ($null -eq ($Url -as [System.URI]).AbsoluteURI) {
+        throw "⚠ Invalid Url: $Url"
     }
-    catch {
-        Write-Host "Downloading: $Url"
+    elseif (Test-Path -Path "$FilePath" -PathType Leaf) {
+        Write-Host "File already available: '$FilePath'"
     }
+    else {
+        Write-Host "Target: '$FilePathOut'"
+        $handler = $null
+        $webclient = $null
 
-    if ($null -ne ($Url -as [System.URI]).AbsoluteURI) {
-        if ($null -eq $handler) {
-            $ProgressPreference = 'SilentlyContinue'
-            Invoke-WebRequest -UseBasicParsing -Uri "$Url" -OutFile "$Filename"
+        try {
+            $webclient = New-Object System.Net.WebClient
+            Write-Host "[web.client] Downloading: $Url"
+            $webclient.DownloadFile([System.Uri]::new($Url), "$FilePathOut")
         }
-        else {
-            $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
-            $client = New-Object -TypeName System.Net.Http.HttpClient -ArgumentList $handler
-            $client.Timeout = New-Object -TypeName System.TimeSpan -ArgumentList 0, 30, 0
-            $cancelTokenSource = [System.Threading.CancellationTokenSource]::new(-1)
-            $responseMsg = $client.GetAsync([System.Uri]::new($Url), $cancelTokenSource.Token)
-            $responseMsg.Wait()
-            if (!$responseMsg.IsCanceled) {
-                $response = $responseMsg.Result
-                if ($response.IsSuccessStatusCode) {
-                    $downloadedFileStream = [System.IO.FileStream]::new(
-                        $FilePath, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+        catch {
+            try {
+                $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
+                $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
+                $client = New-Object -TypeName System.Net.Http.HttpClient -ArgumentList $handler
+                $client.Timeout = New-Object -TypeName System.TimeSpan -ArgumentList 0, 30, 0
+                $cancelTokenSource = [System.Threading.CancellationTokenSource]::new(-1)
+                $responseMsg = $client.GetAsync([System.Uri]::new($Url), $cancelTokenSource.Token)
+                $responseMsg.Wait()
 
-                    $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
+                Write-Host "[http.client.handler] Downloading: $Url"
 
-                    Write-Host "Download started..."
-                    $copyStreamOp.Wait()
+                if (!$responseMsg.IsCanceled) {
+                    $response = $responseMsg.Result
+                    if ($response.IsSuccessStatusCode) {
+                        $downloadedFileStream = [System.IO.FileStream]::new(
+                            $FilePathOut,
+                            [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
 
-                    $downloadedFileStream.Close()
-                    if ($null -ne $copyStreamOp.Exception) {
-                        throw $copyStreamOp.Exception
+                        $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
+
+                        Write-Host "Download started..."
+                        $copyStreamOp.Wait()
+
+                        $downloadedFileStream.Close()
+                        if ($null -ne $copyStreamOp.Exception) {
+                            throw $copyStreamOp.Exception
+                        }
                     }
                 }
             }
+            catch {
+                Write-Host "[web.request] Downloading: $Url"
+                $ProgressPreference = 'SilentlyContinue'
+                Invoke-WebRequest -UseBasicParsing -Uri "$Url" -OutFile "$FilePathOut"
+            }
+        }
+        finally {
+            if (Test-Path -Path "$FilePathOut" -PathType Leaf) {
+                Move-Item -Path "$FilePathOut" -Destination "$FilePath" -Force
+                Write-Host "Downloaded file: '$FilePath'"
+            }
+            else {
+                throw "Failed to download file: $Url"
+            }
+        }
+    }
+}
+
+Function Install-Git {
+    # Install git so we can clone repositories
+    try {
+        $script:MycelioGit = ""
+
+        $gitCommand = (Get-Command -Name "git" -CommandType Application -ErrorAction SilentlyContinue)
+        if ($null -ne $gitCommand) {
+            $script:MycelioGit = ($gitCommand | Where-Object {
+                    & $_.Source --version | Out-Null
+                    return $?
+                } | Select-Object -First 1).Source
         }
 
-        Write-Host "Downloaded file: '$Filename'"
+        $MycelioLocalGitDir = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "git"
+        $MycelioLocalGitBinDir = Join-Path -Path "$MycelioLocalGitDir" -ChildPath "cmd"
+        $script:MycelioLocalGit = Join-Path -Path "$MycelioLocalGitBinDir" -ChildPath "git.exe"
+
+        if (-Not (Test-Path -Path "$script:MycelioLocalGit" -PathType Leaf)) {
+            $gitFilename = "MinGit-2.33.0.2-64-bit.zip"
+            $gitArchive = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "$gitFilename"
+            Get-File -Url "https://github.com/git-for-windows/git/releases/download/v2.33.0.windows.2/$gitFilename" -Filename "$gitArchive"
+            Expand-File -Path "$gitArchive" -DestinationPath "$MycelioLocalGitDir"
+        }
+
+        if (-Not (Test-Path -Path "$script:MycelioGit" -PathType Leaf)) {
+            $script:MycelioGit = "$script:MycelioLocalGit"
+        }
+
+        $gitDir = [System.IO.Path]::GetDirectoryName("$script:MycelioGit")
+
+        # Make sure this shows up in path first
+        $env:Path = "$gitDir;$env:Path"
+
+        Write-Host "Git: '$script:MycelioGit'"
     }
-    else {
-        throw "⚠ Failed to download file: $Url"
+    catch [Exception] {
+        Write-Host "Failed to install minimal 'Git' for Windows.", $_.Exception.Message
     }
 }
 
@@ -326,60 +449,258 @@ Function Initialize-ConsoleFont {
     Write-Host "::endgroup::"
 }
 
+Function Get-TexLive {
+    try {
+        Write-Host "::group::Get TexLive"
+
+        if ($IsWindows -or $ENV:OS) {
+            Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+        }
+
+        if ( -not(Test-Path -Path "$script:MycelioTempDir") ) {
+            New-Item -ItemType directory -Path "$script:MycelioTempDir" | Out-Null
+        }
+
+        $tempTexFolder = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "texlive-tmp"
+        $tempTexTargetFolder = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "texlive-install"
+        $tempTexTargetInstall = Join-Path -Path "$tempTexTargetFolder" -ChildPath "install-tl-windows.bat"
+        $tempTexArchive = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "install-tl.zip"
+
+        if (Test-Path -Path "$tempTexTargetInstall" -PathType Leaf) {
+            Write-Host "Installer already available: '$tempTexTargetInstall'"
+        }
+        else {
+            Get-File -Url "https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip" -Filename "$tempTexArchive"
+
+            # Remove tex folder if it exists
+            If (Test-Path "$tempTexFolder" -PathType Any) {
+                Remove-Item -Recurse -Force "$tempTexFolder" | Out-Null
+            }
+            Expand-File -Path "$tempTexArchive" -DestinationPath "$tempTexFolder"
+
+            Get-ChildItem -Path "$tempTexFolder" -Force -Directory | Select-Object -First 1 | Move-Item -Destination "$tempTexTargetFolder" -Force
+        }
+
+        # Remove tex folder if it exists
+        If (Test-Path "$tempTexFolder" -PathType Any) {
+            Remove-Item -Recurse -Force "$tempTexFolder" | Out-Null
+        }
+
+        $env:TEXLIVE_ROOT = "$tempTexTargetFolder"
+        $env:TEXLIVE_INSTALL = "$tempTexTargetInstall"
+
+        $TexLiveInstallRoot = "$script:MycelioLocalDir\texlive"
+
+        $env:TEXDIR = "$TexLiveInstallRoot\latest"
+        if ( -not(Test-Path -Path "$env:TEXDIR") ) {
+            New-Item -ItemType directory -Path "$env:TEXDIR" | Out-Null
+        }
+
+        # https://github.com/TeX-Live/installer/blob/master/install-tl
+        $env:TEXLIVE_INSTALL_PREFIX = "$TexLiveInstallRoot"
+        $env:TEXLIVE_INSTALL_TEXDIR = "$env:TEXDIR"
+        $env:TEXLIVE_INSTALL_TEXMFSYSCONFIG = "$env:TEXDIR\texmf-config"
+        $env:TEXLIVE_INSTALL_TEXMFSYSVAR = "$env:TEXDIR\texmf-var"
+        $env:TEXLIVE_INSTALL_TEXMFHOME = "$TexLiveInstallRoot\texmf"
+        $env:TEXLIVE_INSTALL_TEXMFLOCAL = "$TexLiveInstallRoot\texmf-local"
+        $env:TEXLIVE_INSTALL_TEXMFVAR = "$TexLiveInstallRoot\texmf-var"
+        $env:TEXLIVE_INSTALL_TEXMFCONFIG = "$TexLiveInstallRoot\texmf-config"
+
+        $env:TEXLIVE_BIN = "$env:TEXLIVE_INSTALL_PREFIX\bin\win32"
+        $env:TEXMFSYSCONFIG = "$env:TEXLIVE_INSTALL_TEXMFSYSCONFIG"
+        $env:TEXMFSYSVAR = "$env:TEXLIVE_INSTALL_TEXMFSYSVAR"
+        $env:TEXMFHOME = "$env:TEXLIVE_INSTALL_TEXMFHOME"
+        $env:TEXMFLOCAL = "$env:TEXLIVE_INSTALL_TEXMFLOCAL"
+        $env:TEXMFVAR = "$env:TEXLIVE_INSTALL_TEXMFVAR"
+        $env:TEXMFCONFIG = "$env:TEXLIVE_INSTALL_TEXMFCONFIG"
+
+        $texLiveProfile = Join-Path -Path "$tempTexTargetFolder" -ChildPath "install-texlive.profile"
+        Set-Content -Path "$texLiveProfile" -Value @"
+# It will NOT be updated and reflects only the
+# installation profile at installation time.
+
+selected_scheme scheme-custom
+binary_win32 1
+collection-basic 1
+collection-wintools 1
+collection-binextra 0
+collection-formatsextra 0
+instopt_adjustpath 0
+instopt_adjustrepo 1
+#instopt_desktop_integration 0
+#instopt_file_assocs 0
+instopt_letter 0
+instopt_portable 0
+instopt_write18_restricted 1
+tlpdbopt_autobackup 1
+tlpdbopt_backupdir tlpkg/backups
+tlpdbopt_create_formats 1
+tlpdbopt_desktop_integration 0
+tlpdbopt_file_assocs 0
+tlpdbopt_generate_updmap 0
+tlpdbopt_install_docfiles 0
+tlpdbopt_install_srcfiles 0
+tlpdbopt_post_code 1
+tlpdbopt_sys_bin /usr/local/bin
+tlpdbopt_sys_info /usr/local/share/info
+tlpdbopt_sys_man /usr/local/share/man
+tlpdbopt_w32_multi_user 0
+"@
+
+        # Update PATH environment as we need to make sure 'cmd.exe' is available since the TeX Live manager
+        # expected it to work.
+        $env:Path = "$ENV:SystemRoot\System32\;$env:TEXLIVE_BIN;$env:Path"
+
+        $texExecutable = Join-Path -Path "$env:TEXLIVE_BIN" -ChildPath "tex.exe"
+        If (Test-Path "$texExecutable" -PathType Leaf) {
+            Write-Host "Skipped install. TeX already exists: '$texExecutable'"
+        }
+        elseif ($IsWindows -or $ENV:OS) {
+            $errorPreference = $ErrorActionPreference
+            $ErrorActionPreference = 'SilentlyContinue'
+
+            # We redirect stderr to stdout because of a seemingly unavoidable error that we get during
+            # install e.g. 'Use of uninitialized value $deftmflocal in string at C:\...\texlive-install\install-tl line 1364.'
+            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ""$env:TEXLIVE_INSTALL" -no-gui -portable -profile "$texLiveProfile"" 2>&1
+
+            $ErrorActionPreference = $errorPreference
+        }
+        else {
+            Write-Host "TeX Live install process only supported on Windows."
+        }
+
+        if ($IsWindows -or $ENV:OS) {
+            & "$ENV:SystemRoot\System32\cmd.exe" /d /c "call "$env:TEXLIVE_BIN/tlmgr.bat" update -all"
+        }
+    }
+    catch [Exception] {
+        Write-Host "Failed to download and extract TeX Live.", $_.Exception.Message
+    }
+    finally {
+        Write-Host "::endgroup::"
+    }
+}
+
 Function Start-Bash() {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
         'PSUseShouldProcessForStateChangingFunctions', '', Scope = 'Function')]
     param()
 
-    Write-Host "bash -c '$Args'"
-    & "$script:MsysTargetDir\usr\bin\bash.exe" @('--noprofile', '--norc', '-lc') + @Args
+    Write-Host "[bash] $Args"
+
+    if ($IsWindows -or $ENV:OS) {
+        & "$script:MsysTargetDir/usr/bin/bash.exe" @('-lc') + @Args
+    }
+    else {
+        Write-Host "Skipped command. This is only supported on Windows."
+    }
 }
 
 Function Install-MSYS2 {
-    if ( -not(Test-Path -Path "$Env:UserProfile\.local\msys64\mingw64.exe" -PathType Leaf) ) {
+    $script:MsysTargetDir = "$script:MycelioLocalDir/msys64"
+    $script:MsysArchive = "$script:MycelioArchivesDir/msys2.exe"
+
+    if ( -not(Test-Path -Path "$script:MsysTargetDir/mingw64.exe" -PathType Leaf) ) {
         $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/2021-07-25/msys2-base-x86_64-20210725.sfx.exe"
 
-        if ( -not(Test-Path -Path "$script:MycelioTempDir\msys2.exe" -PathType Leaf) ) {
+        if ( -not(Test-Path -Path "$script:MsysArchive" -PathType Leaf) ) {
             Write-Host "::group::Download MSYS2"
-            Get-File -Url "$msysInstaller" -Filename "$script:MycelioTempDir\msys2.exe"
+            Get-File -Url "$msysInstaller" -Filename "$script:MsysArchive"
             Write-Host "::endgroup::"
         }
 
-        $msysDir = "$Env:UserProfile\.local\msys64"
-
-        if ( -not(Test-Path -Path "$msysDir\msys2.exe" -PathType Leaf) ) {
+        if ( -not(Test-Path -Path "$script:MsysTargetDir/usr/bin/bash.exe" -PathType Leaf) ) {
             Write-Host "::group::Install MSYS2"
-            & "$script:MycelioTempDir\msys2.exe" -y -o"$Env:UserProfile\.local"
+            Expand-File -Path "$script:MsysArchive" -Destination "$script:MycelioLocalDir"
             Write-Host "::endgroup::"
+        }
+    }
 
-            # Create a file that gets automatically called after installation which will silence the
-            # clear that happens during a normal install. This may be useful for users by default but
-            # this makes us lose the rest of the console log which is not great for our use case here.
-            Set-Content -Path "$msysDir\etc\post-install\09-dotfiles.post" -Value @"
+    $postInstallScript = "$script:MsysTargetDir/etc/post-install/09-mycelio.post"
+    $initializedFile = "$script:MsysTargetDir/.initialized"
+
+    if (Test-Path -Path "$script:MsysTargetDir/usr/bin/bash.exe" -PathType Leaf) {
+        $mycelioRootCygwin = (& "$script:MsysTargetDir/usr/bin/cygpath.exe" "$script:MycelioRoot").TrimEnd("/")
+
+        # Create a file that gets automatically called after installation which will silence the
+        # clear that happens during a normal install. This may be useful for users by default but
+        # this makes us lose the rest of the console log which is not great for our use case here.
+        Set-Content -Path "$postInstallScript" -Value @"
 MAYBE_FIRST_START=false
-[ -f '/usr/bin/update-ca-trust' ] && sh /usr/bin/update-ca-trust
-echo '[mycelio] Post-install complete.'
+
+if [ ! -e "/.initialized" ]; then
+    [ -f '/usr/bin/update-ca-trust' ] && sh /usr/bin/update-ca-trust
+
+    echo "[mycelio] Starting initialization of MSYS2 package manager."
+
+    if [ -x "`$(command -v pacman)" ] && [ -n "`${MSYSTEM:-}" ]; then
+        echo "Mycelio initialized." >"/.initialized"
+
+        if [ ! -f "/etc/passwd" ]; then
+            mkpasswd -l -c >"/etc/passwd"
+        fi
+
+        if [ ! -f "/etc/group" ]; then
+            mkgroup -l -c >"/etc/group"
+        fi
+
+        if [ ! -L "/etc/nsswitch.conf" ]; then
+            rm -f "/etc/nsswitch.conf"
+            ln -s "$mycelioRootCygwin/source/windows/msys/nsswitch.conf" "/etc/nsswitch.conf"
+        fi
+
+        # https://github.com/msys2/MSYS2-packages/issues/2343#issuecomment-780121556
+        rm -f "/var/lib/pacman/db.lck"
+
+        pacman -Syu --quiet --noconfirm
+
+        if [ -f "/etc/pacman.d/gnupg/" ]; then
+            rm -rf "/etc/pacman.d/gnupg/"
+        fi
+
+        pacman-key --init
+        pacman-key --populate msys2
+
+        # Long version of '-Syuu' gets fresh package databases from server and
+        # upgrades the packages while allowing downgrades '-uu' as well if needed.
+        echo "[mycelio] Upgrade of all packages."
+        pacman --quiet --sync --refresh -uu --noconfirm
+    fi
+
+    # Note that if this is the first run on MSYS2 it will likely never get here.
+    echo "[mycelio] Initialized package manager. Post-install complete."
+fi
 "@
 
-            # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
-            # as the initial upgrade of msys2 results in it shutting down the console.
-            Write-Host "::group::Initialize MSYS2 Package Manager"
-            $msys2_shell = "$Env:UserProfile\.local\msys64\msys2_shell.cmd"
-            $msys2_shell += " -mingw64 -defterm -no-start -where $script:MycelioRoot -shell bash"
-            $msys2_shell += " -c ./source/shell/initialize-package-manager.sh"
-            & "C:\Windows\System32\cmd.exe" /d /s /c "$msys2_shell"
-            Write-Host "::endgroup::"
+        if (($IsWindows -or $ENV:OS) -and [String]::IsNullOrEmpty("$env:MSYSTEM")) {
+            if (-not (Test-Path -Path "$initializedFile" -PathType Leaf)) {
+                $homeOriginal = $env:HOME
+                $env:HOME = "$script:MycelioTempDir/home"
 
-            Write-Host "::group::Upgrade MSYS2 Packages"
-            # Upgrade all packages
-            Start-Bash 'pacman --noconfirm -Syuu'
+                # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
+                # as the initial upgrade of msys2 results in it shutting down the console.
+                Write-Host "::group::Initialize MSYS2 Package Manager"
+                Start-Bash "echo 'First run of MSYS2 to trigger post install.'"
 
-            # Clean entire package cache
-            Start-Bash 'pacman --noconfirm -Scc'
-            Write-Host "::endgroup::"
+                Write-Host "::group::Upgrade MSYS2 Packages"
+                # Upgrade all packages
+                Start-Bash 'pacman --noconfirm -Syuu'
+
+                # Clean entire package cache
+                Start-Bash 'pacman --noconfirm -Scc'
+                Write-Host "::endgroup::"
+
+                $env:HOME = "$homeOriginal"
+            }
 
             Write-Host '[mycelio] Finished MSYS2 install.'
         }
+        else {
+            Write-Host '[mycelio] Extracted MSYS2 but skipped install.'
+        }
+    }
+    else {
+        Write-Host '[mycelio] MSYS2 already installed and initialized.'
     }
 }
 
@@ -409,45 +730,50 @@ Function Install-Toolset {
 
     Write-Host "::group::Install Toolset"
 
+    # We use our own Git install instead of scoop as sometimes scoop shims stop working and they
+    # are generally slower. We care a lot about the performance of Git since it is used everywhere
+    # including the prompt.
+    Install-Git
+
+    Get-TexLive
+
+    # Install Perl which is necessary for 'Mycelio' so that we can run it outside of MSYS2 environment.
+    try {
+        if (-Not (Test-Path -Path "$script:MycelioLocalDir/perl/portableshell.bat" -PathType Leaf)) {
+            $strawberryPerlVersion = "5.32.1.1"
+            $strawberyPerlUrl = "https://strawberryperl.com/download/$strawberryPerlVersion/strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
+            Get-File -Url "$strawberyPerlUrl" -Filename "$script:MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
+            Expand-File -Path "$script:MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip" -DestinationPath "$script:MycelioLocalDir/perl"
+        }
+    }
+    catch [Exception] {
+        Write-Host "Failed to install Strawberry Perl.", $_.Exception.Message
+    }
+
+    # Install mutagen so that we can synchronize folders much like 'rclone' but better
+    try {
+        if (-Not (Test-Path -Path "$script:MycelioLocalDir/mutagen/mutagen.exe" -PathType Leaf)) {
+            $mutagenVersion = "v0.11.8"
+            $mutagenArchive = "mutagen_windows_amd64_$mutagenVersion.zip"
+            $mutagenUrl = "https://github.com/mutagen-io/mutagen/releases/download/$mutagenVersion/$mutagenArchive"
+            Get-File -Url "$mutagenUrl" -Filename "$script:MycelioTempDir/$mutagenArchive"
+            Expand-File -Path "$script:MycelioTempDir/$mutagenArchive" -DestinationPath "$script:MycelioLocalDir/mutagen"
+        }
+    }
+    catch [Exception] {
+        Write-Host "Failed to install mutagen.", $_.Exception.Message
+    }
+
     try {
         if (Test-CommandValid "scoop") {
+            $scoopShim = (scoop config shim)
+            if ("$scoopShim" -ne "kiennq") {
+                scoop config shim kiennq
+                scoop reset *
+            }
+
             # Install first as this gives us faster multi-connection downloads
             Install-Tool "aria2"
-
-            # Make sure git is installed first as scoop uses git to update itself. We actually would
-            # prefer the 'mingw64' version if that is installed so we check that first. There are times
-            # when the scoop shims do not work and result in slowdowns.
-            Install-Tool "git"
-
-            Install-Tool "7zip"
-
-            # Install Perl which is necessary for 'stow' so that we can run it outside of Start-Bash
-            # environment. We install it after 7zip since it extracts much faster than built-in
-            # PowerShell utilities.
-            try {
-                if (-Not (Test-Path -Path "$script:MycelioLocalDir\perl\portableshell.bat" -PathType Leaf)) {
-                    $strawberryPerlVersion = "5.32.1.1"
-                    $strawberyPerlUrl = "https://strawberryperl.com/download/$strawberryPerlVersion/strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
-                    Get-File -Url "$strawberyPerlUrl" -Filename "$script:MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
-                    Expand-File -Path "$script:MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip" -DestinationPath "$script:MycelioLocalDir\perl"
-                }
-            }
-            catch [Exception] {
-                Write-Host "Failed to install Strawberry Perl.", $_.Exception.Message
-            }
-
-            # Install mutagen so that we can synchronize folders much like 'rclone' but better
-            try {
-                if (-Not (Test-Path -Path "$script:MycelioLocalDir\mutagen\mutagen.exe" -PathType Leaf)) {
-                    $mutagenVersion = "v0.11.8"
-                    $mutagenUrl = "https://github.com/mutagen-io/mutagen/releases/download/$mutagenVersion/mutagen_windows_amd64_$mutagenVersion.zip"
-                    Get-File -Url "$mutagenUrl" -Filename "$script:MycelioTempDir\mutagen_windows_amd64_$mutagenVersion.zip"
-                    Expand-File -Path "$script:MycelioTempDir\mutagen_windows_amd64_$mutagenVersion.zip" -DestinationPath "$script:MycelioLocalDir\mutagen"
-                }
-            }
-            catch [Exception] {
-                Write-Host "Failed to install mutagen.", $_.Exception.Message
-            }
 
             # gsudo: Run commands as administrator.
             Install-Tool "gsudo"
@@ -504,7 +830,7 @@ Function Install-Toolset {
 
                 # Windows Defender may slow down or disrupt installs with realtime scanning.
                 Import-Module Defender
-                gsudo Add-MpPreference -ExclusionPath "$Env:UserProfile\scoop"
+                gsudo Add-MpPreference -ExclusionPath "$script:MycelioUserProfile\scoop"
                 gsudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
 
                 Write-Host "Initialized administrator settings for 'scoop' package manager."
@@ -526,9 +852,19 @@ Function Initialize-Environment {
 
     $script:MycelioRoot = Resolve-Path -Path "$PSScriptRoot\..\..\"
 
-    $script:MycelioTempDir = "$ENV:UserProfile\.tmp"
+    $script:MycelioUserProfile = "$env:UserProfile"
+    if ([String]::IsNullOrEmpty("$script:MycelioUserProfile")) {
+        $script:MycelioUserProfile = "$env:HOME"
+    }
+
+    $script:MycelioTempDir = "$script:MycelioUserProfile\.tmp"
     if ( -not(Test-Path -Path "$script:MycelioTempDir") ) {
         New-Item -ItemType directory -Path "$script:MycelioTempDir" | Out-Null
+    }
+
+    $script:MycelioArchivesDir = "$script:MycelioTempDir\archives"
+    if ( -not(Test-Path -Path "$script:MycelioArchivesDir") ) {
+        New-Item -ItemType directory -Path "$script:MycelioArchivesDir" | Out-Null
     }
 
     $script:MycelioArtifactsDir = "$script:MycelioRoot\artifacts\"
@@ -536,7 +872,7 @@ Function Initialize-Environment {
         New-Item -ItemType directory -Path "$script:MycelioArtifactsDir" | Out-Null
     }
 
-    $script:MycelioLocalDir = "$Env:UserProfile\.local\"
+    $script:MycelioLocalDir = "$script:MycelioUserProfile\.local\"
     if ( -not(Test-Path -Path "$script:MycelioLocalDir") ) {
         New-Item -ItemType directory -Path "$script:MycelioLocalDir" | Out-Null
     }
@@ -548,8 +884,8 @@ Function Initialize-Environment {
     Install-Toolset
 
     try {
-        $mutagen = "$Env:UserProfile\.local\mutagen\mutagen.exe"
-        $rclone = "$Env:UserProfile\scoop\apps\rclone\current\rclone.exe"
+        $mutagen = "$script:MycelioUserProfile\.local\mutagen\mutagen.exe"
+        $rclone = "$script:MycelioUserProfile\scoop\apps\rclone\current\rclone.exe"
 
         # Useful tool for syncing folders (like rsync) which is sometimes necessary with
         # environments like MSYS which do not work in containerized spaces that mount local
@@ -557,7 +893,7 @@ Function Initialize-Environment {
         if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
             if (Test-Path -Path "$mutagen" -PathType Leaf) {
                 & "$mutagen" terminate "dotfiles"
-                & "$mutagen" sync create "C:\Workspace\" "$Env:UserProfile\dotfiles" --name "dotfiles" --sync-mode "two-way-resolved" --symlink-mode "portable" --ignore-vcs --ignore "fzf_key_bindings.fish" --ignore "clink_history*" --ignore "_Inline/" --ignore "_build/"
+                & "$mutagen" sync create "C:\Workspace\" "$script:MycelioUserProfile\dotfiles" --name "dotfiles" --sync-mode "two-way-resolved" --symlink-mode "portable" --ignore-vcs --ignore "fzf_key_bindings.fish" --ignore "clink_history*" --ignore "_Inline/" --ignore "_build/"
                 & "$mutagen" sync flush --all
             }
             else {
@@ -565,7 +901,7 @@ Function Initialize-Environment {
 
                 if (Test-Path -Path "$rclone" -PathType Leaf) {
                     if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
-                        & "$rclone" sync "C:\Workspace" "$Env:UserProfile\dotfiles" --copy-links --exclude ".git/" --exclude "fzf_key_bindings.fish" --exclude "clink_history*"
+                        & "$rclone" sync "C:\Workspace" "$script:MycelioUserProfile\dotfiles" --copy-links --exclude ".git/" --exclude "fzf_key_bindings.fish" --exclude "clink_history*"
                     }
                     else {
                         Write-Host "Skipped 'dotfiles' sync since we are not in container."

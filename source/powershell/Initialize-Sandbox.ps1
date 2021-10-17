@@ -12,7 +12,7 @@
     the 'scoop' package manager.
 #>
 
-Function Initialize-Environment {
+Function Initialize-Sandbox {
     $mycelioRoot = Resolve-Path -Path "$PSScriptRoot\..\..\"
 
     $tempFolder = "$ENV:UserProfile\.tmp"
@@ -30,4 +30,4 @@ Function Initialize-Environment {
     Set-Content -Path "$mycelioArtifacts\sandbox.wsb" -Value "$sandbox"
 }
 
-Initialize-Environment
+Initialize-Sandbox

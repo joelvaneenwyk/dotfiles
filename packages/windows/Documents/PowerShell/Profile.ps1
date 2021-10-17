@@ -108,13 +108,13 @@ Function Get-ScriptDirectory() {
     return $ScriptDir
 }
 
-Function global:init() {
+Function global:setup() {
     param(
         [string] $ArgumentList
     )
 
     $ScriptPath = Get-ScriptDirectory
-    $Path = Resolve-Path "$ScriptPath\Invoke-Init.ps1"
+    $Path = Resolve-Path "$ScriptPath\Invoke-Setup.ps1"
     Write-Host "##[cmd] $Path $ArgumentList"
     & $Path $ArgumentList
 }
@@ -181,7 +181,7 @@ Function Update-Environment() {
         New-Item -Path "$ENV:UserProfile\.local\bin" -type directory -ErrorAction SilentlyContinue | Out-Null
         $Env:Path = $($environmentPaths -join ";")
         $Env:MYCELIO_ROOT = $root
-        $Env:PATHEXT=".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
+        $Env:PATHEXT = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
         $Env:HOME = $ENV:UserProfile
     }
     catch [Exception] {
