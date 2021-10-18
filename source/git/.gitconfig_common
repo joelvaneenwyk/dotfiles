@@ -3,6 +3,8 @@
 	name = Joel Van Eenwyk
 	email = joel.vaneenwyk@gmail.com
 	signingkey = F7B61CE9EF223B20
+[core]
+	symlinks = true
 [init]
 	defaultBranch = main
 [push]

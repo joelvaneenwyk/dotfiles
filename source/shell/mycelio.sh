@@ -434,6 +434,37 @@ function _get_windows_root() {
     fi
 }
 
+function _get_profile_root() {
+    _user_profile="$MYCELIO_HOME"
+    _windows_root="$(_get_windows_root)"
+    _cmd="$_windows_root/Windows/System32/cmd.exe"
+
+    if [ -x "$(command -v wslpath)" ]; then
+        _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"
+    fi
+
+    if [ -f "$_cmd" ]; then
+        if _windows_user_profile="$($_cmd "\/D" "\/S" "\/C" "echo %UserProfile%" 2>/dev/null)"; then
+            _win_userprofile_drive="${_windows_user_profile%%:*}:"
+            _win_userprofile_dir="${_windows_user_profile#*:}"
+
+            if [ -x "$(command -v findmnt)" ]; then
+                _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"
+                _windows_user_profile="$(echo "${_userprofile_mount}${_win_userprofile_dir}" | sed 's/\\/\//g')"
+            elif [ -x "$(command -v cygpath)" ]; then
+                _windows_user_profile="$(echo "${_windows_user_profile}" | sed 's/\\/\//g')"
+                _windows_user_profile="$(cygpath "${_windows_user_profile}")"
+            fi
+        fi
+    fi
+
+    if [ ! -d "$_user_profile" ] && [ -d "$_windows_user_profile" ]; then
+        _user_profile="$_windows_user_profile"
+    fi
+
+    echo "$_user_profile"
+}
+
 function _is_windows() {
     case "$(uname -s)" in
     CYGWIN*)
@@ -625,15 +656,21 @@ function initialize_gitconfig() {
             echo "Added WSL include to '.gitconfig' file."
         fi
 
+        _gpg_paths=(
+            "$windows_root/Program Files (x86)/GnuPG/bin/gpg.exe"
+            "$(_get_profile_root)/scoop/apps/gnupg/current/bin/gpg.exe"
+        )
+
         echo "    path = $MYCELIO_HOME/.gitconfig_mycelio" >>"$_git_config"
         {
-            _gpg="$windows_root/Program Files (x86)/GnuPG/bin/gpg.exe"
-            if [ -f "$_gpg" ] && ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-                echo "[gpg]"
-                echo "    program = \"$_gpg\""
-            else
-                echo ""
-            fi
+            for _gpg in "${_gpg_paths[@]}"; do
+                if [ -f "$_gpg" ] && ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
+                    _gpg="$(cygpath --mixed "$_gpg")"
+                    echo "[gpg]"
+                    echo "    program = \"$_gpg\""
+                    break
+                fi
+            done
         } >"$MYCELIO_HOME/.gitconfig_mycelio"
 
         echo "Created custom '.gitconfig' with include directives."
@@ -641,15 +678,26 @@ function initialize_gitconfig() {
 
     # We only create the local version and never global config at '/etc/gnupg' since typical
     # user does not have access.
-    generate_gnugp_config "$MYCELIO_HOME/.gnupg"
+    _config_paths=(
+        "$MYCELIO_HOME/.gnupg"
+    )
 
     if [ -n "$windows_root" ] && ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-        # GPG4Win: homedir
-        generate_gnugp_config "$windows_root/Users/$(whoami)/AppData/Roaming/gnupg"
+        _config_paths+=(
+            # GPG4Win: homedir
+            "$windows_root/Users/$(whoami)/AppData/Roaming/gnupg"
 
-        # GPG4Win: sysconfdir
-        generate_gnugp_config "$windows_root/ProgramData/GNU/etc/gnupg"
+            # GPG4Win: sysconfdir
+            "$windows_root/ProgramData/GNU/etc/gnupg"
+
+            # Scoop persistent storage
+            "$windows_root/Users/$(whoami)/scoop/persist/gnupg/home"
+        )
     fi
+
+    for _config_path in "${_config_paths[@]}"; do
+        generate_gnugp_config "$_config_path"
+    done
 
     if _tty="$(tty)"; then
         GPG_TTY="$_tty"

@@ -110,6 +110,8 @@ Function Get-Environment {
     $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
     $environmentVariables += "C:\Program Files (x86)\Gpg4win\bin"
 
+    $environmentVariables += "C:\Program Files\Docker"
+
     $environmentVariables += "$ENV:UserProfile\scoop\shims"
 
     # Initially seemed like a good idea to include these tools in the environment, but there are a

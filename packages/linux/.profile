@@ -39,6 +39,12 @@ _unique_list() {
     }
 }
 
+_log_debug() {
+    if [ "${MYCELIO_DEBUG:-}" = "1" ]; then
+        echo "$@"
+    fi
+}
+
 _add_to_list() {
     _list=":$(_unique_list "${1-}"):"
     shift
@@ -149,6 +155,8 @@ _initialize_synology() {
 }
 
 initialize_interactive_profile() {
+    _log_debug "Initializing interactive profile."
+
     # Make less more friendly for non-text input files, see lesspipe(1)
     if [ -x "$(command -v lesspipe)" ]; then
         eval "$(SHELL=/bin/sh lesspipe)"
@@ -200,6 +208,8 @@ initialize_interactive_profile() {
     *) ;;
     esac
 
+    _log_debug "Initialized prompt."
+
     # Enable color support for 'ls'
     if [ -x "$(command -v dircolors)" ]; then
         if [ -r "$HOME/.dircolors" ]; then
@@ -246,6 +256,8 @@ initialize_interactive_profile() {
             fi
         fi
     fi
+
+    _log_debug "Setup 'Oh My Posh' callback."
 
     if [ "${MYCELIO_OS_NAME:-}" = "Windows" ]; then
         if ! _parent="$(ps -p $$ --all | tail -n +2 | awk '{ print $8 }')"; then
@@ -360,13 +372,23 @@ _get_profile_root() {
         _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"
     fi
 
-    if [ ! -d "$_user_profile" ] && [ -f "$_cmd" ]; then
-        if _user_profile="$($_cmd /c "<nul set /p=%UserProfile%" 2>/dev/null)"; then
-            _win_userprofile_drive="${_user_profile%%:*}:"
-            _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"
-            _win_userprofile_dir="${_user_profile#*:}"
-            _user_profile="$(echo "${_userprofile_mount}${_win_userprofile_dir}" | sed 's/\\/\//g')"
+    if [ -f "$_cmd" ]; then
+        if _windows_user_profile="$($_cmd "\/D" "\/S" "\/C" "echo %UserProfile%" 2>/dev/null)"; then
+            _win_userprofile_drive="${_windows_user_profile%%:*}:"
+            _win_userprofile_dir="${_windows_user_profile#*:}"
+
+            if [ -x "$(command -v findmnt)" ]; then
+                _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"
+                _windows_user_profile="$(echo "${_userprofile_mount}${_win_userprofile_dir}" | sed 's/\\/\//g')"
+            elif [ -x "$(command -v cygpath)" ]; then
+                _windows_user_profile="$(echo "${_windows_user_profile}" | sed 's/\\/\//g')"
+                _windows_user_profile="$(cygpath "${_windows_user_profile}")"
+            fi
         fi
+    fi
+
+    if [ ! -d "$_user_profile" ] && [ -d "$_windows_user_profile" ]; then
+        _user_profile="$_windows_user_profile"
     fi
 
     echo "$_user_profile"
@@ -380,7 +402,7 @@ initialize_profile() {
 
     # This is critically important on Windows (MSYS) otherwise we are not able to
     # create symbolic links which is the entire point of 'stow'
-    export MSYS=winsymlinks:nativestrict
+    export MSYS="winsymlinks:nativestrict"
 
     if _tty="$(tty)"; then
         GPG_TTY="$_tty"
@@ -392,6 +414,8 @@ initialize_profile() {
     if uname -a | grep -q "synology"; then
         _initialize_synology
     fi
+
+    _log_debug "Initialized default enviornment variables."
 
     # Import environment varaibles from dotenv file. Primarily used to grab
     # the 'MYCELIO_ROOT' path as it is sometimes hard (if not impossible) to calculate
@@ -411,6 +435,8 @@ initialize_profile() {
         done
 
         IFS=$OLD_IFS
+
+        _log_debug "Loaded dot environment file."
     fi
 
     # We intentionally disable on some Windows variants due to corruption e.g. MSYS, Cygwin
@@ -472,6 +498,8 @@ initialize_profile() {
 
     export LD_PRELOAD=
 
+    _log_debug "Detected operating system and hardware details."
+
     if [ -f "$HOME/.cargo/env" ]; then
         # shellcheck disable=SC1091
         . "$HOME/.cargo/env"
@@ -525,6 +553,8 @@ initialize_profile() {
     _add_path "append" "$(_get_windows_root)/c/Program Files/Microsoft VS Code/bin"
 
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
+
+    _log_debug "Added paths to environment."
 
     # Clear out TMP as TEMP may come from Windows and we do not want tools confused
     # if they find both.

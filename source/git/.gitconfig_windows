@@ -1,4 +1,2 @@
-[gpg]
-	program = "c:\\Program Files (x86)\\GnuPG\\bin\\gpg.exe"
 [core]
 	autocrlf = false

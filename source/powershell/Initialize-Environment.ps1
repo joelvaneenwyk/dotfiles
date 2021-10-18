@@ -570,7 +570,7 @@ tlpdbopt_w32_multi_user 0
         }
 
         if ($IsWindows -or $ENV:OS) {
-            & "$ENV:SystemRoot\System32\cmd.exe" /d /c "call "$env:TEXLIVE_BIN/tlmgr.bat" update -all"
+            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ""$env:TEXLIVE_BIN\tlmgr.bat" update -all"
         }
     }
     catch [Exception] {
@@ -673,6 +673,8 @@ fi
 "@
 
         if (($IsWindows -or $ENV:OS) -and [String]::IsNullOrEmpty("$env:MSYSTEM")) {
+            $env:MSYS = "winsymlinks:nativestrict"
+
             if (-not (Test-Path -Path "$initializedFile" -PathType Leaf)) {
                 $homeOriginal = $env:HOME
                 $env:HOME = "$script:MycelioTempDir/home"
@@ -787,6 +789,9 @@ Function Install-Toolset {
             # Need this for VSCode
             scoop bucket add extras "https://github.com/lukesampson/scoop-extras.git"
 
+            # Need this for 'keepassxc'
+            scoop bucket add nonportable "https://github.com/TheRandomLabs/scoop-nonportable.git"
+
             # Get latest buckets (requires 'git')
             scoop update
 
@@ -799,6 +804,8 @@ Function Install-Toolset {
             if (-not(Test-CommandValid "wt")) {
                 scoop install windows-terminal
             }
+
+            Install-Tool "keepassxc"
 
             # Useful tool for syncing folders (like rsync) which is sometimes necessary with
             # environments like MSYS which do not work in containerized spaces that mount local
@@ -867,14 +874,25 @@ Function Initialize-Environment {
         New-Item -ItemType directory -Path "$script:MycelioArchivesDir" | Out-Null
     }
 
-    $script:MycelioArtifactsDir = "$script:MycelioRoot\artifacts\"
+    $script:MycelioArtifactsDir = "$script:MycelioRoot\artifacts"
     if ( -not(Test-Path -Path "$script:MycelioArtifactsDir") ) {
         New-Item -ItemType directory -Path "$script:MycelioArtifactsDir" | Out-Null
     }
 
-    $script:MycelioLocalDir = "$script:MycelioUserProfile\.local\"
+    $script:MycelioLocalDir = "$script:MycelioUserProfile\.local"
     if ( -not(Test-Path -Path "$script:MycelioLocalDir") ) {
         New-Item -ItemType directory -Path "$script:MycelioLocalDir" | Out-Null
+    }
+
+    try {
+        if (-not (Test-Path -Path "$script:MycelioRoot/source/stow/setup.sh" -PathType Leaf)) {
+            if (Test-Path -Path "$script:MycelioGit" -PathType Leaf) {
+                & "$script:MycelioGit" -C "$script:MycelioRoot" submodule update --init --recursive
+            }
+        }
+    }
+    catch {
+        Write-Host "Failed to update submodules with 'git' command."
     }
 
     Write-WindowsSandboxTemplate

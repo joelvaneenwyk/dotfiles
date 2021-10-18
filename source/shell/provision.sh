@@ -5,7 +5,7 @@
 #
 
 echo "[mycelio] Cloning 'dotfiles' repository..."
-git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git
+git -C "$HOME" -c core.symlinks=true clone --recursive https://github.com/joelvaneenwyk/dotfiles.git
 
 # shellcheck source=setup.sh
 source "$HOME/setup.sh"

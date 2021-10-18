@@ -45,21 +45,20 @@ Custom config files (aka. "dotfiles") for Linux, macOS, and Windows that are dep
 
 ## Table of Contents
 
-- [Table of Contents](#table-of-contents)
-- [Setup](#setup)
-  - [Windows](#windows)
-  - [macOS](#macos)
-  - [Linux](#linux)
-  - [Synology](#synology)
-  - [Raspberry PI](#raspberry-pi)
-  - [Secrets](#secrets)
-- [Introduction](#introduction)
-- [Management](#management)
-- [Installation](#installation)
-- [Implementation](#implementation)
-- [Details](#details)
-  - [x11](#x11)
-- [Resources](#resources)
+- [`dotfiles` 🍄](#dotfiles-)
+  - [Table of Contents](#table-of-contents)
+  - [Setup](#setup)
+    - [Windows](#windows)
+    - [macOS](#macos)
+    - [Linux](#linux)
+    - [Synology](#synology)
+    - [Raspberry PI](#raspberry-pi)
+    - [Secrets](#secrets)
+  - [Introduction](#introduction)
+  - [Management](#management)
+  - [Implementation](#implementation)
+    - [x11](#x11)
+  - [Resources](#resources)
 
 ## Setup
 
@@ -84,7 +83,7 @@ curl -i https://git.io -F "url=https://gist.githubusercontent.com/joelvaneenwyk/
 ### Windows
 
 1. Clone the repo from your home directory:
-   > `git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
+   > `git -C "%USERPROFILE%" clone -c core.symlinks=true --recursive https://github.com/joelvaneenwyk/dotfiles.git`
 2. Enter the `dotfiles` directory and then run `init`
 3. To setup commit signing, download and install [Gpg4win - Kleopatra](https://www.gpg4win.org/index.html)
    - Import Secret Key from secure location e.g. `{cloud}\Documents\Keys`

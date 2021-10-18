@@ -390,7 +390,7 @@ Function Initialize-Environment {
                     git -C "$HOME/dotfiles" pull
                 }
                 else {
-                    git -C "$HOME" clone --recursive "https://github.com/joelvaneenwyk/dotfiles.git"
+                    git -C "$HOME" -c core.symlinks=true clone --recursive "https://github.com/joelvaneenwyk/dotfiles.git"
                 }
             }
             catch {
@@ -399,7 +399,7 @@ Function Initialize-Environment {
         }
 
         if (!(Test-Path Variable:\IsWindows) -or $IsWindows) {
-            Start-Process -Wait -NoNewWindow "cmd.exe" -ArgumentList @("/c", "$HOME/dotfiles/setup.bat")
+            Start-Process -Wait -NoNewWindow "cmd.exe" -ArgumentList @("/d", "/c", "$HOME\dotfiles\setup.bat")
         }
         else {
             Start-Process -Wait -NoNewWindow "bash" -ArgumentList @("-c", "$HOME/dotfiles/setup.sh")
