@@ -636,33 +636,31 @@ function initialize_gitconfig() {
 
     if [ ! -f "$_git_config" ] || rm -f "$_git_config"; then
         unlink "$_git_config" >/dev/null 2>&1 || true
-        echo "[include]" >"$_git_config"
 
-        if _is_windows; then
-            {
+        {
+            echo "[include]"
+
+            if _is_windows; then
                 echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_common")"
                 echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_linux")"
                 echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_windows")"
-            } >>"$_git_config"
-        else
-            {
+                echo "    path = $(cygpath --mixed "$MYCELIO_HOME/.gitconfig_mycelio")"
+            else
                 echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_common"
                 echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_linux"
-            } >>"$_git_config"
-        fi
+                echo "    path = $MYCELIO_HOME/.gitconfig_mycelio"
+            fi
 
-        if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-            echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_wsl" >>"$_git_config"
-            echo "Added WSL include to '.gitconfig' file."
-        fi
+            if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
+                echo "    path = $MYCELIO_ROOT/source/git/.gitconfig_wsl"
+            fi
+        } >"$_git_config"
 
-        _gpg_paths=(
-            "$windows_root/Program Files (x86)/GnuPG/bin/gpg.exe"
-            "$(_get_profile_root)/scoop/apps/gnupg/current/bin/gpg.exe"
-        )
-
-        echo "    path = $MYCELIO_HOME/.gitconfig_mycelio" >>"$_git_config"
         {
+            _gpg_paths=(
+                "$windows_root/Program Files (x86)/GnuPG/bin/gpg.exe"
+                "$(_get_profile_root)/scoop/apps/gnupg/current/bin/gpg.exe"
+            )
             for _gpg in "${_gpg_paths[@]}"; do
                 if [ -f "$_gpg" ] && ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
                     _gpg="$(cygpath --mixed "$_gpg")"

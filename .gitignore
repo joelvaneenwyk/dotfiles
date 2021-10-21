@@ -8,6 +8,9 @@
 # Generated files that may be used in Docker
 artifacts/
 
+# Any secrets or data we want to make sure never ends up on this repository
+secrets/
+
 # Perl intermediate files
 _Inline/
 

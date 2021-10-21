@@ -1,7 +1,4 @@
 ::
-:: Simple test to make sure secret and public key is setup correctly.
+:: Alias for 'pgptest' as it can be easy to mix up.
 ::
-@echo off
-if not exist "%USERPROFILE%\.tmp" mkdir "%USERPROFILE%\.tmp"
-echo test>"%USERPROFILE%\.tmp\gpgtest.txt"
-gpg --clearsign <"%USERPROFILE%\.tmp\gpgtest.txt"
+@call "%~dp0gpgtest.bat"

@@ -95,7 +95,7 @@ Function Get-Environment {
     $environmentVariables += "$script:MycelioRoot\source\windows\bin"
 
     $environmentVariables += "$ENV:UserProfile\.local\texlive\bin\win32"
-    $environmentVariables += "$ENV:UserProfile\.local\git\cmd"
+    $environmentVariables += "$ENV:UserProfile\.local\git\mingw64\bin"
     $environmentVariables += "$ENV:UserProfile\.local\bin"
     $environmentVariables += "$ENV:UserProfile\.local\msys64"
     $environmentVariables += "$ENV:UserProfile\.local\mutagen"
