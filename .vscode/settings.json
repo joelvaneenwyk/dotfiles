@@ -229,7 +229,8 @@
         "**/blib/**": true
     },
     "files.associations": {
-        "*.json.git": "cjson",
+        "*.json.git": "jsonc",
+        "*.omp.json": "jsonc",
         "*.in": "perl",
         "*.shbat": "shellscript",
         "*.bats": "shellscript",

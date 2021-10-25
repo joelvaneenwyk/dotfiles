@@ -1,6 +1,10 @@
 {
     "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
-    "osc99": true,
+
+    /* Disable this otherwise in 'cmd' we get an extra 'm' character sometimes. */
+    "osc99": false,
+    "final_space": false,
+
     "blocks": [{
             "type": "prompt",
             "alignment": "right",
@@ -169,11 +173,10 @@
                     "properties": {
                         "prefix": "",
                         "postfix": "",
-                        "text": "$"
+                        "text": "$ "
                     }
                 }
             ]
         }
-    ],
-    "final_space": true
+    ]
 }
