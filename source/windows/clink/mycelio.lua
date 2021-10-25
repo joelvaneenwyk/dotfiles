@@ -13,9 +13,9 @@ local parser = clink.arg.new_parser
 -- Initialization script for Windows
 --
 
-clink.argmatcher("init")
+clink.argmatcher("setup")
 :addflags(
-    "-f", "-c", "--clean")
+    "-f", "-c", "--clean", "--force")
 :addarg(
-    { "--home", "clean", "docker" }
+    { "clean", "docker" }
 )

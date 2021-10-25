@@ -167,4 +167,4 @@ end
 
 add_modules(mycelio_root_dir .. "/source/windows/clink-completions/")
 
-print('[clink] Initialized environment with `dotfiles` project.')
+print("[clink] Initialized 'mycelio' environment: '" .. mycelio_root_dir .. "'")

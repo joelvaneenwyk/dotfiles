@@ -153,7 +153,6 @@ Function Update-Environment() {
     $environmentVariables += "$Env:UserProfile\.local\go\bin"
     $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
     $environmentVariables += "C:\Program Files\Git\bin"
-    #$environmentVariables += "$Env:UserProfile\scoop\apps\msys2\current\mingw64"
     $environmentVariables += $(Get-CurrentEnvironment)
     $environmentVariables += "$Env:UserProfile\scoop\shims"
 
@@ -181,7 +180,7 @@ Function Update-Environment() {
         New-Item -Path "$ENV:UserProfile\.local\bin" -type directory -ErrorAction SilentlyContinue | Out-Null
         $Env:Path = $($environmentPaths -join ";")
         $Env:MYCELIO_ROOT = $root
-        $Env:PATHEXT = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC"
+        $Env:PATHEXT = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PS1;.PY"
         $Env:HOME = $ENV:UserProfile
     }
     catch [Exception] {
@@ -209,7 +208,7 @@ Function Update-Terminal() {
     try {
         Import-Module oh-my-posh -ErrorAction SilentlyContinue >$null
         if ($PSCmdlet.ShouldProcess('Terminal')) {
-            Set-PoshPrompt -ErrorAction SilentlyContinue -Theme "stelbent.minimal"
+            Set-PoshPrompt -ErrorAction SilentlyContinue -Theme "$env:UserProfile/.poshthemes/mycelio.omp.json"
         }
     }
     catch {
