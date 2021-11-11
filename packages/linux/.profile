@@ -154,6 +154,11 @@ _initialize_synology() {
     fi
 }
 
+# This is a stub for Oh My Posh in case it fails to initialize.
+_omp_hook() {
+    :
+}
+
 initialize_interactive_profile() {
     _log_debug "Initializing interactive profile."
 
@@ -257,7 +262,11 @@ initialize_interactive_profile() {
         fi
     fi
 
-    _log_debug "Setup 'Oh My Posh' callback."
+    if [ -n "${BASH_VERSION:-}" ] && [ ! "$(command -v "_omp_hook")" = "0" ]; then
+        export -f _omp_hook >/dev/null 2>&1
+    fi
+
+    _log_debug "Initialized 'Oh My Posh' callback."
 
     if [ "${MYCELIO_OS_NAME:-}" = "Windows" ]; then
         if ! _parent="$(ps -p $$ --all | tail -n +2 | awk '{ print $8 }')"; then
@@ -364,7 +373,7 @@ _get_windows_root() {
 }
 
 _get_profile_root() {
-    _user_profile="$MYCELIO_HOME"
+    _user_profile="${MYCELIO_HOME:-${HOME}}"
     _windows_root="$(_get_windows_root)"
     _cmd="$_windows_root/Windows/System32/cmd.exe"
 
@@ -439,7 +448,7 @@ initialize_profile() {
         _log_debug "Loaded dot environment file."
     fi
 
-    # We intentionally disable on some Windows variants due to corruption e.g. MSYS, Cygwin
+    # We intentionally disable Oh My Posh on some Windows variants due to corruption e.g. MSYS, Cygwin
     MYCELIO_OH_MY_POSH=1
 
     MYCELIO_OS_NAME="UNKNOWN"

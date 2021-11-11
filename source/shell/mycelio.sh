@@ -434,7 +434,7 @@ function _get_windows_root() {
     fi
 }
 
-function _get_profile_root() {
+function _mycelio_get_profile_root() {
     _user_profile="$MYCELIO_HOME"
     _windows_root="$(_get_windows_root)"
     _cmd="$_windows_root/Windows/System32/cmd.exe"
@@ -448,8 +448,7 @@ function _get_profile_root() {
             _win_userprofile_drive="${_windows_user_profile%%:*}:"
             _win_userprofile_dir="${_windows_user_profile#*:}"
 
-            if [ -x "$(command -v findmnt)" ]; then
-                _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"
+            if [ -x "$(command -v findmnt)" ] && _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"; then
                 _windows_user_profile="$(echo "${_userprofile_mount}${_win_userprofile_dir}" | sed 's/\\/\//g')"
             elif [ -x "$(command -v cygpath)" ]; then
                 _windows_user_profile="$(echo "${_windows_user_profile}" | sed 's/\\/\//g')"
@@ -659,7 +658,7 @@ function initialize_gitconfig() {
         {
             _gpg_paths=(
                 "$windows_root/Program Files (x86)/GnuPG/bin/gpg.exe"
-                "$(_get_profile_root)/scoop/apps/gnupg/current/bin/gpg.exe"
+                "$(_mycelio_get_profile_root)/scoop/apps/gnupg/current/bin/gpg.exe"
             )
             for _gpg in "${_gpg_paths[@]}"; do
                 if [ -f "$_gpg" ] && ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then

@@ -8,19 +8,19 @@
 # the first one that exists and is readable.
 #
 
-if [ -n "$BASH_VERSION" ] && [ -f "$HOME/.bashrc" ]; then
+if [ -n "${BASH_VERSION:-}" ] && [ -f "${HOME:-}/.bashrc" ]; then
     # shellcheck source=packages/bash/.bashrc
-    . "$HOME/.bashrc"
+    . "${HOME}/.bashrc"
 else
     echo "Failed to load both '.profile' and '.bashrc' files."
 fi
 
-if [ -e "${HOME}/.iterm2_shell_integration.bash" ]; then
+if [ -e "${HOME:-}/.iterm2_shell_integration.bash" ]; then
     # shellcheck disable=SC1090,SC1091
     source "${HOME}/.iterm2_shell_integration.bash"
 fi
 
-if [ -f "/home/linuxbrew/.linuxbrew/bin/brew" ]; then
+if [ -f "${HOME:-}/.linuxbrew/bin/brew" ]; then
     # shellcheck disable=SC1090,SC1091
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    eval "$("${HOME}/.linuxbrew/bin/brew" shellenv)"
 fi
