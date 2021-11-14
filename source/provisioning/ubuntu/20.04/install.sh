@@ -74,12 +74,12 @@ sed -i -e 's/FuseMountName=thinclient_drives/FuseMountName=shared-drives/g' /etc
 # Changed the allowed_users
 sed -i_orig -e 's/allowed_users=console/allowed_users=anybody/g' /etc/X11/Xwrapper.config
 
-# Blacklist the vmw module
+# Block the vmw module
 if [ ! -e /etc/modprobe.d/blacklist-vmw_vsock_vmci_transport.conf ]; then
     echo "blacklist vmw_vsock_vmci_transport" >/etc/modprobe.d/blacklist-vmw_vsock_vmci_transport.conf
 fi
 
-#Ensure hv_sock gets loaded
+# Ensure hv_sock gets loaded
 if [ ! -e /etc/modules-load.d/hv_sock.conf ]; then
     echo "hv_sock" >/etc/modules-load.d/hv_sock.conf
 fi
@@ -102,5 +102,4 @@ systemctl start xrdp
 # End XRDP
 ###############################################################################
 
-echo "Install is complete."
-echo "Reboot your machine to begin using XRDP."
+echo "XRDP install is complete. Please reboot your machine to begin using XRDP."

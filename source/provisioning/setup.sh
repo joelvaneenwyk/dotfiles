@@ -16,6 +16,17 @@ if [ ! -f "$_provision" ]; then
     git -C "$_dotfiles" pull
 fi
 
-if [ -f "$_provision" ]; then
-    cd ~/dotfiles/source/provisioning/ubuntu/18.04/
+if [ -f "/etc/os-release" ]; then
+    # shellcheck disable=SC1091
+    source "/etc/os-release"
+fi
+
+if grep </proc/cpuinfo -q ^flags.*\ hypervisor; then
+    if [ "${ID:-}" = "ubuntu" ]; then
+        _root="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
+        _setup_ubuntu="$_root/ubuntu/${VERSION_ID:-}/install.sh"
+        if [ -f "$_setup_ubuntu" ]; then
+            "$_setup_ubuntu"
+        fi
+    fi
 fi
