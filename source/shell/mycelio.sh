@@ -969,19 +969,21 @@ function install_powershell() {
             source "/etc/os-release"
         fi
 
-        _packages_production="packages-microsoft-prod.deb"
-        _url="https://packages.microsoft.com/config/ubuntu/${VERSION_ID:-0.0}/$_packages_production"
+        if [ "${ID:-}" = "ubuntu" ]; then
+            _packages_production="packages-microsoft-prod.deb"
+            _url="https://packages.microsoft.com/config/ubuntu/${VERSION_ID:-0.0}/$_packages_production"
 
-        # Download the Microsoft repository GPG keys
-        if run_task "powershell.key.get" get_file "$MYCELIO_TEMP/$_packages_production" "$_url"; then
-            # Register the Microsoft repository GPG keys
-            run_command_sudo "dpkg.register.microsoft" dpkg -i "$MYCELIO_TEMP/$_packages_production"
-            # Update the list of products
-            run_command_sudo "apt.update" apt-get update
-            # Enable the "universe" repositories
-            run_command_sudo "apt.add.repository" add-apt-repository universe || true
-            # Install PowerShell
-            DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install.powershell" apt-get install -y powershell
+            # Download the Microsoft repository GPG keys
+            if run_task "powershell.key.get" get_file "$MYCELIO_TEMP/$_packages_production" "$_url"; then
+                # Register the Microsoft repository GPG keys
+                run_command_sudo "dpkg.register.microsoft" dpkg -i "$MYCELIO_TEMP/$_packages_production"
+                # Update the list of products
+                run_command_sudo "apt.update" apt-get update
+                # Enable the "universe" repositories
+                run_command_sudo "apt.add.repository" add-apt-repository universe || true
+                # Install PowerShell
+                DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install.powershell" apt-get install -y powershell
+            fi
         fi
     else
         echo "Skipped PowerShell install "
