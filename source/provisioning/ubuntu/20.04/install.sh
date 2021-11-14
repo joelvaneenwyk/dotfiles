@@ -56,13 +56,13 @@ sed -i_orig -e 's/bitmap_compression=true/bitmap_compression=false/g' /etc/xrdp/
 
 # Add script to setup the ubuntu session properly
 if [ ! -e /etc/xrdp/startubuntu.sh ]; then
-cat >> /etc/xrdp/startubuntu.sh << EOF
+    cat >>/etc/xrdp/startubuntu.sh <<EOF
 #!/bin/sh
 export GNOME_SHELL_SESSION_MODE=ubuntu
 export XDG_CURRENT_DESKTOP=ubuntu:GNOME
 exec /etc/xrdp/startwm.sh
 EOF
-chmod a+x /etc/xrdp/startubuntu.sh
+    chmod a+x /etc/xrdp/startubuntu.sh
 fi
 
 # use the script to setup the ubuntu session
@@ -76,16 +76,16 @@ sed -i_orig -e 's/allowed_users=console/allowed_users=anybody/g' /etc/X11/Xwrapp
 
 # Blacklist the vmw module
 if [ ! -e /etc/modprobe.d/blacklist-vmw_vsock_vmci_transport.conf ]; then
-  echo "blacklist vmw_vsock_vmci_transport" > /etc/modprobe.d/blacklist-vmw_vsock_vmci_transport.conf
+    echo "blacklist vmw_vsock_vmci_transport" >/etc/modprobe.d/blacklist-vmw_vsock_vmci_transport.conf
 fi
 
 #Ensure hv_sock gets loaded
 if [ ! -e /etc/modules-load.d/hv_sock.conf ]; then
-  echo "hv_sock" > /etc/modules-load.d/hv_sock.conf
+    echo "hv_sock" >/etc/modules-load.d/hv_sock.conf
 fi
 
 # Configure the policy xrdp session
-cat > /etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla <<EOF
+cat >/etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla <<EOF
 [Allow Colord all Users]
 Identity=unix-user:*
 Action=org.freedesktop.color-manager.create-device;org.freedesktop.color-manager.create-profile;org.freedesktop.color-manager.delete-device;org.freedesktop.color-manager.delete-profile;org.freedesktop.color-manager.modify-device;org.freedesktop.color-manager.modify-profile

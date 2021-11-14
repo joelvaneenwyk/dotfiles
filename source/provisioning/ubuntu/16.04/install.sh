@@ -84,12 +84,12 @@ systemctl enable xrdp-sesman.service
 
 # Configure the policy xrdp session
 # polkit policy definition language changes depending on its version. See issue #61
-if [[ "$(pkaction --version | sed -E 's/^[[:alnum:] ]*([[:digit:]]+.*)/\1/' - )" != '0.105' ]]; then
+if [[ "$(pkaction --version | sed -E 's/^[[:alnum:] ]*([[:digit:]]+.*)/\1/' -)" != '0.105' ]]; then
     echo "Error: Policy rule specification probably invalid. Expected version: 0.105 detected $(pkaction --version)." >&2
     exit 1
 fi
 
-cat > /etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla <<EOF
+cat >/etc/polkit-1/localauthority/50-local.d/45-allow-colord.pkla <<EOF
 [Allow Colord all Users]
 Identity=unix-user:*
 Action=org.freedesktop.color-manager.create-device;org.freedesktop.color-manager.create-profile;org.freedesktop.color-manager.delete-device;org.freedesktop.color-manager.delete-profile;org.freedesktop.color-manager.modify-device;org.freedesktop.color-manager.modify-profile

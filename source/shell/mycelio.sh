@@ -1549,7 +1549,7 @@ function install_packages() {
             sudo gpgconf ca-certificates tzdata git wget curl unzip xclip libnotify-bin \
             software-properties-common apt-transport-https \
             build-essential gcc g++ make automake autoconf \
-            perl cpanminus \
+            libssl-dev openssl libz-dev perl cpanminus \
             tmux neofetch fish zsh bash \
             python3 python3-pip \
             shellcheck \

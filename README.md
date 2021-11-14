@@ -145,16 +145,22 @@ Most versions of MacOS will already have Git installed, and you can activate it 
 
 These are optional steps to setup SSH to sync to private GitHub repositories.
 
+Instead of running each step below, you can instead run `./source/shell/setup-secrets.sh`
+
 1. `ssh-keygen -t ed25519 -C "joel.vaneenwyk@gmail.com"`
    - **NOTE:** Some older systems do not support `Ed25519` algorithm. In those cases, use the following instead: `ssh-keygen -t rsa -b 4096 -C "joel.vaneenwyk@gmail.com"`
 2. `eval "$(ssh-agent -s)"`
-3. `ssh-add ~/.ssh/id_rsa`
-4. `xclip -sel clip < ~/.ssh/id_rsa.pub`
-   - WSL: `cat ~/.ssh/id_rsa.pub | /mnt/c/Windows/System32/clip.exe`
+3. `ssh-add ~/.ssh/id_ed25519`
+4. `xclip -sel clip < ~/.ssh/id_ed25519.pub`
+   - WSL: `cat ~/.ssh/id_ed25519.pub | /mnt/c/Windows/System32/clip.exe`
 5. From [GitHub SSH and GPG keys](https://github.com/settings/keys), press **New SSH Key**
-6. Paste in the key on the clipboard
+6. Paste in the key from the clipboard and press `Save`
 
 If all worked, you should be able to clone one of your private repositories e.g. `git clone git@github.com:joelvaneenwyk/secrets.git`
+
+At this point if you want to change the origin to the SSH URL you can do so with:
+
+`git remote set-url origin "git@github.com:joelvaneenwyk/dotfiles.git"`
 
 ## Introduction
 
