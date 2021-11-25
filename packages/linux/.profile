@@ -237,10 +237,12 @@ initialize_interactive_profile() {
     if [ "$_shell" = "sh" ]; then
         PS1='$(
             printf "[mycelio] `whoami`@`hostname` | "
-            if [ ! "${PWD#$HOME}" = "$PWD" ]; then
-                printf "~${PWD#$HOME}"
+            _pwd="${PWD:-}"
+            _pwd_home="${_pwd#${HOME:-}}"
+            if [ "$_pwd_home" = "$_pwd" ]; then
+                printf "$_pwd"
             else
-                printf "$PWD"
+                printf "~$_pwd_home"
             fi
             printf "\n$ "
         )'
