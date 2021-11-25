@@ -7,7 +7,7 @@ _generate_ssh() {
         ssh-add ~/.ssh/id_ed25519
 
         if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-            cat "$HOME/.ssh/id_ed25519.pub" | "/mnt/c/Windows/System32/clip.exe"
+            "/mnt/c/Windows/System32/clip.exe" <"$HOME/.ssh/id_ed25519.pub"
         else
             xclip -sel clip <~/.ssh/id_ed25519.pub
         fi
@@ -18,9 +18,8 @@ _generate_ssh() {
     echo "3. Paste in the key from the clipboard and press 'Save'"
     echo "4. Press any key to continue..."
 
-    while [ true ]; do
-        read -t 3 -n 1
-        if [ $? = 0 ]; then
+    while true; do
+        if read -r -t 3 -n 1; then
             break
         else
             echo "Waiting for the keypress..."

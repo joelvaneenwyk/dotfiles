@@ -23,19 +23,19 @@ pushd "$TMPDIR" || exit
 # XRDP
 #
 (
-	git clone https://aur.archlinux.org/xrdp.git
-	cd xrdp || exit
-	makepkg -sri --noconfirm
+    git clone "https://aur.archlinux.org/xrdp.git"
+    cd "xrdp" || exit
+    makepkg -sri --noconfirm
 )
 ###############################################################################
 # XORGXRDP
 # Devel version, because release version includes a bug crashing gnome-settings-daemon
 (
-	git clone https://aur.archlinux.org/xorgxrdp-devel-git.git
-	cd xorgxrdp-devel-git || exit
-	makepkg -sri --noconfirm
+    git clone https://aur.archlinux.org/xorgxrdp-devel-git.git
+    cd xorgxrdp-devel-git || exit
+    makepkg -sri --noconfirm
 )
 ###############################################################################
 
 #remove build directory
-rm -rf $TMPDIR
+rm -rf "$TMPDIR"
