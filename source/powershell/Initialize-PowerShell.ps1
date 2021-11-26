@@ -25,6 +25,37 @@
         - https://office365itpros.com/2020/05/04/onedrive-known-folders-powershell-module-installations/
 #>
 
+<#
+.SYNOPSIS
+    Returns true if the given command can be executed from the shell.
+.INPUTS
+    Command name which does not need to be a full path.
+.OUTPUTS
+    Whether or not the command exists and can be executed.
+#>
+Function Test-CommandValid {
+    Param ($command)
+
+    $oldPreference = $ErrorActionPreference
+
+    $ErrorActionPreference = 'stop'
+    $IsValid = $false
+
+    try {
+        if (Get-Command $command) {
+            $IsValid = $true
+        }
+    }
+    Catch {
+        Write-Host "Command '$command' does not exist."
+    }
+    finally {
+        $ErrorActionPreference = $oldPreference
+    }
+
+    return $IsValid
+}
+
 Function Initialize-PowerShell {
     Write-Host "PowerShell v$($host.Version)"
 
@@ -34,165 +65,175 @@ Function Initialize-PowerShell {
         New-Item -ItemType directory -Path "$tempFolder" | Out-Null
     }
 
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-    #
-    # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
-    #
-    # Error it is attempting to mitigate: "The term 'PackageManagement\Get-PackageSource' is not recognized as the name
-    # of a cmdlet, function, script file, or operable program."
-    #
-    Write-Host "Importing package management module and validating NuGet package provider."
-    Import-Module PackageManagement -ErrorAction SilentlyContinue >$null
-    if (-not $?) {
-        Install-Module -Name PackageManagement -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue >$null
-        Write-Host "✔ Installed 'PackageManagement' module."
+    if ([enum]::GetNames([Net.SecurityProtocolType]) -match 'Tls12') {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    } else {
+        # If you use PowerShell with .Net Framework 2.0 and you want to use TLS1.2, you have
+        # to set the value 3072 for the [System.Net.ServicePointManager]::SecurityProtocol
+        # property which internally is Tls12.
+        [Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject(
+            [System.Net.SecurityProtocolType], 3072);
     }
 
-    Import-Module PackageManagement -ErrorAction SilentlyContinue >$null
-    if ($?) {
-        Write-Host "✔ Imported 'PackageManagement' module."
+    if (Test-CommandValid "Install-Module") {
+        #
+        # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
+        #
+        # Error it is attempting to mitigate: "The term 'PackageManagement\Get-PackageSource' is not recognized as the name
+        # of a cmdlet, function, script file, or operable program."
+        #
+        Write-Host "Importing package management module and validating NuGet package provider."
+        Import-Module PackageManagement -ErrorAction SilentlyContinue >$null
+        if (-not $?) {
+            Install-Module -Name PackageManagement -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue >$null
+            Write-Host "✔ Installed 'PackageManagement' module."
+        }
 
-        $script:hasNuGet = $false
-        Get-PackageProvider -ListAvailable | ForEach-Object -Process {
-            if ($_.Name -eq "NuGet") {
-                $script:hasNuGet = $true
+        Import-Module PackageManagement -ErrorAction SilentlyContinue >$null
+        if ($?) {
+            Write-Host "✔ Imported 'PackageManagement' module."
+
+            $script:hasNuGet = $false
+            Get-PackageProvider -ListAvailable | ForEach-Object -Process {
+                if ($_.Name -eq "NuGet") {
+                    $script:hasNuGet = $true
+                }
             }
-        }
 
-        if ($script:hasNuGet) {
-            Write-Host "✔ 'NuGet' package provider already installed."
-        }
-        else {
-            Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue >$null
-            if ($?) {
-                Write-Host "✔ Installed 'NuGet' package provider."
+            if ($script:hasNuGet) {
+                Write-Host "✔ 'NuGet' package provider already installed."
             }
             else {
-                Write-Host "❌ Failed to install 'NuGet' package source. $NugetPackage"
+                Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue >$null
+                if ($?) {
+                    Write-Host "✔ Installed 'NuGet' package provider."
+                }
+                else {
+                    Write-Host "❌ Failed to install 'NuGet' package source. $NugetPackage"
+                }
             }
         }
-    }
-    else {
-        Write-Host "❌ Failed to import PowerShell package management.", $_.Exception.Message
-    }
-
-    Import-Module PowerShellGet -ErrorAction SilentlyContinue >$null
-    if ($?) {
-        Write-Host "✔ PowerShellGet module already installed."
-    }
-    else {
-        # We do not check if module is installed because 'Get-Package' may not exist yet.
-        Install-Module -Name PowerShellGet -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue >$null
-        if ($?) {
-            Write-Host "Installed 'PowerShellGet' module."
-
-            Update-Module -Name PowerShellGet -Force -ErrorAction SilentlyContinue >$null
-            Write-Host "Updated 'PowerShellGet' module to latest version."
-        }
         else {
-            Write-Host "Failed to install and update 'PowerShellGet' module."
+            Write-Host "❌ Failed to import PowerShell package management.", $_.Exception.Message
         }
 
         Import-Module PowerShellGet -ErrorAction SilentlyContinue >$null
-        if (-not $?) {
-            Write-Host "Failed to import required 'PowerShellGet' module. Exiting initialization."
-            return 1;
+        if ($?) {
+            Write-Host "✔ PowerShellGet module already installed."
         }
-    }
+        else {
+            # We do not check if module is installed because 'Get-Package' may not exist yet.
+            Install-Module -Name PowerShellGet -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue >$null
+            if ($?) {
+                Write-Host "Installed 'PowerShellGet' module."
 
-    # Set Microsoft PowerShell Gallery to 'Trusted' as this is needed for packages
-    # like 'WindowsConsoleFonts' and 'PSReadLine' installed below.
-    try {
-        $psGallery = Get-PSRepository -Name "*PSGallery*" -ErrorAction SilentlyContinue
-        if ($null -eq $psGallery) {
-            if ($host.Version.Major -ge 5) {
-                Register-PSRepository -Default -InstallationPolicy Trusted
+                Update-Module -Name PowerShellGet -Force -ErrorAction SilentlyContinue >$null
+                Write-Host "Updated 'PowerShellGet' module to latest version."
             }
             else {
-                Register-PSRepository -Name PSGallery -SourceLocation "https://www.powershellgallery.com/api/v2/" -InstallationPolicy Trusted
+                Write-Host "Failed to install and update 'PowerShellGet' module."
             }
-            Write-Host "✔ Registered 'PSGallery' repository."
-        }
-        else {
-            Write-Host "✔ Already registered 'PSGallery' repository."
-        }
-    }
-    catch [Exception] {
-        Write-Host "❌ Failed to add repository.", $_.Exception.Message
-    }
 
-    try {
-        if ($null -eq (Get-InstalledModule -Name "WindowsConsoleFonts" -ErrorAction SilentlyContinue)) {
-            Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -ErrorAction SilentlyContinue >$null
-            if ($?) {
-                Write-Host "✔ Installed 'WindowsConsoleFonts' module."
+            Import-Module PowerShellGet -ErrorAction SilentlyContinue >$null
+            if (-not $?) {
+                Write-Host "Failed to import required 'PowerShellGet' module. Exiting initialization."
+                return 1;
             }
         }
-        else {
-            Write-Host "✔ 'WindowsConsoleFonts' module already installed."
-        }
-    }
-    catch [Exception] {
-        Write-Host "❌ Failed to install 'WindowsConsoleFonts' module.", $_.Exception.Message
-    }
 
-    try {
-        if ($null -eq (Get-InstalledModule -Name "Terminal-Icons" -ErrorAction SilentlyContinue)) {
-            Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck -Repository PSGallery
-            Write-Host "✔ Installed 'Terminal-Icons' module."
-        }
-        else {
-            Write-Host "✔ 'Terminal-Icons' module already installed."
-        }
-    }
-    catch [Exception] {
-        Write-Host "❌ Failed to install 'Terminal-Icons' module.", $_.Exception.Message
-    }
-
-    try {
-        Import-Module PSReadLine
-        Write-Host "✔ 'PSReadLine' module already installed."
-    }
-    catch {
+        # Set Microsoft PowerShell Gallery to 'Trusted' as this is needed for packages
+        # like 'WindowsConsoleFonts' and 'PSReadLine' installed below.
         try {
-            Install-Module -Name PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck >$null
-            Write-Host "✔ Installed 'PSReadLine' module."
+            $psGallery = Get-PSRepository -Name "*PSGallery*" -ErrorAction SilentlyContinue
+            if ($null -eq $psGallery) {
+                if ($host.Version.Major -ge 5) {
+                    Register-PSRepository -Default -InstallationPolicy Trusted
+                }
+                else {
+                    Register-PSRepository -Name PSGallery -SourceLocation "https://www.powershellgallery.com/api/v2/" -InstallationPolicy Trusted
+                }
+                Write-Host "✔ Registered 'PSGallery' repository."
+            }
+            else {
+                Write-Host "✔ Already registered 'PSGallery' repository."
+            }
+        }
+        catch [Exception] {
+            Write-Host "❌ Failed to add repository.", $_.Exception.Message
+        }
+
+        try {
+            if ($null -eq (Get-InstalledModule -Name "WindowsConsoleFonts" -ErrorAction SilentlyContinue)) {
+                Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -ErrorAction SilentlyContinue >$null
+                if ($?) {
+                    Write-Host "✔ Installed 'WindowsConsoleFonts' module."
+                }
+            }
+            else {
+                Write-Host "✔ 'WindowsConsoleFonts' module already installed."
+            }
+        }
+        catch [Exception] {
+            Write-Host "❌ Failed to install 'WindowsConsoleFonts' module.", $_.Exception.Message
+        }
+
+        try {
+            if ($null -eq (Get-InstalledModule -Name "Terminal-Icons" -ErrorAction SilentlyContinue)) {
+                Install-Module -Name Terminal-Icons -Scope CurrentUser -Force -SkipPublisherCheck -Repository PSGallery
+                Write-Host "✔ Installed 'Terminal-Icons' module."
+            }
+            else {
+                Write-Host "✔ 'Terminal-Icons' module already installed."
+            }
+        }
+        catch [Exception] {
+            Write-Host "❌ Failed to install 'Terminal-Icons' module.", $_.Exception.Message
+        }
+
+        try {
+            Import-Module PSReadLine
+            Write-Host "✔ 'PSReadLine' module already installed."
         }
         catch {
-            Write-Host "❌ Failed to install 'PSReadLine' module.", $_.Exception.Message
-        }
-    }
-
-    # https://ohmyposh.dev/
-    try {
-        if ($null -eq (Get-InstalledModule -Name "oh-my-posh" -ErrorAction SilentlyContinue)) {
-            Install-Module -Name oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck >$null
-            if ($?) {
-                Write-Host "✔ Installed 'oh-my-posh' module."
+            try {
+                Install-Module -Name PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck >$null
+                Write-Host "✔ Installed 'PSReadLine' module."
+            }
+            catch {
+                Write-Host "❌ Failed to install 'PSReadLine' module.", $_.Exception.Message
             }
         }
-        else {
-            Write-Host "✔ 'oh-my-posh' module already installed."
-        }
-    }
-    catch [Exception] {
-        Write-Host "❌ Failed to install 'oh-my-posh' module.", $_.Exception.Message
-    }
 
-    try {
-        if ($null -eq (Get-InstalledModule -Name "posh-git" -ErrorAction SilentlyContinue)) {
-            Install-Module -Name posh-git -Scope CurrentUser -Force -SkipPublisherCheck
-            if ($?) {
-                Write-Host "✔ Installed 'posh-git' module."
+        # https://ohmyposh.dev/
+        try {
+            if ($null -eq (Get-InstalledModule -Name "oh-my-posh" -ErrorAction SilentlyContinue)) {
+                Install-Module -Name oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck >$null
+                if ($?) {
+                    Write-Host "✔ Installed 'oh-my-posh' module."
+                }
             }
             else {
-                Write-Host "✔ 'posh-git' module already installed."
+                Write-Host "✔ 'oh-my-posh' module already installed."
             }
         }
-    }
-    catch [Exception] {
-        Write-Host "❌ Failed to install 'posh-git' module.", $_.Exception.Message
+        catch [Exception] {
+            Write-Host "❌ Failed to install 'oh-my-posh' module.", $_.Exception.Message
+        }
+
+        try {
+            if ($null -eq (Get-InstalledModule -Name "posh-git" -ErrorAction SilentlyContinue)) {
+                Install-Module -Name posh-git -Scope CurrentUser -Force -SkipPublisherCheck
+                if ($?) {
+                    Write-Host "✔ Installed 'posh-git' module."
+                }
+                else {
+                    Write-Host "✔ 'posh-git' module already installed."
+                }
+            }
+        }
+        catch [Exception] {
+            Write-Host "❌ Failed to install 'posh-git' module.", $_.Exception.Message
+        }
     }
 
     Write-Host "✔ Initialized PowerShell environment."

@@ -76,9 +76,54 @@ Function Get-CurrentEnvironment {
     Return $PathArray
 }
 
-Function Get-Environment {
-    $script:MycelioRoot = Resolve-Path -Path "$PSScriptRoot\..\.."
+Function Initialize-Environment {
+    Param(
+        [Parameter(Position = 0, mandatory = $true)]
+        [string]$ScriptPath
+    )
 
+    $script:ScriptDir = Split-Path $ScriptPath -Parent
+
+    if ([enum]::GetNames([Net.SecurityProtocolType]) -match 'Tls12') {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    } else {
+        # If you use PowerShell with .Net Framework 2.0 and you want to use TLS1.2, you have
+        # to set the value 3072 for the [System.Net.ServicePointManager]::SecurityProtocol
+        # property which internally is Tls12.
+        [Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject(
+            [System.Net.SecurityProtocolType], 3072);
+    }
+    Write-Host "PowerShell v$($host.Version)"
+
+    $script:MycelioRoot = Resolve-Path -Path "$script:ScriptDir\..\..\"
+
+    $script:MycelioUserProfile = "$env:UserProfile"
+    if ([String]::IsNullOrEmpty("$script:MycelioUserProfile")) {
+        $script:MycelioUserProfile = "$env:HOME"
+    }
+
+    $script:MycelioTempDir = "$script:MycelioUserProfile\.tmp"
+    if ( -not(Test-Path -Path "$script:MycelioTempDir") ) {
+        New-Item -ItemType directory -Path "$script:MycelioTempDir" | Out-Null
+    }
+
+    $script:MycelioArchivesDir = "$script:MycelioTempDir\archives"
+    if ( -not(Test-Path -Path "$script:MycelioArchivesDir") ) {
+        New-Item -ItemType directory -Path "$script:MycelioArchivesDir" | Out-Null
+    }
+
+    $script:MycelioArtifactsDir = "$script:MycelioRoot\artifacts"
+    if ( -not(Test-Path -Path "$script:MycelioArtifactsDir") ) {
+        New-Item -ItemType directory -Path "$script:MycelioArtifactsDir" | Out-Null
+    }
+
+    $script:MycelioLocalDir = "$script:MycelioUserProfile\.local"
+    if ( -not(Test-Path -Path "$script:MycelioLocalDir") ) {
+        New-Item -ItemType directory -Path "$script:MycelioLocalDir" | Out-Null
+    }
+}
+
+Function Get-Environment {
     if ("$Env:Username" -eq "WDAGUtilityAccount") {
         if (Test-Path -Path "$Env:UserProfile\dotfiles\setup.bat" -PathType Leaf) {
             $script:MycelioRoot = Resolve-Path -Path "$Env:UserProfile\dotfiles"
@@ -209,4 +254,5 @@ Function Save-Environment {
     }
 }
 
+Initialize-Environment $MyInvocation.MyCommand.Path
 Save-Environment -ScriptPath "$ScriptPath" -Verbose $Verbose

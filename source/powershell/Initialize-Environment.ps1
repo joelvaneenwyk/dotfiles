@@ -12,8 +12,6 @@
     the 'scoop' package manager.
 #>
 
-using namespace System.Net.Http;
-
 <#
 .SYNOPSIS
     Returns true if the given command can be executed from the shell.
@@ -35,8 +33,7 @@ Function Test-CommandValid {
             $IsValid = $true
         }
     }
-    Catch {
-        Write-Host "Command '$command' does not exist."
+    catch {
     }
     finally {
         $ErrorActionPreference = $oldPreference
@@ -44,6 +41,7 @@ Function Test-CommandValid {
 
     return $IsValid
 }
+
 Function Expand-File {
     <#
 .SYNOPSIS
@@ -85,71 +83,110 @@ Function Expand-File {
         # Extract previous version of 7zip first
         if (Test-Path -Path "$7za920zip" -PathType Leaf) {
             if (-not(Test-Path -Path "$7za920/7za.exe" -PathType Leaf)) {
-                $ProgressPreference = 'SilentlyContinue'
-                Expand-Archive -Path "$7za920zip" -DestinationPath "$7za920"
+                if ( -not(Test-Path -Path "$7za920") ) {
+                    New-Item -ItemType directory -Path "$7za920" | Out-Null
+                }
+
+                # We use this approach as it is compatible with PowerShell 2.0 as opposed to
+                # Expand-Archive which requires .NET 4
+                $shell = New-Object -ComObject Shell.Application
+                $zip = $shell.NameSpace("$7za920zip")
+                $targetFolder = $shell.Namespace("$7za920")
+                foreach($item in $zip.items())
+                {
+                    $targetFolder.CopyHere($item, 1564)
+                }
             }
         }
 
         # If older vresion is available, download and extract latest
         if (Test-Path -Path "$7za920/7za.exe" -PathType Leaf) {
-            $7z2103zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2103-extra.7z"
-            $7z2103 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2103"
+            $7z2106zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2106-extra.7z"
+            $7z2106 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2106"
 
             # Download latest version of 7zip
-            if (-not(Test-Path -Path "$7z2103zip" -PathType Leaf)) {
-                Get-File -Url "https://www.7-zip.org/a/7z2103-extra.7z" -Filename "$7z2103zip"
+            if (-not(Test-Path -Path "$7z2106zip" -PathType Leaf)) {
+                Get-File -Url "https://www.7-zip.org/a/7z2106-extra.7z" -Filename "$7z2106zip"
             }
 
             # Extract latest vesrion using old version
-            if (Test-Path -Path "$7z2103zip" -PathType Leaf) {
-                if (-not(Test-Path -Path "$7z2103/7za.exe" -PathType Leaf)) {
-                    & "$7za920/7za.exe" x "$7z2103zip" -aoa -o"$7z2103" -r -y | Out-Default
+            if (Test-Path -Path "$7z2106zip" -PathType Leaf) {
+                if ( -not(Test-Path -Path "$7z2106") ) {
+                    New-Item -ItemType directory -Path "$7z2106" | Out-Null
+                }
+
+                if (-not(Test-Path -Path "$7z2106/7za.exe" -PathType Leaf)) {
+                    Write-Host "$7za920/7za.exe x $7z2106zip -aoa -o$7z2106 -r -y"
+                    & "$7za920/7za.exe" @(
+                        "x", "$7z2106zip", "-aoa", "-o$7z2106", "-r", "-y")
+                    Write-Host "Extracted archive: '$7z2106'"
                 }
             }
         }
 
         # Specify latest version of 7zip so that we can use it below
-        if (Test-Path -Path "$7z2103/x64/7za.exe" -PathType Leaf) {
-            $7zip = "$7z2103/x64/7za.exe"
+        if (Test-Path -Path "$7z2106/x64/7za.exe" -PathType Leaf) {
+            $7zip = "$7z2106/x64/7za.exe"
         }
     }
     else {
-        $7z2103zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2103-linux-x64.tar.xz"
-        $7z2103 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2103"
+        $7z2106zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2106-linux-x64.tar.xz"
+        $7z2106 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2106"
 
         # Download 7zip that was stored in a zip file so that we can extract the latest version stored in 7z format
-        if (-not(Test-Path -Path "$7z2103zip" -PathType Leaf)) {
-            Get-File -Url "https://www.7-zip.org/a/7z2103-linux-x64.tar.xz" -Filename "$7z2103zip"
+        if (-not(Test-Path -Path "$7z2106zip" -PathType Leaf)) {
+            Get-File -Url "https://www.7-zip.org/a/7z2106-linux-x64.tar.xz" -Filename "$7z2106zip"
         }
 
         # Extract previous version of 7zipTempDir first
-        if (Test-Path -Path "$7z2103zip" -PathType Leaf) {
-            if ( -not(Test-Path -Path "$7z2103") ) {
-                New-Item -ItemType directory -Path "$7z2103" | Out-Null
+        if (Test-Path -Path "$7z2106zip" -PathType Leaf) {
+            if ( -not(Test-Path -Path "$7z2106") ) {
+                New-Item -ItemType directory -Path "$7z2106" | Out-Null
             }
 
-            if (-not(Test-Path -Path "$7z2103/7zz" -PathType Leaf)) {
-                tar -xvf "$7z2103zip" -C "$7z2103"
+            if (-not(Test-Path -Path "$7z2106/7zz" -PathType Leaf)) {
+                tar -xvf "$7z2106zip" -C "$7z2106"
             }
         }
 
-        if (Test-Path -Path "$7z2103/7zz" -PathType Leaf) {
-            $7zip = "$7z2103/7zz"
+        if (Test-Path -Path "$7z2106/7zz" -PathType Leaf) {
+            $7zip = "$7z2106/7zz"
         }
     }
 
     try {
         Write-Host "Extracting archive: '$Path'"
         if (Test-Path -Path "$7zip" -PathType Leaf) {
-            & "$7zip" x "$Path" -aoa -o"$DestinationPath" -r -y | Out-Default
+            & "$7zip" @(
+                "x", "$Path", "-aoa", "-o$DestinationPath", "-r", "-y")
         }
         else {
+            Write-Host "7-zip not found: '$7zip'"
+
             $ProgressPreference = 'SilentlyContinue'
-            Expand-Archive -Path "$Path" -DestinationPath "$DestinationPath" -Force
+
+            if ($IsWindows -or $ENV:OS) {
+                if ( -not(Test-Path -Path "$DestinationPath") ) {
+                    New-Item -ItemType directory -Path "$DestinationPath" | Out-Null
+                }
+
+                # We use this approach as it is compatible with PowerShell 2.0 as opposed to
+                # Expand-Archive which requires .NET 4
+                $shell = New-Object -ComObject Shell.Application
+                $zip = $shell.NameSpace("$Path")
+                $targetFolder = $shell.Namespace("$DestinationPath")
+                foreach($item in $zip.items())
+                {
+                    $targetFolder.CopyHere($item, 1564)
+                }
+            } else {
+                Expand-Archive -Path "$Path" -DestinationPath "$DestinationPath" -Force
+            }
         }
         Write-Host "Extracted archive to target: '$DestinationPath'"
     }
-    catch {
+    catch [Exception] {
+        Write-Host $_.Exception.GetType().FullName, $_.Exception.Message
         throw "Failed to extract archive: $Path"
     }
 }
@@ -203,7 +240,7 @@ Function Get-File {
         try {
             $webclient = New-Object System.Net.WebClient
             Write-Host "[web.client] Downloading: $Url"
-            $webclient.DownloadFile([System.Uri]::new($Url), "$FilePathOut")
+            $webclient.DownloadFile($Url, "$FilePathOut")
         }
         catch {
             try {
@@ -261,10 +298,18 @@ Function Install-Git {
 
         $gitCommand = (Get-Command -Name "git" -CommandType Application -ErrorAction SilentlyContinue)
         if ($null -ne $gitCommand) {
-            $script:MycelioGit = ($gitCommand | Where-Object {
-                    & $_.Source --version | Out-Null
-                    return $?
-                } | Select-Object -First 1).Source
+            $script:MycelioGit = ($gitCommand `
+            | Where-Object {
+                $gitPath = $_.Definition
+                try {
+                    & "$gitPath" --version | Out-Null
+                }
+                catch [Exception] {
+                    Write-Host "Failed to install minimal 'Git' for Windows.", $_.Exception.Message
+                }
+                return $?
+            } `
+            | Select-Object -First 1).Definition
         }
 
         $MycelioLocalGitDir = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "git"
@@ -317,7 +362,7 @@ Function Install-Tool {
 }
 
 Function Write-WindowsSandboxTemplate {
-    $sandboxTemplate = Get-Content -Path "$script:MycelioRoot\source\windows\sandbox\sandbox.wsb.template" -Raw
+    $sandboxTemplate = Get-Content -Path "$script:MycelioRoot\source\windows\sandbox\sandbox.wsb.template" | Out-String
     $sandbox = $sandboxTemplate -replace '${workspaceFolder}', $script:MycelioRoot
     Set-Content -Path "$script:MycelioArtifactsDir\sandbox.wsb" -Value "$sandbox"
 }
@@ -364,18 +409,16 @@ Function Initialize-ConsoleFont {
             }
 
             $zipFile = "$tempFontFolder\font.zip"
-
-            # Download the font
-            Get-File -Url $fontUrl -Filename $zipFile
+            Get-File -Url "$fontUrl" -Filename "$zipFile"
             Expand-File -Path "$zipFile" -DestinationPath "$tempFontFolder"
 
-            Remove-Item -Recurse -Force "$zipFile" | Out-Null
-            Write-Host "Removed intermediate archive: '$zipFile'"
-
-            Write-Host "Downloaded font: '$tempFontFolder\$fontNameOriginal.ttf'"
-            Write-Host "Renamed font: '$targetTempFontPath'"
-
-            Copy-Item -Path "$tempFontFolder\$fontNameOriginal.ttf" -Destination "$targetTempFontPath"
+            if (Test-Path -Path "$tempFontFolder\$fontNameOriginal.ttf" -PathType Leaf) {
+                Write-Host "Downloaded font: '$tempFontFolder\$fontNameOriginal.ttf'"
+                Copy-Item -Path "$tempFontFolder\$fontNameOriginal.ttf" -Destination "$targetTempFontPath"
+                Write-Host "Renamed font: '$targetTempFontPath'"
+            } else {
+                Write-Host "Failed to find font: '$tempFontFolder\$fontNameOriginal.ttf'"
+            }
         }
 
         # Remove the existing font first
@@ -437,7 +480,7 @@ Function Initialize-ConsoleFont {
 
     try {
         # After the above are setup, can add this to Profile to always loads
-        Import-Module Terminal-Icons
+        Import-Module Terminal-Icons -ErrorAction SilentlyContinue >$null
         Set-TerminalIconsTheme -ColorTheme DevBlackOps -IconTheme DevBlackOps
 
         Write-Host "Updated terminal icons and font."
@@ -478,7 +521,10 @@ Function Get-TexLive {
             }
             Expand-File -Path "$tempTexArchive" -DestinationPath "$tempTexFolder"
 
-            Get-ChildItem -Path "$tempTexFolder" -Force -Directory | Select-Object -First 1 | Move-Item -Destination "$tempTexTargetFolder" -Force
+            Get-ChildItem -Path "$tempTexFolder" -Force `
+            | Where-Object { $_.PSIsContainer } `
+            | Select-Object -First 1 `
+            | Move-Item -Destination "$tempTexTargetFolder" -Force
         }
 
         # Remove tex folder if it exists
@@ -718,8 +764,8 @@ Function Install-Scoop {
             Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
         }
     }
-    catch {
-        Write-Host "Exception caught while installing `scoop` package manager."
+    catch [Exception] {
+        Write-Host "Exception caught while installing 'scoop' package manager.", $_.Exception.Message
     }
     finally {
         Write-Host "::endgroup::"
@@ -855,9 +901,33 @@ Function Install-Toolset {
 }
 
 Function Initialize-Environment {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Param(
+        [Parameter(Position = 0, mandatory = $true)]
+        [string]$ScriptPath
+    )
 
-    $script:MycelioRoot = Resolve-Path -Path "$PSScriptRoot\..\..\"
+    if ($null -eq $ScriptPath) {
+        $ScriptPath = $PSScriptRoot
+
+        if ($null -eq $ScriptPath) {
+            $ScriptPath = $pwd
+        }
+    } else {
+        $script:ScriptDir = Split-Path $ScriptPath -Parent
+    }
+
+    if ([enum]::GetNames([Net.SecurityProtocolType]) -match 'Tls12') {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    } else {
+        # If you use PowerShell with .Net Framework 2.0 and you want to use TLS1.2, you have
+        # to set the value 3072 for the [System.Net.ServicePointManager]::SecurityProtocol
+        # property which internally is Tls12.
+        [Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject(
+            [System.Net.SecurityProtocolType], 3072);
+    }
+    Write-Host "PowerShell v$($host.Version)"
+
+    $script:MycelioRoot = Resolve-Path -Path "$script:ScriptDir\..\..\"
 
     $script:MycelioUserProfile = "$env:UserProfile"
     if ([String]::IsNullOrEmpty("$script:MycelioUserProfile")) {
@@ -943,4 +1013,4 @@ Function Initialize-Environment {
     Write-Host "Initialized Mycelio environment for Windows."
 }
 
-Initialize-Environment
+Initialize-Environment $MyInvocation.MyCommand.Path
