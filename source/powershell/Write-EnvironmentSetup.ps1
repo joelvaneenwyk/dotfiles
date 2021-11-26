@@ -86,14 +86,14 @@ Function Initialize-Environment {
 
     if ([enum]::GetNames([Net.SecurityProtocolType]) -match 'Tls12') {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    } else {
+    }
+    else {
         # If you use PowerShell with .Net Framework 2.0 and you want to use TLS1.2, you have
         # to set the value 3072 for the [System.Net.ServicePointManager]::SecurityProtocol
         # property which internally is Tls12.
         [Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject(
             [System.Net.SecurityProtocolType], 3072);
     }
-    Write-Host "PowerShell v$($host.Version)"
 
     $script:MycelioRoot = Resolve-Path -Path "$script:ScriptDir\..\..\"
 

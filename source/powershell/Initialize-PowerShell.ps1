@@ -67,7 +67,8 @@ Function Initialize-PowerShell {
 
     if ([enum]::GetNames([Net.SecurityProtocolType]) -match 'Tls12') {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    } else {
+    }
+    else {
         # If you use PowerShell with .Net Framework 2.0 and you want to use TLS1.2, you have
         # to set the value 3072 for the [System.Net.ServicePointManager]::SecurityProtocol
         # property which internally is Tls12.
@@ -99,19 +100,6 @@ Function Initialize-PowerShell {
                     $script:hasNuGet = $true
                 }
             }
-
-            if ($script:hasNuGet) {
-                Write-Host "✔ 'NuGet' package provider already installed."
-            }
-            else {
-                Install-PackageProvider -Name NuGet -RequiredVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue >$null
-                if ($?) {
-                    Write-Host "✔ Installed 'NuGet' package provider."
-                }
-                else {
-                    Write-Host "❌ Failed to install 'NuGet' package source. $NugetPackage"
-                }
-            }
         }
         else {
             Write-Host "❌ Failed to import PowerShell package management.", $_.Exception.Message
@@ -138,6 +126,19 @@ Function Initialize-PowerShell {
             if (-not $?) {
                 Write-Host "Failed to import required 'PowerShellGet' module. Exiting initialization."
                 return 1;
+            }
+        }
+
+        if ($script:hasNuGet) {
+            Write-Host "✔ 'NuGet' package provider already installed."
+        }
+        else {
+            Install-PackageProvider -Scope CurrentUser -Name NuGet -MinimumVersion 2.8.5.201 -Force -ErrorAction SilentlyContinue >$null
+            if ($?) {
+                Write-Host "✔ Installed 'NuGet' package provider."
+            }
+            else {
+                Write-Host "❌ Failed to install 'NuGet' package source. ($Error[0].Exception.Message)"
             }
         }
 
@@ -191,7 +192,7 @@ Function Initialize-PowerShell {
         }
 
         try {
-            Import-Module PSReadLine
+            Import-Module PSReadLine -ErrorAction SilentlyContinue >$null
             Write-Host "✔ 'PSReadLine' module already installed."
         }
         catch {

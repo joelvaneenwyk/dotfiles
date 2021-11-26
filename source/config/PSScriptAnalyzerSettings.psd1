@@ -28,6 +28,18 @@
     Rules        = @{
         #    Do not flag 'cd' alias.
         #    PSAvoidUsingCmdletAliases = @{Whitelist = @('cd')}
+        PSUseCompatibleSyntax  = @{
+            # This turns the rule on (setting it to false will turn it off)
+            Enable         = $true
+
+            # List the targeted versions of PowerShell here
+            TargetVersions = @(
+                '2.0',
+                '3.0',
+                '5.1',
+                '6.2'
+            )
+        }
 
         #    Check if your script uses cmdlets that are compatible on PowerShell Core,
         #    version 6.0.0-alpha, on Linux.

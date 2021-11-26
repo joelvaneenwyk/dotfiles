@@ -2066,7 +2066,10 @@ function _initialize_environment() {
             fi
 
             if [ ! -L "/etc/nsswitch.conf" ]; then
-                mv "/etc/nsswitch.conf" "/etc/nsswitch.conf.bak"
+                if [ -f "/etc/nsswitch.conf" ]; then
+                    mv "/etc/nsswitch.conf" "/etc/nsswitch.conf.bak"
+                fi
+
                 if ln -s "$MYCELIO_ROOT/source/windows/msys/nsswitch.conf" "/etc/nsswitch.conf" >/dev/null 2>&1; then
                     echo "Updated 'nsswitch.conf' with custom version."
                 else

@@ -34,12 +34,93 @@ Function Test-CommandValid {
         }
     }
     catch {
+        $IsValid = $false
     }
     finally {
         $ErrorActionPreference = $oldPreference
     }
 
     return $IsValid
+}
+
+
+function AddSymbolicLinkPermissions($accountToAdd) {
+
+    $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    if (-not ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))) {
+        Write-Host "Unable to add symbolic link privileges. Please run as administrator."
+    }
+    else {
+        Set-ItemProperty -Path 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord | Out-Null
+        Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord | Out-Null
+
+        Write-Host "Checking SymLink permissions.."
+        $sidstr = $null
+        try {
+            $ntprincipal = New-Object System.Security.Principal.NTAccount "$accountToAdd"
+            $sid = $ntprincipal.Translate([System.Security.Principal.SecurityIdentifier])
+            $sidstr = $sid.Value.ToString()
+        }
+        catch {
+            $sidstr = $null
+        }
+
+        Write-Host "Account: $($accountToAdd)" -ForegroundColor DarkCyan
+        if ( [string]::IsNullOrEmpty($sidstr) ) {
+            Write-Host "Account not found!" -ForegroundColor Red
+            exit -1
+        }
+
+        Write-Host "Account SID: $($sidstr)" -ForegroundColor DarkCyan
+        $tmp = [System.IO.Path]::GetTempFileName()
+        Write-Host "Export current Local Security Policy" -ForegroundColor DarkCyan
+        secedit.exe /export /cfg "$($tmp)"
+        $c = Get-Content -Path $tmp
+        $currentSetting = ""
+        foreach ($s in $c) {
+            if ( $s -like "SECreateSymbolicLinkPrivilege*") {
+                $x = $s.split("=", [System.StringSplitOptions]::RemoveEmptyEntries)
+                $currentSetting = $x[1].Trim()
+            }
+        }
+        if ( $currentSetting -notlike "*$($sidstr)*" ) {
+            Write-Host "Need to add permissions to SymLink" -ForegroundColor Yellow
+
+            Write-Host "Modify Setting ""Create SymLink""" -ForegroundColor DarkCyan
+
+            if ( [string]::IsNullOrEmpty($currentSetting) ) {
+                $currentSetting = "*$($sidstr)"
+            }
+            else {
+                $currentSetting = "*$($sidstr),$($currentSetting)"
+            }
+            Write-Host "$currentSetting"
+            $outfile = @"
+[Unicode]
+Unicode=yes
+[Version]
+signature="`$CHICAGO`$"
+Revision=1
+[Privilege Rights]
+SECreateSymbolicLinkPrivilege = $($currentSetting)
+"@
+            $tmp2 = [System.IO.Path]::GetTempFileName()
+            Write-Host "Import new settings to Local Security Policy" -ForegroundColor DarkCyan
+            $outfile | Set-Content -Path $tmp2 -Encoding Unicode -Force
+            Push-Location (Split-Path $tmp2)
+            try {
+                secedit.exe /configure /db "secedit.sdb" /cfg "$($tmp2)" /areas USER_RIGHTS
+            }
+            finally {
+                Pop-Location
+            }
+        }
+        else {
+            Write-Host "NO ACTIONS REQUIRED! Account already in ""Create SymLink""" -ForegroundColor DarkCyan
+            Write-Host "Account $accountToAdd already has permissions to SymLink" -ForegroundColor Green
+            return $true;
+        }
+    }
 }
 
 Function Expand-File {
@@ -92,8 +173,7 @@ Function Expand-File {
                 $shell = New-Object -ComObject Shell.Application
                 $zip = $shell.NameSpace("$7za920zip")
                 $targetFolder = $shell.Namespace("$7za920")
-                foreach($item in $zip.items())
-                {
+                foreach ($item in $zip.items()) {
                     $targetFolder.CopyHere($item, 1564)
                 }
             }
@@ -175,11 +255,11 @@ Function Expand-File {
                 $shell = New-Object -ComObject Shell.Application
                 $zip = $shell.NameSpace("$Path")
                 $targetFolder = $shell.Namespace("$DestinationPath")
-                foreach($item in $zip.items())
-                {
+                foreach ($item in $zip.items()) {
                     $targetFolder.CopyHere($item, 1564)
                 }
-            } else {
+            }
+            else {
                 Expand-Archive -Path "$Path" -DestinationPath "$DestinationPath" -Force
             }
         }
@@ -248,8 +328,8 @@ Function Get-File {
                 $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
                 $client = New-Object -TypeName System.Net.Http.HttpClient -ArgumentList $handler
                 $client.Timeout = New-Object -TypeName System.TimeSpan -ArgumentList 0, 30, 0
-                $cancelTokenSource = [System.Threading.CancellationTokenSource]::new(-1)
-                $responseMsg = $client.GetAsync([System.Uri]::new($Url), $cancelTokenSource.Token)
+                $cancelTokenSource = New-Object 'System.Threading.CancellationTokenSource' @(-1)
+                $responseMsg = $client.GetAsync((New-Object 'System.Uri' @($Url)), $cancelTokenSource.Token)
                 $responseMsg.Wait()
 
                 Write-Host "[http.client.handler] Downloading: $Url"
@@ -257,9 +337,11 @@ Function Get-File {
                 if (!$responseMsg.IsCanceled) {
                     $response = $responseMsg.Result
                     if ($response.IsSuccessStatusCode) {
-                        $downloadedFileStream = [System.IO.FileStream]::new(
+                        $downloadedFileStream = New-Object 'System.IO.FileStream' @(
                             $FilePathOut,
-                            [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+                            [System.IO.FileMode]::Create,
+                            [System.IO.FileAccess]::Write,
+                            [System.IO.FileShare]::None)
 
                         $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
 
@@ -299,17 +381,17 @@ Function Install-Git {
         $gitCommand = (Get-Command -Name "git" -CommandType Application -ErrorAction SilentlyContinue)
         if ($null -ne $gitCommand) {
             $script:MycelioGit = ($gitCommand `
-            | Where-Object {
-                $gitPath = $_.Definition
-                try {
-                    & "$gitPath" --version | Out-Null
-                }
-                catch [Exception] {
-                    Write-Host "Failed to install minimal 'Git' for Windows.", $_.Exception.Message
-                }
-                return $?
-            } `
-            | Select-Object -First 1).Definition
+                | Where-Object {
+                    $gitPath = $_.Definition
+                    try {
+                        & "$gitPath" --version | Out-Null
+                    }
+                    catch [Exception] {
+                        Write-Host "Failed to install minimal 'Git' for Windows.", $_.Exception.Message
+                    }
+                    return $?
+                } `
+                | Select-Object -First 1).Definition
         }
 
         $MycelioLocalGitDir = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "git"
@@ -336,6 +418,17 @@ Function Install-Git {
     }
     catch [Exception] {
         Write-Host "Failed to install minimal 'Git' for Windows.", $_.Exception.Message
+    }
+
+    try {
+        if (-not (Test-Path -Path "$script:MycelioRoot/source/stow/setup.sh" -PathType Leaf)) {
+            if (Test-Path -Path "$script:MycelioGit" -PathType Leaf) {
+                & "$script:MycelioGit" -C "$script:MycelioRoot" submodule update --init --recursive
+            }
+        }
+    }
+    catch {
+        Write-Host "Failed to update submodules with 'git' command."
     }
 }
 
@@ -416,7 +509,8 @@ Function Initialize-ConsoleFont {
                 Write-Host "Downloaded font: '$tempFontFolder\$fontNameOriginal.ttf'"
                 Copy-Item -Path "$tempFontFolder\$fontNameOriginal.ttf" -Destination "$targetTempFontPath"
                 Write-Host "Renamed font: '$targetTempFontPath'"
-            } else {
+            }
+            else {
                 Write-Host "Failed to find font: '$tempFontFolder\$fontNameOriginal.ttf'"
             }
         }
@@ -778,11 +872,6 @@ Function Install-Toolset {
 
     Write-Host "::group::Install Toolset"
 
-    # We use our own Git install instead of scoop as sometimes scoop shims stop working and they
-    # are generally slower. We care a lot about the performance of Git since it is used everywhere
-    # including the prompt.
-    Install-Git
-
     Get-TexLive
 
     # Install Perl which is necessary for 'Mycelio' so that we can run it outside of MSYS2 environment.
@@ -900,8 +989,9 @@ Function Install-Toolset {
     Write-Host "::endgroup::"
 }
 
-function New-TerminatingErrorRecord
-{
+function New-TerminatingErrorRecord {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSUseShouldProcessForStateChangingFunctions', '', Scope = 'Function')]
     param(
         [string] $exception,
         [string] $exceptionMessage,
@@ -914,28 +1004,28 @@ function New-TerminatingErrorRecord
     return $errorRecord
 }
 
-function Test-Compatibility
-{
+function Test-Compatibility() {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+        'PSAvoidUsingWMICmdlet', '', Scope = 'Function')]
+    param()
+
     $returnValue = $true
 
     $BuildVersion = [System.Environment]::OSVersion.Version
 
-    if($BuildVersion.Major -ge '10')
-    {
+    if ($BuildVersion.Major -ge '10') {
         Write-Warning 'WMF 5.1 is not supported for Windows 10 and above.'
         $returnValue = $false
     }
 
     ## OS is below Windows Vista
-    if($BuildVersion.Major -lt '6')
-    {
+    if ($BuildVersion.Major -lt '6') {
         Write-Warning "WMF 5.1 is not supported on BuildVersion: {0}" -f $BuildVersion.ToString()
         $returnValue = $false
     }
 
     ## OS is Windows Vista
-    if($BuildVersion.Major -eq '6' -and $BuildVersion.Minor -le '0')
-    {
+    if ($BuildVersion.Major -eq '6' -and $BuildVersion.Minor -le '0') {
         Write-Warning "WMF 5.1 is not supported on BuildVersion: {0}" -f $BuildVersion.ToString()
         $returnValue = $false
     }
@@ -943,8 +1033,7 @@ function Test-Compatibility
     ## Check if WMF 3 is installed
     $wmf3 = Get-WmiObject -Query "select * from Win32_QuickFixEngineering where HotFixID = 'KB2506143'"
 
-    if($wmf3)
-    {
+    if ($wmf3) {
         Write-Warning "WMF 5.1 is not supported when WMF 3.0 is installed."
         $returnValue = $false
     }
@@ -954,13 +1043,11 @@ function Test-Compatibility
     $release = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\' -Name Release -ErrorAction SilentlyContinue -ErrorVariable evRelease).release
     $installed = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\' -Name Install -ErrorAction SilentlyContinue -ErrorVariable evInstalled).install
 
-    if($evRelease -or $evInstalled)
-    {
+    if ($evRelease -or $evInstalled) {
         Write-Warning "WMF 5.1 requires .Net 4.5."
         $returnValue = $false
     }
-    elseif (($installed -ne 1) -or ($release -lt 378389))
-    {
+    elseif (($installed -ne 1) -or ($release -lt 378389)) {
         Write-Warning "WMF 5.1 requires .Net 4.5."
         $returnValue = $false
     }
@@ -979,59 +1066,54 @@ Install-WMF5.1.ps1
 #>
 Function Install-PowerShell {
     param(
-        [switch] $AcceptEULA,
-        [switch] $AllowRestart = $true
+        [bool] $AcceptEULA = $false,
+        [bool] $AllowRestart = $true
     )
 
-    $windowsUpdateFilename = "Win7AndW2K8R2-KB3191566-x64.zip"
-    $url = "https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/$windowsUpdateFilename"
-    $path = Join-Path $script:MycelioArchivesDir $windowsUpdateFilename
-    Get-File -Filename $path -Url $url
-
-    $powerShellInstallers = Join-Path $script:MycelioTempDir "powershell_KB3191566"
-    Expand-File -Path $path $powerShellInstallers
-    $ErrorActionPreference = 'Stop'
-
-    if($PSBoundParameters.ContainsKey('AllowRestart') -and (-not $PSBoundParameters.ContainsKey('AcceptEULA')))
-    {
-        $errorParameters = @{
-                                        exception = 'System.Management.Automation.ParameterBindingException';
-                                        exceptionMessage = "AcceptEULA must be specified when AllowRestart is used.";
-                                        errorCategory = [System.Management.Automation.ErrorCategory]::InvalidArgument;
-                                        targetObject = ""
-                            }
-
-        $PSCmdlet.ThrowTerminatingError((New-TerminatingErrorRecord @errorParameters))
+    if ($host.Version.Major -ge 5) {
+        Write-Host "Skipped PowerShell install as v5 is already available."
     }
+    else {
+        $windowsUpdateFilename = "Win7AndW2K8R2-KB3191566-x64.zip"
+        $url = "https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/$windowsUpdateFilename"
+        $path = Join-Path $script:MycelioArchivesDir $windowsUpdateFilename
+        Get-File -Filename $path -Url $url
 
-    if($env:PROCESSOR_ARCHITECTURE -eq 'x86')
-    {
-        $packageName = 'Win7-KB3191566-x86.msu'
-    }
-    else
-    {
-        $packageName = 'Win7AndW2K8R2-KB3191566-x64.msu'
-    }
+        $powerShellInstallers = Join-Path $script:MycelioTempDir "powershell_KB3191566"
+        Expand-File -Path $path $powerShellInstallers
+        $ErrorActionPreference = 'Stop'
 
-    $packagePath = Resolve-Path (Join-Path $powerShellInstallers $packageName)
+        if ($PSBoundParameters.ContainsKey('AllowRestart') -and (-not $PSBoundParameters.ContainsKey('AcceptEULA'))) {
+            $errorParameters = @{
+                exception        = 'System.Management.Automation.ParameterBindingException';
+                exceptionMessage = "AcceptEULA must be specified when AllowRestart is used.";
+                errorCategory    = [System.Management.Automation.ErrorCategory]::InvalidArgument;
+                targetObject     = ""
+            }
 
-    if($packagePath -and (Test-Path $packagePath))
-    {
-        if(Test-Compatibility)
-        {
-            $wusaExe = "$env:windir\system32\wusa.exe"
-            if($PSCmdlet.ShouldProcess($packagePath,"Install WMF 5.1 Package from:"))
-            {
+            $PSCmdlet.ThrowTerminatingError((New-TerminatingErrorRecord @errorParameters))
+        }
+
+        if ($env:PROCESSOR_ARCHITECTURE -eq 'x86') {
+            $packageName = 'Win7-KB3191566-x86.msu'
+        }
+        else {
+            $packageName = 'Win7AndW2K8R2-KB3191566-x64.msu'
+        }
+
+        $packagePath = Resolve-Path (Join-Path $powerShellInstallers $packageName)
+
+        if ($packagePath -and (Test-Path $packagePath)) {
+            if (Test-Compatibility) {
+                $wusaExe = "$env:windir\system32\wusa.exe"
                 $wusaParameters = @("`"{0}`"" -f $packagePath)
 
                 ##We assume that AcceptEULA is also specified
-                if($AllowRestart)
-                {
+                if ($AllowRestart) {
                     $wusaParameters += @("/passive")
                 }
                 ## Here AllowRestart is not specified but AcceptEULA is.
-                elseif ($AcceptEULA)
-                {
+                elseif ($AcceptEULA) {
                     $wusaParameters += @("/quiet", "/promptrestart")
                 }
 
@@ -1040,32 +1122,29 @@ Function Install-PowerShell {
                 Write-Host "##[cmd] $wusaExe $wusaParameterString"
                 & $wusaExe $wusaParameterString
             }
+            else {
+                $errorParameters = @{
+                    exception        = 'System.InvalidOperationException';
+                    exceptionMessage = "WMF 5.1 cannot be installed as pre-requisites are not met. See Install and Configure WMF 5.1 documentation: https://go.microsoft.com/fwlink/?linkid=839022";
+                    errorCategory    = [System.Management.Automation.ErrorCategory]::InvalidOperation;
+                    targetObject     = $packagePath
+                }
+
+                $PSCmdlet.ThrowTerminatingError((New-TerminatingErrorRecord @errorParameters))
+            }
         }
-        else
-        {
+        else {
             $errorParameters = @{
-                                    exception = 'System.InvalidOperationException';
-                                    exceptionMessage = "WMF 5.1 cannot be installed as pre-requisites are not met. See Install and Configure WMF 5.1 documentation: https://go.microsoft.com/fwlink/?linkid=839022";
-                                    errorCategory = [System.Management.Automation.ErrorCategory]::InvalidOperation;
-                                    targetObject = $packagePath
-                                }
+                exception        = 'System.IO.FileNotFoundException';
+                exceptionMessage = "Expected WMF 5.1 Package: `"$packageName`" was not found.";
+                errorCategory    = [System.Management.Automation.ErrorCategory]::ResourceUnavailable;
+                targetObject     = $packagePath
+            }
 
             $PSCmdlet.ThrowTerminatingError((New-TerminatingErrorRecord @errorParameters))
         }
     }
-    else
-    {
-        $errorParameters = @{
-                                exception = 'System.IO.FileNotFoundException';
-                                exceptionMessage = "Expected WMF 5.1 Package: `"$packageName`" was not found.";
-                                errorCategory = [System.Management.Automation.ErrorCategory]::ResourceUnavailable;
-                                targetObject = $packagePath
-                                }
-
-        $PSCmdlet.ThrowTerminatingError((New-TerminatingErrorRecord @errorParameters))
-    }
 }
-
 
 Function Initialize-Environment {
     Param(
@@ -1079,13 +1158,15 @@ Function Initialize-Environment {
         if ($null -eq $ScriptPath) {
             $ScriptPath = $pwd
         }
-    } else {
+    }
+    else {
         $script:ScriptDir = Split-Path $ScriptPath -Parent
     }
 
     if ([enum]::GetNames([Net.SecurityProtocolType]) -match 'Tls12') {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    } else {
+    }
+    else {
         # If you use PowerShell with .Net Framework 2.0 and you want to use TLS1.2, you have
         # to set the value 3072 for the [System.Net.ServicePointManager]::SecurityProtocol
         # property which internally is Tls12.
@@ -1121,18 +1202,12 @@ Function Initialize-Environment {
         New-Item -ItemType directory -Path "$script:MycelioLocalDir" | Out-Null
     }
 
-    try {
-        if (-not (Test-Path -Path "$script:MycelioRoot/source/stow/setup.sh" -PathType Leaf)) {
-            if (Test-Path -Path "$script:MycelioGit" -PathType Leaf) {
-                & "$script:MycelioGit" -C "$script:MycelioRoot" submodule update --init --recursive
-            } else {
-                Write-Host "Failed to find stow source but unable to update as 'git' is missing."
-            }
-        }
-    }
-    catch {
-        Write-Host "Failed to update submodules with 'git' command."
-    }
+    AddSymbolicLinkPermissions([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)
+
+    # We use our own Git install instead of scoop as sometimes scoop shims stop working and they
+    # are generally slower. We care a lot about the performance of Git since it is used everywhere
+    # including the prompt.
+    Install-Git
 
     Write-WindowsSandboxTemplate
 
