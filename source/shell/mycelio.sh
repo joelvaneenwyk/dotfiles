@@ -2055,6 +2055,7 @@ function _initialize_environment() {
     mkdir -p "$MYCELIO_TEMP"
 
     if [ "$MYCELIO_OS" = "windows" ] && [ -d "/etc/" ]; then
+        # Make sure we have permission to touch the folder
         if touch --no-create "/etc/fstab" >/dev/null 2>&1; then
             if [ ! -f "/etc/passwd" ]; then
                 mkpasswd -l -c >"/etc/passwd"
@@ -2065,8 +2066,12 @@ function _initialize_environment() {
             fi
 
             if [ ! -L "/etc/nsswitch.conf" ]; then
-                rm -f "/etc/nsswitch.conf"
-                ln -s "$MYCELIO_ROOT/source/windows/msys/nsswitch.conf" "/etc/nsswitch.conf"
+                mv "/etc/nsswitch.conf" "/etc/nsswitch.conf.bak"
+                if ln -s "$MYCELIO_ROOT/source/windows/msys/nsswitch.conf" "/etc/nsswitch.conf" >/dev/null 2>&1; then
+                    echo "Updated 'nsswitch.conf' with custom version."
+                else
+                    log_error "Unable to create symbolic link to 'nsswitch.conf' likely due to permission errors."
+                fi
             fi
         fi
     fi
