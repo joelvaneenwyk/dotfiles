@@ -736,6 +736,30 @@ Function Start-Bash() {
     }
 }
 
+Function Test-SymbolicLink {
+    $errorPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+
+    $createdSymbolicLink = $false
+    $linkTargetTemp = "$script:MycelioTempDir\link_test.sh"
+    $linkSource = "$script:MycelioRoot\setup.sh"
+
+    if (Test-Path $linkTargetTemp) {
+        Remove-Item $linkTargetTemp
+    }
+
+    # We redirect stderr to stdout because of a seemingly unavoidable error that we get during
+    # install e.g. 'Use of uninitialized value $deftmflocal in string at C:\...\texlive-install\install-tl line 1364.'
+    & "$ENV:SystemRoot\System32\cmd.exe" /d /c "mklink "$linkTargetTemp" "$linkSource" > nul 2>&1"
+    if ($? -and (Test-Path $linkTargetTemp)) {
+        $createdSymbolicLink = $true
+        Remove-Item $linkTargetTemp
+    }
+
+    $ErrorActionPreference = $errorPreference
+
+    return $createdSymbolicLink
+}
 Function Install-MSYS2 {
     $script:MsysTargetDir = "$script:MycelioLocalDir/msys64"
     $script:MsysArchive = "$script:MycelioArchivesDir/msys2.exe"
@@ -813,7 +837,7 @@ fi
 "@
 
         if (($IsWindows -or $ENV:OS) -and [String]::IsNullOrEmpty("$env:MSYSTEM")) {
-            $env:MSYS = "winsymlinks:nativestrict"
+            $env:MSYS = "winsymlinks:native"
 
             if (-not (Test-Path -Path "$initializedFile" -PathType Leaf)) {
                 $homeOriginal = $env:HOME
@@ -1203,6 +1227,13 @@ Function Initialize-Environment {
     }
 
     AddSymbolicLinkPermissions([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)
+
+    if (Test-SymbolicLink) {
+        Write-Host "System supports creating symbolic links."
+    }
+    else {
+        Write-Host "WARNING: System does not support creating symbolic links."
+    }
 
     # We use our own Git install instead of scoop as sometimes scoop shims stop working and they
     # are generally slower. We care a lot about the performance of Git since it is used everywhere

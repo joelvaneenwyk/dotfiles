@@ -228,7 +228,7 @@ Function Save-Environment {
             $fileStream.WriteLine("set ""MYCELIO_ROOT=$script:MycelioRoot""")
             $fileStream.WriteLine("set ""HOME=$ENV:UserProfile""")
             $fileStream.WriteLine("set ""PERL=$ENV:UserProfile\.local\perl\perl\bin\perl.exe""")
-            $fileStream.WriteLine("set ""MSYS=winsymlinks:nativestrict""")
+            $fileStream.WriteLine("set ""MSYS=winsymlinks:native""")
             $fileStream.WriteLine("set ""MSYS_SHELL=%USERPROFILE%\.local\msys64\msys2_shell.cmd""")
             $fileStream.WriteLine("set ""MSYS2_PATH_TYPE=minimal""")
 

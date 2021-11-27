@@ -19,7 +19,7 @@ SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPref
 
 ARG MSYS_ROOT=C:\msys64
 ENV HOME=C:\Users\ContainerAdministrator
-ENV MSYS=winsymlinks:nativestrict
+ENV MSYS=winsymlinks:native
 ENV POST_INSTALL_DOTFILES=C:\msys64\etc\post-install\09-dotfiles.post
 ENV MSYS_ROOT=${MSYS_ROOT}
 

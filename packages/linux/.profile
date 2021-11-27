@@ -413,7 +413,7 @@ initialize_profile() {
 
     # This is critically important on Windows (MSYS) otherwise we are not able to
     # create symbolic links which is the entire point of 'stow'
-    export MSYS="winsymlinks:nativestrict"
+    export MSYS="winsymlinks:native"
 
     if _tty="$(tty)"; then
         GPG_TTY="$_tty"
