@@ -1947,7 +1947,7 @@ function _update_git_repository() {
         run_command "$_name.git.checkout" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
     fi
 
-    run_command "$_name.git.pull" git -C "$MYCELIO_ROOT/$_path" pull --rebase --autostash "origin" "$_branch"
+    run_command "$_name.git.pull" git -C "$MYCELIO_ROOT/$_path" pull "origin" "$_branch" --rebase --autostash
 }
 
 function _parse_arguments() {

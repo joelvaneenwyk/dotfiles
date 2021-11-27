@@ -43,9 +43,7 @@ Function Test-CommandValid {
     return $IsValid
 }
 
-
-function AddSymbolicLinkPermissions($accountToAdd) {
-
+Function AddSymbolicLinkPermissions($accountToAdd) {
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if (-not ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))) {
         Write-Host "Unable to add symbolic link privileges. Please run as administrator."

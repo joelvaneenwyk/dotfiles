@@ -1,1 +1,1 @@
-@dir /Q
+@dir /N /O
