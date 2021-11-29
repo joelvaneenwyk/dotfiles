@@ -26,7 +26,7 @@ if grep </proc/cpuinfo -q "^flags.*\ hypervisor"; then
         _root="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && pwd)"
         _setup_ubuntu="$_root/ubuntu/${VERSION_ID:-}/install.sh"
         if [ -f "$_setup_ubuntu" ]; then
-            "$_setup_ubuntu"
+            sudo bash "$_setup_ubuntu"
         else
             echo "❌ Failed to find setup script: '$_setup_ubuntu'"
         fi

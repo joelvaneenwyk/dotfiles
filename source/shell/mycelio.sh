@@ -977,12 +977,20 @@ function install_powershell() {
             if run_task "powershell.key.get" get_file "$MYCELIO_TEMP/$_packages_production" "$_url"; then
                 # Register the Microsoft repository GPG keys
                 run_command_sudo "dpkg.register.microsoft" dpkg -i "$MYCELIO_TEMP/$_packages_production"
+
                 # Update the list of products
                 run_command_sudo "apt.update" apt-get update
+
                 # Enable the "universe" repositories
                 run_command_sudo "apt.add.repository" add-apt-repository universe || true
+
                 # Install PowerShell
-                DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install.powershell" apt-get install -y powershell
+                if DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install.powershell" \
+                    apt-get install -y --no-install-recommends powershell; then
+                    echo "Installed PowerShell."
+                else
+                    echo "WARNING: Failed to install PowerShell."
+                fi
             fi
         fi
     else
