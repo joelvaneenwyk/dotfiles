@@ -1,12 +1,32 @@
 #!/bin/bash
 
-if [ ! -x "$(command -v git)" ]; then
-    sudo apt-get update
-    sudo apt install git
-fi
+use_sudo() {
+    if [ -x "$(command -v sudo)" ] && [ ! -x "$(command -v cygpath)" ]; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}
 
 _dotfiles="$HOME/dotfiles"
 _provision="$HOME/dotfiles/source/provisioning/setup.sh"
+
+# Keep track of whether or not XRDP is already installed
+if [ -x "$(command -v xrdp)" ]; then
+    _xrdp_installed=1
+else
+    _xrdp_installed=0
+fi
+
+if [ -x "$(command -v apt-get)" ]; then
+    use_sudo apt-get update
+    use_sudo apt-get install -y --no-install-recommends \
+        sudo git bash net-tools openssh-server
+fi
+
+if [ -x "$(command -v ufw)" ]; then
+    use_sudo ufw allow ssh
+fi
 
 if [ ! -d "$_dotfiles" ]; then
     git clone "https://github.com/joelvaneenwyk/dotfiles" "$_dotfiles"
@@ -19,13 +39,6 @@ fi
 if [ -f "/etc/os-release" ]; then
     # shellcheck disable=SC1091
     . "/etc/os-release"
-fi
-
-# Keep track of whether or not XRDP is already installed
-_xrdp_installed=0
-
-if [ -x "$(command -v xrdp)" ]; then
-    _xrdp_installed=1
 fi
 
 if grep </proc/cpuinfo -q "^flags.*\ hypervisor"; then
@@ -41,7 +54,7 @@ if grep </proc/cpuinfo -q "^flags.*\ hypervisor"; then
 
             /etc/init.d/xrdp restart
 
-            if [ "$_xrdp_installed" = "1" ]; then
+            if [ "$_xrdp_installed" = "0" ]; then
                 echo "XRDP install is complete. Please reboot your machine to begin using XRDP."
             fi
 
