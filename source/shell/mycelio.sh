@@ -2080,7 +2080,9 @@ function _initialize_environment() {
     fi
 
     task_group "Initialize Git Config" initialize_gitconfig
-    task_group "Update Git Repositories" update_repositories
+    if ! task_group "Update Git Repositories" update_repositories; then
+        echo "WARNING: Unable to update Git repositories. Continuing setup."
+    fi
 
     if [ "$MYCELIO_OS" = "linux" ] || [ "$MYCELIO_OS" = "windows" ]; then
         initialize_linux "$@"
