@@ -231,7 +231,7 @@ initialize_interactive_profile() {
     fi
 
     if [ -z "${_shell:-}" ]; then
-        _shell= "$(basename "$0")"
+        _shell="$(basename "$0")"
     fi
 
     if [ "$_shell" = "sh" ]; then
@@ -265,6 +265,7 @@ initialize_interactive_profile() {
     fi
 
     if [ -n "${BASH_VERSION:-}" ] && [ ! "$(command -v "_omp_hook")" = "0" ]; then
+        # shellcheck: disable=SC3045
         export -f _omp_hook >/dev/null 2>&1
     fi
 
