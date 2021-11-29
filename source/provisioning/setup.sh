@@ -27,6 +27,12 @@ if grep </proc/cpuinfo -q "^flags.*\ hypervisor"; then
         _setup_ubuntu="$_root/ubuntu/${VERSION_ID:-}/install.sh"
         if [ -f "$_setup_ubuntu" ]; then
             "$_setup_ubuntu"
+        else
+            echo "❌ Failed to find setup script: '$_setup_ubuntu'"
         fi
+    else
+        echo "Setup not supported on operating system: '${ID:-}'"
     fi
+else
+    echo "Skipped setup as not running in Hyper-V instance."
 fi

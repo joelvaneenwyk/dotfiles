@@ -1,4 +1,8 @@
 #!/bin/sh
+#
+# wget -qO- https://raw.githubusercontent.com/joelvaneenwyk/dotfiles/main/source/standalone/init.sh | bash
+# curl -sL https://raw.githubusercontent.com/joelvaneenwyk/dotfiles/main/source/standalone/init.sh | bash
+#
 
 use_sudo() {
     if [ -x "$(command -v sudo)" ] && [ ! -x "$(command -v cygpath)" ]; then
@@ -8,7 +12,7 @@ use_sudo() {
     fi
 }
 
-if [ ! -x "$(command -v git)" ]; then
+if [ ! -x "$(command -v git)" ] || [ ! -x "$(command -v bash)" ] || [ ! -x "$(command -v sudo)" ]; then
     if [ -x "$(command -v apt-get)" ]; then
         use_sudo apt-get update
         use_sudo apt-get install -y --no-install-recommends sudo git bash
