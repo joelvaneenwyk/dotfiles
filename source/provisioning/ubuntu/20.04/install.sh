@@ -93,13 +93,3 @@ ResultAny=no
 ResultInactive=no
 ResultActive=yes
 EOF
-
-# reconfigure the service
-systemctl daemon-reload
-systemctl start xrdp
-
-#
-# End XRDP
-###############################################################################
-
-echo "XRDP install is complete. Please reboot your machine to begin using XRDP."

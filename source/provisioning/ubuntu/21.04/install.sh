@@ -24,7 +24,7 @@ fi
 apt update && apt upgrade -y
 
 if [ -f /var/run/reboot-required ]; then
-    echo "A reboot is required in order to proceed with the install." >&2
+    echo "Reboot is required in order to proceed with the install." >&2
     echo "Please reboot and re-run this script to finish the install." >&2
     exit 1
 fi
@@ -33,12 +33,20 @@ fi
 # XRDP
 #
 
-# Install hv_kvp utils
-apt install -y linux-tools-virtual${HWE}
-apt install -y linux-cloud-tools-virtual${HWE}
+# Install hv_kvp utils and the xrdp service so we have the auto start behavior
+apt install -y --no-install-recommends \
+    linux-tools-virtual${HWE} \
+    linux-cloud-tools-virtual${HWE} \
+    xrdp \
+    net-tools
 
-# Install the xrdp service so we have the auto start behavior
-apt install -y xrdp
+ufw allow 3389/tcp
+
+if [ -x "$(command -v iptables)" ] && [ ! -x "$(command -v netfilter-persistent)" ]; then
+    iptables -A INPUT -p tcp --dport 3389 -j ACCEPT
+    netfilter-persistent save
+    netfilter-persistent reload
+fi
 
 systemctl stop xrdp
 systemctl stop xrdp-sesman
@@ -61,7 +69,7 @@ export GNOME_SHELL_SESSION_MODE=ubuntu
 export XDG_CURRENT_DESKTOP=ubuntu:GNOME
 exec /etc/xrdp/startwm.sh
 EOF
-    chmod a+x /etc/xrdp/startubuntu.sh
+    chmod a+x "/etc/xrdp/startubuntu.sh"
 fi
 
 # use the script to setup the ubuntu session
@@ -92,13 +100,3 @@ ResultAny=no
 ResultInactive=no
 ResultActive=yes
 EOF
-
-# reconfigure the service
-systemctl daemon-reload
-systemctl start xrdp
-
-#
-# End XRDP
-###############################################################################
-
-echo "XRDP install is complete. Please reboot your machine to begin using XRDP."
