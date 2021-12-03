@@ -234,43 +234,6 @@ initialize_interactive_profile() {
         _shell="$(basename "$0")"
     fi
 
-    if [ "$_shell" = "sh" ]; then
-        PS1='$(
-            printf "[mycelio] `whoami`@`hostname` | "
-            _pwd="${PWD:-}"
-            _pwd_home="${_pwd#${HOME:-}}"
-            if [ "$_pwd_home" = "$_pwd" ]; then
-                printf "$_pwd"
-            else
-                printf "~$_pwd_home"
-            fi
-            printf "\n$ "
-        )'
-    elif [ -x "$(command -v oh-my-posh)" ] && [ "$MYCELIO_OH_MY_POSH" = "1" ]; then
-        _theme="$HOME/.poshthemes/mycelio.omp.json"
-
-        if [ ! -f "$_theme" ]; then
-            if [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
-                _theme="$HOME/.poshthemes/stelbent.minimal.omp.json"
-            else
-                _theme=""
-            fi
-        fi
-
-        if [ -n "$_theme" ]; then
-            if ! eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")"; then
-                echo "❌ Failed to initialize Oh My Posh."
-            fi
-        fi
-    fi
-
-    if [ -n "${BASH_VERSION:-}" ] && [ ! "$(command -v "_omp_hook")" = "0" ]; then
-        # shellcheck: disable=SC3045
-        export -f _omp_hook >/dev/null 2>&1
-    fi
-
-    _log_debug "Initialized 'Oh My Posh' callback."
-
     if [ "${MYCELIO_OS_NAME:-}" = "Windows" ]; then
         if ! _parent="$(ps -p $$ --all | tail -n +2 | awk '{ print $8 }')"; then
             _parent="N/A"
@@ -282,8 +245,8 @@ initialize_interactive_profile() {
     alias mstow='perl -I "$MYCELIO_ROOT/source/stow/lib" "$MYCELIO_ROOT/source/stow/bin/stow"'
 
     alias gpgreset='gpg-connect-agent updatestartuptty /bye'
-    alias pgptest='source "$MYCELIO_ROOT/source/shell/pgptest.sh"'
-    alias gpgtest='source "$MYCELIO_ROOT/source/shell/pgptest.sh"'
+    alias pgptest='. "$MYCELIO_ROOT/source/shell/pgptest.sh"'
+    alias gpgtest='. "$MYCELIO_ROOT/source/shell/pgptest.sh"'
     alias cls='clear'
 
     ## Common typos
@@ -335,6 +298,7 @@ initialize_interactive_profile() {
         alias l='ls -CF --color=always'
     fi
 
+    echo ""
     echo "▓├═════════════════════════════════"
     echo "▓│"
     echo "▓│   ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓"
@@ -350,6 +314,43 @@ initialize_interactive_profile() {
     echo "  micro       Default text editor. Press 'F2' to save and 'F4' to exit."
     echo "  gpgtest     Validate that git commit signing will work with secret key"
     echo ""
+
+    if [ "$_shell" = "sh" ]; then
+        PS1='$(
+            printf "[mycelio] `whoami`@`hostname` | "
+            _pwd="${PWD:-}"
+            _pwd_home="${_pwd#${HOME:-}}"
+            if [ "$_pwd_home" = "$_pwd" ]; then
+                printf "$_pwd"
+            else
+                printf "~$_pwd_home"
+            fi
+            printf "\n$ "
+        )'
+    elif [ -x "$(command -v oh-my-posh)" ] && [ "$MYCELIO_OH_MY_POSH" = "1" ]; then
+        _theme="$HOME/.poshthemes/mycelio.omp.json"
+
+        if [ ! -f "$_theme" ]; then
+            if [ -f "$HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
+                _theme="$HOME/.poshthemes/stelbent.minimal.omp.json"
+            else
+                _theme=""
+            fi
+        fi
+
+        if [ -n "$_theme" ]; then
+            if ! eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")" >/dev/null 2>&1; then
+                echo "❌ Failed to initialize Oh My Posh."
+            else
+                _log_debug "Initialized 'Oh My Posh' callback."
+            fi
+        fi
+    fi
+
+    if [ -n "${BASH_VERSION:-}" ] && [ ! "$(command -v "_omp_hook")" = "0" ]; then
+        # shellcheck: disable=SC3045
+        export -f _omp_hook >/dev/null 2>&1
+    fi
 
     return 0
 }
@@ -587,6 +588,12 @@ initialize_profile() {
 }
 
 initialize() {
+    if [ "${MYCELIO_PROFILE_INITIALIZED:-}" = "1" ]; then
+        return
+    fi
+
+    export MYCELIO_PROFILE_INITIALIZED=1
+
     initialize_profile "$@"
 
     # If not running interactively, don't do anything else.

@@ -392,6 +392,9 @@ function run_sudo() {
 }
 
 function _load_profile() {
+    export MYCELIO_PROFILE_INITIALIZED=0
+    export MYCELIO_BASH_PROFILE_INITIALIZED=0
+
     if [[ $(type -t initialize_interactive_profile) == function ]]; then
         initialize_profile
         initialize_interactive_profile
@@ -703,7 +706,9 @@ function initialize_gitconfig() {
 
     if [ -x "$(command -v gpgconf)" ]; then
         run_command "gpgconf.kill" gpgconf --kill gpg-agent
-        run_command "gpgconf.reload" gpgconf --reload
+        if run_command "gpgconf.reload" gpgconf --reload; then
+            echo "Reloaded 'gpgconf' tool."
+        fi
     fi
 
     if [ -x "$(command -v gpg-connect-agent)" ]; then
@@ -925,18 +930,18 @@ function install_fzf {
     fi
 
     if [ ! -x "$(command -v git)" ]; then
-        log_error "Failed to install 'fzf' extension. Required 'git' tool missing."
-        return 1
+        echo "⚠ WARNING: Failed to install 'fzf' extension. Required 'git' tool missing."
+        return 0
     fi
 
     if [ ! -f "$MYCELIO_GOEXE" ]; then
-        log_error "Failed to install 'fzf' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
-        return 2
+        echo "⚠ WARNING: Failed to install 'fzf' extension. Missing 'go' compiler: '$MYCELIO_GOEXE'"
+        return 0
     fi
 
     if [ ! -x "$(command -v make)" ]; then
-        log_error "Failed to install 'fzf' extension. Required 'make' tool missing."
-        return 3
+        echo "⚠ WARNING: Failed to install 'fzf' extension. Required 'make' tool missing."
+        return 0
     fi
 
     mkdir -p "$_fzf_root"

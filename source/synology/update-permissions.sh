@@ -20,8 +20,11 @@ function _update_permissions() {
 
     if is_synology; then
         if [ -d "$_target" ]; then
-            sudo chown -R "$(whoami):users" "$_target"
-            echo "✔ Made '$(whoami)' owner: '$_target'" | tee -a "$MYCELIO_LOG_PATH"
+            if sudo chown -R "$(whoami):users" "$_target"; then
+                echo "✔ Made '$(whoami)' owner: '$_target'" | tee -a "$MYCELIO_LOG_PATH"
+            else
+                echo "❌ Unable to change owner: '$_target'" | tee -a "$MYCELIO_LOG_PATH"
+            fi
 
             if sudo chmod -R 777 "$_target"; then
                 echo "✔ Set permissions: '$_target'" | tee -a "$MYCELIO_LOG_PATH"

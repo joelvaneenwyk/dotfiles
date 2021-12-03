@@ -153,6 +153,12 @@ function _initialize_interactive_bash_profile() {
 }
 
 function _initialize_bash_profile() {
+    if [ "${MYCELIO_BASH_PROFILE_INITIALIZED:-}" = "1" ]; then
+        return
+    fi
+
+    export MYCELIO_BASH_PROFILE_INITIALIZED=1
+
     # We alias 'grep' in '.profile' so initialize Synology first
     if uname -a | grep -q "synology"; then
         _initialize_synology
