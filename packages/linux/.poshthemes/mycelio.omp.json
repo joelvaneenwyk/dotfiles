@@ -95,27 +95,19 @@
                         "display_host": true,
                         "ssh_icon": "[SSH] "
                     }
-                },
-                {
+                },{
+                    // We intentionally do not specify a background because otherwise the color
+                    // continues to the prompt even if we reset it in the next block.
                     "type": "path",
-                    "style": "plain",
-                    "powerline_symbol": "\ue0b0",
-                    "foreground": "#100e23",
-                    "background": "#91ddff",
+                    "style": "powerline",
+                    "foreground": "#bbbbbb",
                     "properties": {
                         "style": "agnoster_full",
                         "max_depth": 4,
-                        "enable_hyperlink": false
+                        "enable_hyperlink": true
                     }
-                },
-                {
-                    "type": "terraform",
-                    "style": "powerline",
-                    "powerline_symbol": "\ue0b0",
-                    "foreground": "#100e23",
-                    "background": "#ffee58"
-                },
-                {
+                }
+                ,{
                     "type": "exit",
                     "style": "powerline",
                     "foreground": "#ffffff",
@@ -129,6 +121,32 @@
                         "always_enabled": true,
                         "template": "\uE23A",
                         "prefix": "<#193549>\uE0B0</> "
+                    }
+                }
+                ,{
+                    "type": "text",
+                    "style": "plain",
+                    "foreground": "#a3a3a3",
+                    "background": "black",
+                    "properties": {
+                        "prefix": "",
+                        "postfix": "",
+                        "text": "]"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "prompt",
+            "alignment": "right",
+            "segments": [{
+                    "type": "text",
+                    "style": "plain",
+                    "foreground": "#a3a3a3",
+                    "properties": {
+                        "prefix": "",
+                        "postfix": "",
+                        "text": "|"
                     }
                 }
             ]

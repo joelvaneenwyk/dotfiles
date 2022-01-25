@@ -415,12 +415,23 @@ initialize_profile() {
     # Setup XServer for Windows. This assumes you have a working XServer and PulseAudio configuration
     # running on the Windows host machine.
     if grep -qEi "(Microsoft|WSL)" /proc/version >/dev/null 2>&1; then
-        # Get the IP Address of the Windows 10 host machine.
-        HOST_IP=$(host $(hostname) | grep -oP '(\s)\d+(\.\d+){3}' | tail -1 | awk '{ print $NF }' | tr -d '\r')
-        export LIBGL_ALWAYS_INDIRECT=1
-        export DISPLAY=$HOST_IP:0.0
-        export NO_AT_BRIDGE=1
-        export PULSE_SERVER=tcp:$HOST_IP
+        # Get the IP Address of the Windows host machine.
+        export HOST_IP="$(
+            host $(hostname) |
+                grep -oP '(\s)\d+(\.\d+){3}' |
+                tail -1 |
+                awk '{ print $NF }' |
+                tr -d '\r'
+        )"
+
+        # These are no longer necessary to get display working in WSL as there
+        # is now native support for graphics applications using WSLg so we can
+        # disable all of these.
+        # export LIBGL_ALWAYS_INDIRECT=1
+        # export DISPLAY=$HOST_IP:0.0
+        # export NO_AT_BRIDGE=1
+        # export PULSE_SERVER=tcp:$HOST_IP
+        :
     fi
 
     # We do this near the beginning because Synology may not even define "HOME" variable
