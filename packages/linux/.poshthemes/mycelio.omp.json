@@ -50,26 +50,38 @@
                     "properties": {
                         "prefix": "",
                         "postfix": "",
-                        "text": "\u250c mycelio 🍄"
+                        "text": "\u250c"
+                    }
+                }, {
+                    "type": "text",
+                    "style": "powerline",
+                    "foreground": "#a3a3a3",
+                    "properties": {
+                        "prefix": " ",
+                        "postfix": " ",
+                        "text": "MY∈"
                     }
                 }, {
                     "type": "os",
                     "style": "plain",
-                    "foreground": "#757575",
+                    "foreground": "#e4e4e4",
+                    "background": "#0077c2",
                     "properties": {
                         "color_background": true,
-                        "prefix": " | ",
-                        "postfix": " \uE0B1",
+                        "prefix": " ",
+                        "postfix": " ",
                         "display_distro_name": true,
                         "macos": "mac"
                     }
                 }, {
                     "type": "shell",
                     "style": "powerline",
+                    "invert_powerline": true,
                     "powerline_symbol": "\uE0B0",
-                    "foreground": "#ffffff",
+                    "foreground": "#e4e4e4",
                     "background": "#0077c2",
                     "properties": {
+                        "color_background": true,
                         "mapped_shell_names": {
                             "pwsh": "PS"
                         }
@@ -86,7 +98,7 @@
                 },
                 {
                     "type": "path",
-                    "style": "powerline",
+                    "style": "plain",
                     "powerline_symbol": "\ue0b0",
                     "foreground": "#100e23",
                     "background": "#91ddff",
@@ -94,40 +106,6 @@
                         "style": "agnoster_full",
                         "max_depth": 4,
                         "enable_hyperlink": false
-                    }
-                },
-                {
-                    "type": "git",
-                    "style": "powerline",
-                    "powerline_symbol": "\ue0b0",
-                    "foreground": "#100e23",
-                    "background": "#95ffa4",
-                    "properties": {
-                        "display_status_detail": false,
-                        "display_status": false,
-                        "display_stash_count": false,
-                        "display_upstream_icon": false,
-                        "branch_ahead_icon": "\u2191",
-                        "branch_behind_icon": "\u2193",
-                        "branch_gone": "\u2262",
-                        "branch_icon": "\ue0a0 ",
-                        "branch_identical_icon": "\u2261",
-                        "cherry_pick_icon": "\u2713 ",
-                        "color_background": true,
-                        "commit_icon": "\u25b7 ",
-                        "local_staged_icon": "",
-                        "local_working_icon": "",
-                        "merge_icon": "\u25f4 ",
-                        "no_commits_icon": "[no commits]",
-                        "rebase_icon": "\u2c62 ",
-                        "stash_count_icon": "",
-                        "status_colors_enabled": true,
-                        "status_separator_icon": " \u2502",
-                        "tag_icon": "\u25b6 ",
-                        "local_changes_color": "#ff9248",
-                        "ahead_and_behind_color": "#f26d50",
-                        "behind_color": "#f17c37",
-                        "ahead_color": "#89d1dc"
                     }
                 },
                 {
@@ -140,14 +118,17 @@
                 {
                     "type": "exit",
                     "style": "powerline",
-                    "powerline_symbol": "\ue0b0",
                     "foreground": "#ffffff",
                     "background": "#ff8080",
+                    "background_templates": [
+                        "{{ if gt .Code 0 }}#e91e63{{ end }}"
+                    ],
+                    "leading_diamond": "",
+                    "trailing_diamond": "\uE0B4",
                     "properties": {
-                        "display_exit_code": true,
-                        "prefix": " ",
-                        "postfix": " ",
-                        "error_icon": "error"
+                        "always_enabled": true,
+                        "template": "\uE23A",
+                        "prefix": "<#193549>\uE0B0</> "
                     }
                 }
             ]

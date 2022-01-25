@@ -793,6 +793,7 @@ function install_oh_my_posh {
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -rf "$_oh_my_posh_tmp"
+        rm -f "$_oh_my_posh_exe"
     fi
 
     if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
@@ -873,7 +874,7 @@ function install_oh_my_posh {
         if [ -f "$MYCELIO_GOEXE" ]; then
             mkdir -p "$_oh_my_posh_tmp"
             rm -rf "$_oh_my_posh_tmp"
-            run_task "oh-my-posh.git.clone" git -c advice.detachedHead=false clone -b "v3.175.0" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
+            run_task "oh-my-posh.git.clone" git -c advice.detachedHead=false clone -b "v7.5.1" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
 
             if (
                 cd "$_oh_my_posh_tmp/src"
@@ -1149,7 +1150,7 @@ function install_go {
     fi
 
     if [ "$_go_requires_update" = "1" ]; then
-        _go_version="1.$_go_required_version_major.1"
+        _go_version="1.$_go_required_version_major.6"
         _go_compiled=0
 
         if [ ! -x "$(command -v gcc)" ] && [ ! -x "$(command -v make)" ]; then

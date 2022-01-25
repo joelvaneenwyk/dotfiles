@@ -154,11 +154,6 @@ _initialize_synology() {
     fi
 }
 
-# This is a stub for Oh My Posh in case it fails to initialize.
-_omp_hook() {
-    :
-}
-
 initialize_interactive_profile() {
     _log_debug "Initializing interactive profile."
 
@@ -345,11 +340,6 @@ initialize_interactive_profile() {
                 _log_debug "Initialized 'Oh My Posh' callback."
             fi
         fi
-    fi
-
-    if [ -n "${BASH_VERSION:-}" ] && [ ! "$(command -v "_omp_hook")" = "0" ]; then
-        # shellcheck: disable=SC3045
-        export -f _omp_hook >/dev/null 2>&1
     fi
 
     return 0

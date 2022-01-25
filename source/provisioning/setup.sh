@@ -21,7 +21,7 @@ fi
 if [ -x "$(command -v apt-get)" ]; then
     use_sudo apt-get update
     use_sudo apt-get install -y --no-install-recommends \
-        sudo git bash net-tools openssh-server
+        sudo git bash net-tools openssh-server netfilter-persistent
 fi
 
 if [ -x "$(command -v ufw)" ]; then

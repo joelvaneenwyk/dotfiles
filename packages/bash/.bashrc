@@ -171,6 +171,12 @@ function _initialize_bash_profile() {
         . "$HOME/.profile" "$@"
     fi
 
+    if [ -e "/usr/local/texlive/2021" ]; then
+        export PATH=/usr/local/texlive/2021/bin/x86_64-linux${PATH:+:${PATH}}
+        export INFOPATH=/usr/local/texlive/2021/texmf-dist/doc/info${INFOPATH:+:${INFOPATH}}
+        export MANPATH=/usr/local/texlive/2021/texmf-dist/doc/man${MANPATH:+:${MANPATH}}
+    fi
+
     if [ -f "${MYCELIO_ROOT:-}/setup.sh" ]; then
         MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
         export MYCELIO_ROOT
