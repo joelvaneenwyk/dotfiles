@@ -111,7 +111,7 @@
                     "type": "exit",
                     "style": "powerline",
                     "foreground": "#ffffff",
-                    "background": "#ff8080",
+                    "background": "#00d624",
                     "background_templates": [
                         "{{ if gt .Code 0 }}#e91e63{{ end }}"
                     ],
@@ -119,7 +119,7 @@
                     "trailing_diamond": "\uE0B4",
                     "properties": {
                         "always_enabled": true,
-                        "template": "\uE23A",
+                        "template": "",
                         "prefix": "<#193549>\uE0B0</> "
                     }
                 }
@@ -127,7 +127,6 @@
                     "type": "text",
                     "style": "plain",
                     "foreground": "#a3a3a3",
-                    "background": "black",
                     "properties": {
                         "prefix": "",
                         "postfix": "",
@@ -142,7 +141,7 @@
             "segments": [{
                     "type": "text",
                     "style": "plain",
-                    "foreground": "#a3a3a3",
+                    "foreground": "#d3d3d3",
                     "properties": {
                         "prefix": "",
                         "postfix": "",
