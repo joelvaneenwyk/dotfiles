@@ -136,7 +136,7 @@
             "icon": "terminal-powershell"
         }
     },
-
+    "terminal.integrated.scrollback": 20000,
     "terminal.integrated.defaultProfile.linux": "bash",
     "terminal.integrated.profiles.linux": {
         "sh": {
@@ -149,7 +149,7 @@
             "path": "sh",
             "args": [
                 "-c",
-                "bash"
+                "set -x && . ~/.profile && bash"
             ],
             "icon": "terminal-bash"
         },

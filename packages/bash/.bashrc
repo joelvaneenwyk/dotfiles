@@ -153,12 +153,6 @@ function _initialize_interactive_bash_profile() {
 }
 
 function _initialize_bash_profile() {
-    if [ "${MYCELIO_BASH_PROFILE_INITIALIZED:-}" = "1" ]; then
-        return
-    fi
-
-    export MYCELIO_BASH_PROFILE_INITIALIZED=1
-
     # We alias 'grep' in '.profile' so initialize Synology first
     if uname -a | grep -q "synology"; then
         _initialize_synology
@@ -182,15 +176,21 @@ function _initialize_bash_profile() {
         export MYCELIO_ROOT
     fi
 
-    # If not running interactively, don't do anything else.
-    case $- in
-    *i*) ;;
-    *)
-        return
-        ;;
-    esac
+    if [ -e "${HOME:-}/.iterm2_shell_integration.bash" ]; then
+        # shellcheck disable=SC1090,SC1091
+        . "${HOME}/.iterm2_shell_integration.bash"
+    fi
 
-    _initialize_interactive_bash_profile
+    if [ -f "${HOME:-}/.linuxbrew/bin/brew" ]; then
+        # shellcheck disable=SC1090,SC1091
+        eval "$("${HOME}/.linuxbrew/bin/brew" shellenv)"
+    fi
+
+    if [ -n "${PS1:-}" ]; then
+        _initialize_interactive_bash_profile
+    fi
+
+    export MYCELIO_BASH_PROFILE_INITIALIZED=1
 }
 
 _initialize_bash_profile "$@"

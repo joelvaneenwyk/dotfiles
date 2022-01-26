@@ -14,13 +14,3 @@ if [ -n "${BASH_VERSION:-}" ] && [ -f "${HOME:-}/.bashrc" ]; then
 else
     echo "Failed to load both '.profile' and '.bashrc' files."
 fi
-
-if [ -e "${HOME:-}/.iterm2_shell_integration.bash" ]; then
-    # shellcheck disable=SC1090,SC1091
-    . "${HOME}/.iterm2_shell_integration.bash"
-fi
-
-if [ -f "${HOME:-}/.linuxbrew/bin/brew" ]; then
-    # shellcheck disable=SC1090,SC1091
-    eval "$("${HOME}/.linuxbrew/bin/brew" shellenv)"
-fi

@@ -415,14 +415,17 @@ initialize_profile() {
     # Setup XServer for Windows. This assumes you have a working XServer and PulseAudio configuration
     # running on the Windows host machine.
     if grep -qEi "(Microsoft|WSL)" /proc/version >/dev/null 2>&1; then
+        # This was disabled January 2022 as it is very slow and causes a hang when you
+        # load a new prompt. Ideally this is a separate script you run as needed.
+
         # Get the IP Address of the Windows host machine.
-        export HOST_IP="$(
-            host $(hostname) |
-                grep -oP '(\s)\d+(\.\d+){3}' |
-                tail -1 |
-                awk '{ print $NF }' |
-                tr -d '\r'
-        )"
+        #export HOST_IP="$(
+        #    host $(hostname) |
+        #        grep -oP '(\s)\d+(\.\d+){3}' |
+        #        tail -1 |
+        #        awk '{ print $NF }' |
+        #        tr -d '\r'
+        #)"
 
         # These are no longer necessary to get display working in WSL as there
         # is now native support for graphics applications using WSLg so we can
@@ -579,6 +582,10 @@ initialize_profile() {
 
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
 
+    if [ -f "${HOME:-}/.cargo/env" ]; then
+        . "$HOME/.cargo/env"
+    fi
+
     _log_debug "Added paths to environment."
 
     # Clear out TMP as TEMP may come from Windows and we do not want tools confused
@@ -589,23 +596,14 @@ initialize_profile() {
 }
 
 initialize() {
-    if [ "${MYCELIO_PROFILE_INITIALIZED:-}" = "1" ]; then
-        return
-    fi
-
-    export MYCELIO_PROFILE_INITIALIZED=1
-
     initialize_profile "$@"
 
     # If not running interactively, don't do anything else.
-    case $- in
-    *i*) ;;
-    *)
-        return
-        ;;
-    esac
+    if [ -n "${PS1:-}" ]; then
+        initialize_interactive_profile "$@"
+    fi
 
-    initialize_interactive_profile "$@"
+    export MYCELIO_PROFILE_INITIALIZED=1
 }
 
 initialize "$@"
