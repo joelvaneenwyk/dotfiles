@@ -4,6 +4,7 @@ if not functions -q fundle; eval (curl -sfL https://git.io/fundle-install); end
 fundle plugin 'fisherman/getopts'
 fundle plugin 'fisherman/fzf'
 fundle plugin 'fisherman/z'
+fundle plugin 'edc/bass'
 fundle init
 
 # suppress fish greeting
@@ -23,6 +24,8 @@ if test -d $HOME/.config/git-fuzzy
 end
 
 set -gx PATH ./node_modules/.bin $PATH
+
+set -gx PATH /usr/local/opt/openssl@1.1/bin $PATH
 
 # color stderr in red
 set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
@@ -87,4 +90,9 @@ if type -q asdf
     source /usr/local/opt/asdf/asdf.fish
 end
 
+# install google cloud sdk
+if test -d ~/Tools/google-cloud-sdk
+    bass source ~/Tools/google-cloud-sdk/path.bash.inc
+    bass source ~/Tools/google-cloud-sdk/completion.bash.inc
+end
 
