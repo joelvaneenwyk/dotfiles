@@ -16,7 +16,6 @@ brew "ripgrep"
 brew "stow"
 
 cask "arq"
-cask "bitwarden"
 cask "dropbox"
 cask "font-jetbrains-mono"
 cask "fsnotes"
