@@ -4,21 +4,14 @@
     "terminal.external.osxExec": "iTerm.app",
     "terminal.integrated.copyOnSelection": true,
     "terminal.integrated.automationShell.osx": "/bin/bash",
-    "vscode-neovim.neovimPath": "/usr/local/bin/nvim",
     "git.autofetch": true,
     "ruby.useBundler": true,
-    "window.zoomLevel": 0,
     "diffEditor.ignoreTrimWhitespace": true,
     "editor.tabSize": 2,
     "workbench.colorTheme": "Monokai",
-    "terminal.integrated.shell.osx": "/usr/local/bin/fish",
-    "terminal.integrated.shellArgs.osx": [
-        "-l"
-    ],
     "diffEditor.renderSideBySide": false,
     "dart.debugExternalLibraries": true,
     "dart.debugSdkLibraries": true,
-    "dart.openDevTools": "flutter",
     "files.exclude": {
         "**/.classpath": true,
         "**/.project": true,
@@ -32,5 +25,19 @@
     "editor.fontSize": 11,
     "terminal.integrated.fontSize": 11,
     "workbench.startupEditor": "none",
-    "terminal.integrated.tabs.enabled": false
+    "terminal.integrated.tabs.enabled": false,
+    "cmake.configureOnOpen": true,
+    "terminal.integrated.profiles.osx": {
+        "fish": {
+            "path": "fish",
+            "args": [
+                "-l"
+            ]
+        }
+    },
+    "terminal.integrated.defaultProfile.osx": "fish",
+    "vscode-neovim.neovimExecutablePaths.darwin": "/usr/local/bin/nvim",
+    "terminal.integrated.enablePersistentSessions": false,
+    "dart.debugExternalPackageLibraries": true,
+    "dart.flutterSdkPath": "/Users/jdve/.asdf/installs/flutter/2.5.3"
 }
