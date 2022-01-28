@@ -5,6 +5,8 @@ fundle plugin 'fisherman/getopts'
 fundle plugin 'fisherman/fzf'
 fundle plugin 'fisherman/z'
 fundle plugin 'edc/bass'
+fundle plugin 'orefalo/grc'
+fundle plugin 'mattgreen/lucid.fish'
 fundle init
 
 # suppress fish greeting
