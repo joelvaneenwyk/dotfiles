@@ -1,0 +1,18 @@
+{
+    "font_size": 15,
+    "ignored_packages":
+    [
+        "Markdown",
+        "Vintage",
+    ],
+    "color_scheme": "Mariana.sublime-color-scheme",
+    "draw_white_space": ["all"],
+    "font_face": "PragmataPro Mono Liga",
+    "font_options": [
+        "dlig"
+    ],
+    "show_encoding": true,
+    "update_check": false,
+    "hardware_acceleration": "opengl",
+    "trim_trailing_white_space_on_save": "all",
+}
