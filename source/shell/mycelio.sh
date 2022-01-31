@@ -545,7 +545,7 @@ function _stow_internal() {
         fi
 
         if [ -f "$_source" ] || [ -d "$_source" ]; then
-            if ln -s "$_source" "$_target"; then
+            if ln -s "$_source" "$_target" >/dev/null 2>&1; then
                 echo "✔ Stowed target: '$_target'"
             else
                 log_error "Unable to stow target: '$_target'"
@@ -1215,7 +1215,7 @@ function install_go {
                             export GO_LDFLAGS="--subsystem,console"
                         fi
 
-                        run_task "go.bootstrap.make" cmd /c "make.bat"
+                        run_task "go.bootstrap.make" cmd "\/d" "\/c" "$_local_go_bootstrap_root/src/make.bat"
                     else
                         run_task "go.bootstrap.make" ./make.bash
                     fi
@@ -1258,7 +1258,7 @@ function install_go {
                     export GOHOSTARCH
 
                     if [ -x "$(command -v cygpath)" ]; then
-                        run_task "go.make" cmd /c "make.bat"
+                        run_task "go.make" cmd "\/d" "\/c" "$_local_go_root/src/make.bat"
                     else
                         run_task "go.make" ./make.bash
                     fi
