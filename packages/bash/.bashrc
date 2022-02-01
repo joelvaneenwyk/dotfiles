@@ -153,6 +153,10 @@ function _initialize_interactive_bash_profile() {
 }
 
 function _initialize_bash_profile() {
+    # Clear out prompt command to start so that we do not end up with an
+    # unknown function (e.g., '_omp_hook') being called after every call.
+    unset PROMPT_COMMAND
+
     # We alias 'grep' in '.profile' so initialize Synology first
     if uname -a | grep -q "synology"; then
         _initialize_synology

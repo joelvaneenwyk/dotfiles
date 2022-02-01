@@ -293,22 +293,24 @@ initialize_interactive_profile() {
         alias l='ls -CF --color=always'
     fi
 
-    echo ""
-    echo "▓├═════════════════════════════════"
-    echo "▓│"
-    echo "▓│   ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓"
-    echo "▓│   ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃"
-    echo "▓│   ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛"
-    echo "▓│"
-    echo "▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
-    echo ""
-    echo "Initialized '${MYCELIO_OS_NAME:-UNKNOWN}:${MYCELIO_OS_VARIANT:-UNKNOWN}' environment: '${MYCELIO_ROOT:-}'"
-    echo "Parent Process: '$_parent'"
-    echo ""
-    echo "  refresh     Try to pull latest 'dotfiles' and reload profile"
-    echo "  micro       Default text editor. Press 'F2' to save and 'F4' to exit."
-    echo "  gpgtest     Validate that git commit signing will work with secret key"
-    echo ""
+    if [ -z "${MYCELIO_PROFILE_INITIALIZED:-}" ]; then
+        echo ""
+        echo "▓├═════════════════════════════════"
+        echo "▓│"
+        echo "▓│   ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓"
+        echo "▓│   ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃"
+        echo "▓│   ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛"
+        echo "▓│"
+        echo "▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
+        echo ""
+        echo "Initialized '${MYCELIO_OS_NAME:-UNKNOWN}:${MYCELIO_OS_VARIANT:-UNKNOWN}' environment: '${MYCELIO_ROOT:-}'"
+        echo "Parent Process: '$_parent'"
+        echo ""
+        echo "  refresh     Try to pull latest 'dotfiles' and reload profile"
+        echo "  micro       Default text editor. Press 'F2' to save and 'F4' to exit."
+        echo "  gpgtest     Validate that git commit signing will work with secret key"
+        echo ""
+    fi
 
     if [ "$_shell" = "sh" ]; then
         PS1='$(
@@ -522,7 +524,7 @@ initialize_profile() {
 
     # Define a default for this as it is used by Oh My Posh and we do not want an
     # error due to undefined access.
-    export PROMPT_COMMAND=${PROMPT_COMMAND:-""}
+    unset PROMPT_COMMAND
 
     export LD_PRELOAD=
 
@@ -607,3 +609,4 @@ initialize() {
 }
 
 initialize "$@"
+export PATH="/home/jvaneenwyk/.havok/tools:$PATH"
