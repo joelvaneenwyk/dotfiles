@@ -300,7 +300,7 @@
         "packages/micro/.config/micro/**",
         "packages/macos/Library/**",
         "test/bats/**",
-        "test/test_helper/bats-assert/**",
+        "test/test_helper/**",
         ".Xresources",
         ".xmobarrc",
         ".travis.yml"

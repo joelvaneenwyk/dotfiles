@@ -142,9 +142,9 @@ Function Update-Environment() {
     param()
 
     $ScriptPath = Get-ScriptDirectory
-    $root = Resolve-Path -Path "$ScriptPath\..\.."
+    $root = Resolve-Path -Path "$ScriptPath\..\..\..\.."
 
-    Write-Host "Root: $root"
+    Write-Host "Root: '$root'"
 
     $environmentVariables = @()
     $environmentVariables += "$root"
@@ -219,11 +219,10 @@ Function Update-Terminal() {
         $fontName = "JetBrainsMono NF"
         Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue >$null
         if ($?) {
-            $currentFont = Get-ConsoleFont -ErrorAction SilentlyContinue
+            $currentFont = Get-ConsoleFont -ErrorAction SilentlyContinue >$null
             if (($null -ne $currentFont) -and ($currentFont.Name -ne $fontName) -and $PSCmdlet.ShouldProcess('Terminal')) {
                 Set-ConsoleFont "$fontName" >$null
-                Write-Host "Previous font: '$currentFont.Name'"
-                Write-Host "Updated font: '$fontName'"
+                Write-Host "Updated font from '$currentFont.Name' -> '$fontName'"
             }
         }
 
