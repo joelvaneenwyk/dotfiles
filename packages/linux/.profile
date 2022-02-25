@@ -535,6 +535,11 @@ initialize_profile() {
         . "$HOME/.cargo/env"
     fi
 
+    if [ -f "$HOME/.config/profile.sh" ]; then
+        # shellcheck disable=SC1091
+        . "$HOME/.config/profile.sh"
+    fi
+
     _set_golang_paths
 
     # Must NOT include /mingw64/bin as we want to rely on the system environment setup

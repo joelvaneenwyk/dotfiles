@@ -1,4 +1,5 @@
 \.config/fish/functions/fundle\.fish
 \.config/fish/functions/fzf_key_bindings\.fish
 \.config/fish/fish_variables
+\.config/fish/config\.fish
 \.local/
