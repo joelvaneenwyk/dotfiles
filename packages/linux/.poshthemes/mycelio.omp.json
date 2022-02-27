@@ -79,7 +79,7 @@
                     "invert_powerline": true,
                     "powerline_symbol": "\uE0B0",
                     "foreground": "#e4e4e4",
-                    "background": "#0077c2",
+                    "background": "#746800",
                     "properties": {
                         "color_background": true,
                         "mapped_shell_names": {
@@ -87,6 +87,19 @@
                         }
                     }
                 }, {
+                    "type": "python",
+                    "style": "powerline",
+                    "powerline_symbol": "\uE0B0",
+                    "foreground": "#100e23",
+                    "background": "#906cff",
+                    "properties": {
+                        "prefix": " Python ",
+                        "display_mode": "always",
+                        "fetch_virtual_env": false,
+                        "template": " \uE235 {{ if .Error }}{{ .Error }}{{ else }}{{ if .Venv }}{{ .Venv }} {{ end }}{{ .Full }}{{ end }} "
+                    }
+                },
+                {
                     "type": "session",
                     "style": "plain",
                     "foreground": "#757575",
@@ -95,7 +108,8 @@
                         "display_host": true,
                         "ssh_icon": "[SSH] "
                     }
-                },{
+                },
+                {
                     // We intentionally do not specify a background because otherwise the color
                     // continues to the prompt even if we reset it in the next block.
                     "type": "path",
@@ -106,8 +120,8 @@
                         "max_depth": 4,
                         "enable_hyperlink": true
                     }
-                }
-                ,{
+                },
+                {
                     "type": "exit",
                     "style": "powerline",
                     "foreground": "#ffffff",
@@ -122,8 +136,8 @@
                         "template": "",
                         "prefix": "<#193549>\uE0B0</> "
                     }
-                }
-                ,{
+                },
+                {
                     "type": "text",
                     "style": "plain",
                     "foreground": "#a3a3a3",
@@ -139,16 +153,15 @@
             "type": "prompt",
             "alignment": "right",
             "segments": [{
-                    "type": "text",
-                    "style": "plain",
-                    "foreground": "#d3d3d3",
-                    "properties": {
-                        "prefix": "",
-                        "postfix": "",
-                        "text": "|"
-                    }
+                "type": "text",
+                "style": "plain",
+                "foreground": "#d3d3d3",
+                "properties": {
+                    "prefix": "",
+                    "postfix": "",
+                    "text": "|"
                 }
-            ]
+            }]
         },
         {
             "type": "prompt",

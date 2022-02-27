@@ -180,6 +180,18 @@ function _initialize_bash_profile() {
         export MYCELIO_ROOT
     fi
 
+    if [ -x "$(command -v pyenv)" ]; then
+        alias brew='env PATH="${PATH//$(pyenv root)\/shims:/}" brew'
+
+        case "$(uname -s)" in
+        Darwin*)
+            export PYENV_ROOT="$HOME/.pyenv"
+            export PATH="$PYENV_ROOT/bin:$PATH"
+            eval "$(pyenv init -)"
+            ;;
+        esac
+    fi
+
     if [ -e "${HOME:-}/.iterm2_shell_integration.bash" ]; then
         # shellcheck disable=SC1090,SC1091
         . "${HOME}/.iterm2_shell_integration.bash"

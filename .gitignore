@@ -59,3 +59,5 @@ log.txt
 # Generated files
 *.stackdump
 texput.log
+
+.DS_Store

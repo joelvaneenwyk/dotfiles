@@ -527,6 +527,8 @@ initialize_profile() {
     unset PROMPT_COMMAND
 
     export LD_PRELOAD=
+    export HOMEBREW_NO_ENV_HINTS=1
+    export BASH_SILENCE_DEPRECATION_WARNING=1
 
     _log_debug "Detected operating system and hardware details."
 

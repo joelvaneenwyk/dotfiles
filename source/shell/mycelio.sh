@@ -795,9 +795,10 @@ function install_oh_my_posh {
     _oh_my_posh_tmp="$MYCELIO_TEMP/oh_my_posh"
     _oh_my_posh_exe="$MYCELIO_GOBIN/oh-my-posh$MYCELIO_OS_APP_EXTENSION"
 
-    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
+    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ] && [ -f "$_oh_my_posh_exe" ]; then
         rm -rf "$_oh_my_posh_tmp"
         rm -f "$_oh_my_posh_exe"
+        echo "Removed oh-my-posh binary: '$_oh_my_posh_exe'"
     fi
 
     if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
@@ -878,7 +879,7 @@ function install_oh_my_posh {
         if [ -f "$MYCELIO_GOEXE" ]; then
             mkdir -p "$_oh_my_posh_tmp"
             rm -rf "$_oh_my_posh_tmp"
-            run_task "oh-my-posh.git.clone" git -c advice.detachedHead=false clone -b "v7.5.1" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
+            run_task "oh-my-posh.git.clone" git -c advice.detachedHead=false clone -b "v7.26.0" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
 
             if (
                 cd "$_oh_my_posh_tmp/src"
@@ -1649,10 +1650,11 @@ function initialize_macos() {
     # dependencies needed for this step.
     initialize_linux
 
-    run_task 'configure.dock' configure_macos_dock
-    run_task 'configure.finder' configure_macos_finder
-    run_task 'configure.apps' configure_macos_apps
-    run_task 'configure.system' configure_macos_system
+    # Disabled temporarily while settings are still in flux
+    # run_task 'configure.dock' configure_macos_dock
+    # run_task 'configure.finder' configure_macos_finder
+    # run_task 'configure.apps' configure_macos_apps
+    # run_task 'configure.system' configure_macos_system
 }
 
 function configure_macos_apps() {
