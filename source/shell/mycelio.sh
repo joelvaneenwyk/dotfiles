@@ -1412,7 +1412,7 @@ function generate_gnugp_config() {
         if [ -f "${_pin_entry:-}" ]; then
             # Must use double quotes and not single quotes here or it fails
             echo "pinentry-program \"$_pin_entry\"" | tee -a "$_gnupg_config_root/gpg-agent.conf"
-        else
+        elif [ -n "${_pin_entry:-}" ]; then
             log_error "Failed to find pinentry program: '$_pin_entry'"
         fi
         echo "Created config from template: '$_gnupg_config_root/gpg-agent.conf'"

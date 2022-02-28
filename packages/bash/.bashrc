@@ -186,7 +186,7 @@ function _initialize_bash_profile() {
         case "$(uname -s)" in
         Darwin*)
             export PYENV_ROOT="$HOME/.pyenv"
-            export PATH="$PYENV_ROOT/bin:$PATH"
+            export PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
             eval "$(pyenv init -)"
             ;;
         esac

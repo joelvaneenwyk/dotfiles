@@ -102,7 +102,7 @@
         }
     },
 
-    "terminal.integrated.defaultProfile.osx": "fish",
+    "terminal.integrated.defaultProfile.osx": "bash",
     "terminal.integrated.profiles.osx": {
         "sh": {
             "path": "sh",
