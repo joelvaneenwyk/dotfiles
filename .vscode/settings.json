@@ -351,5 +351,10 @@
         "xclip",
         "xmonad",
         "yabai"
-    ]
+    ],
+    //
+    // Ignore/disable features or extensions
+    //
+    "svn.ignoreMissingSvnWarning": true,
+    "restructuredtext.syntaxHighlighting.disabled": true
 }
