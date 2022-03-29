@@ -25,15 +25,31 @@ if test -d $HOME/.config/git-fuzzy
     set -gx PATH $HOME/.config/git-fuzzy/bin $PATH
 end
 
-set -gx PATH ./node_modules/.bin $PATH
+if test -d ./node_modules/.bin
+    set -gx PATH ./node_modules/.bin $PATH
+end
 
-set -gx PATH /usr/local/opt/openssl@1.1/bin $PATH
+if test -d /usr/local/opt/openssl@1.1/bin
+    set -gx PATH /usr/local/opt/openssl@1.1/bin $PATH
+end
+
+if test -d /c/tools/nvim-win64/bin
+    set -gx PATH /c/tools/nvim-win64/bin $PATH
+end
+
+if test -d /c/Users/jdve/AppData/Local/Android/Sdk/platform-tools
+    set -gx PATH /c/Users/jdve/AppData/Local/Android/Sdk/platform-tools $PATH
+end
 
 # color stderr in red
-set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
+if [ (uname) = "Darwin" ]
+    set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
+end
 
 # use java 1.8 by default
-set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
+if test -f /usr/libexec/java_home
+    set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
+end
 
 # aliases
 alias more="less -r"
@@ -67,9 +83,9 @@ if type -q nvim
     alias vi="nvim"
     alias vim="nvim"
 
-    set -gx EDITOR /usr/local/bin/nvim
+    set -gx EDITOR (which nvim)
 else
-    set -gx EDITOR /usr/bin/vim
+    set -gx EDITOR (which vim)
 
     echo "Pro Tip: brew install neovim"
 end
