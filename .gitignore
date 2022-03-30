@@ -14,6 +14,8 @@ secrets/
 # Perl intermediate files
 _Inline/
 
+.vscode/configurationCache.log
+
 packages/fonts/.fonts/JetBrains*
 
 packages/fish/.base16_theme
