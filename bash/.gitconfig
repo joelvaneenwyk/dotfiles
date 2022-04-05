@@ -15,6 +15,7 @@
 	gpgsign = true
 [core]
 	excludesfile = /Users/jdve/.gitignore_global
+	symlinks = true
 [user]
 	name = Jonathan Van Eenwyk
 	email = hello@jdve.me
