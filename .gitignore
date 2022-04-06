@@ -2,6 +2,7 @@ Brewfile.lock.json
 fish/.local/share
 fish/.config/fish/fishd.*
 fish/.config/fish/fish_history
+fish/.config/fish/fish_variables
 fish/.config/fish/functions/fundle.fish
 fish/.config/fish/fundle/
 vim/.vim/plugged/
