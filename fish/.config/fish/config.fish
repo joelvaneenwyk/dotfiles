@@ -68,14 +68,14 @@ if type -q exa
     alias ls="exa --git --time-style=iso"
     alias lt="ll --tree"
 else
-    echo "Pro Tip: brew install exa"
+    echo "Pro Tip: install exa"
 end
 
 # use hub if available
 if type -q hub
     alias git="hub"
 else
-    echo "Pro Tip: brew install hub"
+    echo "Pro Tip: install hub"
 end
 
 # set editor
@@ -87,7 +87,7 @@ if type -q nvim
 else
     set -gx EDITOR (which vim)
 
-    echo "Pro Tip: brew install neovim"
+    echo "Pro Tip: install neovim"
 end
 
 # set color scheme
@@ -95,8 +95,13 @@ if status --is-interactive
     source $HOME/.config/base16-shell/profile_helper.fish
 end
 
-source $HOME/.config/base16-fzf/fish/(basename (readlink $HOME/(readlink $HOME/.base16_theme)) .sh).fish
-set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
+# configure fzf
+if type -q fzf
+    source $HOME/.config/base16-fzf/fish/(basename (readlink $HOME/(readlink $HOME/.base16_theme)) .sh).fish
+    set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
+else
+    echo "Pro Tip: install fzf"
+end
 
 # enable activating anaconda environments
 if type -q conda
