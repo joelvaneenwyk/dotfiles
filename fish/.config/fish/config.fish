@@ -108,9 +108,16 @@ if type -q conda
     source (conda info --root)/etc/fish/conf.d/conda.fish
 end
 
-# Enable asdf for managing runtimes.
+# enable asdf for managing runtimes.
 if type -q asdf
     source /usr/local/opt/asdf/asdf.fish
+end
+
+# enable git commit signing
+if type -q gpg
+    git config --global commit.gpgsign true
+else
+    git config --global --unset commit.gpgsign
 end
 
 # install google cloud sdk
