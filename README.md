@@ -19,7 +19,7 @@
  bash           > basic bash setup
  fish           > fish setup
  fonts          > favorite fonts
- osx            > special sauce for MacOS/OSX
+ macos          > special sauce for MacOS
  python         > flake8 config
  sup            > sup mail client configs
  vim            > vim configs
@@ -48,8 +48,8 @@ enter the dotfiles directory
 
 `cd dotfiles`
 
-## osx
-`./init-osx.sh`
+## macos
+`./init-macos.sh`
 
 ## linux
 install the bash settings

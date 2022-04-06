@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Usage: ./init-osx.sh
+# Usage: ./init-macos.sh
 #
 # - Install commonly used apps using "brew bundle" (see Brewfile).
 # - Uses "stow" to link config files into home directory.
@@ -33,7 +33,7 @@ function configure_apps() {
    stow bash
    stow fish
    stow fonts
-   stow osx
+   stow macos
    stow ruby
    stow vim
    stow vscode
