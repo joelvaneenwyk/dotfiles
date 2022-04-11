@@ -41,6 +41,10 @@ if test -d /c/Users/jdve/AppData/Local/Android/Sdk/platform-tools
     set -gx PATH /c/Users/jdve/AppData/Local/Android/Sdk/platform-tools $PATH
 end
 
+if test -d /c/ProgramData/chocolatey/bin
+    set -gx PATH /c/ProgramData/chocolatey/bin $PATH
+end
+
 # color stderr in red
 if [ (uname) = "Darwin" ]
     set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
