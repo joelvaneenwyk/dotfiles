@@ -15,6 +15,7 @@
 	gpgsign = true
 [core]
 	symlinks = true
+	autocrlf = true
 [user]
 	name = Jonathan Van Eenwyk
 	email = jonathan@vihanti.com
