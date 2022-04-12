@@ -73,10 +73,6 @@ alias grep="grep --color=always"
 alias pr="hub -c core.commentChar='%' pull-request"
 alias rg="rg --smart-case"
 
-# configure fzf
-set -gx FZF_FIND_FILE_COMMAND "fd --type f . \$dir"
-set -gx FZF_CTRL_T_COMMAND "fd --type f . \$dir"
-
 # use exa if available
 if type -q exa
     alias ls="exa --git --time-style=iso"
@@ -109,8 +105,11 @@ base16-irblack
 
 # configure fzf
 if type -q fzf
-    source $HOME/.config/base16-fzf/fish/(basename (readlink $HOME/(readlink $HOME/.base16_theme)) .sh).fish
-    set -x FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
+    source $HOME/.config/base16-fzf/fish/base16-irblack.fish
+
+    set -gx FZF_FIND_FILE_COMMAND "fd --type f . \$dir"
+    set -gx FZF_CTRL_T_COMMAND "fd --type f . \$dir"
+    set -gx FZF_DEFAULT_OPTS (echo $FZF_DEFAULT_OPTS | tr -d '\n')
 else
     echo "Pro Tip: install fzf"
 end
