@@ -7,6 +7,7 @@ fundle plugin 'fisherman/z'
 fundle plugin 'edc/bass'
 fundle plugin 'orefalo/grc'
 fundle plugin 'mattgreen/lucid.fish'
+fundle plugin 'FabioAntunes/base16-fish-shell'
 fundle init
 
 # suppress fish greeting
@@ -95,9 +96,7 @@ else
 end
 
 # set color scheme
-if status --is-interactive
-    source $HOME/.config/base16-shell/profile_helper.fish
-end
+base16-irblack
 
 # configure fzf
 if type -q fzf

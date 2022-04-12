@@ -1,9 +1,6 @@
 [submodule "vim/.vim/bundle/vundle"]
 	path = vim/.vim/bundle/vundle
 	url = https://github.com/VundleVim/Vundle.vim.git
-[submodule "fish/.config/base16-shell"]
-	path = fish/.config/base16-shell
-	url = git@github.com:chriskempson/base16-shell.git
 [submodule "fish/.config/base16-fzf"]
 	path = fish/.config/base16-fzf
 	url = git@github.com:nicodebo/base16-fzf.git
