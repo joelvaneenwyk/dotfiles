@@ -56,6 +56,15 @@ if test -f /usr/libexec/java_home
     set -gx JAVA_HOME (/usr/libexec/java_home -v 1.8)
 end
 
+# set path to zk notebook
+if test -d /c/Users/jdve/Documents/Notes/Zettelkasten
+    set -gx ZK_NOTEBOOK_DIR /c/Users/jdve/Documents/Notes/Zettelkasten
+end
+
+if test -d "$HOME/Documents/Notes/Zettelkasten"
+    set -gx ZK_NOTEBOOK_DIR "$HOME/Documents/Notes/Zettelkasten"
+end
+
 # aliases
 alias more="less -r"
 alias less="less -r"
