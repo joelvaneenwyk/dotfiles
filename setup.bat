@@ -6,7 +6,9 @@ setlocal EnableExtensions EnableDelayedExpansion
     set "_mycelio_root=%~dp0"
     set "_starting_directory=%cd%"
 
-    set "MYCELIO_ROOT=%_mycelio_root:~0,-1%"                        &:# Script path, without the trailing \
+    :: Remove trailing slash if there is one
+    if "%_mycelio_root:~-1%"=="\" set "_mycelio_root=%_mycelio_root:~0,-1%"
+
     set "USER[HKLM]=all users"
     set "USER[HKCU]=%USERNAME%"
     set "HIVE="
@@ -16,8 +18,8 @@ setlocal EnableExtensions EnableDelayedExpansion
     set "SNAME=%~n0"                                                &:# Script name, without its extension
     set ^"ARG0=%0^"                                                 &:# Script invokation name
     set ^"ARGS=%*^"                                                 &:# Argument line
-    set "SPROFILE=%MYCELIO_ROOT%\source\windows\bin\profile.bat"    &:# Full path to profile script
-    set "STOW=%MYCELIO_ROOT%\source\stow\bin\stow"
+    set "SPROFILE=%_mycelio_root%\source\windows\bin\profile.bat"    &:# Full path to profile script
+    set "STOW=%_mycelio_root%\source\stow\bin\stow"
     set "COMMAND=%~1"
 
     set _error=0
@@ -68,9 +70,9 @@ setlocal EnableExtensions EnableDelayedExpansion
         set MYCELIO_PROFILE_INITIALIZED=
         if exist "%USERPROFILE%\.local\msys64" rmdir /s /q "%USERPROFILE%\.local\msys64" > nul 2>&1
         if exist "%USERPROFILE%\.tmp" rmdir /s /q "%USERPROFILE%\.tmp" > nul 2>&1
-        if exist "%MYCELIO_ROOT%\.tmp" rmdir /s /q "%MYCELIO_ROOT%\.tmp" > nul 2>&1
-        if exist "%MYCELIO_ROOT%\source\stow\bin\stow" del "%MYCELIO_ROOT%\source\stow\bin\stow" > nul 2>&1
-        if exist "%MYCELIO_ROOT%\source\stow\bin\chkstow" del "%MYCELIO_ROOT%\source\stow\bin\chkstow" > nul 2>&1
+        if exist "%_mycelio_root%\.tmp" rmdir /s /q "%_mycelio_root%\.tmp" > nul 2>&1
+        if exist "%_mycelio_root%\source\stow\bin\stow" del "%_mycelio_root%\source\stow\bin\stow" > nul 2>&1
+        if exist "%_mycelio_root%\source\stow\bin\chkstow" del "%_mycelio_root%\source\stow\bin\chkstow" > nul 2>&1
         if exist "%USERPROFILE%\Documents\PowerShell" rmdir /q /s "%USERPROFILE%\Documents\PowerShell" > nul 2>&1
         if exist "%USERPROFILE%\Documents\WindowsPowerShell" rmdir /q /s "%USERPROFILE%\Documents\WindowsPowerShell" > nul 2>&1
         echo [mycelio] Cleared out generated files and reinitializing environment.
@@ -88,7 +90,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     call :RunPowerShell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
 
-    call :Run "%MYCELIO_ROOT%\source\windows\bin\profile.bat"
+    call :Run "%_mycelio_root%\source\windows\bin\profile.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Profile setup failed. 1>&2
@@ -123,9 +125,9 @@ setlocal EnableExtensions EnableDelayedExpansion
         if "!_arg_remainder!"=="" set _arg_remainder=bash
         set _shell_cmd=cd /usr/workspace ^&^& !_arg_remainder!
 
-        call :Run docker build --progress plain --rm -t "!_container_name!" -f "%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!" !MYCELIO_ROOT!
+        call :Run docker build --progress plain --rm -t "!_container_name!" -f "%_mycelio_root%\source\docker\Dockerfile.!_container_platform!" !_mycelio_root!
         if errorlevel 1 (
-            echo Docker '!_container_name!' container build failed: '%MYCELIO_ROOT%\source\docker\Dockerfile.!_container_platform!'
+            echo Docker '!_container_name!' container build failed: '%_mycelio_root%\source\docker\Dockerfile.!_container_platform!'
         ) else (
             call :Run docker run -it --rm  --name "!_container_instance!" -v %cd%:/usr/workspace "%_container_name%" bash -c "!_shell_cmd!"
         )
@@ -133,8 +135,8 @@ setlocal EnableExtensions EnableDelayedExpansion
         exit /b 0
     )
 
-    call :RunPowerShell -File "%MYCELIO_ROOT%\source\powershell\Initialize-PowerShell.ps1"
-    call :RunPowerShell -File "%MYCELIO_ROOT%\source\powershell\Initialize-Environment.ps1" %*
+    call :RunPowerShell -File "%_mycelio_root%\source\powershell\Initialize-PowerShell.ps1"
+    call :RunPowerShell -File "%_mycelio_root%\source\powershell\Initialize-Environment.ps1" %*
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
     )
@@ -142,12 +144,12 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     :: Re-initialize environment paths now that dependencies are installed
     ::
-    call :Run "%MYCELIO_ROOT%\source\windows\bin\env.bat"
+    call :Run "%_mycelio_root%\source\windows\bin\env.bat"
 
     :: The 'stow' tool should now be installed in our local Perl so we can
     :: stow the Windows settings.
     call :GroupStart "Make Stow"
-    call :Run "%MYCELIO_ROOT%\source\stow\tools\make-stow.bat"
+    call :Run "%_mycelio_root%\source\stow\tools\make-stow.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Failed to build Stow for Windows. 1>&2
@@ -166,7 +168,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     :: We intentionally use MINGW64 here because binaries that we compile (e.g., golang) need
     :: to be able to run without the MSYS dynamic libraries.
-    call :Run "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%MYCELIO_ROOT%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
+    call :Run "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%_mycelio_root%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo ERROR: Shell setup with 'bash' failed. 1>&2
@@ -176,7 +178,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     :$InitializeDone
     cd /d "%_starting_directory%"
 endlocal & (
-    set "MYCELIO_ROOT=%MYCELIO_ROOT%"
+    set "MYCELIO_ROOT=%_mycelio_root%"
     set "MYCELIO_PROFILE_INITIALIZED=%MYCELIO_PROFILE_INITIALIZED%"
     set "MYCELIO_ERROR=%_error%"
     set "PATH=%PATH%"

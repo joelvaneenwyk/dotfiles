@@ -10,6 +10,7 @@
         "eamodio.gitlens",
         "donjayamanne.githistory",
         "jetmartin.bats",
-        "ms-vscode.powershell-preview"
+        "ms-vscode.powershell-preview",
+        "Koihik.vscode-lua-format"
     ]
 }

@@ -46,8 +46,13 @@
     "xml.validation.enabled": false,
     "stylelint.enable": false,
 
+    "vscode-lua-format.configPath": "source/config/.lua-style",
     "git.requireGitUserConfig": false,
 
+    "editor.fontFamily": "PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
+    "editor.fontLigatures": true,
+
+    "terminal.integrated.fontFamily": "PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
     "terminal.integrated.environmentChangesRelaunch": false,
     "terminal.integrated.confirmOnExit": "never",
     "terminal.integrated.showExitAlert": false,
@@ -308,6 +313,7 @@
     "cSpell.words": [
         "agnoster",
         "asdf",
+        "Backblaze",
         "beaners",
         "buildx",
         "cpan",
@@ -318,14 +324,17 @@
         "dotfile",
         "dotfiles",
         "eval",
+        "filelocator",
         "Fullscreen",
         "fundle",
         "gmail",
         "joelvaneenwyk",
+        "keyscan",
         "kleopatra",
         "Mailmate",
         "mingw",
         "mkdir",
+        "MobaXterm",
         "msys",
         "msystem",
         "mycelio",
@@ -348,6 +357,7 @@
         "tldr",
         "trackpad",
         "USERPROFILE",
+        "Venv",
         "xclip",
         "xmonad",
         "yabai"

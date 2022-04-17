@@ -1,4 +1,4 @@
-local script_dir = path.normalise(debug.getinfo(1, "S").source:match[[^@?(.*[\/])[^\/]-$]])
+local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
 local mycelio_root_dir = path.normalise(script_dir .. "../../..")
 
 local home = os.getenv("HOME") or os.getenv("USERPROFILE")
@@ -15,15 +15,9 @@ else
     if not os.geterrorlevel == 0 then
         print('[clink] WARNING: Oh My Posh version test failed: \'' .. local_ohmyposh_executable .. '\'')
     else
-        print('[clink] Using Oh My Posh: \'' .. local_ohmyposh_executable .. '\'')
+        print('[clink] Oh My Posh: \'' .. local_ohmyposh_executable .. '\'')
+        print('[clink] Oh My Posh config: \'' .. mycelio_config .. '\'')
         ohmyposh_executable = local_ohmyposh_executable
-    end
-end
-
-local ohmyposh_executable_prompt = clink.promptfilter(1)
-function ohmyposh_executable_prompt:filter(prompt)
-    if ohmyposh_executable ~= '' then
-        prompt = io.popen(ohmyposh_executable .. " --config " .. mycelio_config):read("*a")
-        return prompt, false
+        load(io.popen(ohmyposh_executable .. " init cmd --config " .. mycelio_config):read("*a"))()
     end
 end

@@ -624,10 +624,6 @@ function _stow_packages() {
         mkdir -p "$MYCELIO_HOME/Library/Application\ Support/Code"
         _stow "$@" macos
     fi
-
-    if [ "$MYCELIO_OS" = "windows" ]; then
-        _stow "$@" windows
-    fi
 }
 
 function initialize_gitconfig() {
