@@ -152,9 +152,9 @@ setlocal EnableExtensions EnableDelayedExpansion
     call :Run "%_mycelio_root%\source\stow\tools\make-stow.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
-        echo ERROR: Failed to build Stow for Windows. 1>&2
-        call :GroupEnd
-        goto:$InitializeDone
+        echo WARNING: Failed to build Stow for Windows. 1>&2
+        REM call :GroupEnd
+        REM goto:$InitializeDone
     )
     call :GroupEnd
 

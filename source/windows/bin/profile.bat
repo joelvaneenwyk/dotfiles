@@ -77,12 +77,10 @@ if "%MYCELIO_SKIP_INIT%"=="1" goto:$InitializedProfile
 :: Change to unicode
 chcp 65001 >NUL 2>&1
 echo ▓├═════════════════════════════════
-echo ▓│
 echo ▓│  ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓
 echo ▓│  ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃
 echo ▓│  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
-echo ▓│
-echo ▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+echo ▓├═════════════════════════════════
 echo.
 
 :: Switch back to standard ANSI
@@ -90,13 +88,7 @@ chcp 1252 >NUL 2>&1
 
 :: Generate and run the environment batch script
 call "%~dp0env.bat"
-echo Initialized 'Windows' environment: '%MYCELIO_ROOT%'
-echo.
-echo Commands:
-echo.
-echo   gpgtest     Validate that git commit signing will work with secret key
-echo   refresh     Try to pull latest 'dotfiles' and reload profile
-echo   micro       Default text editor. Press 'F2' to save and 'F4' to exit.
+echo [mycelio] Run `help` to get list of commands.
 
 :: Check to see if 'doskey' is valid first as some versions
 :: of Windows (e.g. nanoserver) do not have 'doskey' support.

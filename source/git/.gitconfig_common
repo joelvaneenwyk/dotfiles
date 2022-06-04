@@ -1,30 +1,46 @@
 # This is Git's per-user configuration file.
 [user]
-	name = Joel Van Eenwyk
-	email = joel.vaneenwyk@gmail.com
-	signingkey = F7B61CE9EF223B20
-[core]
-	symlinks = true
+name = Joel Van Eenwyk
+email = joel.vaneenwyk@gmail.com
+signingkey = F7B61CE9EF223B20
+
 [init]
-	defaultBranch = main
+defaultBranch = main
+
+[core]
+symlinks = true
+packedGitLimit = 128m
+packedGitWindowSize = 128m
+
+[pack]
+deltaCacheSize = 256m
+packSizeLimit = 256m
+windowMemory = 256m
+
 [push]
-	default = simple
+default = simple
+
 [pull]
-	rebase = true
+rebase = true
+
 [rebase]
-	autoStash = true
+autoStash = true
+
 [diff]
-	renamelimit = 10000
+renamelimit = 10000
+
 [commit]
-	verbose = true
-	gpgsign = true
+verbose = true
+gpgsign = true
+
 [alias]
-	subup = submodule update --init --recursive
-	co = checkout
-	br = branch
-	ci = commit
-	st = status
-	pr = pull --rebase
-	df = diff
+subup = submodule update --init --recursive
+co = checkout
+br = branch
+ci = commit
+st = status
+pr = pull --rebase
+df = diff
+
 [advice]
-	fetchShowForcedUpdates = false
+fetchShowForcedUpdates = false

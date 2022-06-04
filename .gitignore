@@ -37,6 +37,8 @@ packages/xmonad/.xmonad/xmonad.errors
 packages/xmonad/.xmonad/xmonad.hi
 packages/xmonad/.xmonad/xmonad.o
 
+packages/windows/Documents/WindowsPowerShell/Modules
+
 source/vagrant/.vagrant/
 
 Brewfile.lock.json
