@@ -69,18 +69,6 @@
                     "template": " {{ .Name }} ",
                     "type": "shell"
                 },
-                // {
-                //     "background": "#906cff",
-                //     "foreground": "#100e23",
-                //     "powerline_symbol": "\ue0b0",
-                //     "properties": {
-                //         "display_mode": "always",
-                //         "fetch_virtual_env": false
-                //     },
-                //     "style": "powerline",
-                //     "template": " Python \ue235 {{ if .Error }}{{ .Error }}{{ else }}{{ if .Venv }}{{ .Venv }} {{ end }}{{ .Full }}{{ end }} ",
-                //     "type": "python"
-                // },
                 {
                     "foreground": "#757575",
                     "properties": {
@@ -121,16 +109,6 @@
                     "type": "text"
                 }
             ],
-            "type": "prompt"
-        },
-        {
-            "alignment": "right",
-            "segments": [{
-                "foreground": "#d3d3d3",
-                "style": "plain",
-                "template": "|",
-                "type": "text"
-            }],
             "type": "prompt"
         },
         {

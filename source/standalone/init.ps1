@@ -453,5 +453,5 @@ finally {
     # Reset $erroractionpreference to original value
     $erroractionpreference = $old_erroractionpreference
 
-    Write-Host "Initialized Mycelio environment."
+    Write-Host "Initialized Mycelio standalone environment."
 }

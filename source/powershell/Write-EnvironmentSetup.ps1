@@ -235,7 +235,7 @@ Function Save-Environment {
             # We intentionally do not output anything in this script as we want to be able to
             # run this in subshells if needed which means we can't have the output cluttered.
             if ($Verbose) {
-                $fileStream.WriteLine("echo [mycelio] Initialized path from generated script.")
+                $fileStream.WriteLine("echo [mycelio] Initialized path from generated script. Root: '%MYCELIO_ROOT%'")
             }
 
             $fileStream.WriteLine("")

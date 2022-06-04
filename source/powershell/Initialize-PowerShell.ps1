@@ -205,22 +205,6 @@ Function Initialize-PowerShell {
             }
         }
 
-        # https://ohmyposh.dev/
-        try {
-            if ($null -eq (Get-InstalledModule -Name "oh-my-posh" -ErrorAction SilentlyContinue)) {
-                Install-Module -Name oh-my-posh -Scope CurrentUser -Force -SkipPublisherCheck >$null
-                if ($?) {
-                    Write-Host "✔ Installed 'oh-my-posh' module."
-                }
-            }
-            else {
-                Write-Host "✔ 'oh-my-posh' module already installed."
-            }
-        }
-        catch [Exception] {
-            Write-Host "❌ Failed to install 'oh-my-posh' module.", $_.Exception.Message
-        }
-
         try {
             if ($null -eq (Get-InstalledModule -Name "posh-git" -ErrorAction SilentlyContinue)) {
                 Install-Module -Name posh-git -Scope CurrentUser -Force -SkipPublisherCheck
@@ -231,6 +215,8 @@ Function Initialize-PowerShell {
                     Write-Host "✔ 'posh-git' module already installed."
                 }
             }
+
+            Uninstall-Module -Name oh-my-posh -Force
         }
         catch [Exception] {
             Write-Host "❌ Failed to install 'posh-git' module.", $_.Exception.Message

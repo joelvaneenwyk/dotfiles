@@ -158,16 +158,38 @@ Function Update-Environment() {
     $environmentVariables += "$Env:UserProfile\scoop\shims"
 
     $environmentPaths = @()
+    $environmentVariables = $environmentVariables | Select-Object -Unique
     $environmentVariables | ForEach-Object {
         $environmentPath = "$_"
         try {
             $resolvedPath = Get-NormalizedPath "$_"
 
-            if (($resolvePath -Contains "msys2") -and ($resolvePath -Contains "usr\bin")) {
+            if (($resolvedPath -match "msys2") -and ($resolvedPath -match "usr\bin")) {
+                $resolvedPath = $null
+            }
+            elseif ($resolvedPath -match "NVIDIA") {
+                $resolvedPath = $null
+            }
+            elseif ($resolvedPath -match "SQL") {
+                $resolvedPath = $null
+            }
+            elseif ($resolvedPath -match "Vagrant") {
+                $resolvedPath = $null
+            }
+            elseif ($resolvedPath -match "Salesforce") {
+                $resolvedPath = $null
+            }
+            elseif ($resolvedPath -match "WindowsApps") {
+                $resolvedPath = $null
+            }
+            elseif ($resolvedPath -match "Network Monitor") {
+                $resolvedPath = $null
+            }
+            elseif ($resolvedPath -match "AdoptOpenJDK") {
                 $resolvedPath = $null
             }
 
-            if ($null -ne $resolvedPath) {
+            if (($null -ne $resolvedPath) -and (-not($environmentPaths -contains $resolvedPath))) {
                 $environmentPaths += $resolvedPath
             }
         }
@@ -207,11 +229,10 @@ Function Update-Terminal() {
     }
 
     try {
-        oh-my-posh init pwsh --config "$env:UserProfile/dotfiles/packages/linux/.poshthemes/mycelio.omp.json" | Invoke-Expression
-        Write-Host "Initialized 'oh-my-posh' config."
+        oh-my-posh.exe init pwsh --config "$env:UserProfile/.poshthemes/mycelio.omp.json" | Invoke-Expression
     }
     catch {
-        Write-Host "Failed to set 'oh-my-posh' prompt."
+        Write-Host "Failed to set 'oh-my-posh' prompt. $_"
     }
 
     try {
@@ -237,7 +258,7 @@ Function Update-Terminal() {
 
 Update-Environment
 Update-Terminal
-Write-Host "Initialized primary Mycelio environment."
+Write-Host "Initialized Mycelio environment."
 
 #
 # NOTE: This script is called in each sub-shell as well so reduce noise by not calling anything

@@ -747,7 +747,7 @@ function install_hugo {
     if [ -f "$MYCELIO_GOEXE" ]; then
         mkdir -p "$_hugo_tmp"
         rm -rf "$_hugo_tmp"
-        run_task "hugo.git.clone" git -c advice.detachedHead=false clone -b "v0.88.1" "https://github.com/gohugoio/hugo.git" "$_hugo_tmp"
+        run_task "hugo.git.clone" git -c advice.detachedHead=false clone -b "v0.100.0" "https://github.com/gohugoio/hugo.git" "$_hugo_tmp"
 
         if (
             cd "$_hugo_tmp"
@@ -851,8 +851,10 @@ function install_oh_my_posh {
     fi
 
     if [ -f "$_oh_my_posh_exe" ] && _version=$("$_oh_my_posh_exe" --version 2>&1); then
-        echo "✔ 'oh-my-posh' v$_version already installed."
-        return 0
+        if [ "$_version" = "8.0.0" ]; then
+            echo "✔ 'oh-my-posh' v$_version already installed."
+            return 0
+        fi
     fi
 
     _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$MYCELIO_OS_APP_EXTENSION"
@@ -1120,7 +1122,7 @@ function install_go {
     _local_go_bootstrap_root="$_local_root/gobootstrap"
     _go_bootstrap_exe="$_local_go_bootstrap_root/bin/go"
     _go_requires_update=0
-    _go_required_version_major=17
+    _go_required_version_minor=18
 
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped 'go' install for root user."
@@ -1137,7 +1139,7 @@ function install_go {
         echo "${v#go}"
     ))"; then
         _go_version_minor=$(echo "$_go_version" | cut -d. -f2)
-        if [ "$_go_version_minor" -lt "$_go_required_version_major" ]; then
+        if [ "$_go_version_minor" -lt "$_go_required_version_minor" ]; then
             _go_requires_update=1
         fi
     else
@@ -1151,7 +1153,7 @@ function install_go {
     fi
 
     if [ "$_go_requires_update" = "1" ]; then
-        _go_version="1.$_go_required_version_major.6"
+        _go_version="1.$_go_required_version_minor"
         _go_compiled=0
 
         if [ ! -x "$(command -v gcc)" ] && [ ! -x "$(command -v make)" ]; then
