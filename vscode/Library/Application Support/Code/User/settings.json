@@ -39,5 +39,20 @@
     "vscode-neovim.neovimExecutablePaths.darwin": "/usr/local/bin/nvim",
     "terminal.integrated.enablePersistentSessions": false,
     "dart.debugExternalPackageLibraries": true,
-    "dart.flutterSdkPath": "/Users/jdve/.asdf/installs/flutter/2.5.3"
+    "dart.flutterSdkPath": "/Users/jdve/.asdf/installs/flutter/2.10.1-stable",
+    "liveshare.allowGuestDebugControl": true,
+    "liveshare.allowGuestTaskControl": true,
+    "liquid.format": false,
+    "eslint.workingDirectories": [
+        {
+            "mode": "auto"
+        }
+    ],
+    "eslint.format.enable": true,
+    "[typescript]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    }
 }
