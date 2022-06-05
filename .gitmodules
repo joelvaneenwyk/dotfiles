@@ -10,3 +10,6 @@
 [submodule "fish/.config/git-fuzzy"]
 	path = fish/.config/git-fuzzy
 	url = git@github.com:bigH/git-fuzzy.git
+[submodule "macos/.hammerspoon/stackline"]
+	path = macos/.hammerspoon/stackline
+	url = git@github.com:AdamWagner/stackline.git

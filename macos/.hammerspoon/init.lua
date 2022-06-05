@@ -19,3 +19,8 @@ usbWatcher:start()
 
 hyper = {"ctrl", "alt", "shift", "command"}
 meh = {"ctrl", "alt", "shift"}
+
+-- run stackline
+stackline = require "stackline"
+stackline:init()
+

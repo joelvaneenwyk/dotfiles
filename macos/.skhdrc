@@ -1,12 +1,6 @@
 # swap current window into largest space
 alt - return : yabai -m window --swap largest
 
-# focus window
-alt - h : yabai -m window --focus west
-alt - j : yabai -m window --focus south
-alt - k : yabai -m window --focus north
-alt - l : yabai -m window --focus east
-
 # swap managed window
 shift + alt - h : yabai -m window --warp west
 shift + alt - j : yabai -m window --warp south
@@ -37,6 +31,21 @@ lctrl + alt - k : \
 lctrl + alt - l : \
     yabai -m window --resize right:20:0 ; \
     yabai -m window --resize left:20:0
+
+# stack
+alt - s : window=$(yabai -m query --windows --window | jq -r '.id') && yabai -m window west --stack $window
+
+alt - k : yabai -m query --spaces --space \
+  | jq -re ".index" \
+  | xargs -I{} yabai -m query --windows --space {} \
+  | jq -sre 'add | map(select(."is-minimized"==false)) | . as $array | length as $array_length | index(map(select(."has-focus"==true))) as $has_index | if $has_index > 0 then nth($has_index - 1).id else nth($array_length - 1).id end'  \
+  | xargs -I{} yabai -m window --focus {}
+
+alt - j : yabai -m query --spaces --space \
+  | jq -re ".index" \
+  | xargs -I{} yabai -m query --windows --space {} \
+  | jq -sre 'add | map(select(."is-minimized"==false)) | . as $array | length as $array_length | index(map(select(."has-focus"==true))) as $has_index | if $array_length - 1 > $has_index then nth($has_index + 1).id else nth(0).id end' \
+  | xargs -I{} yabai -m window --focus {}
 
 # toggle window zoom
 alt - d : yabai -m window --toggle zoom-parent
