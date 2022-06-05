@@ -92,41 +92,30 @@ endif
 " Load plugins.
 call plug#begin('~/.vim/plugged')
 
-" Generally useful.
-Plug 'chriskempson/base16-vim'
-Plug 'moll/vim-bbye'
-Plug 'scrooloose/nerdtree'
-Plug 'majutsushi/tagbar'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
-Plug 'terryma/vim-multiple-cursors'
-Plug 'vim-scripts/LargeFile'
-Plug 'tpope/vim-fugitive'
-Plug 'luochen1990/rainbow'
-Plug 'w0rp/ale'
-Plug 'mileszs/ack.vim'
-Plug 'jez/vim-github-hub'
-Plug 'scrooloose/nerdcommenter'
-Plug 'prabirshrestha/asyncomplete.vim'
-Plug '/usr/local/opt/fzf'
-
-" For web development.
-Plug 'jelera/vim-javascript-syntax'
-Plug 'tpope/vim-markdown'
-Plug 'groenewege/vim-less'
-Plug 'digitaltoad/vim-jade'
+" Language support.
 Plug 'Glench/Vim-Jinja2-Syntax'
-Plug 'prettier/vim-prettier', { 'do': 'yarn install' }
-
-" For python.
-Plug 'nvie/vim-flake8'
-Plug 'ludovicchabant/vim-gutentags'
-
-" For latex.
-Plug 'lervag/vimtex'
-
-" For nim.
 Plug 'alaviss/nim.nvim'
+Plug 'digitaltoad/vim-jade'
+Plug 'groenewege/vim-less'
+Plug 'jelera/vim-javascript-syntax'
+Plug 'jez/vim-github-hub'
+Plug 'lervag/vimtex'
+Plug 'tpope/vim-markdown'
+
+" Tools.
+Plug 'chriskempson/base16-vim'            " color scheme
+Plug 'ludovicchabant/vim-gutentags'       " tags
+Plug 'luochen1990/rainbow'                " colored parens
+Plug 'mileszs/ack.vim'                    " search tool
+Plug 'nvie/vim-flake8'                    " python linting
+Plug 'prettier/vim-prettier', { 'do': 'yarn install' }
+Plug 'scrooloose/nerdcommenter'           " commenting code
+Plug 'scrooloose/nerdtree'                " file tree
+Plug 'tpope/vim-fugitive'                 " git tools
+Plug 'vim-airline/vim-airline'            " fancy status bar
+Plug 'vim-airline/vim-airline-themes'
+Plug 'vim-scripts/LargeFile'              " disable features to keep large files fast
+Plug 'w0rp/ale'                           " auto linting
 
 call plug#end()
 
@@ -169,7 +158,6 @@ augroup fzf
   autocmd  FileType fzf set laststatus=0 noshowmode noruler
     \| autocmd BufLeave <buffer> set laststatus=2 showmode ruler
 augroup END
-
 
 " Configure GUI settings.
 if filereadable(expand("~/.vimrc_background"))
