@@ -26,8 +26,20 @@ if test -d $HOME/.config/git-fuzzy
     set -gx PATH $HOME/.config/git-fuzzy/bin $PATH
 end
 
-if test -d ./node_modules/.bin
-    set -gx PATH ./node_modules/.bin $PATH
+if test -d ./node_modules/bin
+   set -gx PATH ./node_modules/.bin $PATH
+end
+
+if test -d /usr/local/opt/openssl@1.1/bin
+   set -gx PATH /usr/local/opt/openssl@1.1/bin $PATH
+end
+
+if test -d /opt/local/bin
+   set -gx PATH /opt/local/bin $PATH
+end
+
+if test -d $HOME/Library/Android/sdk/platform-tools
+   set -gx PATH $HOME/Library/Android/sdk/platform-tools $PATH
 end
 
 if test -d /usr/local/opt/openssl@1.1/bin
