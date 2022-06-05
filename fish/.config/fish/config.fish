@@ -58,6 +58,9 @@ if test -d /c/ProgramData/chocolatey/bin
     set -gx PATH /c/ProgramData/chocolatey/bin $PATH
 end
 
+set brew (brew --prefix)
+set -gx LESSOPEN "|$brew/bin/lesspipe.sh %s"
+
 # color stderr in red
 if [ (uname) = "Darwin" ]
     set -gx LD_PRELOAD "$HOME/.local/lib/libstderred.so"
