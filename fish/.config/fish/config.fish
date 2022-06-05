@@ -92,6 +92,7 @@ alias rg="rg --smart-case"
 if type -q exa
     alias ls="exa --git --time-style=iso"
     alias lt="ll --tree"
+    alias la="ls -a"
 else
     echo "Pro Tip: install exa"
 end
