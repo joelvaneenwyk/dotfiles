@@ -620,10 +620,14 @@ function _stow_packages() {
     # the fish package manager fundle, see https://github.com/danhper/fundle
     _stow "$@" fish
 
-    if [ "$MYCELIO_OS" = "darwin" ]; then
-        mkdir -p "$MYCELIO_HOME/Library/Application\ Support/Code"
-        _stow "$@" macos
-    fi
+    # if [ "$MYCELIO_OS" = "darwin" ]; then
+    #     mkdir -p "$MYCELIO_HOME/Library/Application\ Support/Code"
+    #     _stow "$@" macos
+    # fi
+
+    # if [ "$MYCELIO_OS" = "windows" ]; then
+    #    _stow "$@" windows
+    # fi
 }
 
 function initialize_gitconfig() {
@@ -790,6 +794,10 @@ function install_hugo {
 function install_oh_my_posh {
     _oh_my_posh_tmp="$MYCELIO_TEMP/oh_my_posh"
     _oh_my_posh_exe="$MYCELIO_GOBIN/oh-my-posh$MYCELIO_OS_APP_EXTENSION"
+
+    if [ -f "$MYCELIO_HOME/.local/bin/oh-my-posh" ]; then
+        rm "$MYCELIO_HOME/.local/bin/oh-my-posh"
+    fi
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ] && [ -f "$_oh_my_posh_exe" ]; then
         rm -rf "$_oh_my_posh_tmp"
@@ -1510,7 +1518,7 @@ function configure_linux() {
     # Remove intermediate Perl files
     rm -rf "$MYCELIO_ROOT/_Inline"
 
-    printf "🍄 Mycelium is configured and healthy.\n\n"
+    return 0
 }
 
 function install_packages() {
@@ -1634,9 +1642,9 @@ function initialize_linux() {
     install_stow
 
     install_go
+    install_oh_my_posh
     install_hugo
     install_fzf
-    install_oh_my_posh
     install_powershell
     install_micro_text_editor
 }
@@ -2119,14 +2127,13 @@ function _initialize_environment() {
         log_error "Failed to reload profile."
     fi
 
-    _supports_neofetch=0
-    if [ "$BASH_VERSION_MAJOR" -ge 4 ]; then
+    if [ "${BASH_VERSION_MAJOR:-0}" -ge 4 ]; then
         _supports_neofetch=1
-    elif [ "$BASH_VERSION_MAJOR" -ge 3 ] && [ "$BASH_VERSION_MINOR" -ge 2 ]; then
+    elif [ "${BASH_VERSION_MAJOR:-0}" -ge 3 ] && [ "${BASH_VERSION_MINOR:-0}" -ge 2 ]; then
         _supports_neofetch=1
+    else
+        _supports_neofetch=0
     fi
-
-    _displayed_details=0
 
     if [ -x "$(command -v neofetch)" ] && [ "$_supports_neofetch" = "1" ]; then
         echo ""
@@ -2135,17 +2142,11 @@ function _initialize_environment() {
         fi
     fi
 
-    if [ ! "$_displayed_details" = "1" ]; then
-        echo "Initialized '$MYCELIO_OS' machine."
+    if [ ! "${_displayed_details:-}" = "1" ]; then
+        echo "Initialized '${MYCELIO_OS:-UNKNOWN}' machine."
     fi
 
     return 0
-}
-
-function initialize_environment() {
-    _initialize_environment "$@"
-
-    _remove_error_handling
 }
 
 function is_synology() {
@@ -2186,4 +2187,16 @@ function use_mycelio_library() {
 
     MYCELIO_LIBRARY_IMPORTED="1"
     export MYCELIO_LIBRARY_IMPORTED
+}
+
+function initialize_environment() {
+    if _initialize_environment "$@"; then
+        _return_code=0
+    else
+        _return_code=$?
+    fi
+
+    _remove_error_handling
+
+    return $_return_code
 }

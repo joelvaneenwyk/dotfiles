@@ -52,7 +52,7 @@ _get_real_path() {
     return 0
 }
 
-use_sudo() {
+_use_sudo() {
     if [ -x "$(command -v sudo)" ] && [ ! -x "$(command -v cygpath)" ]; then
         sudo "$@"
     else
@@ -73,17 +73,21 @@ setup() {
         # shellcheck source=source/shell/mycelio.sh
         . "$_root/source/shell/mycelio.sh"
 
-        initialize_environment "$@"
+        if initialize_environment "$@"; then
+            _return_code=0
+        else
+            _return_code=$?
+        fi
     else
         _root="$(cd -P -- "$(dirname -- "$0")" && pwd)"
 
         if [ ! -x "$(command -v bash)" ]; then
             if [ -x "$(command -v apk)" ]; then
-                use_sudo apk update
-                use_sudo apk add bash
+                _use_sudo apk update
+                _use_sudo apk add bash
             elif [ -x "$(command -v apt-get)" ]; then
-                use_sudo apt-get update
-                use_sudo apt-get install -y --no-install-recommends bash
+                _use_sudo apt-get update
+                _use_sudo apt-get install -y --no-install-recommends bash
             fi
         fi
 
@@ -91,8 +95,15 @@ setup() {
 
         # Re-launch with bash
         # shellcheck source=setup.sh
-        bash "$_root/setup.sh" "$@"
+        if bash "$_root/setup.sh" "$@"; then
+            _return_code=0
+        else
+            _return_code=$?
+            echo "[mycelio] Error code returned from bash setup: $_return_code"
+        fi
     fi
+
+    return ${_return_code:-99}
 }
 
 setup "$@"

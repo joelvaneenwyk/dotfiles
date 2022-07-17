@@ -187,13 +187,9 @@ function _initialize_bash_profile() {
     if [ -x "$(command -v pyenv)" ]; then
         alias brew='env PATH="${PATH//$(pyenv root)\/shims:/}" brew'
 
-        case "$(uname -s)" in
-        Darwin*)
-            export PYENV_ROOT="$HOME/.pyenv"
-            export PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
-            eval "$(pyenv init -)"
-            ;;
-        esac
+        export PYENV_ROOT="$HOME/.pyenv"
+        export PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
     fi
 
     if [ -e "${HOME:-}/.iterm2_shell_integration.bash" ]; then
@@ -214,3 +210,7 @@ function _initialize_bash_profile() {
 }
 
 _initialize_bash_profile "$@"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion

@@ -52,6 +52,8 @@
     "editor.fontFamily": "PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
     "editor.fontLigatures": true,
 
+    "json.validate.enable": true,
+
     "terminal.integrated.fontFamily": "PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
     "terminal.integrated.environmentChangesRelaunch": false,
     "terminal.integrated.confirmOnExit": "never",
