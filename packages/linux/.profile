@@ -8,6 +8,12 @@
 # the files are located in the bash-doc package.
 #
 
+_log_debug() {
+    if [ "${MYCELIO_DEBUG:-}" = "1" ]; then
+        echo "$@"
+    fi
+}
+
 #
 # USAGE: _unique_list [list]
 #
@@ -39,15 +45,22 @@ _unique_list() {
     }
 }
 
-_log_debug() {
-    if [ "${MYCELIO_DEBUG:-}" = "1" ]; then
-        echo "$@"
-    fi
-}
-
-_add_to_list() {
-    _list=":$(_unique_list "${1-}"):"
-    shift
+#
+# USAGE: _add_path [include|prepend|append] "dir1" "dir2" ...
+#
+#   prepend: add/move to beginning
+#   append:  add/move to end
+#   include: add to end of PATH if not already included [default]
+#          that is, don't change position if already in PATH
+#
+# RETURNS:
+#   prepend:  dir2:dir1:OLD_PATH
+#   append:   OLD_PATH:dir1:dir2
+#
+# If called with no paramters, returns PATH with duplicate directories removed
+#
+_add_path() {
+    _list=":$(_unique_list "${PATH:-}"):"
 
     case "$1" in
     'include' | 'prepend' | 'append')
@@ -84,25 +97,7 @@ _add_to_list() {
     _list="${_list%:}"
 
     # Return combined path
-    printf '%s' "$_list"
-}
-
-#
-# USAGE: _add_path [include|prepend|append] "dir1" "dir2" ...
-#
-#   prepend: add/move to beginning
-#   append:  add/move to end
-#   include: add to end of PATH if not already included [default]
-#          that is, don't change position if already in PATH
-#
-# RETURNS:
-#   prepend:  dir2:dir1:OLD_PATH
-#   append:   OLD_PATH:dir1:dir2
-#
-# If called with no paramters, returns PATH with duplicate directories removed
-#
-_add_path() {
-    PATH="$(_add_to_list "$PATH" "$@")"
+    PATH="$_list"
     export PATH
 }
 
@@ -216,12 +211,6 @@ initialize_interactive_profile() {
             eval "$(dircolors -b "$HOME/.dircolors")"
         else
             eval "$(dircolors -b)"
-        fi
-    fi
-
-    if [ -x "$(command -v oh-my-posh)" ]; then
-        if ! _shell="$(oh-my-posh --print-shell 2>&1)"; then
-            _shell=""
         fi
     fi
 
@@ -603,6 +592,11 @@ initialize_profile() {
 }
 
 initialize() {
+    # Fig pre block. Keep at the top of this file.
+    if [ -f "$HOME/.fig/shell/profile.pre.bash" ]; then
+        . "$HOME/.fig/shell/profile.pre.bash"
+    fi
+
     initialize_profile "$@"
 
     # If not running interactively, don't do anything else.
@@ -611,7 +605,11 @@ initialize() {
     fi
 
     export MYCELIO_PROFILE_INITIALIZED=1
+
+    # Fig pre block. Keep at the top of this file.
+    if [ -f "$HOME/.fig/shell/profile.post.bash" ]; then
+        . "$HOME/.fig/shell/profile.post.bash"
+    fi
 }
 
 initialize "$@"
-export PATH="/home/jvaneenwyk/.havok/tools:$PATH"

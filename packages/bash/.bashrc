@@ -153,6 +153,9 @@ function _initialize_interactive_bash_profile() {
 }
 
 function _initialize_bash_profile() {
+    # Fig pre block. Keep at the top of this file.
+    [[ -f "$HOME/.fig/shell/bashrc.pre.bash" ]] && . "$HOME/.fig/shell/bashrc.pre.bash"
+
     # Clear out prompt command to start so that we do not end up with an
     # unknown function (e.g., '_omp_hook') being called after every call.
     unset PROMPT_COMMAND
@@ -184,14 +187,6 @@ function _initialize_bash_profile() {
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 
-    if [ -x "$(command -v pyenv)" ]; then
-        alias brew='env PATH="${PATH//$(pyenv root)\/shims:/}" brew'
-
-        export PYENV_ROOT="$HOME/.pyenv"
-        export PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
-        eval "$(pyenv init -)"
-    fi
-
     if [ -e "${HOME:-}/.iterm2_shell_integration.bash" ]; then
         # shellcheck disable=SC1090,SC1091
         . "${HOME}/.iterm2_shell_integration.bash"
@@ -203,14 +198,30 @@ function _initialize_bash_profile() {
     fi
 
     if [ -n "${PS1:-}" ]; then
+        if [ -x "$(command -v pyenv)" ]; then
+            alias brew='env PATH="${PATH//$(pyenv root)\/shims:/}" brew'
+
+            export PYENV_ROOT="$HOME/.pyenv"
+            export PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
+            eval "$(pyenv init -)"
+        fi
+
         _initialize_interactive_bash_profile
     fi
 
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"                   # This loads nvm
+    [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+
+    if [ -e "$HOME/.bun" ]; then
+        export BUN_INSTALL="$HOME/.bun"
+        export PATH="$BUN_INSTALL/bin:$PATH"
+    fi
+
     export MYCELIO_BASH_PROFILE_INITIALIZED=1
+
+    # Fig post block. Keep at the bottom of this file.
+    [[ -f "$HOME/.fig/shell/bashrc.post.bash" ]] && . "$HOME/.fig/shell/bashrc.post.bash"
 }
 
 _initialize_bash_profile "$@"
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
