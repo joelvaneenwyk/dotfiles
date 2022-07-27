@@ -620,14 +620,12 @@ function _stow_packages() {
     # the fish package manager fundle, see https://github.com/danhper/fundle
     _stow "$@" fish
 
-    # if [ "$MYCELIO_OS" = "darwin" ]; then
-    #     mkdir -p "$MYCELIO_HOME/Library/Application\ Support/Code"
-    #     _stow "$@" macos
-    # fi
+    if [ "${MYCELIO_OS:-}" = "darwin" ]; then
+        mkdir -p "$MYCELIO_HOME/Library/Application\ Support/Code"
 
-    # if [ "$MYCELIO_OS" = "windows" ]; then
-    #    _stow "$@" windows
-    # fi
+        # todo : Revisit enabling this at some point after settings are improved
+        # _stow "$@" macos
+    fi
 }
 
 function initialize_gitconfig() {
@@ -1934,13 +1932,7 @@ function _setup_environment() {
     Darwin*)
         MYCELIO_OS='darwin'
         ;;
-    CYGWIN*)
-        MYCELIO_OS='windows'
-        ;;
-    MINGW*)
-        MYCELIO_OS='windows'
-        ;;
-    MSYS*)
+    CYGWIN* | MINGW* | MSYS*)
         MYCELIO_OS='windows'
         ;;
     esac

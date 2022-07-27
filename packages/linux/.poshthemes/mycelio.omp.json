@@ -79,10 +79,12 @@
                     "type": "session"
                 },
                 {
-                    "foreground": "#bbbbbb",
+                    "background": "#61AFEF",
+                    "foreground": "#ffffff",
+                    "powerline_symbol": "\ue0b0",
                     "properties": {
-                        "max_depth": 4,
-                        "style": "agnoster_full"
+                        "mixed_threshold": 1,
+                        "style": "letter"
                     },
                     "style": "powerline",
                     "template": " {{ .Path }} ",
@@ -101,14 +103,18 @@
                     "template": "<#193549>\ue0b0</> ",
                     "trailing_diamond": "\ue0b4",
                     "type": "exit"
-                },
-                {
-                    "foreground": "#a3a3a3",
-                    "style": "plain",
-                    "template": "]",
-                    "type": "text"
                 }
             ],
+            "type": "prompt"
+        },
+        {
+            "alignment": "right",
+            "segments": [{
+                "foreground": "#d3d3d3",
+                "style": "plain",
+                "template": "|",
+                "type": "text"
+            }],
             "type": "prompt"
         },
         {
@@ -123,7 +129,7 @@
                 {
                     "foreground": "#ffffff",
                     "style": "plain",
-                    "template": "$ ",
+                    "template": "$",
                     "type": "text"
                 }
             ],

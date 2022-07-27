@@ -59,7 +59,6 @@
     "terminal.integrated.confirmOnExit": "never",
     "terminal.integrated.showExitAlert": false,
     "terminal.integrated.cwd": "${workspaceFolder}",
-
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
     "terminal.integrated.profiles.windows": {
         "PowerShell": {
@@ -367,7 +366,8 @@
     //
     // Ignore/disable features or extensions
     //
-    "svn.ignoreMissingSvnWarning": true,
+    "restructuredtext.languageServer.disabled": true,
     "restructuredtext.syntaxHighlighting.disabled": true,
+    "svn.ignoreMissingSvnWarning": true,
     "esbonio.server.enabled": false
 }
