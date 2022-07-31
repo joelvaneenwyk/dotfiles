@@ -136,6 +136,8 @@ Function Get-Environment {
     # there is a 'scoop' portable version installed.
     $environmentVariables += "C:\Program Files\Microsoft VS Code\bin"
 
+    $environmentVariables += "$ENV:UserProfile\scoop\shims"
+
     $environmentVariables += "$script:MycelioRoot"
     $environmentVariables += "$script:MycelioRoot\source\windows\bin"
 
@@ -156,8 +158,6 @@ Function Get-Environment {
     $environmentVariables += "C:\Program Files (x86)\Gpg4win\bin"
 
     $environmentVariables += "C:\Program Files\Docker"
-
-    $environmentVariables += "$ENV:UserProfile\scoop\shims"
 
     # Initially seemed like a good idea to include these tools in the environment, but there are a
     # lot of dependencies between these tools from dynamic libraries to just include folders that
@@ -235,7 +235,7 @@ Function Save-Environment {
             # We intentionally do not output anything in this script as we want to be able to
             # run this in subshells if needed which means we can't have the output cluttered.
             if ($Verbose) {
-                $fileStream.WriteLine("echo [mycelio] Initialized path from generated script. Root: '%MYCELIO_ROOT%'")
+                $fileStream.WriteLine("echo [mycelio] Initialized environment from generated script. Root: '%MYCELIO_ROOT%'")
             }
 
             $fileStream.WriteLine("")

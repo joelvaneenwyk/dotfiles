@@ -43,6 +43,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     if "%MYCELIO_AUTORUN_INITIALIZED%"=="1" set MYCELIO_SKIP_INIT=1
     if "%MYCELIO_PROFILE_INITIALIZED%"=="1" set MYCELIO_SKIP_INIT=1
+    if "!MYCELIO_ROOT:~-1!"=="\" set "MYCELIO_ROOT=!MYCELIO_ROOT:~0,-1!"
 
     :$InitializeProfile
 endlocal & (
@@ -105,7 +106,7 @@ if errorlevel 1 goto:$StartClink
     doskey mv=move $*
     doskey h=doskey /HISTORY
     doskey edit=%HOME%\.local\bin\micro.exe $*
-    doskey refresh=%MYCELIO_ROOT%\source\windows\profile.bat --refresh
+    doskey refresh=%MYCELIO_ROOT%\source\windows\bin\profile.bat --refresh
     doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
 
 :$StartClink
@@ -125,7 +126,7 @@ if errorlevel 1 (
 
 :$InitializedProfile
 set MYCELIO_SKIP_INIT=
-exit /b 0
+goto:eof
 
 ::-----------------------------------
 :: Extract the ARG0 and ARG1 from %CMDCMDLINE% using cmd.exe own parser
