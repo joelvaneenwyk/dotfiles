@@ -1,35 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
     "blocks": [{
-            "alignment": "right",
-            "segments": [{
-                    "foreground": "#007acc",
-                    "style": "plain",
-                    "template": "{{ .Name }}",
-                    "type": "shell"
-                },
-                {
-                    "foreground": "#ff8080",
-                    "properties": {
-                        "root_icon": "root"
-                    },
-                    "style": "plain",
-                    "template": " <#757575,>as</> \uf0e7",
-                    "type": "root"
-                },
-                {
-                    "foreground": "#689f38",
-                    "properties": {
-                        "time_format": "15:04:05"
-                    },
-                    "style": "plain",
-                    "template": " <#757575,>|</> {{ .CurrentDate | date .Format }}",
-                    "type": "time"
-                }
-            ],
-            "type": "prompt"
-        },
-        {
             "alignment": "left",
             "newline": true,
             "segments": [{
@@ -106,15 +77,27 @@
                 }
             ],
             "type": "prompt"
-        },
-        {
+        }, {
             "alignment": "right",
             "segments": [{
-                "foreground": "#d3d3d3",
-                "style": "plain",
-                "template": "|",
-                "type": "text"
-            }],
+                    "foreground": "#ff8080",
+                    "properties": {
+                        "root_icon": "root"
+                    },
+                    "style": "plain",
+                    "template": " <#757575,>as</> \uf0e7",
+                    "type": "root"
+                },
+                {
+                    "foreground": "#689f38",
+                    "properties": {
+                        "time_format": "15:04:05"
+                    },
+                    "style": "plain",
+                    "template": " <#757575,>|</> {{ .CurrentDate | date .Format }}",
+                    "type": "time"
+                }
+            ],
             "type": "prompt"
         },
         {
@@ -129,7 +112,7 @@
                 {
                     "foreground": "#ffffff",
                     "style": "plain",
-                    "template": "$",
+                    "template": "$ ",
                     "type": "text"
                 }
             ],
