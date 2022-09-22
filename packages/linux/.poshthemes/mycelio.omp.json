@@ -23,11 +23,11 @@
                         "macos": "mac"
                     },
                     "style": "plain",
-                    "template": " {{ if .WSL }}WSL at {{ end }}{{.Icon}} ",
+                    "template": " {{.Icon}}  ",
                     "type": "os"
                 },
                 {
-                    "background": "#746800",
+                    "background": "#0077c2",
                     "foreground": "#e4e4e4",
                     "invert_powerline": true,
                     "powerline_symbol": "\ue0b0",
@@ -51,7 +51,7 @@
                 },
                 {
                     "background": "#61AFEF",
-                    "foreground": "#ffffff",
+                    "foreground": "#474747",
                     "powerline_symbol": "\ue0b0",
                     "properties": {
                         "mixed_threshold": 1,
@@ -62,18 +62,15 @@
                     "type": "path"
                 },
                 {
-                    "background": "#00d624",
-                    "background_templates": [
-                        "{{ if gt .Code 0 }}#e91e63{{ end }}"
-                    ],
-                    "foreground": "#ffffff",
+                    "type": "exit",
+                    "style": "powerline",
+                    "foreground": "#B8BEC2",
+                    "background": "#ffffff",
+                    "trailing_diamond": "\ue0b4",
+                    "template": "{{ if ne .Code 0 }}<,#FF461B> \uf656 {{ .Meaning }} </>{{else}}<,#8AEB07> \uf42e  </>{{ end }}",
                     "properties": {
                         "always_enabled": true
-                    },
-                    "style": "powerline",
-                    "template": "<#193549>\ue0b0</> ",
-                    "trailing_diamond": "\ue0b4",
-                    "type": "exit"
+                    }
                 }
             ],
             "type": "prompt"
