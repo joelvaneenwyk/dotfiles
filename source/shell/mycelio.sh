@@ -790,19 +790,6 @@ function install_hugo {
 }
 
 function install_oh_my_posh {
-    _oh_my_posh_tmp="$MYCELIO_TEMP/oh_my_posh"
-    _oh_my_posh_exe="$MYCELIO_GOBIN/oh-my-posh$MYCELIO_OS_APP_EXTENSION"
-
-    if [ -f "$MYCELIO_HOME/.local/bin/oh-my-posh" ]; then
-        rm "$MYCELIO_HOME/.local/bin/oh-my-posh"
-    fi
-
-    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ] && [ -f "$_oh_my_posh_exe" ]; then
-        rm -rf "$_oh_my_posh_tmp"
-        rm -f "$_oh_my_posh_exe"
-        echo "Removed oh-my-posh binary: '$_oh_my_posh_exe'"
-    fi
-
     if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
         _posh_themes="$MYCELIO_HOME/.poshthemes"
         mkdir -p "$_posh_themes"
@@ -856,10 +843,22 @@ function install_oh_my_posh {
         return 0
     fi
 
-    if [ -f "$_oh_my_posh_exe" ] && _version=$("$_oh_my_posh_exe" --version 2>&1); then
-        if [ "$_version" = "8.0.0" ]; then
+    _oh_my_posh_tmp="$MYCELIO_TEMP/oh_my_posh"
+    _oh_my_posh_exe="$MYCELIO_GOBIN/oh-my-posh$MYCELIO_OS_APP_EXTENSION"
+
+    if [ -f "$MYCELIO_HOME/.local/bin/oh-my-posh" ]; then
+        rm "$MYCELIO_HOME/.local/bin/oh-my-posh"
+        echo "✔ Removed 'oh-my-posh' executable old location."
+    fi
+
+    if [ -f "$_oh_my_posh_exe" ]; then
+        if [ ! "${MYCELIO_ARG_CLEAN:-}" = "1" ] && _version=$("$_oh_my_posh_exe" --version 2>&1) && [ "$_version" = "8.32.4" ]; then
             echo "✔ 'oh-my-posh' v$_version already installed."
             return 0
+        else
+            rm -rf "$_oh_my_posh_tmp"
+            rm -f "$_oh_my_posh_exe"
+            echo "Removed oh-my-posh binary: '$_oh_my_posh_exe'"
         fi
     fi
 
@@ -911,7 +910,7 @@ function install_oh_my_posh {
     fi
 
     if ! _version=$("$_oh_my_posh_exe" --version 2>&1); then
-        log_error "Failed to install 'oh_my_posh' static site builder."
+        log_error "Failed to install 'oh-my-posh' terminal helper."
         return 3
     fi
 

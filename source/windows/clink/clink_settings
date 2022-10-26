@@ -1,9 +1,6 @@
-#
-# Default clink settings. For explanation of these and other settings see:
-#
-#   - https://chrisant996.github.io/clink/clink.html
-#   - https://github.com/cmderdev/cmder/blob/master/vendor/clink_settings.default
-#
+# name: Auto-update the Clink program files
+# type: boolean
+clink.autoupdate = False
 
 # name: Strips CR and LF chars on paste
 # type: enum
@@ -15,29 +12,105 @@ clink.paste_crlf = space
 # options: off,answer_yes,answer_no
 cmd.auto_answer = answer_yes
 
+# name: Argument color
+# type: color
+color.arg = bold yellow
+
+# name: Argument info color
+# type: color
+color.arginfo = yellow
+
+# name: Shell command completions
+# type: color
+color.cmd = bold yellow
+
+# name: Color for < and > redirection symbols
+# type: color
+color.cmdredir = bold
+
+# name: Color for & and | command separators
+# type: color
+color.cmdsep = bold
+
+# name: Color for comment row
+# type: color
+color.comment_row = bright white on cyan
+
+# name: Description completion color
+# type: color
+color.description = bright cyan
+
+# name: Doskey completions
+# type: color
+color.doskey = bold cyan
+
+# name: Filtered completion color
+# type: color
+color.filtered = bold yellow
+
+# name: Flag color
+# type: color
+color.flag = bold
+
+# name: Color for preferred branch completions
+# type: color
+color.git.star = bright green
+
+# name: For user-interaction prompts
+# type: color
+color.interact = bold
+
+# name: Message area color
+# type: color
+color.message = default
+
 # name: Prompt color
 # type: color
 color.prompt = red
 
-color.doskey = bold cyan
-color.cmd = bold yellow
-color.flag = bold
-color.arg = bold yellow
-color.filtered = bold yellow
+# name: Color for suggestion text
+# type: color
+color.suggestion = bright black
 
-# name: Skip adding lines prefixed with whitespace
+# name: Unexpected argument color
+# type: color
+color.unexpected = default
+
+# name: Match executables in current directory
 # type: boolean
-history.ignore_space = False
+exec.cwd = True
+
+# name: Include directories
+# type: boolean
+exec.dirs = True
+
+# name: Enable executable matching for 'complete'
+# type: boolean
+exec.enable = True
+
+# name: Match executables in PATH
+# type: boolean
+exec.path = True
+
+# name: Whitespace prefix matches files
+# type: boolean
+exec.space_prefix = True
 
 # name: Sets how command history expansion is applied
 # type: enum
 # options: off,on,not_squoted,not_dquoted,not_quoted
 history.expand_mode = not_dquoted
 
+# name: Skip adding lines prefixed with whitespace
+# type: boolean
+history.ignore_space = False
+
 # name: The number of history lines to save
 # type: integer
 history.max_lines = 10000
 
+# name: Save history between sessions
+# type: boolean
 history.save = True
 
 # name: Share history between instances
@@ -48,21 +121,3 @@ history.shared = True
 # type: boolean
 terminal.use_altgr_substitute = True
 
-# When matching executables as the first word (exec.enable), include executables in the current
-# directory. (This is implicit if the word being completed is a relative path).
-exec.cwd = True
-
-# When matching executables as the first word (exec.enable), also include directories
-# relative to the current working directory as matches.
-exec.dirs = True
-
-# Match executables when completing the first word of a line.
-exec.enable = True
-
-# When matching executables as the first word (exec.enable), include executables found in the
-# directories specified in the %PATH% environment variable.
-exec.path = True
-
-# If the line begins with whitespace then Clink bypasses executable
-# matching (exec.path) and will do normal files matching instead.
-exec.space_prefix = True

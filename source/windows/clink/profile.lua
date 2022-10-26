@@ -1,11 +1,12 @@
----
--- Clink profile for 'dotfiles' project.
---
--- See https://chrisant996.github.io/clink/clink.html for documentation. This is originally based
--- on the Cmder boot script (see https://github.com/cmderdev/cmder/blob/master/config/cmder.lua) but has
--- been somewhat heavily modified and also just out of date with most recent version.
----
-local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
+--[[
+
+Clink profile for 'dotfiles' project.
+
+See https://chrisant996.github.io/clink/clink.html for documentation. This is originally based
+on the Cmder boot script (see https://github.com/cmderdev/cmder/blob/master/config/cmder.lua) but has
+been somewhat heavily modified and also just out of date with most recent version.
+
+]] local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
 local mycelio_root_dir = path.normalise(script_dir .. "../../..")
 
 local color_cyan = "\x1b[36m"
@@ -31,6 +32,7 @@ profile_settings = {extension_npm_cache = 1, extension_npm = 1}
 --                          current directory will be used
 -- @param  {string} dirname Directory name to search for
 -- @return {string} Path to specified directory or nil if such dir not found
+
 local function get_dir_contains(path, dirname)
 
     -- return parent path for specified entry (either file or directory)

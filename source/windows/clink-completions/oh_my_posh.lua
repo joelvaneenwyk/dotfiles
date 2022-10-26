@@ -5,6 +5,7 @@ local home = os.getenv("HOME") or os.getenv("USERPROFILE")
 local mycelio_config = path.normalise(mycelio_root_dir .. "/packages/linux/.poshthemes/mycelio.omp.json")
 local local_oh_my_posh_executable = path.normalise(home .. "/.local/go/bin/oh-my-posh.exe")
 local oh_my_posh_executable = ""
+local loaded = false
 
 if not os.isfile(local_oh_my_posh_executable) then
     print('[clink] Oh My Posh not found: ' .. local_oh_my_posh_executable)
@@ -20,5 +21,14 @@ else
         local command = process:read("*a")
         load(command)()
         print('[clink] Initialized Oh My Posh: \'' .. local_oh_my_posh_executable .. '\'')
+        loaded = true
+    end
+end
+
+if not loaded then
+    -- A prompt filter that adds a line feed and angle bracket.
+    local bracket_prompt = clink.promptfilter(150)
+    function bracket_prompt:filter(prompt)
+        return prompt .. "\n → "
     end
 end
