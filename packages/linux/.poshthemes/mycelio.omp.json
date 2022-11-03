@@ -64,9 +64,10 @@
                 {
                     "type": "exit",
                     "style": "powerline",
-                    "foreground": "#B8BEC2",
-                    "background": "#ffffff",
+                    "foreground": "#252525",
+                    "background": "#FFFFFF",
                     "trailing_diamond": "\ue0b4",
+                    // Show error code and 'X' sign if exit code is not 0 otherwise show a green check mark.
                     "template": "{{ if ne .Code 0 }}<,#FF461B> \uf656 {{ .Meaning }} </>{{else}}<,#8AEB07> \uf42e  </>{{ end }}",
                     "properties": {
                         "always_enabled": true
