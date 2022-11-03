@@ -344,6 +344,7 @@
         "pacman",
         "powerline",
         "pwsh",
+        "pyright",
         "qemu",
         "restow",
         "rlespinasse",
@@ -369,5 +370,6 @@
     "restructuredtext.languageServer.disabled": true,
     "restructuredtext.syntaxHighlighting.disabled": true,
     "svn.ignoreMissingSvnWarning": true,
-    "esbonio.server.enabled": false
+    "esbonio.server.enabled": false,
+    "python.analysis.typeCheckingMode": "basic"
 }
