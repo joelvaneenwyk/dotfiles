@@ -18,7 +18,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     set "SNAME=%~n0"                                                &:# Script name, without its extension
     set ^"ARG0=%0^"                                                 &:# Script invokation name
     set ^"ARGS=%*^"                                                 &:# Argument line
-    set "SPROFILE=%_mycelio_root%\source\windows\bin\profile.bat"    &:# Full path to profile script
+    set "SPROFILE=%_mycelio_root%\source\windows\bin\profile.bat"   &:# Full path to profile script
     set "STOW=%_mycelio_root%\source\stow\bin\stow"
     set "COMMAND=%~1"
 

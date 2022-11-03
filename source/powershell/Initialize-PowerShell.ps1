@@ -216,7 +216,7 @@ Function Initialize-PowerShell {
                 }
             }
 
-            Uninstall-Module -Name oh-my-posh -Force
+            Uninstall-Module -Name oh-my-posh -ErrorAction SilentlyContinue -Force >$null
         }
         catch [Exception] {
             Write-Host "❌ Failed to install 'posh-git' module.", $_.Exception.Message

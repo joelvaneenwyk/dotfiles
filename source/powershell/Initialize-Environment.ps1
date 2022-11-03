@@ -179,56 +179,56 @@ Function Expand-File {
 
         # If older vresion is available, download and extract latest
         if (Test-Path -Path "$7za920/7za.exe" -PathType Leaf) {
-            $7z2106zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2106-extra.7z"
-            $7z2106 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2106"
+            $7z2201zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2201-extra.7z"
+            $7z2201 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2201"
 
             # Download latest version of 7zip
-            if (-not(Test-Path -Path "$7z2106zip" -PathType Leaf)) {
-                Get-File -Url "https://www.7-zip.org/a/7z2106-extra.7z" -Filename "$7z2106zip"
+            if (-not(Test-Path -Path "$7z2201zip" -PathType Leaf)) {
+                Get-File -Url "https://www.7-zip.org/a/7z2201-extra.7z" -Filename "$7z2201zip"
             }
 
             # Extract latest vesrion using old version
-            if (Test-Path -Path "$7z2106zip" -PathType Leaf) {
-                if ( -not(Test-Path -Path "$7z2106") ) {
-                    New-Item -ItemType directory -Path "$7z2106" | Out-Null
+            if (Test-Path -Path "$7z2201zip" -PathType Leaf) {
+                if ( -not(Test-Path -Path "$7z2201") ) {
+                    New-Item -ItemType directory -Path "$7z2201" | Out-Null
                 }
 
-                if (-not(Test-Path -Path "$7z2106/7za.exe" -PathType Leaf)) {
-                    Write-Host "$7za920/7za.exe x $7z2106zip -aoa -o$7z2106 -r -y"
+                if (-not(Test-Path -Path "$7z2201/7za.exe" -PathType Leaf)) {
+                    Write-Host "$7za920/7za.exe x $7z2201zip -aoa -o$7z2201 -r -y"
                     & "$7za920/7za.exe" @(
-                        "x", "$7z2106zip", "-aoa", "-o$7z2106", "-r", "-y")
-                    Write-Host "Extracted archive: '$7z2106'"
+                        "x", "$7z2201zip", "-aoa", "-o$7z2201", "-r", "-y")
+                    Write-Host "Extracted archive: '$7z2201'"
                 }
             }
         }
 
         # Specify latest version of 7zip so that we can use it below
-        if (Test-Path -Path "$7z2106/x64/7za.exe" -PathType Leaf) {
-            $7zip = "$7z2106/x64/7za.exe"
+        if (Test-Path -Path "$7z2201/x64/7za.exe" -PathType Leaf) {
+            $7zip = "$7z2201/x64/7za.exe"
         }
     }
     else {
-        $7z2106zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2106-linux-x64.tar.xz"
-        $7z2106 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2106"
+        $7z2201zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2201-linux-x64.tar.xz"
+        $7z2201 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2201"
 
         # Download 7zip that was stored in a zip file so that we can extract the latest version stored in 7z format
-        if (-not(Test-Path -Path "$7z2106zip" -PathType Leaf)) {
-            Get-File -Url "https://www.7-zip.org/a/7z2106-linux-x64.tar.xz" -Filename "$7z2106zip"
+        if (-not(Test-Path -Path "$7z2201zip" -PathType Leaf)) {
+            Get-File -Url "https://www.7-zip.org/a/7z2201-linux-x64.tar.xz" -Filename "$7z2201zip"
         }
 
         # Extract previous version of 7zipTempDir first
-        if (Test-Path -Path "$7z2106zip" -PathType Leaf) {
-            if ( -not(Test-Path -Path "$7z2106") ) {
-                New-Item -ItemType directory -Path "$7z2106" | Out-Null
+        if (Test-Path -Path "$7z2201zip" -PathType Leaf) {
+            if ( -not(Test-Path -Path "$7z2201") ) {
+                New-Item -ItemType directory -Path "$7z2201" | Out-Null
             }
 
-            if (-not(Test-Path -Path "$7z2106/7zz" -PathType Leaf)) {
-                tar -xvf "$7z2106zip" -C "$7z2106"
+            if (-not(Test-Path -Path "$7z2201/7zz" -PathType Leaf)) {
+                tar -xvf "$7z2201zip" -C "$7z2201"
             }
         }
 
-        if (Test-Path -Path "$7z2106/7zz" -PathType Leaf) {
-            $7zip = "$7z2106/7zz"
+        if (Test-Path -Path "$7z2201/7zz" -PathType Leaf) {
+            $7zip = "$7z2201/7zz"
         }
     }
 
@@ -763,7 +763,7 @@ Function Install-MSYS2 {
     $script:MsysArchive = "$script:MycelioArchivesDir/msys2.exe"
 
     if ( -not(Test-Path -Path "$script:MsysTargetDir/mingw64.exe" -PathType Leaf) ) {
-        $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/2021-07-25/msys2-base-x86_64-20210725.sfx.exe"
+        $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/2022-10-28/msys2-base-x86_64-20221028.sfx.exe"
 
         if ( -not(Test-Path -Path "$script:MsysArchive" -PathType Leaf) ) {
             Write-Host "::group::Download MSYS2"
@@ -952,14 +952,34 @@ Function Install-Toolset {
             # Get latest buckets (requires 'git')
             scoop update
 
+            $vscode_installed = $false
+
             # Install portable version even if it is already installed locally
-            if (-not (Test-Path -Path "C:\Program Files\Microsoft VS Code\Code.exe" -PathType Leaf)) {
+            if (Test-Path -Path "C:\Program Files\Microsoft VS Code\Code.exe" -PathType Leaf) {
+                $vscode_installed = $true
+            }
+            elseif (Test-Path -Path "$env:LOCALAPPDATA\Programs\Microsoft VS Code\Code.exe" -PathType Leaf) {
+                $vscode_installed = $true
+            }
+
+            if ($vscode_installed) {
+                # Already installed nothing to do
+            }
+            elseif (Test-CommandValid "winget") {
+                winget install -e --id Microsoft.VisualStudioCode --silent
+            }
+            else {
                 scoop install vscode-portable
             }
 
             # Much better than default Windows terminal
             if (-not(Test-CommandValid "wt")) {
-                scoop install windows-terminal
+                elseif (Test-CommandValid "winget") {
+                    winget install -e --id Microsoft.WindowsTerminal --silent
+                }
+                else {
+                    scoop install windows-terminal
+                }
             }
 
             Install-Tool "keepassxc"

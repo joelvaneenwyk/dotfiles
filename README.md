@@ -147,14 +147,16 @@ These are optional steps to setup SSH to sync to private GitHub repositories.
 
 Instead of running each step below, you can instead run `./source/shell/setup-secrets.sh`
 
-1. `ssh-keygen -t ed25519 -C "joel.vaneenwyk@gmail.com"`
+1. Open `bash` terminal e.g., `Git Bash` on Windows
+2. `ssh-keygen -t ed25519 -C "joel.vaneenwyk@gmail.com"`
    - **NOTE:** Some older systems do not support `Ed25519` algorithm. In those cases, use the following instead: `ssh-keygen -t rsa -b 4096 -C "joel.vaneenwyk@gmail.com"`
-2. `eval "$(ssh-agent -s)"`
-3. `ssh-add ~/.ssh/id_ed25519`
-4. `xclip -sel clip < ~/.ssh/id_ed25519.pub`
+3. `eval "$(ssh-agent -s)"`
+4. `ssh-add ~/.ssh/id_ed25519`
+5. `xclip -sel clip < ~/.ssh/id_ed25519.pub`
+   - Git Bash: `cat ~/.ssh/id_ed25519.pub | clip`
    - WSL: `cat ~/.ssh/id_ed25519.pub | /mnt/c/Windows/System32/clip.exe`
-5. From [GitHub SSH and GPG keys](https://github.com/settings/keys), press **New SSH Key**
-6. Paste in the key from the clipboard and press `Save`
+6. From [GitHub SSH and GPG keys](https://github.com/settings/keys), press **New SSH Key**
+7. Paste in the key from the clipboard and press `Save`
 
 If all worked, you should be able to clone one of your private repositories e.g. `git clone git@github.com:joelvaneenwyk/secrets.git`
 
