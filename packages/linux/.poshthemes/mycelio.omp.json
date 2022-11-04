@@ -1,9 +1,11 @@
 {
     "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
-    "blocks": [{
+    "blocks": [
+        {
             "alignment": "left",
             "newline": true,
-            "segments": [{
+            "segments": [
+                {
                     "foreground": "#a3a3a3",
                     "style": "plain",
                     "template": "\u250c",
@@ -52,12 +54,12 @@
                 {
                     "background": "#61AFEF",
                     "foreground": "#474747",
+                    "style": "powerline",
                     "powerline_symbol": "\ue0b0",
                     "properties": {
                         "mixed_threshold": 1,
                         "style": "letter"
                     },
-                    "style": "powerline",
                     "template": " {{ .Path }} ",
                     "type": "path"
                 },
@@ -75,9 +77,11 @@
                 }
             ],
             "type": "prompt"
-        }, {
+        },
+        {
             "alignment": "right",
-            "segments": [{
+            "segments": [
+                {
                     "foreground": "#ff8080",
                     "properties": {
                         "root_icon": "root"
@@ -101,7 +105,8 @@
         {
             "alignment": "left",
             "newline": true,
-            "segments": [{
+            "segments": [
+                {
                     "foreground": "#a3a3a3",
                     "style": "plain",
                     "template": "\u2514",

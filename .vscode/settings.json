@@ -53,7 +53,13 @@
     "editor.fontLigatures": true,
 
     "json.validate.enable": true,
-
+    "workbench.colorCustomizations": {
+        "terminal.foreground": "#b69f83",
+        "terminal.background": "#181818"
+    },
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.shellIntegration.enabled": true,
+    "terminal.integrated.minimumContrastRatio": 1,
     "terminal.integrated.fontFamily": "PragmataProMonoLiga NF, PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
     "terminal.integrated.environmentChangesRelaunch": false,
     "terminal.integrated.confirmOnExit": "never",
@@ -78,9 +84,7 @@
             "path": [
                 "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\bash.exe"
             ],
-            "args": [
-                "--login", "-i"
-            ],
+            "args": ["--login", "-i"],
             "env": {
                 "MSYSTEM": "MINGW64",
                 "CHERE_INVOKING": "1",
@@ -92,9 +96,7 @@
             "path": [
                 "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\fish.exe"
             ],
-            "args": [
-                "--login", "-i"
-            ],
+            "args": ["--login", "-i"],
             "env": {
                 "MSYSTEM": "MSYS2",
                 "CHERE_INVOKING": "1",
@@ -116,22 +118,16 @@
         },
         "bash": {
             "path": "bash",
-            "args": [
-                "-l"
-            ],
+            "args": ["-l"],
             "icon": "terminal-bash"
         },
         "zsh": {
             "path": "zsh",
-            "args": [
-                "-l"
-            ]
+            "args": ["-l"]
         },
         "fish": {
             "path": "fish",
-            "args": [
-                "-l"
-            ]
+            "args": ["-l"]
         },
         "tmux": {
             "path": "tmux",
@@ -147,16 +143,11 @@
     "terminal.integrated.profiles.linux": {
         "sh": {
             "path": "sh",
-            "args": [
-                "-l"
-            ]
+            "args": ["-l"]
         },
         "bash": {
             "path": "sh",
-            "args": [
-                "-c",
-                "set -x && . ~/.profile && bash"
-            ],
+            "args": ["-c", "set -x && . ~/.profile && bash"],
             "icon": "terminal-bash"
         },
         "zsh": {
@@ -257,12 +248,12 @@
     },
 
     "[json]": {
-        "editor.defaultFormatter": "HookyQR.beautify",
-        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
     },
     "[jsonc]": {
-        "editor.defaultFormatter": "HookyQR.beautify",
-        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
     },
     "json.format.enable": true,
 
