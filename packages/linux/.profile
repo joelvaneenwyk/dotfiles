@@ -14,6 +14,113 @@ _log_debug() {
     fi
 }
 
+_log_info() {
+    echo "$@"
+}
+
+_log_warning() {
+    echo "WARNING: $@"
+}
+
+#
+# Some platforms (e.g., MacOS) do not come with 'timeout' command so
+# this is a cross-platform implementation that optionally uses perl.
+#
+_timeout() {
+    _seconds="${1:-}"
+    shift
+
+    if [ -n "${_seconds:-}" ]; then
+        if [ -x "$(command -v timeout)" ]; then
+            timeout -k "$_seconds" "$_seconds" "$@"
+        elif [ -x "$(command -v gtimeout)" ]; then
+            gtimeout -k "$_seconds" "$_seconds" "$@"
+        elif [ -x "$(command -v perl)" ]; then
+            perl -e "alarm $_seconds; exec @ARGV" "$@"
+        else
+            # shellcheck disable=SC2294
+            eval "$@"
+        fi
+    fi
+}
+
+_init_sudo() {
+    if [ -z "${MYCO_SUDO:-}" ]; then
+        _status=""
+
+        if [ ! -x "$(command -v sudo)" ]; then
+            _status="no_sudo"
+        fi
+
+        if [ -z "${_status:-}" ] && _sudo_machine_output="$(uname -s 2>/dev/null)"; then
+            case "${_sudo_machine_output:-}" in
+            CYGWIN* | MINGW*)
+                _status="unsupported_platform"
+                ;;
+            Darwin*)
+                if dscl . -authonly "$(whoami)" "" >/dev/null 2>&1; then
+                    _status="has_sudo__pass_set"
+                fi
+                ;;
+            *) ;;
+            esac
+        fi
+
+        if [ -z "${_status:-}" ]; then
+            # We first attempt to validate ('-v') the user which will refresh the timestamp and
+            # essentially "login" if a password is not required.
+            _timeout 1 sudo -v >/dev/null 2>&1
+
+            if _sudo_id="$(_timeout 1 sudo -n id 2>&1)"; then
+                _status="has_sudo__pass_set"
+            else
+                _status="has_sudo__needs_pass"
+            fi
+        fi
+
+        if [ -z "${_status:-}" ]; then
+            # -n -> 'non-interactive'
+            # -v -> 'validate'
+            if _prompt="$(sudo -nv 2>&1)"; then
+                _status="has_sudo__pass_set"
+            fi
+
+            if echo "${_prompt:-}" | grep -q '^sudo: a password is required'; then
+                _status="has_sudo__needs_pass"
+            fi
+        fi
+
+        if [ "${_status:-}" = "has_sudo__pass_set" ]; then
+            export MYCO_SUDO=1
+        else
+            if [ "${_status:-}" = "has_sudo__needs_pass" ]; then
+                _log_warning "Not using 'sudo' as it requires a password. Pass '--sudo' to prompt for password."
+            elif [ "${_status:-}" = "no_sudo" ]; then
+                _log_debug "Command 'sudo' not found or installed."
+            elif [ "${_status:-}" = "unsupported_platform" ]; then
+                _log_warning "Command 'sudo' not supported on this platform."
+            fi
+
+            export MYCO_SUDO=0
+        fi
+    fi
+}
+
+# Runs the command passed in as an argument with sudo if we have sudo permissions or are
+# allowed to run interactively. If sudo command does not exist, we just run the command.
+#######################################
+_sudo() {
+    _init_sudo
+
+    if [ ! -x "$(command -v sudo)" ]; then
+        "$@"
+    elif [ "${MYCO_SUDO:-}" = "1" ]; then
+        sudo "$@"
+    else
+        _log_warning "Skipped command: '$*'"
+    fi
+}
+
 #
 # USAGE: _unique_list [list]
 #
@@ -215,7 +322,7 @@ initialize_interactive_profile() {
     fi
 
     if [ -z "${_shell:-}" ]; then
-        _shell="$(basename "$0")"
+        _shell="$(basename "$0" 2>/dev/null)"
     fi
 
     if [ "${MYCELIO_OS_NAME:-}" = "Windows" ]; then
@@ -404,9 +511,10 @@ initialize_profile() {
     # Setup XServer for Windows. This assumes you have a working XServer and PulseAudio configuration
     # running on the Windows host machine.
     if grep -qEi "(Microsoft|WSL)" /proc/version >/dev/null 2>&1; then
+        export DISPLAY=$(echo $(grep nameserver /etc/resolv.conf | sed 's/nameserver //'):0)
+
         # This was disabled January 2022 as it is very slow and causes a hang when you
         # load a new prompt. Ideally this is a separate script you run as needed.
-
         # Get the IP Address of the Windows host machine.
         #export HOST_IP="$(
         #    host $(hostname) |
@@ -415,7 +523,6 @@ initialize_profile() {
         #        awk '{ print $NF }' |
         #        tr -d '\r'
         #)"
-
         # These are no longer necessary to get display working in WSL as there
         # is now native support for graphics applications using WSLg so we can
         # disable all of these.
@@ -595,6 +702,16 @@ initialize() {
     # Fig pre block. Keep at the top of this file.
     if [ -f "$HOME/.fig/shell/profile.pre.bash" ]; then
         . "$HOME/.fig/shell/profile.pre.bash"
+    fi
+
+    unset MYCO_SUDO
+
+    if grep -qEi "(Microsoft|WSL)" /proc/version >/dev/null 2>&1; then
+        export DONT_PROMPT_WSL_INSTALL=1
+
+        if [ -x "$(command -v update-binfmts)" ]; then
+            _sudo update-binfmts --disable cli
+        fi
     fi
 
     initialize_profile "$@"
