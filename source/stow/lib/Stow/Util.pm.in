@@ -1,0 +1,714 @@
+# This file is part of GNU Stow.
+#
+# GNU Stow is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GNU Stow is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see https://www.gnu.org/licenses/.
+
+package Stow::Util;
+
+=head1 NAME
+
+Stow::Util - general utilities
+
+=head1 SYNOPSIS
+
+    use Stow::Util qw(debug set_debug_level error ...);
+
+=head1 DESCRIPTION
+
+Supporting utility routines for L<Stow>.
+
+=cut
+
+use strict;
+use warnings;
+
+use POSIX qw(getcwd);
+use Encode qw/encode decode/;
+use File::Spec ();
+use File::Path ();
+use File::Basename;
+
+use constant IS_WIN32 => $^O eq 'MSWin32';
+
+use base qw(Exporter);
+
+our @EXPORT_OK = qw(
+    error debug set_debug_level set_test_mode
+    make_path join_paths parent canon_path normalize_path restore_cwd adjust_dotfile
+    get_link_target is_symlink make_symlink remove_link remove_tree
+);
+
+# Very Long Name Prefix
+my $VLNP = '\\\\?';
+
+our $ProgramName = 'stow';
+our $VERSION = '@VERSION@';
+
+#############################################################################
+#
+# General Utilities: nothing stow specific here.
+#
+#############################################################################
+
+=head1 IMPORTABLE SUBROUTINES
+
+=head2 error($format, @args)
+
+Outputs an error message in a consistent form and then dies.
+
+=cut
+
+sub error {
+    my ($format, @args) = @_;
+    die "$ProgramName: ERROR: " . sprintf($format, @args) . "\n";
+}
+
+=head2 set_debug_level($level)
+
+Sets verbosity level for C<debug()>.
+
+=cut
+
+our $debug_level = 0;
+
+sub set_debug_level {
+    my ($level) = @_;
+    $debug_level = $level;
+}
+
+=head2 set_test_mode($on_or_off)
+
+Sets testmode on or off.
+
+=cut
+
+our $test_mode = 0;
+
+sub set_test_mode {
+    my ($on_or_off) = @_;
+    if ($on_or_off) {
+        $test_mode = 1;
+    }
+    else {
+        $test_mode = 0;
+    }
+}
+
+=head2 debug($level, $msg)
+
+Logs to STDERR based on C<$debug_level> setting.  C<$level> is the
+minimum verbosity level required to output C<$msg>.  All output is to
+STDERR to preserve backward compatibility, except for in test mode,
+when STDOUT is used instead.  In test mode, the verbosity can be
+overridden via the C<TEST_VERBOSE> environment variable.
+
+Verbosity rules:
+
+=over 4
+
+=item    0: errors only
+
+=item >= 1: print operations: LINK/UNLINK/MKDIR/RMDIR/MV
+
+=item >= 2: print operation exceptions
+
+e.g. "_this_ already points to _that_", skipping, deferring,
+overriding, fixing invalid links
+
+=item >= 3: print trace detail: trace: stow/unstow/package/contents/node
+
+=item >= 4: debug helper routines
+
+=item >= 5: debug ignore lists
+
+=back
+
+=cut
+
+sub debug {
+    my ($level, $msg) = @_;
+    if ($debug_level >= $level) {
+        if ($test_mode) {
+            print "# $msg\n";
+        }
+        else {
+            warn "$msg\n";
+        }
+    }
+}
+
+
+#===== METHOD ===============================================================
+# Name      : make_symlink
+# Purpose   : wrapper for creating symlinks to add custom support for Windows
+# Parameters: $oldfile, $newfile
+# Returns   : Returns 1 for success, 0 otherwise
+# Throws    : n/a
+#============================================================================
+sub make_symlink {
+    my ($oldfile, $newfile) = @_;
+    my $result;
+
+    if (IS_WIN32) {
+        $result = make_symlink_windows($oldfile, $newfile);
+    } else {
+        $result = symlink($oldfile, $newfile);
+    }
+
+    return $result;
+}
+
+#===== METHOD ===============================================================
+# Name      : join_paths()
+# Purpose   : concatenates given paths
+# Parameters: path1, path2, ... => paths
+# Returns   : concatenation of given paths
+# Throws    : n/a
+# Comments  : factors out redundant path elements:
+#           : '//' => '/' and 'a/b/../c' => 'a/c'
+#============================================================================
+sub join_paths {
+    my @paths = @_;
+
+    # weed out empty components and concatenate
+    my $result = normalize_path(join '/', grep {! /\A\z/} @paths);
+
+    # factor out back references and remove redundant /'s)
+    my @result = ();
+    PART:
+    for my $part (split m{/+}, $result) {
+        next PART if $part eq '.';
+        if (@result && $part eq '..' && $result[-1] ne '..') {
+            pop @result;
+        }
+        else {
+            push @result, $part;
+        }
+    }
+
+    return join '/', @result;
+}
+
+#===== SUBROUTINE ===========================================================
+# Name      : remove_link()
+# Purpose   : remove an esiting symbolic link
+# Parameters: $path => path to the symbolic link
+# Returns   : n/a
+# Throws    : fatal error if the operation fails or if passed the path to a
+#           : non-link
+# Comments  : none
+#============================================================================
+sub remove_link {
+    my ($path) = @_;
+
+    if (is_symlink($path)) {
+        if (IS_WIN32) {
+            my $abs_path = File::Spec->rel2abs($path);
+
+            if (is_directory($path)) {
+                rmdir $path
+                    or die "could not remove directory link: $path ($!)\n";
+            }
+            else {
+                system("del /f /q $abs_path");
+            }
+        }
+        else {
+            unlink $path
+                or die "could not remove link: $path ($!)\n";
+        }
+    }
+
+    return 1;
+}
+
+sub is_directory {
+    my ($dir) = @_;
+    $dir = get_absolute_path($dir);
+    return -d $dir;
+}
+
+#===== SUBROUTINE ===========================================================
+# Name      : remove_tree()
+# Purpose   : safely remove a tree of test files
+# Parameters: $dir => path to the top of the tree
+# Returns   : n/a
+# Comments  : recursively removes directories containing softlinks empty files
+#============================================================================
+sub remove_tree {
+    my ($dir) = @_;
+
+    if (is_symlink($dir)) {
+        remove_link($dir);
+    }
+    elsif (-e $dir && IS_WIN32) {
+        opendir my $DIR, $dir or die "cannot read directory: $dir ($!)\n";
+        my @listing = readdir $DIR;
+        closedir $DIR;
+
+        NODE:
+        for my $node (@listing) {
+            next NODE if $node eq '.';
+            next NODE if $node eq '..';
+
+            my $path = "$dir/$node";
+            if (is_symlink($path)) {
+                remove_link($path);
+            }
+            elsif (is_directory($path)) {
+                remove_tree($path);
+            }
+            else {
+                unlink $path;
+            }
+        }
+    }
+
+    if (-e $dir) {
+        File::Path::remove_tree($dir, {
+            keep_root => 0,
+            verbose => 1,
+            safe => 0,
+            error => \my $err
+        });
+
+        if ($err && @$err) {
+            for my $diag (@$err) {
+                my ($file, $message) = %$diag;
+                if ($file eq '') {
+                    print "general error: $message\n";
+                }
+                else {
+                    print "problem unlinking $file: $message\n";
+                }
+            }
+        }
+        else {
+            print "No error encountered\n";
+        }
+    }
+
+    return 1;
+}
+
+#===== METHOD ===============================================================
+# Name      : parent
+# Purpose   : find the parent of the given path
+# Parameters: @path => components of the path
+# Returns   : returns a path string
+# Throws    : n/a
+# Comments  : allows you to send multiple chunks of the path
+#           : (this feature is currently not used)
+#============================================================================
+sub parent {
+    my @path = @_;
+    my $path = normalize_path(join '/', @_);
+    my @elts = split m{/+}, $path;
+    pop @elts;
+    return join '/', @elts;
+}
+
+#===== METHOD ===============================================================
+# Name      : canon_path
+# Purpose   : find absolute canonical path of given path
+# Parameters: $path
+# Returns   : absolute canonical path
+# Throws    : n/a
+# Comments  : is this significantly different from File::Spec->rel2abs?
+#============================================================================
+sub canon_path {
+    my ($path) = @_;
+
+    my $cwd = getcwd();
+    my $canon_path;
+    if (chdir($path)) {
+        $canon_path = getcwd();
+        restore_cwd($cwd);
+    } else {
+        $canon_path = File::Spec->rel2abs($path);
+    }
+
+    return normalize_path($canon_path);
+}
+
+#===== METHOD ===============================================================
+# Name      : normalize_path
+# Purpose   : convert to a standardized path usable on all platforms which
+#             means converting backslash to forward slash.
+# Parameters: $path
+# Returns   : path converted to normal path
+# Throws    : n/a
+#============================================================================
+sub normalize_path {
+    my ($path) = @_;
+    my $normalized = $path;
+
+    if ($^O eq 'msys' || IS_WIN32) {
+        $normalized =~ s#\\#/#g;
+    }
+
+    return $normalized;
+}
+
+sub restore_cwd {
+    my ($prev) = @_;
+    chdir($prev) or error("Your current directory $prev seems to have vanished");
+}
+
+sub adjust_dotfile {
+    my ($target) = @_;
+
+    my @result = ();
+    for my $part (split m{/+}, normalize_path($target)) {
+        if (($part ne "dot-") && ($part ne "dot-.")) {
+            $part =~ s/^dot-/./;
+        }
+        push @result, $part;
+    }
+
+    return join '/', @result;
+}
+
+sub mk_VLN {
+    my ($path) = @_;
+    return $path if $path =~ m/^$VLNP/;
+
+    if( $path !~ m/^\\\\/ ) { # UNC
+        return "${VLNP}UNC\\$path";
+    }
+
+    return "${VLNP}$path";
+}
+
+sub rm_VLN {
+    my ($path) = @_;
+    if (defined $path and length $path) {
+        $path =~ s/^$VLNP(UNC\\)?//;
+    }
+    return $path;
+}
+
+sub _to {
+    return encode("UTF16-LE", $_[0]) . "\0";
+}
+
+sub old_in {
+    return mk_VLN( File::Spec->canonpath( $_[0] ) );
+}
+
+sub old_out {
+    return rm_VLN( $_[0] );
+}
+
+sub new_in {
+    return $_[0];
+}
+
+#===== METHOD ===============================================================
+# Name      : make_symlink_windows
+# Purpose   : wrapper for creating symlinks to add custom support for Windows
+# Parameters: $oldfile, $newfile
+# Returns   : Returns 1 for success, 0 otherwise
+# Throws    : n/a
+#============================================================================
+sub make_symlink_windows {
+    my ($oldfile, $newfile) = @_;
+    my $result = 1;
+
+    if (File::Spec->VERSION < 3.8 && IS_WIN32) {
+        my $abs_newfile = File::Spec->rel2abs($newfile);
+        my $newfile_container = dirname($abs_newfile);
+
+        my $abs_oldfile = File::Spec->rel2abs($oldfile, $newfile_container);
+        my $oldfile_container = dirname($abs_oldfile);
+
+        $oldfile = old_in( $oldfile );
+        $newfile = new_in( $newfile );
+        #print "$oldfile -> $newfile\n";
+        $result = 1 & CreateSymbolicLink(
+            _to($newfile),  # from
+            _to($oldfile),  # to
+            is_directory($abs_oldfile) ? 1 : 0
+        );
+
+        if ($result eq 0) {
+            require Win32;
+            if( Win32::GetLastError() ) {
+                die "symlink failed: $^E";
+            }
+        }
+    } else {
+        $result = symlink($oldfile, $newfile);
+    }
+
+    return $result;
+}
+
+sub link_windows {
+    my ( $oldfile, $newfile, $opts ) = @_;
+    $oldfile = old_in( $oldfile );
+    $newfile = new_in( $newfile );
+
+    # Cannot *usually* (& usefully?) create hard links to directories: Windows & Linux
+    return 0 if is_directory($oldfile);
+
+    if (IS_WIN32) {
+        return 1 & CreateHardLink( _to($newfile), _to($oldfile) );
+    }
+}
+
+sub readlink_windows {
+    my ( $newfile, $opts ) = @_;
+    $newfile = new_in( $newfile );
+
+    my $oldfile;
+    ReadLink( _to($newfile), $oldfile );
+
+    my $result;
+
+    if (defined $oldfile and length $oldfile) {
+        $result = old_out( decode("UTF16-LE", $oldfile ) );
+    } else {
+        $result = $newfile;
+    }
+
+    return $result;
+}
+
+sub get_absolute_path {
+    my ($path) = @_;
+    my $abs_target = File::Spec->rel2abs($path);
+    if (IS_WIN32) {
+        $abs_target = "\\\\?\\$abs_target\\";
+    }
+    return $abs_target;
+}
+
+sub make_path {
+    my ($path, $mode) = @_;
+
+    if (not defined $mode) {
+        $mode = 0777;
+    }
+
+    my $current = normalize_path(File::Spec->rel2abs($path));
+    my $abs_path = get_absolute_path($current);
+    my @paths = ();
+    while (! is_directory($current)) {
+        my $parent = parent($current);
+        last if (! length $parent);
+
+        push @paths, $abs_path;
+        $current = $parent;
+        $abs_path = get_absolute_path($current);
+    }
+
+    while (@paths) {
+        my $path_to_make = pop @paths;
+        mkdir $path_to_make, $mode
+            or die "Failed to create path: $path_to_make";
+    }
+
+    return 1;
+}
+
+# This is `readlink` but with support for Windows
+sub get_link_target {
+    my ($path) = @_;
+    my $result;
+
+    if (IS_WIN32) {
+        $result = readlink_windows($path);
+    } else {
+        $result = readlink($path);
+    }
+
+    if (not defined $result) {
+        $result = "";
+    }
+
+    return $result;
+}
+
+#
+# Win32 does *NOT* follow symlinks with `stat`. `lstat` works out of the box, but
+# `stat` needs fixing to follow links.
+
+# Corestat uses Ansi not Wide (aka. Unicode) Win API calls whereas rest of this
+# module is using Unicode calls.
+#
+sub stat_windows {
+    my ( $newfile, $opts ) = @_;
+    $newfile = new_in( $newfile );
+
+    my $oldfile;
+
+    if( ReadLink( _to($newfile), $oldfile ) ) {
+        my @f = stat decode("UTF16-LE", $oldfile );
+        return @f;
+    }
+    else {
+        my @f = stat $newfile;
+        return @f;
+    }
+}
+
+sub is_symlink {
+    my ( $newfile ) = @_;
+    my $result;
+
+    if (IS_WIN32) {
+        $newfile = new_in( $newfile );
+        $result = 1 & ReadLink( _to($newfile), my $oldfile );
+    } else {
+        $result = -l $newfile;
+    }
+
+    return $result;
+}
+
+use if IS_WIN32,
+    "Inline" => (
+        C => 'DATA',
+        name => 'Stow::Util',
+        LIBS => '-lKernel32.lib',
+        PREFIX => 'my_'
+);
+
+=head1 BUGS
+
+=head1 SEE ALSO
+
+=cut
+
+1;
+
+# Local variables:
+# mode: perl
+# cperl-indent-level: 4
+# end:
+# vim: ft=perl
+
+__DATA__
+__C__
+#if defined(WIN32)
+    #define WINVER 0x600
+    #define _WIN32_WINNT 0x0600
+
+    #include <windows.h>
+#endif
+
+#define SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE 0x2
+
+int my_CreateSymbolicLink(char* From, char* To, int isDir) {
+#if defined(WIN32)
+    return CreateSymbolicLinkW(
+        (LPCWSTR) From, (LPCWSTR) To,
+        isDir | SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE);
+#else
+    return 0;
+#endif
+}
+
+int my_CreateHardLink(char* From, char* To) {
+#if defined(WIN32)
+    return CreateHardLinkW( (LPCWSTR) From,  (LPCWSTR) To, NULL);
+#else
+    return 0;
+#endif
+}
+
+#if defined(WIN32)
+//# Not found in strawberry perl Windows headers
+
+typedef struct _REPARSE_DATA_BUFFER {
+    ULONG  ReparseTag;
+    USHORT ReparseDataLength;
+    USHORT Reserved;
+    union {
+        struct {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            ULONG  Flags;
+            WCHAR  PathBuffer[1];
+        } SymbolicLinkReparseBuffer;
+
+        struct {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            WCHAR  PathBuffer[1];
+        } MountPointReparseBuffer;
+
+        struct {
+            UCHAR DataBuffer[4096];
+        } GenericReparseBuffer;
+    };
+} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+#endif
+
+int my_ReadLink( SV* svlink, SV* target ) {
+#if defined(WIN32)
+    HANDLE h;
+    DWORD len;
+    REPARSE_DATA_BUFFER rdb;
+    BOOL ok;
+
+    h = CreateFileW(
+            (LPCWSTR) SvPV(svlink, PL_na),
+            FILE_READ_ATTRIBUTES,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            NULL,
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS | FILE_ATTRIBUTE_REPARSE_POINT | FILE_FLAG_OPEN_REPARSE_POINT,
+            NULL
+    );
+    if( h == INVALID_HANDLE_VALUE ) { //# Probably File Not Found or similar
+        return 0; //# Hence it's not a Symlink
+    }
+
+    ok = DeviceIoControl (
+        h,
+        0x900a8, //# FSCTL_GET_REPARSE_POINT
+        NULL,
+        0,
+        &rdb,
+        0x1000, //# Max size of RDB apparently
+        &len,
+        NULL);
+
+    CloseHandle( h );
+    if( !ok ) {
+        //# SMELL?: Quite unexpected, maybe raise exception or return error - somehow?
+        return 0;
+    }
+
+    if( rdb.ReparseTag == IO_REPARSE_TAG_SYMLINK ) {
+        char *buf = (char *) rdb.SymbolicLinkReparseBuffer.PathBuffer;
+        int off = (int) rdb.SymbolicLinkReparseBuffer.PrintNameOffset;
+        int len = (int) rdb.SymbolicLinkReparseBuffer.PrintNameLength;
+
+        sv_setpvn( target, buf + off, len );
+        return 1; //# Success
+    }
+    else if( rdb.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT ) { //# Just for reference, but we don't care about this case
+        return 0;
+    }
+#endif
+
+    //# Not a reparse point at all
+    return 0;
+}

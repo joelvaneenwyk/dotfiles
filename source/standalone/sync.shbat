@@ -1,6 +1,0 @@
-: # Custom script is interpreted by both batch scripts and bash shell scripts. Tips
-: # and tricks used here are inspired by https://stackoverflow.com/a/17623721
-:; echo "This is ${SHELL}"; exit
-@echo off
-
-git -C "$USERPROFILE"  This is %COMSPEC%

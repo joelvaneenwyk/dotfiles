@@ -105,17 +105,17 @@ if test -e "$HOME/.base16_theme"
     if test -e "$theme_shell"
         set theme (echo $HOME/.config/base16-fzf/fish/(basename "$theme_shell" .sh).fish)
     else
-        echo "❌ Theme target does not exist: '$theme_shell'"
+        echo "❌ [Warning] Theme target does not exist: '$theme_shell'"
     end
 else
-    echo "❌ Missing base theme link: '.base16_theme'"
+    echo "❌ [Warning] Missing base theme link: '.base16_theme'"
 end
 
 if test -e $theme
     source $theme
     echo "✔ Theme: '$theme'"
 else
-    echo "❌ Theme not found: '$theme'"
+    echo "❌ [Warning] Theme not found: '$theme'"
 end
 
 if test -d $HOME/anaconda3/bin

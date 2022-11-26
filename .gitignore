@@ -2,8 +2,6 @@
 # Files to ignore for dotfiles repository
 #
 
-.vscode/configurationCache.log
-
 # Local temporary files not intended to be committed or used in Docker instances
 .tmp
 

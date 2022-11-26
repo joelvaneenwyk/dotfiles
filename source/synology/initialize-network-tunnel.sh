@@ -9,8 +9,8 @@ function import_mycelio_library() {
     MYCELIO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
     export MYCELIO_ROOT
 
-    # shellcheck source=source/shell/mycelio.sh
-    source "$MYCELIO_ROOT/source/shell/mycelio.sh"
+    # shellcheck source=source/bin/mycelio.sh
+    source "$MYCELIO_ROOT/source/bin/mycelio.sh"
 
     use_mycelio_library "$@"
 }

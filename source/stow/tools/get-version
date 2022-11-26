@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+#
+# This file is part of GNU Stow.
+#
+# GNU Stow is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GNU Stow is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see https://www.gnu.org/licenses/.
+#
+
+use strict;
+use warnings;
+
+use File::Basename;
+
+my $dirname = dirname(__FILE__);
+my $configure = "$dirname/configure.ac";
+
+unless (-e "$configure") {
+  $configure = "$dirname/../configure.ac";
+}
+
+open(my $CONF, "<", "$configure")
+  or die "Failed to get Stow version.\nSearch path: '$configure'\nUnable to find 'configure.ac' file: '$!'";
+
+while (my $line = <$CONF>) {
+  if ($line =~ /^AC_INIT\(\[stow\], \[(.+?)\]/) {
+    print "$1\n";
+    exit 0;
+  }
+}
+
+exit 1;

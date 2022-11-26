@@ -207,7 +207,7 @@ Function Update-Terminal() {
     }
 
     try {
-        oh-my-posh init pwsh --config "$env:UserProfile/dotfiles/packages/linux/.poshthemes/mycelio.omp.json" | Invoke-Expression
+        oh-my-posh init pwsh --config "$env:UserProfile/dotfiles/packages/shell/.poshthemes/mycelio.omp.json" | Invoke-Expression
         Write-Host "Initialized 'oh-my-posh' config."
     }
     catch {

@@ -234,7 +234,11 @@ Function Expand-File {
 
     try {
         Write-Host "Extracting archive: '$Path'"
-        if (Test-Path -Path "$7zip" -PathType Leaf) {
+        if ($Path -match '\.sfx\.exe$') {
+            & "$Path" @(
+                "x", "-o$DestinationPath", "-y")
+        }
+        elseif (Test-Path -Path "$7zip" -PathType Leaf) {
             & "$7zip" @(
                 "x", "$Path", "-aoa", "-o$DestinationPath", "-r", "-y")
         }
@@ -760,14 +764,14 @@ Function Test-SymbolicLink {
 }
 Function Install-MSYS2 {
     $script:MsysTargetDir = "$script:MycelioLocalDir/msys64"
-    $script:MsysArchive = "$script:MycelioArchivesDir/msys2.exe"
+    $script:MsysInstaller = "msys2-base-x86_64-20221028.sfx.exe"
+    $script:MsysArchive = "$script:MycelioArchivesDir/$script:MsysInstaller"
+    $script:MsysUrl = "https://github.com/msys2/msys2-installer/releases/download/2022-10-28/$script:MsysInstaller"
 
     if ( -not(Test-Path -Path "$script:MsysTargetDir/mingw64.exe" -PathType Leaf) ) {
-        $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/2022-10-28/msys2-base-x86_64-20221028.sfx.exe"
-
         if ( -not(Test-Path -Path "$script:MsysArchive" -PathType Leaf) ) {
             Write-Host "::group::Download MSYS2"
-            Get-File -Url "$msysInstaller" -Filename "$script:MsysArchive"
+            Get-File -Url "$script:MsysUrl" -Filename "$script:MsysArchive"
             Write-Host "::endgroup::"
         }
 

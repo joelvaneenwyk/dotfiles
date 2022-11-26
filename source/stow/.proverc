@@ -1,0 +1,3 @@
+-I bin/
+-I lib/
+-I t/
