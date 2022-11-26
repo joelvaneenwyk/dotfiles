@@ -1,0 +1,64 @@
+{
+   "abstract" : "manage farms of symbolic links",
+   "author" : [
+      "unknown"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "Module::Build version 0.4231",
+   "license" : [
+      "gpl_1"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : 2
+   },
+   "name" : "Stow",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "Module::Build" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp" : "0",
+            "ExtUtils::PL2Bat" : "0",
+            "IO::File" : "0",
+            "Inline::C" : "0",
+            "Win32::Mutex" : "0",
+            "perl" : "5.006"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "IO::Scalar" : "0",
+            "Test::Exception" : "0",
+            "Test::More" : "0",
+            "Test::Output" : "0"
+         }
+      }
+   },
+   "provides" : {
+      "Stow" : {
+         "file" : "lib/Stow.pm",
+         "version" : "v2.3.2"
+      },
+      "Stow::Util" : {
+         "file" : "lib/Stow/Util.pm",
+         "version" : "v2.3.2"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "homepage" : "https://savannah.gnu.org/projects/stow",
+      "license" : [
+         "http://www.gnu.org/licenses/gpl-2.0.html"
+      ],
+      "repository" : {
+         "type" : "git",
+         "url" : "git://git.savannah.gnu.org/stow.git"
+      }
+   },
+   "version" : "v2.3.2",
+   "x_serialization_backend" : "JSON::PP version 4.04"
+}

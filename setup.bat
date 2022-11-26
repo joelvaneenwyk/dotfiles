@@ -153,8 +153,8 @@ setlocal EnableExtensions EnableDelayedExpansion
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
         echo WARNING: Failed to build Stow for Windows. 1>&2
-        REM call :GroupEnd
-        REM goto:$InitializeDone
+        call :GroupEnd
+        goto:$InitializeDone
     )
     call :GroupEnd
 

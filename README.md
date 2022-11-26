@@ -49,6 +49,7 @@ Custom config files (aka. "dotfiles") for Linux, macOS, and Windows that are dep
   - [Table of Contents](#table-of-contents)
   - [Setup](#setup)
     - [Windows](#windows)
+      - [Windows Terminal](#windows-terminal)
     - [macOS](#macos)
     - [Linux](#linux)
     - [Synology](#synology)
@@ -89,6 +90,33 @@ curl -i https://git.io -F "url=https://gist.githubusercontent.com/joelvaneenwyk/
    - Import Secret Key from secure location e.g. `{cloud}\Documents\Keys`
 
 NOTE: The PowerShell setup steps can fail if you have your PowerShell modules and settings stored in OneDrive or some other cloud provider. Please follow steps to migrate to local path, e.g. [How to prevent Powershell Modules being installed into OneDrive - Stack Overflow](https://stackoverflow.com/a/67531193)
+
+#### Windows Terminal
+
+```json
+{
+  "name": "\ud83c\udf44 Mycelio",
+  "altGrAliasing": true,
+  "antialiasingMode": "grayscale",
+  "closeOnExit": "automatic",
+  "colorScheme": "Campbell",
+  "commandline": "%SystemRoot%\\System32\\cmd.exe",
+  "cursorShape": "bar",
+  "font":
+  {
+    "size": 12
+  },
+  "guid": "{e3724fc0-5da7-434c-9414-da85071c9901}",
+  "hidden": false,
+  "historySize": 9001,
+  "icon": "ms-appx:///ProfileIcons/{0caa0dad-35be-5f56-a8ff-afceeeaa6101}.png",
+  "name": "Command Prompt",
+  "padding": "8, 8, 8, 8",
+  "snapOnInput": true,
+  "startingDirectory": "%USERPROFILE%",
+  "useAcrylic": false
+},
+```
 
 ### macOS
 
@@ -145,7 +173,7 @@ Most versions of MacOS will already have Git installed, and you can activate it 
 
 These are optional steps to setup SSH to sync to private GitHub repositories.
 
-Instead of running each step below, you can instead run `./source/shell/setup-secrets.sh`
+Instead of running each step below, you can instead run `./source/bin/setup-secrets.sh`
 
 1. Open `bash` terminal e.g., `Git Bash` on Windows
 2. `ssh-keygen -t ed25519 -C "joel.vaneenwyk@gmail.com"`

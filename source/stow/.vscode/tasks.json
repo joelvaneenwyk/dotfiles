@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Make Stow",
+            "type": "shell",
+            "command": "./tools/make-stow.sh",
+            "windows": {
+                "command": ".\\tools\\make-stow.bat"
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Test Stow",
+            "type": "shell",
+            "command": "prove -I t/ -I bin/ -I lib/",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        }
+    ]
+}

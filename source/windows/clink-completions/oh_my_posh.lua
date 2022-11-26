@@ -2,7 +2,7 @@ local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/
 local mycelio_root_dir = path.normalise(script_dir .. "../../..")
 
 local home = os.getenv("HOME") or os.getenv("USERPROFILE")
-local mycelio_config = path.normalise(mycelio_root_dir .. "/packages/linux/.poshthemes/mycelio.omp.json")
+local mycelio_config = path.normalise(mycelio_root_dir .. "/packages/shell/.poshthemes/mycelio.omp.json")
 local local_oh_my_posh_executable = path.normalise(home .. "/.local/go/bin/oh-my-posh.exe")
 local oh_my_posh_executable = ""
 local loaded = false
