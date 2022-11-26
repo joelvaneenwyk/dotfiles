@@ -8,7 +8,7 @@ name: Validate
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [main, dev]
+    branches: [main, staging, dev]
     paths-ignore:
       - '*.md'
       - 'setup'
@@ -23,7 +23,7 @@ on:
       - '.devcontainer/**'
       - '.vscode/**'
   pull_request:
-    branches: [main, dev]
+    branches: [main, staging, dev]
     paths-ignore:
       - '*.md'
       - 'setup'
