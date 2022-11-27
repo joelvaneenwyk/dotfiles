@@ -17,6 +17,7 @@ function is_shell_script() {
     [[ $1 == */*.fish ]] && return 3
 
     [[ $1 == *.sh ]] && return 0
+    [[ $1 == *.bash ]] && return 0
     [[ $1 == */bash-completion/* ]] && return 0
     [[ $(file -b --mime-type "$1") == text/x-shellscript ]] && return 0
 
@@ -41,16 +42,19 @@ function run_shellcheck() {
     fi
 
     while IFS= read -r -d $'' file; do
-        if is_shell_script "$file"; then
-            if [ "$_use_source_path" = "1" ]; then
-                if shellcheck --external-sources --source-path="$root" --source-path="$root/source/stow" -W0 "$file"; then
-                    echo "✔ $file"
-                fi
-            else
-                if shellcheck --external-sources "$file"; then
-                    echo "✔ $file"
-                fi
-            fi
+        if ! is_shell_script "$file"; then
+            continue
+        fi
+
+        _args=(--external-sources)
+        if [ "$_use_source_path" = "1" ]; then
+            _args+=(--source-path="$root" --source-path="$root/source/stow" -W0)
+        fi
+
+        if shellcheck "${_args[@]}" "$file"; then
+            echo "✔ $file"
+        else
+            echo "❌ $file"
         fi
     done < <(find "$root" -type f \! -path "$root/.git/*" -print0)
 }
