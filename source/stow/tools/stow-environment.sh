@@ -414,13 +414,20 @@ function install_perl_dependencies() {
     modules=(
         local::lib App::cpanminus
         YAML Carp Scalar::Util IO::Scalar Module::Build
-        IO::Socket::SSL Net::SSLeay
-        Moose TAP::Harness TAP::Harness::Env
-        Test::Harness Test::More Test::Exception Test::Output
-        Devel::Cover Devel::Cover::Report::Coveralls
-        TAP::Formatter::JUnit
     )
 
+    # Only add test modules if we are not running on Synology as some packages are not supported
+    if ! uname -a | grep -q "synology"; then
+        modules+=(
+            IO::Socket::SSL Net::SSLeay
+            Moose TAP::Harness TAP::Harness::Env
+            Test::Harness Test::More Test::Exception Test::Output
+            Devel::Cover Devel::Cover::Report::Coveralls
+            TAP::Formatter::JUnit
+        )
+    fi
+
+    # Additional modules if runing in MSYS2
     if [ -n "${MSYSTEM:-}" ]; then
         modules+=(ExtUtils::PL2Bat Inline::C Win32::Mutex)
     fi
