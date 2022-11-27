@@ -31,7 +31,8 @@ jobs:
         env:
           SHELLCHECK_OPTS: --external-sources
         with:
-          ignore: bin doc
+          ignore_paths: ./artifacts/** ./test/test_helper/bats-*/**
+          ignore_names: .zshrc
 
 
   perl_test_matrix:
@@ -121,7 +122,6 @@ jobs:
         run: ${{ env.script_tool }}make-stow${{ env.script_extension }}
 
       - name: Run Tests
-
         # Needed so that the coveralls package knows that we are using GitHub Actions
         # and to look for the secret key, see:
         #   https://github.com/kan/coveralls-perl/blob/master/lib/Devel/Cover/Report/Coveralls.pm
