@@ -1,9 +1,15 @@
 {
     "shellcheck.enable": true,
+    "shellcheck.useWorkspaceRootAsCwd": true,
+    "shellcheck.executablePath": "shellcheck",
     "shellcheck.run": "onType",
     "shellcheck.enableQuickFix": true,
+    "shellcheck.logLevel": "debug",
     "shellcheck.customArgs": [
-        "-W0",
+        "--check-sourced",
+        "--enable=all",
+        "--exclude=SC2292,SC2250,SC2248,SC2248,SC2312,SC2310",
+        "--severity=style",
         "--external-sources",
         "--root=${workspaceFolder}",
         "--source-path=${workspaceFolder}",
