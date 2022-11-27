@@ -12,7 +12,8 @@ function is_shell_script() {
     [[ $1 == */base16*/* ]] && return 2
     [[ $1 == */fish/functions/* ]] && return 2
     [[ $1 == */git-fuzzy/* ]] && return 2
-    [[ $1 == */test/bats/* ]] && return 2
+    [[ $1 == */secrets/* ]] && return 2
+    [[ $1 == */test/test_helper/bats*/* ]] && return 2
 
     [[ $1 == */.zshrc ]] && return 3
     [[ $1 == */*.fish ]] && return 3
@@ -54,6 +55,9 @@ function run_shellcheck() {
             else
                 echo "❌ $file"
             fi
+        else
+            # Skipped the file
+            :
         fi
     done < <(find "$root" -type f \! -path "$root/.git/*" -print0)
 }
