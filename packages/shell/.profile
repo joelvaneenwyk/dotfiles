@@ -19,7 +19,7 @@ _log_info() {
 }
 
 _log_warning() {
-    echo "WARNING: $@"
+    echo "WARNING: $*"
 }
 
 #
@@ -181,7 +181,7 @@ _add_path() {
 
     for dir in "$@"; do
         # Remove last occurrence to end
-        _left="${_list%:$dir:*}"
+        _left="${_list%:"$dir":*}"
 
         if [ "$_list" = "$_left" ]; then
             # Input list does not contain $dir
@@ -189,13 +189,20 @@ _add_path() {
             _right=''
         else
             # Remove start to last occurrence
-            _right=":${_list#$_left:$dir:}"
+            _right=":${_list#"$_left":"$dir":}"
         fi
 
         # Construct _list with $dir added
         case "$_action" in
-        'prepend') _list=":$dir$_left$_right" ;;
-        'append') _list="$_left$_right$dir:" ;;
+        'prepend')
+            _list=":$dir$_left$_right"
+            ;;
+        'append')
+            _list="$_left$_right$dir:"
+            ;;
+        *)
+            # No action needed.
+            ;;
         esac
     done
 
@@ -278,6 +285,9 @@ initialize_interactive_profile() {
     case "${TERM:-}" in
     xterm-color | *-256color)
         color_prompt=yes
+        ;;
+    *)
+        color_prompt=no
         ;;
     esac
 
@@ -407,6 +417,7 @@ initialize_interactive_profile() {
     fi
 
     if [ "$_shell" = "sh" ]; then
+        # shellcheck disable=SC2154
         PS1='$(
             printf "[mycelio] `whoami`@`hostname` | "
             _pwd="${PWD:-}"
@@ -467,7 +478,7 @@ _get_profile_root() {
     _windows_root="$(_get_windows_root)"
     _cmd="$_windows_root/Windows/System32/cmd.exe"
 
-    if [ -x "$(command -v wslpath)" ]; then
+    if [ -x "$(command -v wslvar)" ]; then
         _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"
     fi
 
@@ -511,7 +522,9 @@ initialize_profile() {
     # Setup XServer for Windows. This assumes you have a working XServer and PulseAudio configuration
     # running on the Windows host machine.
     if grep -qEi "(Microsoft|WSL)" /proc/version >/dev/null 2>&1; then
-        export DISPLAY=$(echo $(grep nameserver /etc/resolv.conf | sed 's/nameserver //'):0)
+        _server="$(grep nameserver /etc/resolv.conf | sed 's/nameserver //')"
+        DISPLAY="$_server:0"
+        export DISPLAY
 
         # This was disabled January 2022 as it is very slow and causes a hang when you
         # load a new prompt. Ideally this is a separate script you run as needed.
@@ -552,7 +565,7 @@ initialize_profile() {
         IFS="${IFS% }"
 
         # shellcheck disable=SC2013
-        for _line in $(grep -v '^#.*' "$dotenv" || ""); do
+        for _line in $(grep -v '^#.*' "$dotenv" || echo ""); do
             if [ -n "${_line:-}" ]; then
                 eval "export $_line" >/dev/null 2>&1 || true
             fi
@@ -605,6 +618,9 @@ initialize_profile() {
         MYCELIO_OS_APP_EXTENSION=.exe
         MYCELIO_OH_MY_POSH=0
         ;;
+    *)
+        # Defaults already set
+        ;;
     esac
     export MYCELIO_OS_NAME MYCELIO_OS_VARIANT MYCELIO_OS_APP_EXTENSION MYCELIO_OH_MY_POSH
 
@@ -614,7 +630,7 @@ initialize_profile() {
 
     # Make sure that USER is defined because some scripts (e.g. Oh My Posh) expect
     # the variable to be defined.
-    export USER=${USER:-"$(whoami)"}
+    export USER="${USER:-"$(whoami)"}"
 
     # Define a default for this as it is used by Oh My Posh and we do not want an
     # error due to undefined access.
@@ -649,14 +665,14 @@ initialize_profile() {
 
     # Add 'dot' (current directory) to list of inputs which is required on some versions
     # of Tex on some operating systems.
-    export TEXINPUTS=.:${TEXINPUTS:-}
+    export TEXINPUTS=.:"${TEXINPUTS:-}"
 
     if [ "${MSYSTEM:-}" = "MSYS" ]; then
         _add_path "prepend" "/usr/bin"
 
         if [ -x "$(command -v gcc)" ]; then
             if _gcc_version=$(gcc --version | grep gcc | awk '{print $3}' 2>&1); then
-                _gcc_lib_root="/usr/lib/gcc/$MSYSTEM_CHOST/$_gcc_version"
+                _gcc_lib_root="/usr/lib/gcc/${MSYSTEM_CHOST:-}/$_gcc_version"
             fi
         fi
 
@@ -686,6 +702,7 @@ initialize_profile() {
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
 
     if [ -f "${HOME:-}/.cargo/env" ]; then
+        # shellcheck disable=SC1091
         . "$HOME/.cargo/env"
     fi
 
@@ -701,6 +718,7 @@ initialize_profile() {
 initialize() {
     # Fig pre block. Keep at the top of this file.
     if [ -f "$HOME/.fig/shell/profile.pre.bash" ]; then
+        # shellcheck disable=SC1091
         . "$HOME/.fig/shell/profile.pre.bash"
     fi
 
@@ -725,6 +743,7 @@ initialize() {
 
     # Fig pre block. Keep at the top of this file.
     if [ -f "$HOME/.fig/shell/profile.post.bash" ]; then
+        # shellcheck disable=SC1091
         . "$HOME/.fig/shell/profile.post.bash"
     fi
 }
