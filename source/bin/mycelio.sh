@@ -478,6 +478,9 @@ function _is_windows() {
     MSYS*)
         return 0
         ;;
+    *)
+        # Fall through to default error return
+        ;;
     esac
 
     return 1
@@ -1307,6 +1310,9 @@ function install_go {
                 Darwin*)
                     _go_archive="go$_go_version.darwin-$MYCELIO_ARCH.tar.gz"
                     ;;
+                *)
+                    _go_archive=""
+                    ;;
                 esac
             fi
 
@@ -1935,6 +1941,9 @@ function _setup_environment() {
         ;;
     CYGWIN* | MINGW* | MSYS*)
         MYCELIO_OS='windows'
+        ;;
+    *)
+        # No action needed
         ;;
     esac
     export MYCELIO_OS

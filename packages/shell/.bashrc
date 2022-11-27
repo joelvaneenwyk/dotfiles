@@ -13,7 +13,7 @@ function _get_real_path() {
     cd "$(dirname "$_input_path")" || true
 
     _link=$(readlink "$(basename "$_input_path")")
-    while [ "$_link" ]; do
+    while [ -n "$_link" ]; do
         cd "$(dirname "$_link")" || true
         _link=$(readlink "$(basename "$_input_path")")
     done
