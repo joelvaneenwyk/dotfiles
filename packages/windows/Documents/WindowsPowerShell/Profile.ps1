@@ -156,6 +156,7 @@ Function Update-Environment() {
     $environmentVariables += "C:\Program Files\Git\bin"
     $environmentVariables += $(Get-CurrentEnvironment)
     $environmentVariables += "$Env:UserProfile\scoop\shims"
+    $environmentVariables += "C:\Program Files (x86)\Microsoft SDKs\Azure\CLI2\wbin"
 
     $environmentPaths = @()
     $environmentVariables = $environmentVariables | Select-Object -Unique
@@ -163,6 +164,7 @@ Function Update-Environment() {
         $environmentPath = "$_"
         try {
             $resolvedPath = Get-NormalizedPath "$_"
+            $startingPath = $resolvedPath
 
             if (($resolvedPath -match "msys2") -and ($resolvedPath -match "usr\bin")) {
                 $resolvedPath = $null
@@ -179,14 +181,15 @@ Function Update-Environment() {
             elseif ($resolvedPath -match "Salesforce") {
                 $resolvedPath = $null
             }
-            elseif ($resolvedPath -match "WindowsApps") {
-                $resolvedPath = $null
-            }
             elseif ($resolvedPath -match "Network Monitor") {
                 $resolvedPath = $null
             }
             elseif ($resolvedPath -match "AdoptOpenJDK") {
                 $resolvedPath = $null
+            }
+
+            if ($null -eq $resolvedPath) {
+                Write-Host "Cleared path: $($startingPath)"
             }
 
             if (($null -ne $resolvedPath) -and (-not($environmentPaths -contains $resolvedPath))) {
@@ -221,12 +224,12 @@ Function Update-Terminal() {
     # See https://github.com/dahlbyk/posh-git/issues/860
     $Env:POSHGIT_CYGWIN_WARNING = 'off'
 
-    try {
-        Import-Module posh-git -ErrorAction SilentlyContinue >$null
-    }
-    catch {
-        Write-Host "Failed to import 'posh-git' module."
-    }
+    # try {
+    #     Import-Module posh-git -ErrorAction SilentlyContinue >$null
+    # }
+    # catch {
+    #     Write-Host "Failed to import 'posh-git' module."
+    # }
 
     try {
         oh-my-posh.exe init pwsh --config "$env:UserProfile/.poshthemes/mycelio.omp.json" | Invoke-Expression
@@ -235,25 +238,24 @@ Function Update-Terminal() {
         Write-Host "Failed to set 'oh-my-posh' prompt. $_"
     }
 
-    try {
-        $fontName = "JetBrainsMono NF"
-        Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue >$null
-        if ($?) {
-            $currentFont = Get-ConsoleFont -ErrorAction SilentlyContinue >$null
-            if (($null -ne $currentFont) -and ($currentFont.Name -ne $fontName) -and $PSCmdlet.ShouldProcess('Terminal')) {
-                Set-ConsoleFont "$fontName" >$null
-                Write-Host "Updated font from '$currentFont.Name' -> '$fontName'"
-            }
-        }
-
-        Import-Module Terminal-Icons -ErrorAction SilentlyContinue >$null
-        if ($? -and $PSCmdlet.ShouldProcess('Terminal')) {
-            Set-TerminalIconsTheme -ColorTheme DevBlackOps -ErrorAction SilentlyContinue -IconTheme DevBlackOps
-        }
-    }
-    catch [Exception] {
-        Write-Host "Failed to set console font and theme.", $_.Exception.Message
-    }
+    # try {
+    #     $fontName = "JetBrainsMono NF"
+    #     Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue >$null
+    #     if ($?) {
+    #         $currentFont = Get-ConsoleFont -ErrorAction SilentlyContinue >$null
+    #         if (($null -ne $currentFont) -and ($currentFont.Name -ne $fontName) -and $PSCmdlet.ShouldProcess('Terminal')) {
+    #             Set-ConsoleFont "$fontName" >$null
+    #             Write-Host "Updated font from '$currentFont.Name' -> '$fontName'"
+    #         }
+    #     }
+    #     Import-Module Terminal-Icons -ErrorAction SilentlyContinue >$null
+    #     if ($? -and $PSCmdlet.ShouldProcess('Terminal')) {
+    #         Set-TerminalIconsTheme -ColorTheme DevBlackOps -ErrorAction SilentlyContinue -IconTheme DevBlackOps
+    #     }
+    # }
+    # catch [Exception] {
+    #     Write-Host "Failed to set console font and theme.", $_.Exception.Message
+    # }
 }
 
 Update-Environment
