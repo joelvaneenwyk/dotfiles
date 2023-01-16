@@ -1,6 +1,6 @@
 @echo off
 
-chcp 65001 >NUL 2>&1
+if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 65001 >NUL 2>&1
 
 setlocal EnableExtensions EnableDelayedExpansion
     set "_mycelio_root=%~dp0"
@@ -93,7 +93,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     call :Run "%_mycelio_root%\source\windows\bin\profile.bat"
     if not "!ERRORLEVEL!"=="0" (
         set _error=!ERRORLEVEL!
-        echo ERROR: Profile setup failed. 1>&2
+        echo ERROR: Failed to setup Mycelio profile. 1>&2
         goto:$InitializeDone
     )
 
@@ -223,9 +223,14 @@ endlocal & exit /b
     )
     :$PowerShellSet
 
+    if not exist "!_powershell!" (
+        echo ERROR: PowerShell not found: "!_powershell!" 1>&2
+        exit /b 1
+    )
+
     :: By changing character page we prevent parent console from changing
     :: font, see https://superuser.com/a/1548564
-    chcp 437 > nul
+    if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 437 > nul
     call :Run !_powershell! -NoLogo -NoProfile %*
 endlocal & exit /b
 
