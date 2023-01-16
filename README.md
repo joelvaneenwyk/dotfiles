@@ -84,9 +84,9 @@ curl -i https://git.io -F "url=https://gist.githubusercontent.com/joelvaneenwyk/
 ### Windows
 
 1. Clone the repo from your home directory:
-   > `git -C "%USERPROFILE%" clone -c core.symlinks=true --recursive https://github.com/joelvaneenwyk/dotfiles.git`
-2. Enter the `dotfiles` directory and then run `init`
-3. To setup commit signing, download and install [Gpg4win - Kleopatra](https://www.gpg4win.org/index.html)
+   > `git clone -c core.symlinks=true --recursive https://github.com/joelvaneenwyk/dotfiles.git "%USERPROFILE%\.dotfiles"`
+2. Enter the `%USERPROFILE%\.dotfiles` directory and run `init`
+3. OPTIONAL: To setup commit signing, download and install [Gpg4win - Kleopatra](https://www.gpg4win.org/index.html)
    - Import Secret Key from secure location e.g. `{cloud}\Documents\Keys`
 
 NOTE: The PowerShell setup steps can fail if you have your PowerShell modules and settings stored in OneDrive or some other cloud provider. Please follow steps to migrate to local path, e.g. [How to prevent Powershell Modules being installed into OneDrive - Stack Overflow](https://stackoverflow.com/a/67531193)
@@ -141,7 +141,7 @@ Most versions of MacOS will already have Git installed, and you can activate it 
 
 1. Update Synology to allow TCP port forwarding by adding the following to `/etc/ssh/sshd_config`:
 
-    > `AllowTcpForwarding yes`
+   > `AllowTcpForwarding yes`
 
 2. Restart SSH `sudo synoservicectl --restart sshd`
 3. Clone the repo from your home directory:
@@ -149,6 +149,7 @@ Most versions of MacOS will already have Git installed, and you can activate it 
    > `git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git`
 
 4. Initialize environment.
+
    > `./setup.sh`
 
 5. Install bash settings for the root user
