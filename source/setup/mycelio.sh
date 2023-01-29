@@ -170,8 +170,8 @@ function run_command() {
 
     (
         MYCELIO_DISABLE_TRAP=1
-        (
-            (
+        ( 
+            ( 
                 (
                     unset MYCELIO_DISABLE_TRAP
 
@@ -864,7 +864,7 @@ function install_oh_my_posh {
         chmod +x "$_oh_my_posh_exe"
     fi
 
-    if ! _version="$("$_oh_my_posh_exe" --version 2>&1); then
+    if ! _version=$("$_oh_my_posh_exe" --version 2>&1); then
         if [ ! -x "$(command -v git)" ]; then
             log_error "Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
             return 1
