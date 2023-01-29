@@ -57,7 +57,7 @@ _initialize_synology() {
 }
 
 initialize_interactive_profile() {
-    _log_debug "Initializing interactive profile."
+    log_debug "Initializing interactive profile."
 
     # Make less more friendly for non-text input files, see lesspipe(1)
     if [ -x "$(command -v lesspipe)" ]; then
@@ -110,7 +110,7 @@ initialize_interactive_profile() {
     *) ;;
     esac
 
-    _log_debug "Initialized prompt."
+    log_debug "Initialized prompt."
 
     # Enable color support for 'ls'
     if [ -x "$(command -v dircolors)" ]; then
@@ -233,7 +233,7 @@ initialize_interactive_profile() {
             if ! eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")" >/dev/null 2>&1; then
                 echo "❌ Failed to initialize Oh My Posh."
             else
-                _log_debug "Initialized 'Oh My Posh' callback."
+                log_debug "Initialized 'Oh My Posh' callback."
             fi
         fi
     fi
@@ -339,7 +339,7 @@ initialize_profile() {
         _initialize_synology
     fi
 
-    _log_debug "Initialized default enviornment variables."
+    log_debug "Initialized default enviornment variables."
 
     # Import environment varaibles from dotenv file. Primarily used to grab
     # the 'MYCELIO_ROOT' path as it is sometimes hard (if not impossible) to calculate
@@ -360,7 +360,7 @@ initialize_profile() {
 
         IFS=$OLD_IFS
 
-        _log_debug "Loaded dot environment file."
+        log_debug "Loaded dot environment file."
     fi
 
     # We intentionally disable Oh My Posh on some Windows variants due to corruption e.g. MSYS, Cygwin
@@ -408,8 +408,16 @@ initialize_profile() {
     esac
     export MYCELIO_OS_NAME MYCELIO_OS_VARIANT MYCELIO_OS_APP_EXTENSION MYCELIO_OH_MY_POSH
 
-    if [ -z "${MYCELIO_ROOT:-}" ]; then
+    if [ ! -e "${MYCELIO_ROOT:-}" ]; then
         export MYCELIO_ROOT="$HOME/dotfiles"
+
+        if [ ! -e "$MYCELIO_ROOT" ]; then
+            export MYCELIO_ROOT="$HOME/.dotfiles"
+        fi
+
+        if [ ! -e "$MYCELIO_ROOT" ]; then
+            export MYCELIO_ROOT="/workspaces/dotfiles"
+        fi
     fi
 
     # Make sure that USER is defined because some scripts (e.g. Oh My Posh) expect
@@ -424,7 +432,7 @@ initialize_profile() {
     export HOMEBREW_NO_ENV_HINTS=1
     export BASH_SILENCE_DEPRECATION_WARNING=1
 
-    _log_debug "Detected operating system and hardware details."
+    log_debug "Detected operating system and hardware details."
 
     if [ -f "$HOME/.cargo/env" ]; then
         # shellcheck disable=SC1091
@@ -489,7 +497,7 @@ initialize_profile() {
         . "$HOME/.cargo/env"
     fi
 
-    _log_debug "Added paths to environment."
+    log_debug "Added paths to environment."
 
     # Clear out TMP as TEMP may come from Windows and we do not want tools confused
     # if they find both.

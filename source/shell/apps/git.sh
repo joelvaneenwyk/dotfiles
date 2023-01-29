@@ -33,7 +33,7 @@ function initialize_gitconfig() {
         {
             _gpg_paths=(
                 "$windows_root/Program Files (x86)/GnuPG/bin/gpg.exe"
-                "$(_mycelio_get_profile_root)/scoop/apps/gnupg/current/bin/gpg.exe"
+                "$(get_profile_root)/scoop/apps/gnupg/current/bin/gpg.exe"
             )
             for _gpg in "${_gpg_paths[@]}"; do
                 if [ -f "$_gpg" ] && ! grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
@@ -85,5 +85,44 @@ function initialize_gitconfig() {
 
     if [ -x "$(command -v gpg-connect-agent)" ]; then
         run_command "gpg.connect" gpg-connect-agent updatestartuptty /bye >/dev/null
+    fi
+}
+
+function _update_git_repository() {
+    _path="$1"
+    _branch="$2"
+    _remote="${3:-}"
+    _name=$(basename "$_path")
+
+    if [ -n "${_remote:-}" ]; then
+        run_command "$_name.git.remote" git -C "$MYCELIO_ROOT/$_path" remote set-url "origin" "$_remote"
+    fi
+
+    run_command "$_name.git.fetch" git -C "$MYCELIO_ROOT/$_path" fetch
+
+    if ! git -C "$MYCELIO_ROOT/$_path" symbolic-ref -q HEAD >/dev/null 2>&1; then
+        run_command "$_name.git.checkout" git -C "$MYCELIO_ROOT/$_path" checkout "$_branch"
+    fi
+
+    run_command "$_name.git.pull" git -C "$MYCELIO_ROOT/$_path" pull "origin" "$_branch" --rebase --autostash
+}
+
+function update_repositories() {
+    if [ -x "$(command -v git)" ] && [ -e "$MYCELIO_ROOT/.git" ]; then
+        if [ ! -f "$MYCELIO_ROOT/source/stow/setup.sh" ]; then
+            run_command "git.submodule.update" git submodule update --init --recursive || true
+        fi
+
+        # _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
+        # _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
+        # _update_git_repository "packages/macos/Library/Application Support/Resources" "master"
+        # _update_git_repository "packages/fish/.config/base16-shell" "master"
+        # _update_git_repository "packages/fish/.config/base16-fzf" "master"
+        # _update_git_repository "packages/fish/.config/git-fuzzy" "master"
+        # _update_git_repository "test/bats" "master"
+        # _update_git_repository "test/test_helper/bats-support" "master"
+        # _update_git_repository "test/test_helper/bats-assert" "master"
+
+        echo "[mycelio] Updated submodules."
     fi
 }

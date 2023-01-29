@@ -113,3 +113,7 @@ _unique_list() {
         printf '%s\n' "$_list"
     }
 }
+
+function _remove_trailing_slash() {
+    echo "$1" | sed 's/\/*$//g'
+}

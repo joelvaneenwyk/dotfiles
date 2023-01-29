@@ -1,15 +1,12 @@
-#!/bin/bash
-
-# shellcheck disable=SC3028,SC3054,SC2039
-MYCELIO_BASH_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+#!/bin/sh
 
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
 # so we define our own version here.
-function get_real_path() {
-    readonly _pwd="$(pwd)"
-    local _path="${1:-}"
-    local _offset=""
-    local _real_path=""
+get_real_path() {
+    _pwd="$(pwd)"
+    _path="${1:-}"
+    _offset=""
+    _real_path=""
 
     while :; do
         _base="$(basename "$_path")"
@@ -23,7 +20,7 @@ function get_real_path() {
 
         if [ -n "$_link" ]; then
             if [ -f "$_path" ]; then
-                _real_path=$(_get_real_path "$_link")
+                _real_path=$(get_real_path "$_link")
                 break
             elif [ -f "$_link" ] || [ -d "$_link" ]; then
                 _path="$_link"
@@ -48,28 +45,39 @@ function get_real_path() {
     return 0
 }
 
-function include() {
+include() {
+    # shellcheck disable=SC3028,SC3054,SC2039
+    MYCELIO_BASH_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
     # shellcheck disable=SC1090
     . "$MYCELIO_BASH_DIR/${1:-}"
 }
 
-function main() {
+include_all() {
+    include "lib/commands.sh"
+    include "lib/environment.sh"
     include "lib/errors.sh"
+    include "lib/linux.sh"
     include "lib/logging.sh"
-    include "lib/mycelio.sh"
+    include "lib/macos.sh"
     include "lib/path.sh"
+    include "lib/pgp.sh"
+    include "lib/profile.bash"
+    include "lib/profile.sh"
     include "lib/utilities.sh"
 
-    include "lib/profile.sh"
-    include "lib/profile.bash"
-
     include "apps/fzf.sh"
+    include "apps/git.sh"
     include "apps/go.sh"
     include "apps/hugo.sh"
     include "apps/micro.sh"
     include "apps/oh-my-posh.sh"
     include "apps/powershell.sh"
+    include "apps/python.sh"
     include "apps/stow.sh"
+}
 
+main() {
+    include_all
     initialize_environment
 }

@@ -102,7 +102,7 @@ function _stow() {
     return 0
 }
 
-function _stow_packages() {
+function stow_packages() {
     _stow "$@" shell
     _stow "$@" fonts
     _stow "$@" vim
@@ -173,4 +173,75 @@ function install_stow() {
     rm -rf "$MYCELIO_STOW_ROOT/_Inline"
 
     _stow --version
+}
+
+function _stow_internal() {
+    _source="$1"
+    _target="$2"
+    shift 2
+
+    _remove=0
+
+    if [ -f "$_target" ] || [ -d "$_target" ] || [ -L "$_target" ]; then
+        _remove=1
+    fi
+
+    if [ ! -L "$_target" ]; then
+        _real="$(get_real_path "$_target")"
+
+        # Do not delete files or directories that are actually inside the
+        # dot files source directory.
+        if [[ "$_real" == *"$MYCELIO_ROOT"* ]]; then
+            _remove=0
+            echo "🔗 SKIPPED: $_target"
+        fi
+    fi
+
+    if [ "$_remove" = "1" ]; then
+        _name="'$_target'"
+        if [ -L "$_target" ]; then
+            _name="$_name (link)"
+        fi
+
+        if [ -f "$_source" ]; then
+            _name="$_name (file)"
+            if [[ "$*" == *"--delete"* ]]; then
+                if rm -f "$_target" >/dev/null 2>&1; then
+                    echo "REMOVED: $_name"
+                else
+                    echo "SKIPPED: $_name"
+                fi
+            else
+                echo "TARGET: $_name"
+            fi
+        elif [ -d "$_source" ]; then
+            _name="$_name (directory)"
+            if [[ "$*" == *"--delete"* ]]; then
+                # Remove empty directories in target. It will not delete directories
+                # that have files in them.
+                if find "$_target" -type d -empty -delete >/dev/null 2>&1 &&
+                    rm -df "$_target" >/dev/null 2>&1; then
+                    echo "REMOVED: $_name"
+                else
+                    echo "SKIPPED: $_name"
+                fi
+            else
+                echo "TARGET: $_name"
+            fi
+        fi
+    fi
+
+    if [[ ! "$*" == *"--delete"* ]] && [ ! -f "$_stow_bin" ]; then
+        if [ -f "$_source" ]; then
+            mkdir -p "$(dirname "$_target")"
+        fi
+
+        if [ -f "$_source" ] || [ -d "$_source" ]; then
+            if ln -s "$_source" "$_target" >/dev/null 2>&1; then
+                echo "✔ Stowed target: '$_target'"
+            else
+                log_error "Unable to stow target: '$_target'"
+            fi
+        fi
+    fi
 }

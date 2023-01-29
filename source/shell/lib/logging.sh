@@ -1,18 +1,20 @@
-_log_debug() {
+#!/usr/bin/env sh
+
+log_debug() {
     if [ "${MYCELIO_DEBUG:-}" = "1" ]; then
         echo "$@"
     fi
 }
 
-_log_info() {
+log_info() {
     echo "$@"
 }
 
-_log_warning() {
-    echo "WARNING: $@"
+log_warning() {
+    echo "WARNING: $*"
 }
 
-function log_error() {
+log_error() {
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         echo "::error::$*"
     fi
@@ -20,7 +22,7 @@ function log_error() {
     echo "❌ $*"
 }
 
-function _filter() {
+_filter() {
     _prefix="$1"
     _ifs="$IFS"
     IFS=''
@@ -34,5 +36,6 @@ function _filter() {
             echo "$_prefix $line"
         fi
     done
+
     IFS="$_ifs"
 }

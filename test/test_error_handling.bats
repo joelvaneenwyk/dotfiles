@@ -22,7 +22,7 @@ function _cause_error() {
 
     source "$MYCELIO_ROOT/source/shell/main.sh"
 
-    _setup_environment
+    setup_environment
 
     if _result=$(run_command "prefix" _cause_error); then
         assert_failure

@@ -1,5 +1,15 @@
-function _command_exists() {
+#!/bin/sh
+
+_command_exists() {
     if command -v "$@" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    return 1
+}
+
+is_synology() {
+    if uname -a | grep -q "synology"; then
         return 0
     fi
 
@@ -10,7 +20,7 @@ function _command_exists() {
 # Some platforms (e.g. MacOS) do not come with 'timeout' command so
 # this is a cross-platform implementation that optionally uses perl.
 #
-function _timeout() {
+_timeout() {
     _seconds="${1:-}"
     shift
 
@@ -31,7 +41,7 @@ function _timeout() {
 #
 #   - https://superuser.com/questions/553932/how-to-check-if-i-have-sudo-access
 #
-function _has_admin_rights() {
+_has_admin_rights() {
     # If 'sudo' does not exist at all then assume we can use it
     if ! _command_exists "sudo"; then
         return 0
@@ -74,7 +84,7 @@ function _has_admin_rights() {
     return 1
 }
 
-function _allow_sudo() {
+_allow_sudo() {
     # If the command does not exist we can't use it
     if [ ! -x "$(command -v sudo)" ]; then
         return 1
@@ -104,7 +114,7 @@ function _allow_sudo() {
     return 5
 }
 
-function run_sudo() {
+run_sudo() {
     if _allow_sudo; then
         sudo "$@"
     else
@@ -113,7 +123,7 @@ function run_sudo() {
 }
 
 # Modified from '/usr/bin/wslvar' to support MSYS2 environments as well.
-function _get_windows_root() {
+_get_windows_root() {
     out_prefix="/mnt/c/"
 
     if [ -f "/etc/wsl.conf" ]; then
@@ -133,7 +143,7 @@ function _get_windows_root() {
     fi
 }
 
-function _is_windows() {
+_is_windows() {
     case "$(uname -s)" in
     CYGWIN*)
         return 0
@@ -199,11 +209,11 @@ _init_sudo() {
             export MYCO_SUDO=1
         else
             if [ "${_status:-}" = "has_sudo__needs_pass" ]; then
-                _log_warning "Not using 'sudo' as it requires a password. Pass '--sudo' to prompt for password."
+                log_warning "Not using 'sudo' as it requires a password. Pass '--sudo' to prompt for password."
             elif [ "${_status:-}" = "no_sudo" ]; then
-                _log_debug "Command 'sudo' not found or installed."
+                log_debug "Command 'sudo' not found or installed."
             elif [ "${_status:-}" = "unsupported_platform" ]; then
-                _log_warning "Command 'sudo' not supported on this platform."
+                log_warning "Command 'sudo' not supported on this platform."
             fi
 
             export MYCO_SUDO=0
@@ -222,6 +232,6 @@ _sudo() {
     elif [ "${MYCO_SUDO:-}" = "1" ]; then
         sudo "$@"
     else
-        _log_warning "Skipped command: '$*'"
+        log_warning "Skipped command: '$*'"
     fi
 }

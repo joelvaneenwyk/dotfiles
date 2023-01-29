@@ -4,24 +4,59 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-# Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
-# so we define our own version here.
-function _get_real_path() {
-    _pwd="$(pwd)"
-    _input_path="$1"
+function load_profile() {
+    export MYCELIO_PROFILE_INITIALIZED=0
+    export MYCELIO_BASH_PROFILE_INITIALIZED=0
 
-    cd "$(dirname "$_input_path")" || true
+    if [[ $(type -t initialize_interactive_profile) == function ]]; then
+        initialize_profile
+        initialize_interactive_profile
+        echo "[mycelio] Reloaded shell profile."
+    elif [ -f "$MYCELIO_ROOT/packages/shell/.profile" ]; then
+        # Loading the profile may overwrite the root after it reads the '.env' file
+        # so we restore it afterwards.
+        _root="${MYCELIO_ROOT:-}"
 
-    _link=$(readlink "$(basename "$_input_path")")
-    while [ "$_link" ]; do
-        cd "$(dirname "$_link")" || true
-        _link=$(readlink "$(basename "$_input_path")")
-    done
+        # shellcheck source=packages/shell/.profile
+        source "$MYCELIO_ROOT/packages/shell/.profile"
 
-    _real_path="$(pwd)/$(basename "$_input_path")"
-    cd "$_pwd" || true
+        # Restore previous root folder
+        export MYCELIO_ROOT="${_root:-MYCELIO_ROOT}"
 
-    echo "$_real_path"
+        echo "[mycelio] Loaded shell profile."
+    fi
+
+    return 0
+}
+
+function get_profile_root() {
+    _user_profile="$MYCELIO_HOME"
+    _windows_root="$(_get_windows_root)"
+    _cmd="$_windows_root/Windows/System32/cmd.exe"
+
+    if [ -x "$(command -v wslpath)" ]; then
+        _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"
+    fi
+
+    if [ -f "$_cmd" ]; then
+        if _windows_user_profile="$($_cmd "\/D" "\/S" "\/C" "echo %UserProfile%" 2>/dev/null)"; then
+            _win_userprofile_drive="${_windows_user_profile%%:*}:"
+            _win_userprofile_dir="${_windows_user_profile#*:}"
+
+            if [ -x "$(command -v findmnt)" ] && _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"; then
+                _windows_user_profile="$(echo "${_userprofile_mount}${_win_userprofile_dir}" | sed 's/\\/\//g')"
+            elif [ -x "$(command -v cygpath)" ]; then
+                _windows_user_profile="$(echo "${_windows_user_profile}" | sed 's/\\/\//g')"
+                _windows_user_profile="$(cygpath "${_windows_user_profile}")"
+            fi
+        fi
+    fi
+
+    if [ ! -d "$_user_profile" ] && [ -d "$_windows_user_profile" ]; then
+        _user_profile="$_windows_user_profile"
+    fi
+
+    echo "$_user_profile"
 }
 
 function _start_tmux() {
@@ -179,7 +214,7 @@ function _initialize_bash_profile() {
     fi
 
     if [ -f "${MYCELIO_ROOT:-}/setup.sh" ]; then
-        MYCELIO_ROOT="$(cd "$(dirname "$(_get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
+        MYCELIO_ROOT="$(cd "$(dirname "$(get_real_path "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
         export MYCELIO_ROOT
     fi
 

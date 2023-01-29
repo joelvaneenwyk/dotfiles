@@ -13,7 +13,7 @@ function import_mycelio_library() {
     # shellcheck source=source/shell/main.sh
     source "$root/source/shell/main.sh"
 
-    _setup_environment
+    setup_environment
 }
 
 function setup_perl() {

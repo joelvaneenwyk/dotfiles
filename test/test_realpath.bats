@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 function _test_path {
-    assert_equal "$(_get_real_path "$1")" "$(realpath "$1")"
+    assert_equal "$(get_real_path "$1")" "$(realpath "$1")"
 }
 
 teardown_file() {
