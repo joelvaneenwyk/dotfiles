@@ -20,7 +20,7 @@ function _cause_error() {
 
     run assert_equal "1" "1"
 
-    source "$MYCELIO_ROOT/source/bin/mycelio.sh"
+    source "$MYCELIO_ROOT/source/setup/mycelio.sh"
 
     _setup_environment
 

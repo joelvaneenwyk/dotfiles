@@ -70,8 +70,8 @@ setup() {
         # shellcheck disable=SC3028,SC3054,SC2039
         _root="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-        # shellcheck source=source/bin/mycelio.sh
-        . "$_root/source/bin/mycelio.sh"
+        # shellcheck source=source/setup/mycelio.sh
+        . "$_root/source/setup/mycelio.sh"
 
         if initialize_environment "$@"; then
             _return_code=0
@@ -93,7 +93,6 @@ setup() {
 
         echo "[mycelio] Re-launching with Bash: '$_root/setup.sh'"
 
-        # Re-launch with bash
         # shellcheck source=setup.sh
         if bash "$_root/setup.sh" "$@"; then
             _return_code=0

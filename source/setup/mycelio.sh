@@ -170,8 +170,8 @@ function run_command() {
 
     (
         MYCELIO_DISABLE_TRAP=1
-        ( 
-            ( 
+        (
+            (
                 (
                     unset MYCELIO_DISABLE_TRAP
 
@@ -864,7 +864,7 @@ function install_oh_my_posh {
         chmod +x "$_oh_my_posh_exe"
     fi
 
-    if ! _version=$("$_oh_my_posh_exe" --version 2>&1); then
+    if ! _version="$("$_oh_my_posh_exe" --version 2>&1); then
         if [ ! -x "$(command -v git)" ]; then
             log_error "Failed to install 'oh-my-posh' extension. Required 'git' tool missing."
             return 1
@@ -1896,20 +1896,24 @@ function _setup_environment() {
         MYCELIO_ARCH='amd64'
         ;;
     'armhf')
-        MYCELIO_ARCH='arm' MYCELIO_ARM='6'
+        MYCELIO_ARCH='arm'
+        MYCELIO_ARM='6'
         ;;
     'armv7')
-        MYCELIO_ARCH='arm' MYCELIO_ARM='7'
+        MYCELIO_ARCH='arm'
+        MYCELIO_ARM='7'
         ;;
     'armv7l')
         # Raspberry PI
-        MYCELIO_ARCH='arm' MYCELIO_ARM='7'
+        MYCELIO_ARCH='arm'
+        MYCELIO_ARM='7'
         ;;
     'aarch64')
         MYCELIO_ARCH='arm64'
         ;;
     'x86')
-        MYCELIO_ARCH='386' MYCELIO_386='softfloat'
+        MYCELIO_ARCH='386'
+        MYCELIO_386='softfloat'
         ;;
     'ppc64le')
         MYCELIO_ARCH='ppc64le'
