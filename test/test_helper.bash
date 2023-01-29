@@ -12,6 +12,6 @@ _common_setup() {
     export MYCELIO_TEST_ROOT="$BATS_TEST_DIRNAME"
     export MYCELIO_TEST_LINK="$MYCELIO_TEST_ROOT/.tmpln"
 
-    # shellcheck source=source/setup/main.sh
-    source "$MYCELIO_ROOT/source/setup/main.sh"
+    # shellcheck source=source/shell/main.sh
+    source "$MYCELIO_ROOT/source/shell/main.sh"
 }

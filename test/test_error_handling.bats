@@ -20,7 +20,7 @@ function _cause_error() {
 
     run assert_equal "1" "1"
 
-    source "$MYCELIO_ROOT/source/setup/main.sh"
+    source "$MYCELIO_ROOT/source/shell/main.sh"
 
     _setup_environment
 

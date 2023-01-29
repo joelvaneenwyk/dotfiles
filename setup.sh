@@ -25,8 +25,8 @@ setup() {
         # shellcheck disable=SC3028,SC3054,SC2039
         _root="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-        # shellcheck source=source/setup/main.sh
-        . "$_root/source/setup/main.sh"
+        # shellcheck source=source/shell/main.sh
+        . "$_root/source/shell/main.sh"
 
         if main "$@"; then
             _return_code=0

@@ -422,7 +422,7 @@ try {
 
     if (($PSVersionTable.PSVersion.Major) -lt 5) {
         Write-Output "PowerShell 5 or later is required to run Mycelio setup."
-        Write-Output "Upgrade PowerShell: https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell"
+        Write-Output "Upgrade PowerShell: https://docs.microsoft.com/en-us/powershell/scripting/shell/installing-windows-powershell"
         break
     }
 

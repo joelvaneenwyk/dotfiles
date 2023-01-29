@@ -6,10 +6,10 @@ MYCELIO_BASH_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # Most operating systems have a version of 'realpath' but macOS (and perhaps others) do not
 # so we define our own version here.
 function get_real_path() {
-    _pwd="$(pwd)"
-    _path="$1"
-    _offset=""
-    _real_path=""
+    readonly _pwd="$(pwd)"
+    local _path="${1:-}"
+    local _offset=""
+    local _real_path=""
 
     while :; do
         _base="$(basename "$_path")"
@@ -49,14 +49,19 @@ function get_real_path() {
 }
 
 function include() {
+    # shellcheck disable=SC1090
     . "$MYCELIO_BASH_DIR/${1:-}"
 }
 
 function main() {
-    include "lib/mycelio.sh"
     include "lib/errors.sh"
-    include "lib/bash.sh"
+    include "lib/logging.sh"
+    include "lib/mycelio.sh"
+    include "lib/path.sh"
+    include "lib/utilities.sh"
+
     include "lib/profile.sh"
+    include "lib/profile.bash"
 
     include "apps/fzf.sh"
     include "apps/go.sh"
