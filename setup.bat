@@ -89,6 +89,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     )
 
     call :RunPowerShell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
+    call :RunSudoPowerShell -Command "Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1"
 
     call :Run "%_mycelio_root%\source\windows\bin\profile.bat"
     if not "!ERRORLEVEL!"=="0" (
@@ -206,6 +207,15 @@ exit /b %MYCELIO_ERROR%
     call %*
 endlocal & exit /b
 
+:RunSudo %*=Command with arguments
+    if "%GITHUB_ACTIONS%"=="" (
+        echo ##[cmd] %*
+    ) else (
+        echo [command]%*
+    )
+    call sudo %*
+endlocal & exit /b
+
 :RunPowerShell %*=Command with arguments
     setlocal EnableExtensions EnableDelayedExpansion
 
@@ -213,10 +223,10 @@ endlocal & exit /b
     :: Initialize each installed PowerShell we find
     ::
     set _powershell=
-    set _pwshs=
-    set _pwshs=!_pwshs! "C:\Program Files\PowerShell\7\pwsh.exe"
-    set _pwshs=!_pwshs! "C:\Program Files\PowerShell\pwsh.exe"
-    set _pwshs=!_pwshs! "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    set _pwshs=^
+        "C:\Program Files\PowerShell\7\pwsh.exe"^
+        "C:\Program Files\PowerShell\pwsh.exe"^
+        "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
     for %%p in (!_pwshs!) do (
         set _powershell=%%p
         if exist !_powershell! goto:$PowerShellSet
@@ -232,6 +242,35 @@ endlocal & exit /b
     :: font, see https://superuser.com/a/1548564
     if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 437 > nul
     call :Run !_powershell! -NoLogo -NoProfile %*
+endlocal & exit /b
+
+
+:RunSudoPowerShell %*=Command with arguments
+    setlocal EnableExtensions EnableDelayedExpansion
+
+    ::
+    :: Initialize each installed PowerShell we find
+    ::
+    set _powershell=
+    set _pwshs=^
+        "C:\Program Files\PowerShell\7\pwsh.exe"^
+        "C:\Program Files\PowerShell\pwsh.exe"^
+        "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    for %%p in (!_pwshs!) do (
+        set _powershell=%%p
+        if exist !_powershell! goto:$PowerShellSet
+    )
+    :$PowerShellSet
+
+    if not exist "!_powershell!" (
+        echo ERROR: PowerShell not found: "!_powershell!" 1>&2
+        exit /b 1
+    )
+
+    :: By changing character page we prevent parent console from changing
+    :: font, see https://superuser.com/a/1548564
+    if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 437 > nul
+    call :RunSudo !_powershell! -NoLogo -NoProfile %*
 endlocal & exit /b
 
 :GroupStart
