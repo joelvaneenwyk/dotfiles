@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function install_python() {
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped Python setup for root user."

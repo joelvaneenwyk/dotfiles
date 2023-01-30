@@ -60,9 +60,9 @@ myc_include_all() {
     _include "lib/profile.sh"
     _include "lib/utilities.sh"
     _include "lib/path.sh"
+    _include "lib/pgp.sh"
 
     if [ -n "${BASH_VERSION:-}" ]; then
-        _include "lib/pgp.bash"
         _include "lib/macos.bash"
         _include "lib/linux.bash"
         _include "lib/errors.bash"

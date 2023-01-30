@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function install_go {
     _local_root="$MYCELIO_HOME/.local"
     _local_go_root="$_local_root/go"

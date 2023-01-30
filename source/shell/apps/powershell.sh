@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function install_powershell() {
     if [ -x "$(command -v apt-get)" ]; then
         if [ -f "/etc/os-release" ]; then

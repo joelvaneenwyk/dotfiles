@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function configure_linux() {
     # todo
     #if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ] || [ "${MYCELIO_ARG_FORCE:-}" = "1" ]; then

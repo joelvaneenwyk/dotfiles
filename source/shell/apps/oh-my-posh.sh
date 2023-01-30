@@ -1,4 +1,6 @@
-function install_oh_my_posh {
+#!/bin/bash
+
+function install_oh_my_posh() {
     if [ ! -f "$MYCELIO_HOME/.poshthemes/stelbent.minimal.omp.json" ]; then
         _posh_themes="$MYCELIO_HOME/.poshthemes"
         mkdir -p "$_posh_themes"

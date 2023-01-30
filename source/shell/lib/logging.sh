@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/bin/sh
 
 log_debug() {
     if [ "${MYCELIO_DEBUG:-}" = "1" ]; then

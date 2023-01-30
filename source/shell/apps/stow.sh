@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function _stow_internal() {
     _source="$1"
     _target="$2"

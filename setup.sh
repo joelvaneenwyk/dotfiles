@@ -15,6 +15,41 @@ try_sudo() {
     fi
 }
 
+try_find_root() {
+    relative_file="source/shell/main.sh"
+
+    if [ -n "${BASH_VERSION:-}" ]; then
+        # shellcheck disable=SC3028,SC3054,SC2039
+        root="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+    else
+        root=$(dirname "$0")
+    fi
+
+    if [ ! -e "${root:-}/$relative_file" ]; then
+        root="$HOME/dotfiles"
+    fi
+
+    if [ ! -e "${root:-}/$relative_file" ]; then
+        root="$HOME/.dotfiles"
+    fi
+
+    if [ ! -e "${root:-}/$relative_file" ]; then
+        root="/home/runner/work/dotfiles/"
+    fi
+
+    if [ ! -e "${root:-}/$relative_file" ]; then
+        root=""
+    fi
+
+    echo "${root}"
+
+    if [ -z "${root}" ]; then
+        return 55
+    fi
+
+    return 0
+}
+
 setup() {
     # Standard safety protocol
     set -eu
@@ -25,11 +60,15 @@ setup() {
         # shellcheck disable=SC3028,SC3054,SC2039
         _root="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-        # shellcheck source=source/shell/main.sh
-        . "$_root/source/shell/main.sh"
+        if root="$(try_find_root)"; then
+            # shellcheck source=source/shell/main.sh
+            . "$root/source/shell/main.sh"
 
-        if main "$@"; then
-            _return_code=0
+            if main "$@"; then
+                _return_code=0
+            else
+                _return_code=$?
+            fi
         else
             _return_code=$?
         fi

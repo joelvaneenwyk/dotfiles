@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function run_command_sudo() {
     _prefix="${1:-}"
     shift

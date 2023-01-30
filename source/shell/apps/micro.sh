@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function install_micro_text_editor() {
     mkdir -p "$MYCELIO_HOME/.local/bin/"
     _micro_exe="micro$MYCELIO_OS_APP_EXTENSION"

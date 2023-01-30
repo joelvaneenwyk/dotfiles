@@ -1,8 +1,4 @@
-#!/usr/bin/env bash
-
-# ~/.bashrc: executed by bash(1) for non-login shells.
-# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
-# for examples
+#!/bin/bash
 
 function load_profile() {
     export MYCELIO_PROFILE_INITIALIZED=0

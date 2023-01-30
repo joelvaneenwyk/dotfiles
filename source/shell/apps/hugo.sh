@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function install_hugo {
     _hugo_tmp="$MYCELIO_TEMP/hugo"
     _hugo_exe="$MYCELIO_GOBIN/hugo$MYCELIO_OS_APP_EXTENSION"

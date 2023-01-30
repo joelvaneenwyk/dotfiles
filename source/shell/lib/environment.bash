@@ -1,11 +1,4 @@
 #!/usr/bin/env bash
-#
-# Usage: ./setup.sh
-#
-#   - Install commonly used apps using "brew bundle" (see Brewfile) or apt-get (on Ubunutu/Debian).
-#   - Uses "stow" to link config files into home directory.
-#   - Sets some app settings which were derived from https://github.com/Sajjadhosn/dotfiles
-#
 
 function install_packages() {
     if uname -a | grep -q "synology"; then
@@ -142,7 +135,7 @@ function setup_environment() {
         # 'ERR' is undefined in POSIX. We also use a somewhat strange looking expansion here
         # for 'BASH_LINENO' to ensure it works if BASH_LINENO is not set. There is a 'gist' of
         # at https://bit.ly/3cuHidf along with more details available at https://bit.ly/2AE2mAC.
-        # trap '__trap_error "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
+        # trap '_mycelio_trap_error "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
 
         _enable_trace=0
         _bash_debug=0
@@ -158,7 +151,7 @@ function setup_environment() {
             fi
 
             if [ "$_enable_trace" = "1" ]; then
-                trap '[[ "${FUNCNAME:-}" == "__trap_error" ]] || {
+                trap '[[ "${FUNCNAME:-}" == "_mycelio_trap_error" ]] || {
                     _mycelio_dbg_last_line=${_mycelio_dbg_line:-};
                     _mycelio_dbg_line=${LINENO:-};
                 }' DEBUG || true
@@ -470,7 +463,7 @@ function myc_initialize_environment() {
         _return_code=$?
     fi
 
-    _remove_error_handling
+    remove_error_handling
 
     return $_return_code
 }

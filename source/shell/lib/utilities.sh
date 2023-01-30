@@ -1,15 +1,52 @@
 #!/bin/sh
 
-command_exists() {
-    if command -v "$@" >/dev/null 2>&1; then
+is_synology() {
+    if uname -a | grep -q "synology"; then
         return 0
     fi
 
     return 1
 }
 
-is_synology() {
-    if uname -a | grep -q "synology"; then
+is_windows() {
+    case "$(uname -s)" in
+    CYGWIN*)
+        return 0
+        ;;
+    MINGW*)
+        return 0
+        ;;
+    MSYS*)
+        return 0
+        ;;
+    esac
+
+    return 1
+}
+
+# Modified from '/usr/bin/wslvar' to support MSYS2 environments as well.
+get_windows_root() {
+    out_prefix="/mnt/c/"
+
+    if [ -f "/etc/wsl.conf" ]; then
+        _tmp=$(awk -F '=' '/root/ {print $2}' /etc/wsl.conf | awk '{$1=$1;print}' | sed 's/\/*$//g')
+        if [ -f "$_tmp/c/Windows/explorer.exe" ]; then
+            out_prefix="$_tmp/c/"
+        fi
+    elif [ -f "/c/Windows/explorer.exe" ]; then
+        out_prefix="/c/"
+    fi
+
+    if [ -f "$out_prefix/Windows/explorer.exe" ]; then
+        # Remove trailing slash
+        echo "$out_prefix" | sed 's/\/*$//g'
+    else
+        echo ""
+    fi
+}
+
+command_exists() {
+    if command -v "$@" >/dev/null 2>&1; then
         return 0
     fi
 
@@ -120,43 +157,6 @@ run_sudo() {
     else
         "$@"
     fi
-}
-
-# Modified from '/usr/bin/wslvar' to support MSYS2 environments as well.
-get_windows_root() {
-    out_prefix="/mnt/c/"
-
-    if [ -f "/etc/wsl.conf" ]; then
-        _tmp=$(awk -F '=' '/root/ {print $2}' /etc/wsl.conf | awk '{$1=$1;print}' | sed 's/\/*$//g')
-        if [ -f "$_tmp/c/Windows/explorer.exe" ]; then
-            out_prefix="$_tmp/c/"
-        fi
-    elif [ -f "/c/Windows/explorer.exe" ]; then
-        out_prefix="/c/"
-    fi
-
-    if [ -f "$out_prefix/Windows/explorer.exe" ]; then
-        # Remove trailing slash
-        echo "$out_prefix" | sed 's/\/*$//g'
-    else
-        echo ""
-    fi
-}
-
-is_windows() {
-    case "$(uname -s)" in
-    CYGWIN*)
-        return 0
-        ;;
-    MINGW*)
-        return 0
-        ;;
-    MSYS*)
-        return 0
-        ;;
-    esac
-
-    return 1
 }
 
 _init_sudo() {

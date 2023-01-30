@@ -1,11 +1,13 @@
-function generate_gnugp_config() {
+#!/bin/sh
+
+generate_gnugp_config() {
     _gnupg_config_root="$1"
 
-    if mkdir -p "$_gnupg_config_root" &>/dev/null; then
+    if mkdir -p "$_gnupg_config_root" >/dev/null 2>&1; then
         _gnupg_templates_root="$MYCELIO_ROOT/source/gnupg"
 
         cp -f "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
-        if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
+        if grep -qEi "(Microsoft|WSL)" /proc/version >/dev/null 2>&1; then
             _pin_entry="$(get_windows_root)/Program Files (x86)/GnuPG/bin/pinentry-basic.exe"
         elif [ -f "/usr/local/bin/pinentry-mac" ]; then
             _pin_entry="/usr/local/bin/pinentry-mac"
