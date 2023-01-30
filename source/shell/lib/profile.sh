@@ -262,7 +262,7 @@ _get_windows_root() {
     fi
 }
 
-_get_profile_root() {
+get_profile_root() {
     _user_profile="${MYCELIO_HOME:-${HOME}}"
     _windows_root="$(_get_windows_root)"
     _cmd="$_windows_root/Windows/System32/cmd.exe"
@@ -276,8 +276,7 @@ _get_profile_root() {
             _win_userprofile_drive="${_windows_user_profile%%:*}:"
             _win_userprofile_dir="${_windows_user_profile#*:}"
 
-            if [ -x "$(command -v findmnt)" ]; then
-                _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"
+            if [ -x "$(command -v findmnt)" ] && _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"; then
                 _windows_user_profile="$(echo "${_userprofile_mount}${_win_userprofile_dir}" | sed 's/\\/\//g')"
             elif [ -x "$(command -v cygpath)" ]; then
                 _windows_user_profile="$(echo "${_windows_user_profile}" | sed 's/\\/\//g')"
@@ -341,6 +340,7 @@ initialize_profile() {
 
     log_debug "Initialized default enviornment variables."
 
+    original_root="${MYCELIO_ROOT:-}"
     # Import environment varaibles from dotenv file. Primarily used to grab
     # the 'MYCELIO_ROOT' path as it is sometimes hard (if not impossible) to calculate
     # on some shells/platforms. If needed, this could be replaced with something
@@ -361,6 +361,10 @@ initialize_profile() {
         IFS=$OLD_IFS
 
         log_debug "Loaded dot environment file."
+    fi
+
+    if [ ! -e "${MYCELIO_ROOT:-}/setup.sh" ]; then
+        export MYCELIO_ROOT="${original_root}"
     fi
 
     # We intentionally disable Oh My Posh on some Windows variants due to corruption e.g. MSYS, Cygwin
@@ -485,7 +489,7 @@ initialize_profile() {
         export TEX_OS_NAME="win32"
     fi
 
-    if _user_profile="$(_get_profile_root)"; then
+    if _user_profile="$(get_profile_root)"; then
         _add_path "append" "$_user_profile/AppData/Local/Programs/Microsoft VS Code/bin"
     fi
 

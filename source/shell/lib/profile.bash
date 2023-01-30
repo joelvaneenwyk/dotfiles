@@ -29,36 +29,6 @@ function load_profile() {
     return 0
 }
 
-function get_profile_root() {
-    _user_profile="$MYCELIO_HOME"
-    _windows_root="$(_get_windows_root)"
-    _cmd="$_windows_root/Windows/System32/cmd.exe"
-
-    if [ -x "$(command -v wslpath)" ]; then
-        _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"
-    fi
-
-    if [ -f "$_cmd" ]; then
-        if _windows_user_profile="$($_cmd "\/D" "\/S" "\/C" "echo %UserProfile%" 2>/dev/null)"; then
-            _win_userprofile_drive="${_windows_user_profile%%:*}:"
-            _win_userprofile_dir="${_windows_user_profile#*:}"
-
-            if [ -x "$(command -v findmnt)" ] && _userprofile_mount="$(findmnt --noheadings --first-only --output TARGET "$_win_userprofile_drive")"; then
-                _windows_user_profile="$(echo "${_userprofile_mount}${_win_userprofile_dir}" | sed 's/\\/\//g')"
-            elif [ -x "$(command -v cygpath)" ]; then
-                _windows_user_profile="$(echo "${_windows_user_profile}" | sed 's/\\/\//g')"
-                _windows_user_profile="$(cygpath "${_windows_user_profile}")"
-            fi
-        fi
-    fi
-
-    if [ ! -d "$_user_profile" ] && [ -d "$_windows_user_profile" ]; then
-        _user_profile="$_windows_user_profile"
-    fi
-
-    echo "$_user_profile"
-}
-
 function _start_tmux() {
     if ! { [ "$TERM" = "screen" ] && [ -n "$TMUX" ]; }; then
         tmux new-session -d -s mycelio -n mycowin
@@ -187,7 +157,7 @@ function _initialize_interactive_bash_profile() {
     fi
 }
 
-function _initialize_bash_profile() {
+function initialize_bash_profile() {
     # Fig pre block. Keep at the top of this file.
     [[ -f "$HOME/.fig/shell/bashrc.pre.bash" ]] && . "$HOME/.fig/shell/bashrc.pre.bash"
 

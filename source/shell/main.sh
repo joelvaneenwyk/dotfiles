@@ -47,34 +47,39 @@ get_real_path() {
 
 include() {
     # shellcheck disable=SC3028,SC3054,SC2039
-    MYCELIO_BASH_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+    # MYCELIO_BASH_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+    # /workspaces/dotfiles/source/shell/lib
 
     # shellcheck disable=SC1090
-    . "$MYCELIO_BASH_DIR/${1:-}"
+    . "${MYCELIO_ROOT:-}/source/shell/${1:-}"
 }
 
 include_all() {
-    include "lib/commands.sh"
-    include "lib/environment.sh"
-    include "lib/errors.sh"
-    include "lib/linux.sh"
     include "lib/logging.sh"
-    include "lib/macos.sh"
-    include "lib/path.sh"
-    include "lib/pgp.sh"
-    include "lib/profile.bash"
     include "lib/profile.sh"
     include "lib/utilities.sh"
+    include "lib/path.sh"
 
-    include "apps/fzf.sh"
-    include "apps/git.sh"
-    include "apps/go.sh"
-    include "apps/hugo.sh"
-    include "apps/micro.sh"
-    include "apps/oh-my-posh.sh"
-    include "apps/powershell.sh"
-    include "apps/python.sh"
-    include "apps/stow.sh"
+    if [ -n "${BASH_VERSION:-}" ]; then
+        include "lib/pgp.bash"
+        include "lib/macos.bash"
+        include "lib/linux.bash"
+        include "lib/errors.bash"
+        include "lib/environment.bash"
+        include "lib/commands.bash"
+        include "lib/profile.bash"
+
+        include "apps/fzf.sh"
+        include "apps/git.sh"
+        include "apps/go.sh"
+        include "apps/hugo.sh"
+        include "apps/micro.sh"
+        include "apps/oh-my-posh.sh"
+        include "apps/powershell.sh"
+        include "apps/python.sh"
+        include "apps/stow.sh"
+    fi
 }
 
 main() {

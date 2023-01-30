@@ -1,5 +1,7 @@
+#!/usr/bin/env sh
+
 # get_file [output_path] [url]
-function get_file() {
+get_file() {
     output_path=$1
     url=$2
     return_value=0
@@ -114,6 +116,6 @@ _unique_list() {
     }
 }
 
-function _remove_trailing_slash() {
+_remove_trailing_slash() {
     echo "$1" | sed 's/\/*$//g'
 }

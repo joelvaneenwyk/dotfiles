@@ -3,18 +3,30 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [{
-            "name": "PowerShell Launch Current File",
-            "type": "PowerShell",
+    "configurations": [
+        {
+            "type": "bashdb",
             "request": "launch",
-            "script": "${file}",
-            "cwd": "${workspaceFolder}"
+            "name": "bash setup.sh",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/setup.sh",
+            "args": []
         },
         {
             "type": "bashdb",
             "request": "launch",
-            "name": "Bash-Debug (simplest configuration)",
-            "program": "${file}"
+            "name": "bash <select>",
+            "cwd": "${workspaceFolder}",
+            "program": "${command:AskForScriptName}",
+            "args": []
+        },
+
+        {
+            "name": "PowerShell <current>",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${file}",
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

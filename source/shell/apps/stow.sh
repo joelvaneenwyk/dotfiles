@@ -1,53 +1,72 @@
-function install_stow() {
-    MYCELIO_PERL="${MYCELIO_PERL:-$(command -v perl)}"
-    export MYCELIO_PERL
+function _stow_internal() {
+    _source="$1"
+    _target="$2"
+    shift 2
 
-    _cpan_temp_bin="$MYCELIO_TEMP/cpanm"
+    _remove=0
 
-    if [ "${MSYSTEM:-}" = "MINGW64" ]; then
-        _cpan_root="$MYCELIO_HOME/.cpan-w64"
-        _cpanm_root="$MYCELIO_HOME/.cpanm-w64"
-    else
-        _cpan_root="$MYCELIO_HOME/.cpan"
-        _cpanm_root="$MYCELIO_HOME/.cpanm"
+    if [ -f "$_target" ] || [ -d "$_target" ] || [ -L "$_target" ]; then
+        _remove=1
     fi
 
-    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
-        rm -f "$_cpan_temp_bin" >/dev/null 2>&1
+    if [ ! -L "$_target" ]; then
+        _real="$(get_real_path "$_target")"
 
-        rm -f "$MYCELIO_HOME/.local/bin/cpanm" >/dev/null 2>&1
-
-        rm -rf "$_cpan_root" >/dev/null 2>&1
-        rm -rf "$_cpanm_root" >/dev/null 2>&1
-
-        rm -f "$MYCELIO_STOW_ROOT/bin/stow" >/dev/null 2>&1
-        rm -f "$MYCELIO_STOW_ROOT/bin/chkstow" >/dev/null 2>&1
+        # Do not delete files or directories that are actually inside the
+        # dot files source directory.
+        if [[ "$_real" == *"$MYCELIO_ROOT"* ]]; then
+            _remove=0
+            echo "🔗 SKIPPED: $_target"
+        fi
     fi
 
-    if [ ! -f "$MYCELIO_STOW_ROOT/configure.ac" ]; then
-        log_error "'stow' source missing: '$MYCELIO_STOW_ROOT'"
-        return 20
-    elif (
-        if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
-            # shellcheck source=source/stow/tools/make-clean.sh
-            run_task "stow.make.clean" source "$MYCELIO_STOW_ROOT/tools/make-clean.sh"
+    if [ "$_remove" = "1" ]; then
+        _name="'$_target'"
+        if [ -L "$_target" ]; then
+            _name="$_name (link)"
         fi
 
-        # shellcheck source=source/stow/tools/make-stow.sh
-        run_task "stow.make" source "$MYCELIO_STOW_ROOT/tools/make-stow.sh"
-    ); then
-        echo "✔ Successfully built 'stow' from source."
-    else
-        log_error "Failed to build 'stow' from source."
-        return 15
+        if [ -f "$_source" ]; then
+            _name="$_name (file)"
+            if [[ "$*" == *"--delete"* ]]; then
+                if rm -f "$_target" >/dev/null 2>&1; then
+                    echo "REMOVED: $_name"
+                else
+                    echo "SKIPPED: $_name"
+                fi
+            else
+                echo "TARGET: $_name"
+            fi
+        elif [ -d "$_source" ]; then
+            _name="$_name (directory)"
+            if [[ "$*" == *"--delete"* ]]; then
+                # Remove empty directories in target. It will not delete directories
+                # that have files in them.
+                if find "$_target" -type d -empty -delete >/dev/null 2>&1 &&
+                    rm -df "$_target" >/dev/null 2>&1; then
+                    echo "REMOVED: $_name"
+                else
+                    echo "SKIPPED: $_name"
+                fi
+            else
+                echo "TARGET: $_name"
+            fi
+        fi
     fi
 
-    # Remove intermediate Perl files in case another version of Perl generated
-    # some files that are incompatible with current version.
-    rm -rf "$MYCELIO_ROOT/_Inline"
-    rm -rf "$MYCELIO_STOW_ROOT/_Inline"
+    if [[ ! "$*" == *"--delete"* ]] && [ ! -f "$_stow_bin" ]; then
+        if [ -f "$_source" ]; then
+            mkdir -p "$(dirname "$_target")"
+        fi
 
-    _stow --version
+        if [ -f "$_source" ] || [ -d "$_source" ]; then
+            if ln -s "$_source" "$_target" >/dev/null 2>&1; then
+                echo "✔ Stowed target: '$_target'"
+            else
+                log_error "Unable to stow target: '$_target'"
+            fi
+        fi
+    fi
 }
 
 function _stow() {
@@ -100,6 +119,58 @@ function _stow() {
     fi
 
     return 0
+}
+
+function install_stow() {
+    MYCELIO_PERL="${MYCELIO_PERL:-$(command -v perl)}"
+    export MYCELIO_PERL
+
+    _cpan_temp_bin="$MYCELIO_TEMP/cpanm"
+
+    if [ "${MSYSTEM:-}" = "MINGW64" ]; then
+        _cpan_root="$MYCELIO_HOME/.cpan-w64"
+        _cpanm_root="$MYCELIO_HOME/.cpanm-w64"
+    else
+        _cpan_root="$MYCELIO_HOME/.cpan"
+        _cpanm_root="$MYCELIO_HOME/.cpanm"
+    fi
+
+    if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
+        rm -f "$_cpan_temp_bin" >/dev/null 2>&1
+
+        rm -f "$MYCELIO_HOME/.local/bin/cpanm" >/dev/null 2>&1
+
+        rm -rf "$_cpan_root" >/dev/null 2>&1
+        rm -rf "$_cpanm_root" >/dev/null 2>&1
+
+        rm -f "$MYCELIO_STOW_ROOT/bin/stow" >/dev/null 2>&1
+        rm -f "$MYCELIO_STOW_ROOT/bin/chkstow" >/dev/null 2>&1
+    fi
+
+    if [ ! -f "$MYCELIO_STOW_ROOT/configure.ac" ]; then
+        log_error "'stow' source missing: '$MYCELIO_STOW_ROOT'"
+        return 20
+    elif (
+        if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
+            # shellcheck source=source/stow/tools/make-clean.sh
+            run_task "stow.make.clean" source "$MYCELIO_STOW_ROOT/tools/make-clean.sh"
+        fi
+
+        # shellcheck source=source/stow/tools/make-stow.sh
+        run_task "stow.make" source "$MYCELIO_STOW_ROOT/tools/make-stow.sh"
+    ); then
+        echo "✔ Successfully built 'stow' from source."
+    else
+        log_error "Failed to build 'stow' from source."
+        return 15
+    fi
+
+    # Remove intermediate Perl files in case another version of Perl generated
+    # some files that are incompatible with current version.
+    rm -rf "$MYCELIO_ROOT/_Inline"
+    rm -rf "$MYCELIO_STOW_ROOT/_Inline"
+
+    _stow --version
 }
 
 function stow_packages() {
@@ -173,75 +244,4 @@ function install_stow() {
     rm -rf "$MYCELIO_STOW_ROOT/_Inline"
 
     _stow --version
-}
-
-function _stow_internal() {
-    _source="$1"
-    _target="$2"
-    shift 2
-
-    _remove=0
-
-    if [ -f "$_target" ] || [ -d "$_target" ] || [ -L "$_target" ]; then
-        _remove=1
-    fi
-
-    if [ ! -L "$_target" ]; then
-        _real="$(get_real_path "$_target")"
-
-        # Do not delete files or directories that are actually inside the
-        # dot files source directory.
-        if [[ "$_real" == *"$MYCELIO_ROOT"* ]]; then
-            _remove=0
-            echo "🔗 SKIPPED: $_target"
-        fi
-    fi
-
-    if [ "$_remove" = "1" ]; then
-        _name="'$_target'"
-        if [ -L "$_target" ]; then
-            _name="$_name (link)"
-        fi
-
-        if [ -f "$_source" ]; then
-            _name="$_name (file)"
-            if [[ "$*" == *"--delete"* ]]; then
-                if rm -f "$_target" >/dev/null 2>&1; then
-                    echo "REMOVED: $_name"
-                else
-                    echo "SKIPPED: $_name"
-                fi
-            else
-                echo "TARGET: $_name"
-            fi
-        elif [ -d "$_source" ]; then
-            _name="$_name (directory)"
-            if [[ "$*" == *"--delete"* ]]; then
-                # Remove empty directories in target. It will not delete directories
-                # that have files in them.
-                if find "$_target" -type d -empty -delete >/dev/null 2>&1 &&
-                    rm -df "$_target" >/dev/null 2>&1; then
-                    echo "REMOVED: $_name"
-                else
-                    echo "SKIPPED: $_name"
-                fi
-            else
-                echo "TARGET: $_name"
-            fi
-        fi
-    fi
-
-    if [[ ! "$*" == *"--delete"* ]] && [ ! -f "$_stow_bin" ]; then
-        if [ -f "$_source" ]; then
-            mkdir -p "$(dirname "$_target")"
-        fi
-
-        if [ -f "$_source" ] || [ -d "$_source" ]; then
-            if ln -s "$_source" "$_target" >/dev/null 2>&1; then
-                echo "✔ Stowed target: '$_target'"
-            else
-                log_error "Unable to stow target: '$_target'"
-            fi
-        fi
-    fi
 }

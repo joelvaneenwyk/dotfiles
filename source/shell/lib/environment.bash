@@ -142,7 +142,7 @@ function setup_environment() {
         # 'ERR' is undefined in POSIX. We also use a somewhat strange looking expansion here
         # for 'BASH_LINENO' to ensure it works if BASH_LINENO is not set. There is a 'gist' of
         # at https://bit.ly/3cuHidf along with more details available at https://bit.ly/2AE2mAC.
-        trap '__trap_error "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
+        # trap '__trap_error "$LINENO" ${BASH_LINENO[@]+"${BASH_LINENO[@]}"}' ERR
 
         _enable_trace=0
         _bash_debug=0

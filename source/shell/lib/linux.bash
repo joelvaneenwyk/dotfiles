@@ -1,7 +1,8 @@
 function configure_linux() {
-    if [ "$MYCELIO_ARG_CLEAN" = "1" ] || [ "$MYCELIO_ARG_FORCE" = "1" ]; then
-        task_group "Stow: Sterilize Target" stow_packages --delete
-    fi
+    # todo
+    #if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ] || [ "${MYCELIO_ARG_FORCE:-}" = "1" ]; then
+    task_group "Stow: Sterilize Target" stow_packages --delete
+    #fi
 
     mkdir -p "$MYCELIO_HOME/.config/fish/functions"
 
