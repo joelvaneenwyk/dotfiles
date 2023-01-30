@@ -242,7 +242,7 @@ initialize_interactive_profile() {
 }
 
 # Modified from '/usr/bin/wslvar' to support MSYS2 environments as well.
-_get_windows_root() {
+get_windows_root() {
     out_prefix="/mnt/c/"
 
     if [ -f "/etc/wsl.conf" ]; then
@@ -264,7 +264,7 @@ _get_windows_root() {
 
 get_profile_root() {
     _user_profile="${MYCELIO_HOME:-${HOME}}"
-    _windows_root="$(_get_windows_root)"
+    _windows_root="$(get_windows_root)"
     _cmd="$_windows_root/Windows/System32/cmd.exe"
 
     if [ -x "$(command -v wslpath)" ]; then
@@ -493,7 +493,7 @@ initialize_profile() {
         _add_path "append" "$_user_profile/AppData/Local/Programs/Microsoft VS Code/bin"
     fi
 
-    _add_path "append" "$(_get_windows_root)/c/Program Files/Microsoft VS Code/bin"
+    _add_path "append" "$(get_windows_root)/c/Program Files/Microsoft VS Code/bin"
 
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
 
@@ -510,7 +510,7 @@ initialize_profile() {
     unset tmp
 }
 
-initialize() {
+myc_initialize() {
     # Fig pre block. Keep at the top of this file.
     if [ -f "$HOME/.fig/shell/profile.pre.bash" ]; then
         . "$HOME/.fig/shell/profile.pre.bash"
@@ -522,7 +522,7 @@ initialize() {
         export DONT_PROMPT_WSL_INSTALL=1
 
         if [ -x "$(command -v update-binfmts)" ]; then
-            _sudo update-binfmts --disable cli
+            myc_sudo update-binfmts --disable cli
         fi
     fi
 

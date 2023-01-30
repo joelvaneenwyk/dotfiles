@@ -2,7 +2,7 @@ function run_command_sudo() {
     _prefix="${1:-}"
     shift
 
-    if _allow_sudo; then
+    if allow_sudo; then
         run_command "$_prefix" sudo "$@"
     else
         run_command "$_prefix" "$@"
@@ -37,7 +37,7 @@ function run_task_sudo() {
     _name="${1:-}"
     _prefix="$(echo "${_name// /.}" | awk '{print tolower($0)}')"
     shift
-    if _allow_sudo; then
+    if allow_sudo; then
         task_group "$_name" run_command "$_prefix" sudo "$@"
     else
         task_group "$_name" run_command "$_prefix" "$@"

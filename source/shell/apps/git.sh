@@ -2,7 +2,7 @@ function initialize_gitconfig() {
     _git_config="$MYCELIO_HOME/.gitconfig"
 
     local windows_root
-    windows_root="$(_get_windows_root)"
+    windows_root="$(get_windows_root)"
 
     if [ ! -f "$_git_config" ] || rm -f "$_git_config"; then
         unlink "$_git_config" >/dev/null 2>&1 || true
@@ -10,7 +10,7 @@ function initialize_gitconfig() {
         {
             echo "[include]"
 
-            if _is_windows; then
+            if is_windows; then
                 echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_common")"
                 echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_linux")"
                 echo "    path = $(cygpath --mixed "$MYCELIO_ROOT/source/git/.gitconfig_windows")"

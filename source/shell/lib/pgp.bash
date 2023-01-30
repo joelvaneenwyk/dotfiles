@@ -6,7 +6,7 @@ function generate_gnugp_config() {
 
         cp -f "$_gnupg_templates_root/gpg-agent.template.conf" "$_gnupg_config_root/gpg-agent.conf"
         if grep -qEi "(Microsoft|WSL)" /proc/version &>/dev/null; then
-            _pin_entry="$(_get_windows_root)/Program Files (x86)/GnuPG/bin/pinentry-basic.exe"
+            _pin_entry="$(get_windows_root)/Program Files (x86)/GnuPG/bin/pinentry-basic.exe"
         elif [ -f "/usr/local/bin/pinentry-mac" ]; then
             _pin_entry="/usr/local/bin/pinentry-mac"
         fi

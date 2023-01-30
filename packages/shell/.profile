@@ -80,9 +80,9 @@ _main_profile() {
         # shellcheck source=source/shell/main.sh
         . "$MYCELIO_ROOT/source/shell/main.sh"
 
-        include_all
+        myc_include_all
 
-        initialize
+        myc_initialize
     fi
 }
 

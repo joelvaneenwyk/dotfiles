@@ -73,9 +73,9 @@ _main_bashrc() {
         # shellcheck source=source/shell/main.sh
         . "$MYCELIO_ROOT/source/shell/main.sh"
 
-        include_all
+        myc_include_all
 
-        initialize
+        myc_initialize
         # initialize_bash_profile
     fi
 }

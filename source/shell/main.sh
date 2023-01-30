@@ -45,7 +45,7 @@ get_real_path() {
     return 0
 }
 
-include() {
+_include() {
     # shellcheck disable=SC3028,SC3054,SC2039
     # MYCELIO_BASH_DIR="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -55,34 +55,34 @@ include() {
     . "${MYCELIO_ROOT:-}/source/shell/${1:-}"
 }
 
-include_all() {
-    include "lib/logging.sh"
-    include "lib/profile.sh"
-    include "lib/utilities.sh"
-    include "lib/path.sh"
+myc_include_all() {
+    _include "lib/logging.sh"
+    _include "lib/profile.sh"
+    _include "lib/utilities.sh"
+    _include "lib/path.sh"
 
     if [ -n "${BASH_VERSION:-}" ]; then
-        include "lib/pgp.bash"
-        include "lib/macos.bash"
-        include "lib/linux.bash"
-        include "lib/errors.bash"
-        include "lib/environment.bash"
-        include "lib/commands.bash"
-        include "lib/profile.bash"
+        _include "lib/pgp.bash"
+        _include "lib/macos.bash"
+        _include "lib/linux.bash"
+        _include "lib/errors.bash"
+        _include "lib/environment.bash"
+        _include "lib/commands.bash"
+        _include "lib/profile.bash"
 
-        include "apps/fzf.sh"
-        include "apps/git.sh"
-        include "apps/go.sh"
-        include "apps/hugo.sh"
-        include "apps/micro.sh"
-        include "apps/oh-my-posh.sh"
-        include "apps/powershell.sh"
-        include "apps/python.sh"
-        include "apps/stow.sh"
+        _include "apps/fzf.sh"
+        _include "apps/git.sh"
+        _include "apps/go.sh"
+        _include "apps/hugo.sh"
+        _include "apps/micro.sh"
+        _include "apps/oh-my-posh.sh"
+        _include "apps/powershell.sh"
+        _include "apps/python.sh"
+        _include "apps/stow.sh"
     fi
 }
 
 main() {
-    include_all
-    initialize_environment
+    myc_include_all
+    myc_initialize_environment
 }

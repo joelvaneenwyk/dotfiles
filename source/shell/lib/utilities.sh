@@ -1,6 +1,6 @@
 #!/bin/sh
 
-_command_exists() {
+command_exists() {
     if command -v "$@" >/dev/null 2>&1; then
         return 0
     fi
@@ -20,14 +20,14 @@ is_synology() {
 # Some platforms (e.g. MacOS) do not come with 'timeout' command so
 # this is a cross-platform implementation that optionally uses perl.
 #
-_timeout() {
+myc_timeout() {
     _seconds="${1:-}"
     shift
 
     if [ ! "$_seconds" = "" ]; then
-        if _command_exists "gtimeout"; then
+        if command_exists "gtimeout"; then
             gtimeout "$_seconds" "$@"
-        elif _command_exists "perl"; then
+        elif command_exists "perl"; then
             perl -e "alarm $_seconds; exec @ARGV" "$@"
         else
             eval "$@"
@@ -41,9 +41,9 @@ _timeout() {
 #
 #   - https://superuser.com/questions/553932/how-to-check-if-i-have-sudo-access
 #
-_has_admin_rights() {
+has_admin_rights() {
     # If 'sudo' does not exist at all then assume we can use it
-    if ! _command_exists "sudo"; then
+    if ! command_exists "sudo"; then
         return 0
     else
         _user="$(whoami)"
@@ -69,7 +69,7 @@ _has_admin_rights() {
                     return 0
                 else
                     # Authority check failed
-                    if _timeout 2 sudo id >/dev/null 2>&1; then
+                    if myc_timeout 2 sudo id >/dev/null 2>&1; then
                         # If this passes then we do have a password set
                         return 0
                     fi
@@ -84,7 +84,7 @@ _has_admin_rights() {
     return 1
 }
 
-_allow_sudo() {
+allow_sudo() {
     # If the command does not exist we can't use it
     if [ ! -x "$(command -v sudo)" ]; then
         return 1
@@ -104,7 +104,7 @@ _allow_sudo() {
     # If we get here we have everything we need but we want to make sure
     # we can run sudo without prompt since we are running in non-interactive
     # mode and do not want to stall CI builds.
-    if _has_admin_rights; then
+    if has_admin_rights; then
         return 0
     fi
 
@@ -115,7 +115,7 @@ _allow_sudo() {
 }
 
 run_sudo() {
-    if _allow_sudo; then
+    if allow_sudo; then
         sudo "$@"
     else
         "$@"
@@ -123,7 +123,7 @@ run_sudo() {
 }
 
 # Modified from '/usr/bin/wslvar' to support MSYS2 environments as well.
-_get_windows_root() {
+get_windows_root() {
     out_prefix="/mnt/c/"
 
     if [ -f "/etc/wsl.conf" ]; then
@@ -143,7 +143,7 @@ _get_windows_root() {
     fi
 }
 
-_is_windows() {
+is_windows() {
     case "$(uname -s)" in
     CYGWIN*)
         return 0
@@ -184,9 +184,9 @@ _init_sudo() {
         if [ -z "${_status:-}" ]; then
             # We first attempt to validate ('-v') the user which will refresh the timestamp and
             # essentially "login" if a password is not required.
-            _timeout 1 sudo -v >/dev/null 2>&1
+            myc_timeout 1 sudo -v >/dev/null 2>&1
 
-            if _sudo_id="$(_timeout 1 sudo -n id 2>&1)"; then
+            if _sudo_id="$(myc_timeout 1 sudo -n id 2>&1)"; then
                 _status="has_sudo__pass_set"
             else
                 _status="has_sudo__needs_pass"
@@ -224,7 +224,7 @@ _init_sudo() {
 # Runs the command passed in as an argument with sudo if we have sudo permissions or are
 # allowed to run interactively. If sudo command does not exist, we just run the command.
 #######################################
-_sudo() {
+myc_sudo() {
     _init_sudo
 
     if [ ! -x "$(command -v sudo)" ]; then

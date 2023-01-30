@@ -463,7 +463,7 @@ function use_mycelio_library() {
     export MYCELIO_LIBRARY_IMPORTED
 }
 
-function initialize_environment() {
+function myc_initialize_environment() {
     if _initialize_environment "$@"; then
         _return_code=0
     else
