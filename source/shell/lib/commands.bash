@@ -71,7 +71,7 @@ function run_command() {
     fi
 
     (
-        MYCELIO_DISABLE_TRAP=1
+        export MYCELIO_DISABLE_TRAP=1
         ( 
             ( 
                 (
