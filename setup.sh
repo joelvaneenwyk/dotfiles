@@ -57,12 +57,9 @@ setup() {
     if [ -n "${BASH_VERSION:-}" ]; then
         echo "[mycelio] Bash v$BASH_VERSION"
 
-        # shellcheck disable=SC3028,SC3054,SC2039
-        _root="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-
-        if root="$(try_find_root)"; then
+        if MYCELIO_ROOT="$(try_find_root)"; then
             # shellcheck source=source/shell/main.sh
-            . "$root/source/shell/main.sh"
+            . "$MYCELIO_ROOT/source/shell/main.sh"
 
             if main "$@"; then
                 _return_code=0
