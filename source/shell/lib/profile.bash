@@ -1,4 +1,4 @@
-#!/bin/bash
+# shellcheck shell=sh
 
 function load_profile() {
     export MYCELIO_PROFILE_INITIALIZED=0

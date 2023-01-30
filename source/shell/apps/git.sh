@@ -1,3 +1,5 @@
+#!/bin/bash
+
 function initialize_gitconfig() {
     _git_config="$MYCELIO_HOME/.gitconfig"
 
@@ -105,24 +107,4 @@ function _update_git_repository() {
     fi
 
     run_command "$_name.git.pull" git -C "$MYCELIO_ROOT/$_path" pull "origin" "$_branch" --rebase --autostash
-}
-
-function update_repositories() {
-    if [ -x "$(command -v git)" ] && [ -e "$MYCELIO_ROOT/.git" ]; then
-        if [ ! -f "$MYCELIO_ROOT/source/stow/setup.sh" ]; then
-            run_command "git.submodule.update" git submodule update --init --recursive || true
-        fi
-
-        # _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
-        # _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
-        # _update_git_repository "packages/macos/Library/Application Support/Resources" "master"
-        # _update_git_repository "packages/fish/.config/base16-shell" "master"
-        # _update_git_repository "packages/fish/.config/base16-fzf" "master"
-        # _update_git_repository "packages/fish/.config/git-fuzzy" "master"
-        # _update_git_repository "test/bats" "master"
-        # _update_git_repository "test/test_helper/bats-support" "master"
-        # _update_git_repository "test/test_helper/bats-assert" "master"
-
-        echo "[mycelio] Updated submodules."
-    fi
 }

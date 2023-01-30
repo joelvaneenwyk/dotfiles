@@ -21,49 +21,30 @@ On top of that, submodules are just a nightmare. They work and mostly fine but c
 ## Reference
 
 ```ini
-[submodule "source/stow"]
-  path = source/stow
-  url = https://github.com/joelvaneenwyk/stow
-  branch = main
+path = source/stow
+url = https://github.com/joelvaneenwyk/stow
 
-[submodule "vundle"]
-  path = packages/vim/.vim/bundle/vundle
-  url = https://github.com/VundleVim/Vundle.vim
-  branch = master
+path = packages/vim/.vim/bundle/vundle
+url = https://github.com/VundleVim/Vundle.vim
 
-[submodule "mailmate"]
-  path = packages/macos/Library/Application Support/Resources
-  url = https://github.com/chauncey-garrett/mailmate.git
-  update = rebase
-  branch = master
+path = packages/macos/Library/Application Support/Resources
+url = https://github.com/chauncey-garrett/mailmate.git
 
-[submodule "base16-shell"]
-  path = packages/fish/.config/base16-shell
-  url = https://github.com/chriskempson/base16-shell.git
-  branch = master
+path = packages/fish/.config/base16-shell
+url = https://github.com/chriskempson/base16-shell.git
 
-[submodule "base16-fzf"]
-  path = packages/fish/.config/base16-fzf
-  url = https://github.com/nicodebo/base16-fzf.git
-  branch = master
+path = packages/fish/.config/base16-fzf
+url = https://github.com/nicodebo/base16-fzf.git
 
-[submodule "git-fuzzy"]
-  path = packages/fish/.config/git-fuzzy
-  url = https://github.com/bigH/git-fuzzy.git
-  branch = master
+path = packages/fish/.config/git-fuzzy
+url = https://github.com/bigH/git-fuzzy.git
 
-[submodule "bats-core"]
-  path = test/bats
-  url = https://github.com/bats-core/bats-core.git
-  branch = master
+path = test/bats
+url = https://github.com/bats-core/bats-core.git
 
-[submodule "bats-support"]
-  path = test/test_helper/bats-support
-  url = https://github.com/bats-core/bats-support.git
-  branch = master
+path = test/test_helper/bats-support
+url = https://github.com/bats-core/bats-support.git
 
-[submodule "bats-assert"]
-  path = test/test_helper/bats-assert
-  url = https://github.com/bats-core/bats-assert.git
-  branch = master
+path = test/test_helper/bats-assert
+url = https://github.com/bats-core/bats-assert.git
 ```

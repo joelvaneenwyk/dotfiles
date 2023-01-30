@@ -3,7 +3,7 @@
     "shellcheck.run": "onType",
     "shellcheck.enableQuickFix": true,
     "shellcheck.customArgs": [
-        "-W0",
+        "--enable=all",
         "--external-sources",
         "--root=${workspaceFolder}",
         "--source-path=${workspaceFolder}",
@@ -28,6 +28,8 @@
         "editor.formatOnSave": true,
         "files.eol": "\n"
     },
+    "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
+    "bashIde.includeAllWorkspaceSymbols": true,
 
     "markdownlint.ignore": ".markdownlintignore",
 

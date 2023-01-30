@@ -1,4 +1,4 @@
-#!/bin/sh
+# shellcheck shell=sh
 
 generate_gnugp_config() {
     _gnupg_config_root="$1"

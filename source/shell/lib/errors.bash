@@ -1,4 +1,4 @@
-#!/bin/bash
+# shellcheck shell=bash
 
 function _print_stack() {
     if [ -n "${BASH:-}" ]; then
@@ -70,9 +70,9 @@ function setup_error_handler() {
         # call so only enable it if specifically requested.
         if [ "${MYCELIO_ARG_DEBUG:-0}" = "1" ] && [ -z "${BATS_TEST_NAME:-}" ]; then
             # Redirect only supported in Bash versions after 4.1
-            if [ "$BASH_VERSION_MAJOR" -eq 4 ] && [ "$BASH_VERSION_MINOR" -ge 1 ]; then
+            if [ "${BASH_VERSION_MAJOR:-}" -eq 4 ] && [ "${BASH_VERSION_MINOR:-}" -ge 1 ]; then
                 _enable_trace=1
-            elif [ "$BASH_VERSION_MAJOR" -gt 4 ]; then
+            elif [ "${BASH_VERSION_MAJOR:-}" -gt 4 ]; then
                 _enable_trace=1
             fi
 
@@ -97,11 +97,11 @@ function setup_error_handler() {
             fi
         fi
 
-        MYCELIO_DEBUG_TRACE_FILE=""
+        trace_file=""
 
         # Output trace to file if that is supported
         if [ "$_bash_debug" = "1" ] && [ "$_enable_trace" = "1" ]; then
-            MYCELIO_DEBUG_TRACE_FILE="$MYCELIO_HOME/.logs/init.xtrace.$(date +%s).log"
+            trace_file="$MYCELIO_HOME/.logs/init.xtrace.$(date +%s).log"
             mkdir -p "$MYCELIO_HOME/.logs"
 
             # Find a free file descriptor
@@ -109,7 +109,7 @@ function setup_error_handler() {
 
             while ((log_descriptor < 31)); do
                 if eval "command >&$log_descriptor" >/dev/null 2>&1; then
-                    eval "exec $log_descriptor>$MYCELIO_DEBUG_TRACE_FILE"
+                    eval "exec $log_descriptor>$trace_file"
                     export BASH_XTRACEFD=$log_descriptor
                     set -o xtrace
                     break
@@ -118,9 +118,9 @@ function setup_error_handler() {
                 ((++log_descriptor))
             done
         fi
-
-        export MYCELIO_DEBUG_TRACE_FILE
     fi
+
+    export MYCELIO_DEBUG_TRACE_FILE="${trace_file:-}"
 }
 
 function _mycelio_trap_error() {

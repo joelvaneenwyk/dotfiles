@@ -1,4 +1,4 @@
-#!/bin/bash
+# shellcheck shell=bash
 
 function initialize_macos() {
     install_macos_apps

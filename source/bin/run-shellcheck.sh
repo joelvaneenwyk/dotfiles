@@ -18,7 +18,10 @@ function is_shell_script() {
 
     [[ $1 == *.sh ]] && return 0
     [[ $1 == */bash-completion/* ]] && return 0
-    [[ $(file -b --mime-type "$1") == text/x-shellscript ]] && return 0
+
+    # if [ -x "$(command -v file 2>&1)"]; then
+    #     [[ "$(file -b --mime-type "$1")" == "text/x-shellscript" ]] && return 0
+    # fi
 
     return 1
 }
@@ -43,7 +46,7 @@ function run_shellcheck() {
     while IFS= read -r -d $'' file; do
         if is_shell_script "$file"; then
             if [ "$_use_source_path" = "1" ]; then
-                if shellcheck --external-sources --source-path="$root" --source-path="$root/source/stow" -W0 "$file"; then
+                if shellcheck --external-sources --enable=all --source-path="$root" --source-path="$root/source/stow" -W0 "$file"; then
                     echo "✔ $file"
                 fi
             else
