@@ -1,9 +1,9 @@
-name: 'Nightly'
+name: "Nightly"
 
 on:
   # Run at 2 AM UTC every day
   schedule:
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -16,8 +16,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1

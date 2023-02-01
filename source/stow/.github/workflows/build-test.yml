@@ -23,8 +23,6 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
@@ -90,8 +88,6 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
           # Get all history so we can generate ChangeLog
           fetch-depth: 0
@@ -180,8 +176,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          submodules: recursive
 
       - name: Download Artifacts
         uses: actions/download-artifact@v2

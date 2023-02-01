@@ -10,33 +10,33 @@ on:
   push:
     branches: [main, staging, dev]
     paths-ignore:
-      - '*.md'
-      - 'setup'
-      - 'TODO'
-      - 'NEWS'
-      - 'LICENSE'
-      - 'COPYING'
-      - '*.plist'
-      - '.gitconfig*'
-      - 'META.*'
-      - 'THANKS'
-      - '.devcontainer/**'
-      - '.vscode/**'
+      - "*.md"
+      - "setup"
+      - "TODO"
+      - "NEWS"
+      - "LICENSE"
+      - "COPYING"
+      - "*.plist"
+      - ".gitconfig*"
+      - "META.*"
+      - "THANKS"
+      - ".devcontainer/**"
+      - ".vscode/**"
   pull_request:
     branches: [main, staging, dev]
     paths-ignore:
-      - '*.md'
-      - 'setup'
-      - 'TODO'
-      - 'NEWS'
-      - 'LICENSE'
-      - 'COPYING'
-      - '*.plist'
-      - '.gitconfig*'
-      - 'META.*'
-      - 'THANKS'
-      - '.devcontainer/**'
-      - '.vscode/**'
+      - "*.md"
+      - "setup"
+      - "TODO"
+      - "NEWS"
+      - "LICENSE"
+      - "COPYING"
+      - "*.plist"
+      - ".gitconfig*"
+      - "META.*"
+      - "THANKS"
+      - ".devcontainer/**"
+      - ".vscode/**"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -97,8 +97,6 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       # Runs a single command using the runners shell
       - name: Initialize environment
