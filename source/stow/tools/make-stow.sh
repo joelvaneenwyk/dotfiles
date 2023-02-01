@@ -112,6 +112,7 @@ function make_stow() {
     fi
 
     if [ -n "$PERL5LIB" ]; then
+        # shellcheck disable=SC2311
         PERL5LIB=$(normalize_path "$PERL5LIB")
         USE_LIB_PMDIR=""
         echo "Module directory is listed in standard @INC, so everything"
@@ -132,9 +133,8 @@ function make_stow() {
     if [ -x "$(command -v autoreconf)" ]; then
         cd "$STOW_ROOT" || true
 
-        # shellcheck disable=SC2016
-        PERL5LIB=$("$STOW_PERL" -le 'print $INC[0]')
-        PERL5LIB=$(normalize_path "$PERL5LIB")
+        # shellcheck disable=SC2016,SC2311
+        PERL5LIB=$("$STOW_PERL" -le 'print $INC[0]' | normalize_path)
 
         echo "Perl: '$STOW_PERL'"
         echo "Perl Lib: '$PERL5LIB'"

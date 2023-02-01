@@ -391,7 +391,7 @@ function initialize_perl() {
     # folder at '/mingw64/bin/core_perl/pl2bat.bat'
     if [ -n "${MSYSTEM:-}" ]; then
         if [ ! "${MSYSTEM:-}" = "MSYS" ]; then
-            export PATH="$PATH:$MSYSTEM_PREFIX/bin:$MSYSTEM_PREFIX/bin/core_perl"
+            export PATH="$PATH:${MSYSTEM_PREFIX:-}/bin:$MSYSTEM_PREFIX/bin/core_perl"
         fi
 
         # We intentionally use 'which' here as we are on Windows
@@ -543,6 +543,9 @@ function update_stow_environment() {
             TEX="$_localTexLive/tex.exe"
             PDFTEX="$_localTexLive/pdfetex.exe"
         fi
+        ;;
+    *)
+        # No action needed
         ;;
     esac
 

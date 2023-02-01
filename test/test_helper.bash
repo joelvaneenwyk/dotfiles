@@ -4,7 +4,7 @@ _common_setup() {
     load 'test_helper/bats-support/load'
     load 'test_helper/bats-assert/load'
 
-    TEST_MAIN_DIR="$(cd "${BATS_TEST_DIRNAME}" && cd .. && pwd)"
+    TEST_MAIN_DIR="$(cd "${BATS_TEST_DIRNAME:-}" && cd .. && pwd)"
     TEST_DEPS_DIR="$(cd "${TEST_DEPS_DIR-${TEST_MAIN_DIR}}" && cd .. && pwd)"
     export TEST_MAIN_DIR TEST_DEPS_DIR
 

@@ -1,7 +1,10 @@
 {
     "shellcheck.enable": true,
+    "shellcheck.useWorkspaceRootAsCwd": true,
+    "shellcheck.executablePath": "shellcheck",
     "shellcheck.run": "onType",
     "shellcheck.enableQuickFix": true,
+    "shellcheck.logLevel": "debug",
     "shellcheck.customArgs": [
         "--enable=all",
         "--external-sources",
