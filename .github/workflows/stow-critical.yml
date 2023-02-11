@@ -1,4 +1,4 @@
-name: 'stow - build'
+name: "stow - build"
 
 # Controls when the workflow will run
 on:
@@ -23,8 +23,6 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
@@ -33,7 +31,6 @@ jobs:
         with:
           ignore_paths: ./artifacts/** ./test/test_helper/bats-*/**
           ignore_names: .zshrc
-
 
   perl_test_matrix:
     name: "[${{ matrix.msys && 'windows-msys-latest' || matrix.platform }}] Perl v${{ matrix.perl }}"
@@ -49,21 +46,21 @@ jobs:
           - windows-latest
 
         perl:
-          - '5.32'
-          - '5.14'
+          - "5.32"
+          - "5.14"
 
         include:
           - platform: ubuntu-latest
-            perl: '5.34'
+            perl: "5.34"
 
           - platform: ubuntu-latest
-            perl: '5.18'
+            perl: "5.18"
 
           - platform: ubuntu-latest
-            perl: '5.16'
+            perl: "5.16"
 
           - platform: windows-latest
-            perl: '5.28'
+            perl: "5.28"
             msys: true
 
     env:
@@ -92,8 +89,6 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
         with:
-          submodules: recursive
-
           # Get all history so we can generate ChangeLog
           fetch-depth: 0
 
@@ -180,8 +175,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Download Artifacts
         uses: actions/download-artifact@v2
