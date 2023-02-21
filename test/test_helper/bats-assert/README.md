@@ -23,6 +23,7 @@ Dependencies:
 See the [shared documentation][bats-docs] to learn how to install and
 load this library.
 
+
 ## Usage
 
 ### `assert`

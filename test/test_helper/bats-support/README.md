@@ -84,7 +84,7 @@ Some helpers, e.g. [assertions][bats-assert], structure output as
 key-value pairs. This library provides two ways to format them.
 
 When the value is one line long, a pair can be displayed in a columnar
-fashion called *__two-column__* format.
+fashion called ***two-column*** format.
 
 ```
 -- output differs --
@@ -97,7 +97,7 @@ When the value is longer than one line, the key and value must be
 displayed on separate lines. First, the key is displayed along with the
 number of lines in the value. Then, the value, indented by two spaces
 for added readability, starting on the next line. This is called
-*__multi-line__* format.
+***multi-line*** format.
 
 ```
 -- command failed --
