@@ -14,4 +14,6 @@ _common_setup() {
 
     # shellcheck source=source/shell/main.sh
     source "$MYCELIO_ROOT/source/shell/main.sh"
+
+    myc_include_all
 }

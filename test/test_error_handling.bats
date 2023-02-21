@@ -11,24 +11,23 @@ setup_file() {
 
 function _cause_error() {
     echo "derp"
-    invalidcommand
-    return 22
+    invalid_command
+    return $?
 }
 
 @test "error handling" {
     load test_helper
+    _common_setup
 
-    run assert_equal "1" "1"
-
-    source "$MYCELIO_ROOT/source/shell/main.sh"
+    assert_equal "1" "1"
 
     setup_environment
 
     if _result=$(run_command "prefix" _cause_error); then
         assert_failure
     else
-        run assert_equal "$_result" "command not found"
-        run assert_equal "$?" "127"
+        assert_equal "$?" "127"
+        assert_equal "$_result" $'##[cmd] _cause_error\n[prefix.out] derp'
     fi
 
     echo "here we go!"

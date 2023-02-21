@@ -3,14 +3,14 @@
 MYCELIO_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && cd .. && pwd)"
 export MYCELIO_ROOT
 
-rm -rf "${MYCELIO_ROOT}/test/test_helper/bats-assert"
-git clone "https://github.com/ztombol/bats-assert" "${MYCELIO_ROOT}/test/test_helper/bats-assert"
-rm -rf "${MYCELIO_ROOT}/test/test_helper/bats-assert/.git/"
-rm -rf "${MYCELIO_ROOT}/test/test_helper/bats-assert/test/"
+function clone() {
+    rm -rf "${MYCELIO_ROOT}/test/test_helper/$1"
+    git clone --config core.autocrlf=false "https://github.com/ztombol/$1" "${MYCELIO_ROOT}/test/test_helper/$1"
+    rm -rf "${MYCELIO_ROOT}/test/test_helper/$1/.git/"
+    rm -rf "${MYCELIO_ROOT}/test/test_helper/$1/test/"
+}
 
-rm -rf "${MYCELIO_ROOT}/test/test_helper/bats-support"
-git clone "https://github.com/ztombol/bats-support" "${MYCELIO_ROOT}/test/test_helper/bats-support"
-rm -rf "${MYCELIO_ROOT}/test/test_helper/bats-support/.git/"
-rm -rf "${MYCELIO_ROOT}/test/test_helper/bats-support/test/"
+clone "bats-assert"
+clone "bats-support"
 
 bats --verbose-run "$MYCELIO_ROOT/test/test_error_handling.bats"
