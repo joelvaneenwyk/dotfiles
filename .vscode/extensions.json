@@ -11,6 +11,10 @@
         "donjayamanne.githistory",
         "jetmartin.bats",
         "ms-vscode.powershell",
-        "Koihik.vscode-lua-format"
+        "koihik.vscode-lua-format",
+        "jeff-hykin.better-shellscript-syntax",
+        "jeff-hykin.better-dockerfile-syntax",
+        "tetradresearch.vscode-h2o",
+        "xshrim.txt-syntax"
     ]
 }

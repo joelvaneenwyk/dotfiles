@@ -1,4 +1,9 @@
 {
+    "[shellscript]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "foxundermoon.shell-format",
+        "files.eol": "\n"
+    },
     "shellcheck.enable": true,
     "shellcheck.useWorkspaceRootAsCwd": true,
     "shellcheck.executablePath": "shellcheck",
@@ -26,10 +31,6 @@
         "packages/fish/.config/git-fuzzy/**/*": true,
         "test/bats/**/*.bats": true,
         "test/test_helper/**/*": true
-    },
-    "[shellscript]": {
-        "editor.formatOnSave": true,
-        "files.eol": "\n"
     },
     "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
     "bashIde.includeAllWorkspaceSymbols": true,
@@ -235,6 +236,7 @@
         "*.json.git": "jsonc",
         "*.omp.json": "jsonc",
         "*.in": "perl",
+        "edf": "shellscript",
         "*.shbat": "shellscript",
         "*.bats": "shellscript",
         "*.post": "shellscript",
@@ -334,6 +336,7 @@
         "cpan",
         "cpanm",
         "cygpath",
+        "devcontainer",
         "distro",
         "dockerhub",
         "dotfile",
