@@ -1,4 +1,4 @@
-# TODO
+# Action Items
 
 Remove all submodules and inline everything we need perhaps using `git subtree` or something similar.
 

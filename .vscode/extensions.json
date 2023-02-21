@@ -15,6 +15,7 @@
         "jeff-hykin.better-shellscript-syntax",
         "jeff-hykin.better-dockerfile-syntax",
         "tetradresearch.vscode-h2o",
-        "xshrim.txt-syntax"
+        "xshrim.txt-syntax",
+        "vsls-contrib.gistfs"
     ]
 }
