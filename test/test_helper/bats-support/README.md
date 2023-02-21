@@ -97,7 +97,7 @@ When the value is longer than one line, the key and value must be
 displayed on separate lines. First, the key is displayed along with the
 number of lines in the value. Then, the value, indented by two spaces
 for added readability, starting on the next line. This is called
-***multi-line*** format.
+*__multi-line__* format.
 
 ```
 -- command failed --
