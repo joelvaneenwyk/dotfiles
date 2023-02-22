@@ -1,4 +1,8 @@
 * text=auto
 *.sh=lf
+*.bash=lf
+.bashrc=lf
+.bash_profile=lf
+.profile=lf
 setup=lf
 pre-commit=lf

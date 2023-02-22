@@ -2,50 +2,82 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.202.5/containers/bash
 {
     "name": "mycelio_dots",
-    "runArgs": ["--init"],
-
-    "build": {
-        "dockerfile": "Dockerfile",
-
-        // Update 'VARIANT' to pick an Debian / Ubuntu OS version: debian-11, debian-10, debian-9, ubuntu-21.04, ubuntu-20.04, ubuntu-18.04
-        // Use Debian 11, Debian 9, Ubuntu 18.04 or Ubuntu 21.04 on local arm64/Apple Silicon
-        "args": {
-            "VARIANT": "ubuntu-20.04"
+    "image": "mcr.microsoft.com/devcontainers/base:debian",
+    "remoteUser": "mycelio",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "mads-hartmann.bash-ide-vscode",
+                "rogalmic.bash-debug",
+                "hookyqr.beautify",
+                "foxundermoon.shell-format",
+                "timonwong.shellcheck",
+                "bmalehorn.vscode-fish",
+                "mhutchie.git-graph",
+                "eamodio.gitlens",
+                "donjayamanne.githistory",
+                "jetmartin.bats",
+                "ms-vscode.powershell-preview"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "files.watcherExclude": {
+                    "**/target/**": true
+                }
+            }
         }
     },
-
-    // Set *default* container specific settings.json values on container create.
-    "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash"
-    },
-
-    // Add the IDs of extensions you want installed when the container is created.
-    "extensions": [
-        "mads-hartmann.bash-ide-vscode",
-        "rogalmic.bash-debug",
-        "hookyqr.beautify",
-        "foxundermoon.shell-format",
-        "timonwong.shellcheck",
-        "bmalehorn.vscode-fish",
-        "mhutchie.git-graph",
-        "eamodio.gitlens",
-        "donjayamanne.githistory",
-        "jetmartin.bats",
-        "ms-vscode.powershell-preview"
-    ],
-
-    // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    "forwardPorts": [],
-
-    // Use 'postCreateCommand' to run commands after the container is created.
-    // "postCreateCommand": "uname -a",
-
-    // Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
-    "remoteUser": "vscode",
     "features": {
-        "docker-from-docker": "latest",
-        "git": "latest",
-        "git-lfs": "latest",
-        "sshd": "latest"
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/git-lfs:1": {},
+        "ghcr.io/devcontainers/features/sshd:1": {},
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "installOhMyZsh": true,
+            "upgradePackages": true,
+            "username": "automatic",
+            "userUid": "automatic",
+            "userGid": "automatic"
+        },
+        "ghcr.io/devcontainers-contrib/features/homebrew-package:1": {
+            "package": "typescript",
+            "version": "latest",
+            "installation_flags": "--ignore-dependencies"
+        },
+        "ghcr.io/devcontainers/features/conda:1": {
+            "version": "4.12.0"
+        },
+        "ghcr.io/devcontainers/features/go:1": {
+            "version": "1.19"
+        },
+        "ghcr.io/devcontainers/features/powershell:1": {
+            "version": "7.1"
+        },
+        "ghcr.io/meaningful-ooo/devcontainer-features/fish:1": {
+            "fisher": true
+        },
+        "ghcr.io/devcontainers-contrib/features/isort:2": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-contrib/features/packer-asdf:2": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers-contrib/features/zig:1": {
+            "version": "0.10.0"
+        },
+        "ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {
+            "plugins": "ssh-agent npm",
+            "omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions",
+            "username": "root"
+        },
+        "ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {
+            "jqVersion": "os-provided",
+            "yqVersion": "4",
+            "gojqVersion": "latest"
+        },
+        "ghcr.io/dhoeric/features/hadolint:1": {},
+        "ghcr.io/mikaello/devcontainer-features/modern-shell-utils:1": {},
+        "ghcr.io/devcontainers/features/rust:1": {}
     }
 }
