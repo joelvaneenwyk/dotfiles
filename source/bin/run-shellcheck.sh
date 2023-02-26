@@ -53,6 +53,11 @@ function run_shellcheck() {
 
     while IFS= read -r -d $'' file; do
         if is_shell_script "$file"; then
+            if [ -x "$(command -v shfmt)" ]; then
+                shfmt -w "$file"
+            fi
+
+            # Run shellcheck on the file
             if sed 's/\r$//' "$file" >"$file.tmp"; then
                 rm -f "$file"
                 mv "$file.tmp" "$file"
