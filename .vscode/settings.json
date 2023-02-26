@@ -63,6 +63,9 @@
         "terminal.foreground": "#b69f83",
         "terminal.background": "#181818"
     },
+    "terminal.integrated.env.windows": {
+        "PATH": "${env:PATH};${workspaceFolder};${workspaceFolder}\\source\\windows\\bin;${workspaceFolder}\\source\\bin;${workspaceFolder}\\secrets\\bin;${workspaceFolder}\\source\\stow\\tools"
+    },
     "terminal.integrated.fontSize": 16,
     "terminal.integrated.cursorBlinking": true,
     "terminal.integrated.shellIntegration.enabled": true,
@@ -93,6 +96,7 @@
             ],
             "args": ["--login", "-i"],
             "env": {
+                "PATH": "${env:PATH}:${workspaceFolder}:${workspaceFolder}/source/windows/bin:${workspaceFolder}/source/bin:${workspaceFolder}/secrets/bin:${workspaceFolder}/source/stow/tools",
                 "MSYSTEM": "MINGW64",
                 "CHERE_INVOKING": "1",
                 "MSYS2_PATH_TYPE": "inherit"

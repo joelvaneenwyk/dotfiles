@@ -68,3 +68,5 @@ log.txt
 texput.log
 
 .DS_Store
+
+clink_errorlevel_*.txt
