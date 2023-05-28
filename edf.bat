@@ -4,15 +4,15 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set "path=%~dp0"
-set "path=%path:~0,-1%"
+set "dotfile_root=%~dp0"
+set "dotfile_root=%dotfile_root:~0,-1%"
 
 if "%~1"=="clean" (
     call :Clean
     exit /b
 )
 
-call "!path!\setup.bat" %*
+call "!dotfile_root!\setup.bat" %*
 goto :eof
 
 :Clean
@@ -28,12 +28,13 @@ goto :eof
 exit /b
 
 :Remove
-    set _path=%~dp0%~1
-    if not exist "%_path%" (
+    setlocal EnableDelayedExpansion
+    set path_to_remove=%~dp0%~1
+    if not exist "%path_to_remove%" (
         echo Path already removed: '%~1'
         goto:$RemoveEnd
     )
-    rmdir /q /s "%_path%"
-    echo Removed directory: '%_path%'
+    rmdir /q /s "%path_to_remove%"
+    echo Removed directory: '%path_to_remove%'
     :$RemoveEnd
 exit /b
