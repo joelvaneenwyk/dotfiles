@@ -232,7 +232,9 @@ Function Update-Terminal() {
     # }
 
     try {
-        oh-my-posh.exe init pwsh --config "$env:UserProfile/.poshthemes/mycelio.omp.json" | Invoke-Expression
+        if ($PSCmdlet.ShouldProcess("oh-my-posh prompt", "init")) {
+            oh-my-posh.exe init pwsh --config "$env:UserProfile/.poshthemes/mycelio.omp.json" | Invoke-Expression
+        }
     }
     catch {
         Write-Host "Failed to set 'oh-my-posh' prompt. $_"
