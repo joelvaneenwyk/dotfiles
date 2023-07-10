@@ -9,6 +9,11 @@ On top of that, submodules are just a nightmare. They work and mostly fine but c
 1. Submodules may not work if your git is not setup correctly e.g., does not have the correct `core.autocrlf` setting.
 2. The existence of submodules results in certain views in VSCode becoming cluttered with repositories we do not actually care to look at. They will even come back again after you "close" them in VSCode.
 
+## Windows Nano Server
+
+- [ ] 'where' does not exist.
+- [ ] No version of PowerShell is available by default so we grab from mcr.microsoft.com/powershell on Docker though we need another solution if testing locally.
+
 ## Stow
 
 `git subtree add --prefix source/stow https://github.com/joelvaneenwyk/stow.git main --squash`

@@ -72,7 +72,7 @@ Function AddSymbolicLinkPermissions($accountToAdd) {
         Write-Host "Account SID: $($sidstr)" -ForegroundColor DarkCyan
         $tmp = [System.IO.Path]::GetTempFileName()
         Write-Host "Export current Local Security Policy" -ForegroundColor DarkCyan
-        secedit.exe /export /cfg "$($tmp)"
+        C:\Windows\System32\SecEdit.exe /export /cfg "$($tmp)"
         $c = Get-Content -Path $tmp
         $currentSetting = ""
         foreach ($s in $c) {
@@ -107,7 +107,7 @@ SECreateSymbolicLinkPrivilege = $($currentSetting)
             $outfile | Set-Content -Path $tmp2 -Encoding Unicode -Force
             Push-Location (Split-Path $tmp2)
             try {
-                secedit.exe /configure /db "secedit.sdb" /cfg "$($tmp2)" /areas USER_RIGHTS
+                C:\Windows\System32\SecEdit.exe /configure /db "secedit.sdb" /cfg "$($tmp2)" /areas USER_RIGHTS
             }
             finally {
                 Pop-Location

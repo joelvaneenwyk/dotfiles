@@ -76,7 +76,7 @@ if "%MYCELIO_SKIP_INIT%"=="1" goto:$InitializedProfile
 ::
 
 :: Change to unicode
-chcp 65001 >NUL 2>&1
+if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 65001 >NUL 2>&1
 echo ▓├═════════════════════════════════
 echo ▓│  ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓
 echo ▓│  ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃
@@ -85,7 +85,7 @@ echo ▓├═══════════════════════
 echo.
 
 :: Switch back to standard ANSI
-chcp 1252 >NUL 2>&1
+if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 1252 >NUL 2>&1
 
 :: Generate and run the environment batch script
 call "%~dp0env.bat"
@@ -119,6 +119,7 @@ call clink --version >NUL 2>&1
 if errorlevel 1 (
     echo.
     echo Initialized `dotfiles` environment without clink.
+    call :ClearErrorLevel
 ) else (
     set CLINK_INJECTED=1
     call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink" --quiet --nolog
@@ -135,3 +136,6 @@ goto:eof
     set "ARG0=%1"
     set "ARG1=%2"
 exit /b
+
+:ClearErrorLevel
+exit /b 0
