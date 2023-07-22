@@ -88,7 +88,15 @@ echo.
 if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 1252 >NUL 2>&1
 
 :: Generate and run the environment batch script
-call "%~dp0env.bat"
+set "_env=%~dp0env.bat"
+if exist "!_env!" goto:$SetupEnvironment
+set "_env=%MYCELIO_ROOT%\source\windows\bin\profile.bat"
+if not exist "!_env!" goto:$InitializedProfile
+
+:$SetupEnvironment
+call "!_env!"
+
+:$InitializedProfile
 echo [mycelio] Run `help` to get list of commands.
 
 :: Check to see if 'doskey' is valid first as some versions
