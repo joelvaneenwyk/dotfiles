@@ -90,16 +90,16 @@ echo.
 if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 1252 >NUL 2>&1
 
 :: Generate and run the environment batch script
-set "_env=%~dp0env.bat"
-if exist "!_env!" goto:$SetupEnvironment
-set "_env=%MYCELIO_ROOT%\source\windows\bin\profile.bat"
-if not exist "!_env!" goto:$InitializedProfile
+set "_mycelio_env=%~dp0env.bat"
+if exist "!_mycelio_env!" goto:$SetupEnvironment
+set "_mycelio_env=%MYCELIO_ROOT%\source\windows\bin\profile.bat"
+if not exist "!_mycelio_env!" goto:$InitializedProfile
 
 :$SetupEnvironment
-call "!_env!"
+call "!_mycelio_env!"
 
 :$InitializedProfile
-echo [mycelio] Run `help` to get list of commands.
+echo mycelio Run `help` to get list of commands.
 
 :: Check to see if 'doskey' is valid first as some versions
 :: of Windows (e.g. nanoserver) do not have 'doskey' support.

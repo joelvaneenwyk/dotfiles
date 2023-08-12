@@ -1,5 +1,5 @@
-local path = require "path"
-local os = require "os"
+--local path = require "path"
+--local os = require "os"
 --
 -- Custom script to setup Oh My Posh.
 --
@@ -66,7 +66,7 @@ if mycelio_config and oh_my_posh_executable then
         print('[clink] WARNING: Oh My Posh initialization did not return setup script: \'' .. oh_my_posh_executable .. '\'')
     else
         print(lua_setup)
-        local result, syntaxError = load(lua_setup, "oh_my_posh_init", "t", _ENV)
+        local result, syntaxError = load(lua_setup, nil, "t", _ENV)
         if not result then
             print("There was a syntax error:", syntaxError)
         else
