@@ -1,10 +1,12 @@
+local path = require "path"
+local os = require "os"
 --
 -- Custom script to setup Oh My Posh.
 --
 function omp_cli(args)
     print(args)
     local result = io.popen(args)
-    local out = result:read("*a")
+    local out = result and result:read("*a")
     return out
 end
 
@@ -56,7 +58,7 @@ end
 if mycelio_config and oh_my_posh_executable then
     print('[clink] Found Oh My Posh: ' .. oh_my_posh_executable)
     print('[clink] Found Oh My Posh config: ' .. mycelio_config)
-    lua_setup = omp_cli('"' .. oh_my_posh_executable .. '"' .. ' init cmd')
+    local lua_setup = omp_cli('"' .. oh_my_posh_executable .. '"' .. ' init cmd')
 
     if not os.geterrorlevel == 0 then
         print('[clink] WARNING: Oh My Posh version test failed: \'' .. oh_my_posh_executable .. '\'')
@@ -64,10 +66,14 @@ if mycelio_config and oh_my_posh_executable then
         print('[clink] WARNING: Oh My Posh initialization did not return setup script: \'' .. oh_my_posh_executable .. '\'')
     else
         print(lua_setup)
-        load(lua_setup)
-        print('[clink] Initialized Oh My Posh: \'' .. oh_my_posh_executable .. '\'')
-        loaded = true
-        set_posh_tooltip("Is this the way?")
+        local result, syntaxError = load(lua_setup, "oh_my_posh_init", "t", _ENV)
+        if not result then
+            print("There was a syntax error:", syntaxError)
+        else
+            print('[clink] Initialized Oh My Posh: \'' .. oh_my_posh_executable .. '\'')
+            -- result(mycelio_config)
+            loaded = true
+        end
     end
 end
 
