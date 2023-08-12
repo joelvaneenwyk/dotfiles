@@ -43,6 +43,8 @@ setlocal EnableExtensions EnableDelayedExpansion
     ::
     if "%MYCELIO_AUTORUN_INITIALIZED%"=="1" set MYCELIO_SKIP_INIT=1
     if "%MYCELIO_PROFILE_INITIALIZED%"=="1" set MYCELIO_SKIP_INIT=1
+    if not exist "!MYCELIO_ROOT!" set "MYCELIO_ROOT=%USERPROFILE%\.dotfiles\"
+    if not exist "!MYCELIO_ROOT!" set "MYCELIO_ROOT=%USERPROFILE%\dotfiles\"
     if "!MYCELIO_ROOT:~-1!"=="\" set "MYCELIO_ROOT=!MYCELIO_ROOT:~0,-1!"
 
     :$InitializeProfile
@@ -77,11 +79,11 @@ if "%MYCELIO_SKIP_INIT%"=="1" goto:$InitializedProfile
 
 :: Change to unicode
 if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 65001 >NUL 2>&1
-echo ▓├═════════════════════════════════
-echo ▓│  ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓
-echo ▓│  ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃
-echo ▓│  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
-echo ▓├═════════════════════════════════
+echo ▓├╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝
+echo ▓│  ┝┝┓┓ ┳┝┝┓┳┝┓┳  o┝┝┓
+echo ▓│  ┃┃┃┗┝┛┃  ┣┝ ┃  ┃┃/┃
+echo ▓│  ┛ ┇ ┇ ┗┝┛┻┝┛┇┝┛┇┛┝┛
+echo ▓├╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝╝
 echo.
 
 :: Switch back to standard ANSI
@@ -130,7 +132,7 @@ if errorlevel 1 (
     call :ClearErrorLevel
 ) else (
     set CLINK_INJECTED=1
-    call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink" --quiet --nolog
+    call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink"
 )
 
 :$InitializedProfile

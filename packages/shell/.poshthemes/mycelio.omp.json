@@ -1,67 +1,68 @@
 {
     "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+    "version": 2,
     "blocks": [
         {
+            "type": "prompt",
             "alignment": "left",
-            "newline": true,
             "segments": [
                 {
-                    "foreground": "#a3a3a3",
+                    "type": "text",
                     "style": "plain",
-                    "template": "\u250c",
-                    "type": "text"
-                },
-                {
                     "foreground": "#a3a3a3",
-                    "style": "powerline",
-                    "template": " MY\u2208 ",
-                    "type": "text"
+                    "template": "\u250c"
                 },
                 {
-                    "background": "#0077c2",
+                    "type": "text",
+                    "style": "powerline",
+                    "foreground": "#a3a3a3",
+                    "template": " MY\u2208 "
+                },
+                {
+                    "type": "os",
+                    "style": "plain",
                     "foreground": "#e4e4e4",
+                    "background": "#0077c2",
+                    "template": " {{.Icon}}  ",
                     "properties": {
                         "display_distro_name": true,
                         "macos": "mac"
-                    },
-                    "style": "plain",
-                    "template": " {{.Icon}}  ",
-                    "type": "os"
+                    }
                 },
                 {
-                    "background": "#0077c2",
-                    "foreground": "#e4e4e4",
-                    "invert_powerline": true,
+                    "type": "shell",
+                    "style": "powerline",
                     "powerline_symbol": "\ue0b0",
+                    "invert_powerline": true,
+                    "foreground": "#e4e4e4",
+                    "background": "#0077c2",
+                    "template": " {{ .Name }} ",
                     "properties": {
                         "mapped_shell_names": {
                             "pwsh": "PS"
                         }
-                    },
-                    "style": "powerline",
-                    "template": " {{ .Name }} ",
-                    "type": "shell"
+                    }
                 },
                 {
+                    "type": "session",
+                    "style": "plain",
                     "foreground": "#757575",
+                    "template": " {{ if .SSHSession }}[SSH] {{ end }}{{ .UserName }}@{{ .HostName }} ",
                     "properties": {
                         "display_host": true
-                    },
-                    "style": "plain",
-                    "template": " {{ if .SSHSession }}[SSH] {{ end }}{{ .UserName }}@{{ .HostName }} ",
-                    "type": "session"
+                    }
                 },
                 {
-                    "background": "#61AFEF",
-                    "foreground": "#474747",
+                    "type": "path",
                     "style": "powerline",
                     "powerline_symbol": "\ue0b0",
+                    "foreground": "#474747",
+                    "background": "#61AFEF",
+                    "template": " {{ .Path }} ",
                     "properties": {
                         "mixed_threshold": 1,
                         "style": "letter"
-                    },
-                    "template": " {{ .Path }} ",
-                    "type": "path"
+                    }
                 },
                 {
                     "type": "exit",
@@ -69,58 +70,56 @@
                     "foreground": "#252525",
                     "background": "#FFFFFF",
                     "trailing_diamond": "\ue0b4",
-                    // Show error code and 'X' sign if exit code is not 0 otherwise show a green check mark.
                     "template": "{{ if ne .Code 0 }}<,#FF461B> \uf656 {{ .Meaning }} </>{{else}}<,#8AEB07> \uf42e  </>{{ end }}",
                     "properties": {
                         "always_enabled": true
                     }
                 }
             ],
-            "type": "prompt"
+            "newline": true
         },
         {
+            "type": "prompt",
             "alignment": "right",
             "segments": [
                 {
+                    "type": "root",
+                    "style": "plain",
                     "foreground": "#ff8080",
+                    "template": " <#757575,>as</> \uf0e7",
                     "properties": {
                         "root_icon": "root"
-                    },
-                    "style": "plain",
-                    "template": " <#757575,>as</> \uf0e7",
-                    "type": "root"
+                    }
                 },
                 {
+                    "type": "time",
+                    "style": "plain",
                     "foreground": "#689f38",
+                    "template": " <#757575,>|</> {{ .CurrentDate | date .Format }}",
                     "properties": {
                         "time_format": "15:04:05"
-                    },
-                    "style": "plain",
-                    "template": " <#757575,>|</> {{ .CurrentDate | date .Format }}",
-                    "type": "time"
+                    }
                 }
-            ],
-            "type": "prompt"
+            ]
         },
         {
+            "type": "prompt",
             "alignment": "left",
-            "newline": true,
             "segments": [
                 {
-                    "foreground": "#a3a3a3",
+                    "type": "text",
                     "style": "plain",
-                    "template": "\u2514",
-                    "type": "text"
+                    "foreground": "#a3a3a3",
+                    "template": "\u2514"
                 },
                 {
-                    "foreground": "#ffffff",
+                    "type": "text",
                     "style": "plain",
-                    "template": "$ ",
-                    "type": "text"
+                    "foreground": "#ffffff",
+                    "template": "$ "
                 }
             ],
-            "type": "prompt"
+            "newline": true
         }
-    ],
-    "version": 2
+    ]
 }
