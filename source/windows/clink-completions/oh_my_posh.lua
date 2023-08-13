@@ -3,28 +3,24 @@
 -- Custom script to setup Oh My Posh.
 -- @type fun(string):string?
 local function omp_cli(omp, config_file)
+    local omp_path = path.normalise(omp, '/')
+    omp_path = 'oh-my-posh'
+    local config_file_path = path.normalise(config_file, '/')
+    local command = omp_path .. ' init cmd --config ' .. config_file_path
+
+    local _, ismain = coroutine.running()
     local file_handle = nil
     local pclose = nil
 
-    ---@type string?
-    local out = nil
-    local loaded = false
-
-    local args = '"' .. omp .. '" init cmd'
-    -- args = '"' .. oh_my_posh_executable .. '"' .. ' init cmd --config "' .. mycelio_config .. '"'
-
-    local command = '' .. args .. ''
-    command = 'oh-my-posh init cmd'
-
-    local _, ismain = coroutine.running()
-
     print('##[cmd] ' .. command)
-
     if ismain then
         file_handle, pclose = io.popen(command)
     else
         file_handle, pclose = io.popenyield(command)
     end
+
+    ---@type string?
+    local out = nil
 
     if file_handle then
         out = file_handle:read("*a")
