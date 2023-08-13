@@ -32,13 +32,17 @@ local function omp_cli(omp, config_file)
 
         local exit_code = 99
         local is_ok = false
-        local result_value = nil
 
         if pclose then
-            is_ok, result_value, exit_code = pclose()
+            local _result_value = nil
+            is_ok, _result_value, exit_code = pclose()
         elseif out then
             is_ok = true
             exit_code = 0
+        end
+
+        if not is_ok or exit_code ~= 0 then
+            out = nil
         end
     end
 
@@ -88,7 +92,7 @@ local function omp_init()
     local result = nil
 
     if mycelio_config and oh_my_posh_executable then
-        result = omp_cli(oh_my_posh_executable)
+        result = omp_cli(oh_my_posh_executable, mycelio_config)
     end
 
     return result
@@ -97,7 +101,7 @@ end
 local omp_init_script = omp_init()
 
 if omp_init_script then
-    function_result, syntaxError = load(omp_init_script)
+    local function_result, syntaxError = load(omp_init_script)
 
     if not function_result then
         print("There was a syntax error:", syntaxError)
