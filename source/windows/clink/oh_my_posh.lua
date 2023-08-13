@@ -57,9 +57,6 @@ local function omp_init()
     ---@type string?
     local mycelio_config = path.normalise(mycelio_root_dir .. "/packages/shell/.poshthemes/mycelio.omp.json", '\\')
 
-    ---@type boolean
-    local loaded = false
-
     ---@type string
     local local_oh_my_posh_executable = path.normalise(home .. "/.local/go/bin/oh-my-posh.exe", '\\')
 
