@@ -3,8 +3,8 @@
 -- Custom script to setup Oh My Posh.
 -- @type fun(string):string?
 local function omp_cli(omp, config_file)
-    local file_handle
-    local pclose
+    local file_handle = nil
+    local pclose = nil
 
     ---@type string?
     local out = nil
@@ -14,9 +14,12 @@ local function omp_cli(omp, config_file)
     -- args = '"' .. oh_my_posh_executable .. '"' .. ' init cmd --config "' .. mycelio_config .. '"'
 
     local command = '' .. args .. ''
+    command = 'oh-my-posh init cmd'
+
     local _, ismain = coroutine.running()
 
     print('##[cmd] ' .. command)
+
     if ismain then
         file_handle, pclose = io.popen(command)
     else
@@ -24,15 +27,7 @@ local function omp_cli(omp, config_file)
     end
 
     if file_handle then
-        out = ''
-        while (true) do
-            local line = file_handle:read("*line")
-            if not line then
-                break
-            end
-            out = out .. line
-        end
-
+        out = file_handle:read("*a")
         file_handle:close()
 
         local exit_code = 99
@@ -45,29 +40,9 @@ local function omp_cli(omp, config_file)
             is_ok = true
             exit_code = 0
         end
-
-        if exit_code == 0 then
-            local function_result, syntaxError = load(out, nil, "t")
-            if not function_result then
-                print("There was a syntax error:", syntaxError)
-            else
-                function_result(config_file)
-                print('[clink] Initialized Oh My Posh: \'' .. omp .. '\'')
-            end
-        end
     end
 
-    if exit_code == 0 then
-        -- A prompt filter that adds a line feed and angle bracket.
-        local bracket_prompt = clink.promptfilter(150)
-        function bracket_prompt:filter(prompt)
-            return prompt .. "\n → "
-        end
-
-        print('[clink] Initialized backup prompt since Oh My Posh failed.')
-    end
-
-    return out, exit_code
+    return out
 end
 
 local function omp_init()
@@ -110,17 +85,34 @@ local function omp_init()
         mycelio_config = nil
     end
 
+    local result = nil
+
     if mycelio_config and oh_my_posh_executable then
-        local lua_setup, exit_code = omp_cli(oh_my_posh_executable)
-        if not exit_code == 0 then
-            print('[clink] WARNING: Oh My Posh version test failed: \'' .. oh_my_posh_executable .. '\'')
-        elseif not lua_setup then
-            print('[clink] WARNING: Oh My Posh initialization did not return setup script: \'' ..
-            oh_my_posh_executable .. '\'')
-        end
+        result = omp_cli(oh_my_posh_executable)
     end
 
-    return loaded
+    return result
 end
 
-omp_init()
+local omp_init_script = omp_init()
+
+if omp_init_script then
+    function_result, syntaxError = load(omp_init_script)
+
+    if not function_result then
+        print("There was a syntax error:", syntaxError)
+    else
+        print('[clink] Initialized Oh My Posh.')
+        function_result()
+    end
+else
+    print('[clink] WARNING: Oh My Posh initialization did not return setup script.')
+
+    -- A prompt filter that adds a line feed and angle bracket.
+    local bracket_prompt = clink.promptfilter(150)
+    function bracket_prompt:filter(prompt)
+        return prompt .. "\n → "
+    end
+
+    print('[clink] Initialized backup prompt since Oh My Posh failed.')
+end

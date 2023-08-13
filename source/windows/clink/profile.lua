@@ -165,9 +165,11 @@ function git_branch_prompt:filter(prompt)
 end
 
 -- A prompt filter that adds a line feed and angle bracket.
-local bracket_prompt = clink.promptfilter(150)
-function bracket_prompt:filter(prompt)
-    return prompt .. "\n → "
-end
+-- local bracket_prompt = clink.promptfilter(150)
+-- function bracket_prompt:filter(prompt)
+--     return prompt .. "\n → "
+-- end
 
 add_modules(mycelio_root_dir .. "/source/windows/clink-completions/")
+
+print("[mycelio.clink] Initialized custom 'clink' profile.")
