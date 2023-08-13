@@ -38,6 +38,14 @@ setlocal EnableExtensions EnableDelayedExpansion
         set MYCELIO_SKIP_INIT=1
     )
 
+    call :FindTool clink_executable clink
+    if not exist "!clink_executable!" set "clink_executable=C:\Program Files (x86)\clink\clink_x64.exe"
+    if not exist "!clink_executable!" set "clink_executable=C:\Program Files\clink\clink_x64.exe"
+    if not exist "!clink_executable!" set "clink_executable=clink"
+    call :ClearErrorLevel
+    call "!clink_executable!" --version >NUL 2>&1
+    if errorlevel 1 set "clink_executable="
+
     ::
     :: This is a new top 'cmd.exe' instance so initialize it.
     ::
@@ -53,6 +61,7 @@ endlocal & (
     set "MYCELIO_PROFILE_INITIALIZED=1"
     set "MYCELIO_AUTORUN_INITIALIZED=1"
     set "MYCELIO_SKIP_INIT=%MYCELIO_SKIP_INIT%"
+    set "MYCELIO_CLINK=%clink_executable%"
 )
 
 if "%MYCELIO_SKIP_INIT%"=="1" goto:$InitializedProfile
@@ -99,7 +108,7 @@ if not exist "!_mycelio_env!" goto:$InitializedProfile
 call "!_mycelio_env!"
 
 :$InitializedProfile
-echo mycelio Run `help` to get list of commands.
+:: echo mycelio Run `help` to get list of commands.
 
 :: Check to see if 'doskey' is valid first as some versions
 :: of Windows (e.g. nanoserver) do not have 'doskey' support.
@@ -110,14 +119,14 @@ if "%USERNAME%"=="ContainerAdministrator" goto:$StartClink
 doskey /? >NUL 2>&1
 if errorlevel 1 goto:$StartClink
 
-    doskey cd.=cd /d "%MYCELIO_ROOT%"
-    doskey cd~ =cd /d "%HOME%"
-    doskey cp=copy $*
-    doskey mv=move $*
-    doskey h=doskey /HISTORY
-    doskey edit=%HOME%\.local\bin\micro.exe $*
-    doskey refresh=%MYCELIO_ROOT%\source\windows\bin\profile.bat --refresh
-    doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
+::    doskey cd.=cd /d "%MYCELIO_ROOT%"
+::    doskey cd~ =cd /d "%HOME%"
+::    doskey cp=copy $*
+::    doskey mv=move $*
+::    doskey h=doskey /HISTORY
+::    doskey edit=%HOME%\.local\bin\micro.exe $*
+::    doskey refresh=%MYCELIO_ROOT%\source\windows\bin\profile.bat --refresh
+::    doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
 
 :$StartClink
 
@@ -125,14 +134,13 @@ if errorlevel 1 goto:$StartClink
 if "%CLINK_INJECTED%"=="1" goto:$InitializedProfile
 
 :: This must be the last operation we do.
-call clink --version >NUL 2>&1
-if errorlevel 1 (
+if ["%MYCELIO_CLINK%"]==[""] (
     echo.
     echo Initialized `dotfiles` environment without clink.
     call :ClearErrorLevel
 ) else (
     set CLINK_INJECTED=1
-    call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink"
+    call "%MYCELIO_CLINK%" inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink"
 )
 
 :$InitializedProfile
@@ -145,6 +153,33 @@ goto:eof
 :SplitArgs
     set "ARG0=%1"
     set "ARG1=%2"
+exit /b
+
+:FindTool
+    setlocal EnableExtensions EnableDelayedExpansion
+        set _output_variable=%~1
+        set _file=%~2
+
+        :: If the variable already contains a valid path, then exit early
+        set _output=!%_output_variable%!
+        if exist "!_output!" goto:$FindToolDone
+
+        set _where=%SystemRoot%\System32\WHERE.exe
+        if not exist "%_where%" goto:$FindToolDone
+        "!_where!" /Q %_file%
+        if not "!ERRORLEVEL!"=="0" goto:$FindToolDone
+            for /f "tokens=* usebackq" %%a in (`"%_where%" %_file%`) do (
+                set _output=%%a
+                goto:$FindToolDone
+            )
+
+        :$FindToolDone
+        if not exist "!_output!" set _output=%~3
+        if not exist "!_output!" set _output=
+    endlocal & (
+        set "%_output_variable%=%_output%"
+        if not exist "%_output%" exit /b 1
+    )
 exit /b
 
 :ClearErrorLevel

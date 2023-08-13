@@ -44,10 +44,6 @@
     },
     "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
     "bashIde.includeAllWorkspaceSymbols": true,
-    "[shellscript]": {
-        "editor.formatOnSave": true,
-        "files.eol": "\n"
-    },
 
     "markdownlint.ignore": ".markdownlintignore",
 
@@ -250,6 +246,7 @@
         "**/blib/**": true
     },
     "files.associations": {
+        "clink_settings": "ini",
         "*.json.git": "jsonc",
         "*.omp.json": "jsonc",
         "*.in": "perl",

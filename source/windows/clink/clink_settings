@@ -2,6 +2,8 @@
 # type: boolean
 clink.autoupdate = False
 
+prompt.async = True
+
 # name: Strips CR and LF chars on paste
 # type: enum
 # options: delete,space,ampersand,crlf
