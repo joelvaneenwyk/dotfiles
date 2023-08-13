@@ -1,10 +1,9 @@
 -- luacheck: globals clink.promptcoroutine io.popenyield
 
 -- Custom script to setup Oh My Posh.
--- @type fun(string):string?
+---@type fun(string, string):string?
 local function omp_cli(omp, config_file)
-    local omp_path = path.normalise(omp, '/')
-    omp_path = 'oh-my-posh'
+    local omp_path = '\"' .. path.normalise(omp, '/') .. '\"'
     local config_file_path = path.normalise(config_file, '/')
     local command = omp_path .. ' init cmd --config ' .. config_file_path
 
@@ -21,7 +20,7 @@ local function omp_cli(omp, config_file)
 
     ---@type string?
     local out = nil
-
+    
     if file_handle then
         out = file_handle:read("*a")
         file_handle:close()

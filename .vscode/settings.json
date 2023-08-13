@@ -45,12 +45,30 @@
     "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
     "bashIde.includeAllWorkspaceSymbols": true,
 
+    "Lua.completion.enable": true,
     "markdownlint.ignore": ".markdownlintignore",
 
-    "Lua.workspace.ignoreDir": [
-        ".vscode",
-        "micro/.config/micro",
-        "source/windows/clink"
+    "Lua.workspace.ignoreDir": [".vscode", "micro/.config/micro"],
+    "Lua.workspace.useGitIgnore": true,
+    "Lua.workspace.checkThirdParty": true,
+    "Lua.workspace.ignoreSubmodules": false,
+    "Lua.diagnostics.globals": [
+        "clink",
+        "error",
+        "log",
+        "os",
+        "io",
+        "io.popenyield",
+        "path",
+        "pause",
+        "rl",
+        "rl_state",
+        "settings",
+        "string.comparematches",
+        "string.equalsi",
+        "string.explode",
+        "string.matchlen",
+        "unicode"
     ],
     "Lua.workspace.library": [
         "source/windows/clink-completions",
@@ -58,7 +76,16 @@
         "macos/.hammerspoon",
         "micro/.config"
     ],
-
+    "[lua]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "Koihik.vscode-lua-format",
+        "editor.quickSuggestions": {
+            "comments": "inline",
+            "other": "on",
+            "strings": "on"
+        },
+        "editor.semanticHighlighting.enabled": true
+    },
     "xml.validation.enabled": false,
     "stylelint.enable": false,
 

@@ -65,3 +65,17 @@ log.txt
 texput.log
 
 .DS_Store
+
+#
+# Lua
+#
+.history
+*.sublime-*
+settings
+
+# testing stuff
+lua_modules
+luacov.*.out
+
+#local lua
+.lua

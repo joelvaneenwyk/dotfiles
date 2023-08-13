@@ -8,6 +8,8 @@ return {
         "error",
         "log",
         "os",
+        "io",
+        "io.popenyield",
         "path",
         "pause",
         "rl",
@@ -17,6 +19,6 @@ return {
         "string.equalsi",
         "string.explode",
         "string.matchlen",
-        "unicode",
+        "unicode"
     }
 }

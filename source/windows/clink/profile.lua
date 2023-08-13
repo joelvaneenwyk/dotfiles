@@ -8,6 +8,11 @@ been somewhat heavily modified and also just out of date with most recent versio
 
 --]]
 
+if not clink or not path then
+    -- E.g. some unit test systems will run this module *outside* of Clink.
+    return
+end
+
 -- Local variables used throughout profile script
 local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
 local mycelio_root_dir = path.normalise(script_dir .. "../../..")
