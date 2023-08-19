@@ -1,4 +1,18 @@
 {
+    "[bat]": {
+        "files.encoding": "windows1252",
+        "editor.tabSize": 4,
+        "editor.detectIndentation": false,
+        "editor.trimAutoWhitespace": true,
+        "editor.useTabStops": false,
+        "editor.guides.indentation": true,
+        "editor.formatOnSave": false
+    },
+    "[shellscript]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "foxundermoon.shell-format",
+        "files.eol": "\n"
+    },
     "shellcheck.enable": true,
     "shellcheck.useWorkspaceRootAsCwd": true,
     "shellcheck.executablePath": "shellcheck",
@@ -6,10 +20,11 @@
     "shellcheck.enableQuickFix": true,
     "shellcheck.logLevel": "debug",
     "shellcheck.customArgs": [
+        "-W0",
         "--check-sourced",
-        "--enable=all",
         "--exclude=SC2292,SC2250,SC2248,SC2248,SC2312,SC2310",
         "--severity=style",
+        "--enable=all",
         "--external-sources",
         "--root=${workspaceFolder}",
         "--source-path=${workspaceFolder}",
@@ -30,6 +45,8 @@
         "test/bats/**/*.bats": true,
         "test/test_helper/**/*": true
     },
+    "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
+    "bashIde.includeAllWorkspaceSymbols": true,
     "[shellscript]": {
         "editor.formatOnSave": true,
         "files.eol": "\n"
@@ -55,13 +72,16 @@
     "vscode-lua-format.configPath": "source/config/.lua-style",
     "git.requireGitUserConfig": false,
 
-    "editor.fontFamily": "PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
+    "editor.fontFamily": "PragmataPro Nerd Font, PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, JetBrains Mono NL, Menlo, Monaco, Consolas, Courier New, monospace",
     "editor.fontLigatures": true,
 
     "json.validate.enable": true,
     "workbench.colorCustomizations": {
         "terminal.foreground": "#b69f83",
         "terminal.background": "#181818"
+    },
+    "terminal.integrated.env.windows": {
+        "PATH": "${env:PATH};${workspaceFolder};${workspaceFolder}\\source\\windows\\bin;${workspaceFolder}\\source\\bin;${workspaceFolder}\\secrets\\bin;${workspaceFolder}\\source\\stow\\tools"
     },
     "terminal.integrated.fontSize": 16,
     "terminal.integrated.cursorBlinking": true,
@@ -236,6 +256,7 @@
         "*.json.git": "jsonc",
         "*.omp.json": "jsonc",
         "*.in": "perl",
+        "edf": "shellscript",
         "*.shbat": "shellscript",
         "*.bats": "shellscript",
         "*.post": "shellscript",
@@ -263,6 +284,20 @@
         "editor.formatOnSave": true
     },
     "json.format.enable": true,
+
+    "[markdown]": {
+        "editor.unicodeHighlight.ambiguousCharacters": false,
+        "editor.unicodeHighlight.invisibleCharacters": false,
+        "editor.wordWrap": "on",
+        "editor.quickSuggestions": {
+            "comments": "off",
+            "strings": "off",
+            "other": "off"
+        },
+        "cSpell.fixSpellingWithRenameProvider": true,
+        "cSpell.advanced.feature.useReferenceProviderWithRename": true,
+        "cSpell.advanced.feature.useReferenceProviderRemove": "/^#+\\s/"
+    },
 
     "[powershell]": {
         "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
@@ -321,6 +356,7 @@
         "cpan",
         "cpanm",
         "cygpath",
+        "devcontainer",
         "distro",
         "dockerhub",
         "dotfile",

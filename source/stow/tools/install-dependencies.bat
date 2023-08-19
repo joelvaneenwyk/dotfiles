@@ -18,7 +18,13 @@
 
 setlocal EnableExtensions EnableDelayedExpansion
 
-set _pwsh="%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile
+set _pwsh_exe=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe
+set _pwsh="%_pwsh_exe%" -NoLogo -NoProfile
+
+if not exist "%_pwsh_exe%" (
+    echo Failed to find PowerShell: "%_pwsh_exe%"
+    goto:$SkipPowerShell
+)
 
 call :RunCommand %_pwsh% -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser;"
 if not "!ERRORLEVEL!"=="0" exit /b !ERRORLEVEL!
@@ -26,6 +32,7 @@ if not "!ERRORLEVEL!"=="0" exit /b !ERRORLEVEL!
 call :RunCommand %_pwsh% -File "%~dp0install-dependencies.ps1"
 if not "!ERRORLEVEL!"=="0" exit /b !ERRORLEVEL!
 
+:$SkipPowerShell
 rmdir /q /s "%USERPROFILE%\.cpan\CPAN" > nul 2>&1
 rmdir /q /s "%USERPROFILE%\.cpan\prefs" > nul 2>&1
 rmdir /q /s "%USERPROFILE%\.cpan-w64\CPAN" > nul 2>&1

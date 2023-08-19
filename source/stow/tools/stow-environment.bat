@@ -380,6 +380,7 @@ exit /b
         if exist "!_output!" goto:$FindToolDone
 
         set _where=%SystemRoot%\System32\WHERE.exe
+        if not exist "%_where%" goto:$FindToolDone
         "%_where%" /Q %_file%
         if not "!ERRORLEVEL!"=="0" goto:$FindToolDone
             for /f "tokens=* usebackq" %%a in (`"%_where%" %_file%`) do (
