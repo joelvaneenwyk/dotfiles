@@ -244,7 +244,6 @@ endlocal & exit /b
     call :Run !_powershell! -NoLogo -NoProfile %*
 endlocal & exit /b
 
-
 :RunSudoPowerShell %*=Command with arguments
     setlocal EnableExtensions EnableDelayedExpansion
 

@@ -1,4 +1,13 @@
 {
+    "[bat]": {
+        "files.encoding": "windows1252",
+        "editor.tabSize": 4,
+        "editor.detectIndentation": false,
+        "editor.trimAutoWhitespace": true,
+        "editor.useTabStops": false,
+        "editor.guides.indentation": true,
+        "editor.formatOnSave": false
+    },
     "[shellscript]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "foxundermoon.shell-format",
@@ -11,6 +20,7 @@
     "shellcheck.enableQuickFix": true,
     "shellcheck.logLevel": "debug",
     "shellcheck.customArgs": [
+        "-W0",
         "--enable=all",
         "--external-sources",
         "--root=${workspaceFolder}",
@@ -34,7 +44,11 @@
     },
     "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
     "bashIde.includeAllWorkspaceSymbols": true,
-
+    "[shellscript]": {
+        "editor.formatOnSave": true,
+        "files.eol": "\n"
+    },
+  
     "markdownlint.ignore": ".markdownlintignore",
 
     "Lua.workspace.ignoreDir": [
@@ -55,7 +69,7 @@
     "vscode-lua-format.configPath": "source/config/.lua-style",
     "git.requireGitUserConfig": false,
 
-    "editor.fontFamily": "PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
+    "editor.fontFamily": "PragmataPro Nerd Font, PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, JetBrains Mono NL, Menlo, Monaco, Consolas, Courier New, monospace",
     "editor.fontLigatures": true,
 
     "json.validate.enable": true,
