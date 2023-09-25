@@ -17,6 +17,11 @@
 ::
 
 setlocal EnableExtensions EnableDelayedExpansion
+    set MYCELIO_SKIP_INIT=0
+
+    :: Change 'REM' to 'echo' to get output
+    set ECHO=echo
+
     if "%~1"=="--refresh" goto:$InitializeProfile
 
     set "CMD=!CMDCMDLINE!"
@@ -29,30 +34,38 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     :: for /f invokes %COMSPEC% without quotes, whereas new shells' ARG0 have quotes. If
     :: ARG0 equals COMSPEC then this is not a new top 'cmd.exe' instance.
-    if "!ARG0!"=="%COMSPEC%" (
-        set MYCELIO_SKIP_INIT=1
-    )
+    if "!ARG0!"=="%COMSPEC%" goto:$SkipInit
 
     :: This is not a new top cmd.exe instance
-    if /i "!ARG1!"=="/c" (
-        set MYCELIO_SKIP_INIT=1
-    )
+    if /i "!ARG1!"=="/c" goto:$SkipInit
 
     ::
     :: This is a new top 'cmd.exe' instance so initialize it.
     ::
-    if "%MYCELIO_AUTORUN_INITIALIZED%"=="1" set MYCELIO_SKIP_INIT=1
-    if "%MYCELIO_PROFILE_INITIALIZED%"=="1" set MYCELIO_SKIP_INIT=1
-    if "!MYCELIO_ROOT:~-1!"=="\" set "MYCELIO_ROOT=!MYCELIO_ROOT:~0,-1!"
+    if "%MYCELIO_AUTORUN_INITIALIZED%"=="1" goto:$SkipInit
+    if "%MYCELIO_PROFILE_INITIALIZED%"=="1" goto:$SkipInit
+    goto:$InitializeProfile
+
+    :$SkipInit
+    set MYCELIO_SKIP_INIT=1
+    set ECHO=REM
 
     :$InitializeProfile
+    call :GetRoot "%~dp0..\..\..\" "%~dpnx0"
+
+    :: Generate and run the environment batch script
+    set "MYCELIO_ENV_PATH=%~dp0env.bat"
+    if not exist "!_env!" (
+        set "MYCELIO_ENV_PATH=!MYCELIO_ROOT!\source\windows\bin\profile.bat"
+    )
 endlocal & (
     set "MYCELIO_ROOT=%MYCELIO_ROOT%"
+    set "MYCELIO_ENV_PATH=%MYCELIO_ENV_PATH%"
     set "MYCELIO_PROFILE_INITIALIZED=1"
     set "MYCELIO_AUTORUN_INITIALIZED=1"
     set "MYCELIO_SKIP_INIT=%MYCELIO_SKIP_INIT%"
+    set "MYCELIO_ECHO=%ECHO%"
 )
-
 if "%MYCELIO_SKIP_INIT%"=="1" goto:$InitializedProfile
 
 ::
@@ -77,27 +90,20 @@ if "%MYCELIO_SKIP_INIT%"=="1" goto:$InitializedProfile
 
 :: Change to unicode
 if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 65001 >NUL 2>&1
-echo ▓├═════════════════════════════════
-echo ▓│  ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓
-echo ▓│  ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃
-echo ▓│  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
-echo ▓├═════════════════════════════════
-echo.
+%MYCELIO_ECHO% ▓├═════════════════════════════════
+%MYCELIO_ECHO% ▓│  ┏┏┓┓ ┳┏━┓┳━┓┳  o┏━┓
+%MYCELIO_ECHO% ▓│  ┃┃┃┗┏┛┃  ┣━ ┃  ┃┃/┃
+%MYCELIO_ECHO% ▓│  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
+%MYCELIO_ECHO% ▓├═════════════════════════════════
 
 :: Switch back to standard ANSI
 if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 1252 >NUL 2>&1
 
-:: Generate and run the environment batch script
-set "_env=%~dp0env.bat"
-if exist "!_env!" goto:$SetupEnvironment
-set "_env=%MYCELIO_ROOT%\source\windows\bin\profile.bat"
-if not exist "!_env!" goto:$InitializedProfile
-
-:$SetupEnvironment
-call "!_env!"
+if not exist "%MYCELIO_ENV_PATH%" goto:$InitializedProfile
+call "%MYCELIO_ENV_PATH%"
 
 :$InitializedProfile
-echo [mycelio] Run `help` to get list of commands.
+%MYCELIO_ECHO% [mycelio] Run `help` to get list of commands.
 
 :: Check to see if 'doskey' is valid first as some versions
 :: of Windows (e.g. nanoserver) do not have 'doskey' support.
@@ -106,8 +112,7 @@ if "%USERNAME%"=="ContainerAdministrator" goto:$StartClink
 :: Some versions of Windows do not support using 'doskey' command
 :: so test it out before running all the commands.
 doskey /? >NUL 2>&1
-if errorlevel 1 goto:$StartClink
-
+if errorlevel 1 goto:$SkipDosKeySetup
     doskey cd.=cd /d "%MYCELIO_ROOT%"
     doskey cd~ =cd /d "%HOME%"
     doskey cp=copy $*
@@ -116,26 +121,22 @@ if errorlevel 1 goto:$StartClink
     doskey edit=%HOME%\.local\bin\micro.exe $*
     doskey refresh=%MYCELIO_ROOT%\source\windows\bin\profile.bat --refresh
     doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
-
-:$StartClink
+:$SkipDosKeySetup
 
 :: If we have already injected Clink then skip it
-if "%CLINK_INJECTED%"=="1" goto:$InitializedProfile
+if "%CLINK_INJECTED%"=="1" goto:$SkipClink
+    :: This must be the last operation we do.
+    call clink --version >NUL 2>&1
+    if errorlevel 1 (
+        %MYCELIO_ECHO% Initialized `dotfiles` environment without clink.
+        call :ClearErrorLevel
+    ) else (
+        set CLINK_INJECTED=1
+        call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink" --quiet --nolog
+    )
+:$SkipClink
 
-:: This must be the last operation we do.
-call clink --version >NUL 2>&1
-if errorlevel 1 (
-    echo.
-    echo Initialized `dotfiles` environment without clink.
-    call :ClearErrorLevel
-) else (
-    set CLINK_INJECTED=1
-    call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink" --quiet --nolog
-)
-
-:$InitializedProfile
-set MYCELIO_SKIP_INIT=
-goto:eof
+goto:$MycelioProfileEnd
 
 ::-----------------------------------
 :: Extract the ARG0 and ARG1 from %CMDCMDLINE% using cmd.exe own parser
@@ -145,5 +146,20 @@ goto:eof
     set "ARG1=%2"
 exit /b
 
+:GetRoot
+    if exist "%MYCELIO_ROOT%\setup.bat" exit /b 0
+    if "%MYCELIO_ROOT%"=="" (
+        set "MYCELIO_ROOT=%~dp1"
+        goto:$UpdateRoot
+    )
+
+    :$UpdateRoot
+    if "!MYCELIO_ROOT:~-1!"=="\" set "MYCELIO_ROOT=!MYCELIO_ROOT:~0,-1!"
+    set "ARG1=%2"
+exit /b
+
 :ClearErrorLevel
 exit /b 0
+
+:$MycelioProfileEnd
+set MYCELIO_SKIP_INIT=
