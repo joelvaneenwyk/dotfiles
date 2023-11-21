@@ -61,6 +61,8 @@ _use_sudo() {
 }
 
 setup() {
+    echo "Initiating..."
+
     # Standard safety protocol
     set -eu
 

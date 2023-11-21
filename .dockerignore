@@ -1,8 +1,9 @@
-source/vagrant/.vagrant/
-source/stow/.tmp
+#
+# Ignore file for Docker
+#
 
+.vagrant/
 _Inline/
-
 .git/
 .osx/
 .tmp/
@@ -12,9 +13,9 @@ _Inline/
 artifacts
 !artifacts/windows
 
-.vscode
+.vscode/
 
-dev
+dev/
 
 example.fls
 example.log
