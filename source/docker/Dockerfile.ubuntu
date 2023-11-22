@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ARG USERNAME=default
 
@@ -6,8 +6,10 @@ ENV USERNAME=${USERNAME}
 
 # ubuntu:latest does not have sudo fetch it and install it
 RUN apt-get update \
-&& apt-get install --no-install-recommends -y \
-sudo micro nano neofetch
+    && apt-get install --no-install-recommends -y \
+    sudo micro nano neofetch
+
+RUN sudo apt-get -y --only-upgrade --no-install-recommends install bash
 
 # Create new user and disable password and gecos for later. See '--gecos' explained
 # well here: https://askubuntu.com/a/1195288/635348
@@ -23,16 +25,24 @@ RUN echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Now we can set USER to the user we just created
 USER ${USERNAME}
+ENV USERNAME=${USERNAME}
 
 # Now switch to working in the user home directory
 WORKDIR /home/${USERNAME}
 
+# Copy 'dotfiles' project files into the container
+RUN mkdir -p /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} ./*.md /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} ./packages/ /home/${USERNAME}/dotfiles/packages/
+COPY --chown=${USERNAME} ./docs/ /home/${USERNAME}/dotfiles/docs/
+COPY --chown=${USERNAME} ./test/ /home/${USERNAME}/dotfiles/test/
+COPY --chown=${USERNAME} ./source/ /home/${USERNAME}/dotfiles/source/
+
 RUN sudo apt-get update
 
-COPY --chown=${USERNAME} ./ ./dotfiles/
-
 # This will delete existing '.profile' or other configuration files when stowing
-RUN ./dotfiles/setup.sh --clean --force --yes
+RUN bash /home/${USERNAME}/dotfiles/setup.sh --clean --force --yes
 
 ENTRYPOINT [ "/bin/bash", "-c" ]
 CMD ["neofetch && bash"]

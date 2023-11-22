@@ -170,8 +170,8 @@ function run_command() {
 
     (
         MYCELIO_DISABLE_TRAP=1
-        ( 
-            ( 
+        (
+            (
                 (
                     unset MYCELIO_DISABLE_TRAP
 
@@ -716,7 +716,7 @@ function initialize_gitconfig() {
 
 function install_hugo {
     _hugo_tmp="$MYCELIO_TEMP/hugo"
-    _hugo_exe="$MYCELIO_GOBIN/hugo$MYCELIO_OS_APP_EXTENSION"
+    _hugo_exe="$MYCELIO_GOBIN/hugo${MYCELIO_OS_APP_EXTENSION:-}"
 
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped 'hugo' install for root user."
@@ -858,7 +858,7 @@ function install_oh_my_posh {
         fi
     fi
 
-    _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$MYCELIO_OS_APP_EXTENSION"
+    _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH${MYCELIO_OS_APP_EXTENSION:-}"
     _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
     if run_task "posh.get" get_file "$_oh_my_posh_exe" "$_posh_url"; then
         chmod +x "$_oh_my_posh_exe"
@@ -997,7 +997,7 @@ function install_powershell() {
                 # Install PowerShell
                 if
                     DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install.powershell" \
-                    apt-get install -y --no-install-recommends powershell
+                        apt-get install -y --no-install-recommends powershell
                 then
                     echo "Installed PowerShell."
                 else
@@ -1067,7 +1067,7 @@ function install_stow() {
 
 function install_micro_text_editor() {
     mkdir -p "$MYCELIO_HOME/.local/bin/"
-    _micro_exe="micro$MYCELIO_OS_APP_EXTENSION"
+    _micro_exe="micro${MYCELIO_OS_APP_EXTENSION:-}"
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
@@ -1463,7 +1463,9 @@ function configure_linux() {
         cd "$MYCELIO_ROOT/packages/fish" || true
         rm -f "$MYCELIO_HOME/.base16_theme"
         rm -f ".base16_theme"
-        ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
+
+        # todo:jve Disabled since base16_theme was removed
+        # ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
     )
 
     _fundle_fish="$MYCELIO_HOME/.config/fish/functions/fundle.fish"
@@ -1499,7 +1501,7 @@ function configure_linux() {
 
     if [ -x "$(command -v apt-get)" ] && [ -x "$(command -v sudo)" ]; then
         DEBIAN_FRONTEND="noninteractive" run_task_sudo "Remove Intermediate Package Data" \
-        apt-get autoremove -y
+            apt-get autoremove -y
     fi
 
     # Remove intermediate files here to reduce size of Docker container layer
@@ -1533,17 +1535,17 @@ function install_packages() {
         run_command "pacman.update.database" pacman -Fy
 
         run_command "pacman.install" pacman -S --quiet --noconfirm --needed \
-        msys2-keyring \
-        curl wget unzip \
-        git gawk perl \
-        fish tmux \
-        texinfo texinfo-tex \
-        base-devel gcc gcc-libs binutils make autoconf automake1.16 automake-wrapper libtool \
-        msys2-runtime-devel msys2-w32api-headers msys2-w32api-runtime
+            msys2-keyring \
+            curl wget unzip \
+            git gawk perl \
+            fish tmux \
+            texinfo texinfo-tex \
+            base-devel gcc gcc-libs binutils make autoconf automake1.16 automake-wrapper libtool \
+            msys2-runtime-devel msys2-w32api-headers msys2-w32api-runtime
 
         if [ "${MSYSTEM:-}" = "MINGW64" ]; then
             run_command "pacman.install.mingw64" pacman -S --quiet --noconfirm --needed \
-            mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils
+                mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils
         fi
 
         # Unsure why but for some reason a link for cc1 is not created which results in errors
@@ -1559,30 +1561,30 @@ function install_packages() {
     elif [ -x "$(command -v apk)" ]; then
         run_command_sudo "apk.update" apk update
         run_command_sudo "apk.add" apk add \
-        sudo tzdata git wget curl unzip xclip \
-        build-base gcc g++ make musl-dev openssl-dev zlib-dev \
-        perl perl-dev perl-utils \
-        bash tmux neofetch fish \
-        python3 py3-pip \
-        fontconfig openssl gnupg
+            sudo tzdata git wget curl unzip xclip \
+            build-base gcc g++ make musl-dev openssl-dev zlib-dev \
+            perl perl-dev perl-utils \
+            bash tmux neofetch fish \
+            python3 py3-pip \
+            fontconfig openssl gnupg
     elif [ -x "$(command -v apt-get)" ]; then
         run_command_sudo "apt.update" \
-        apt-get update
+            apt-get update
 
         # Needed to prevent interactive questions during 'tzdata' install, see https://stackoverflow.com/a/44333806
         run_command_sudo "timezone.set" \
-        ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
+            ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime >/dev/null 2>&1
 
         DEBIAN_FRONTEND="noninteractive" run_command_sudo "apt.install" \
-        apt-get install -y --no-install-recommends \
-        sudo gpgconf ca-certificates tzdata git wget curl unzip xclip libnotify-bin \
-        software-properties-common apt-transport-https \
-        build-essential gcc g++ make automake autoconf \
-        libssl-dev openssl libz-dev perl cpanminus \
-        tmux neofetch fish zsh bash \
-        python3 python3-pip \
-        shellcheck \
-        fontconfig
+            apt-get install -y --no-install-recommends \
+            sudo gpgconf ca-certificates tzdata git wget curl unzip xclip libnotify-bin \
+            software-properties-common apt-transport-https \
+            build-essential gcc g++ make automake autoconf \
+            libssl-dev openssl libz-dev perl cpanminus \
+            tmux neofetch fish zsh bash \
+            python3 python3-pip \
+            shellcheck \
+            fontconfig
 
         if [ -x "$(command -v dpkg-reconfigure)" ]; then
             run_command_sudo "timezone.reconfigure" dpkg-reconfigure --frontend noninteractive tzdata
@@ -2021,6 +2023,7 @@ function update_repositories() {
             run_command "git.submodule.update" git submodule update --init --recursive || true
         fi
 
+        # todo:jve
         # _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
         # _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
         # _update_git_repository "packages/macos/Library/Application Support/Resources" "master"
