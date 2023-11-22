@@ -32,7 +32,12 @@ WORKDIR /home/${USERNAME}
 
 # Copy 'dotfiles' project files into the container
 RUN mkdir -p /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} ./ /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} ./*.md /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} ./packages/ /home/${USERNAME}/dotfiles/packages/
+COPY --chown=${USERNAME} ./docs/ /home/${USERNAME}/dotfiles/docs/
+COPY --chown=${USERNAME} ./test/ /home/${USERNAME}/dotfiles/test/
+COPY --chown=${USERNAME} ./source/ /home/${USERNAME}/dotfiles/source/
 
 RUN sudo apt-get update
 

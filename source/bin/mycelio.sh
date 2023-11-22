@@ -1463,7 +1463,9 @@ function configure_linux() {
         cd "$MYCELIO_ROOT/packages/fish" || true
         rm -f "$MYCELIO_HOME/.base16_theme"
         rm -f ".base16_theme"
-        ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
+
+        # todo:jve Disabled since base16_theme was removed
+        # ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
     )
 
     _fundle_fish="$MYCELIO_HOME/.config/fish/functions/fundle.fish"
@@ -2021,6 +2023,7 @@ function update_repositories() {
             run_command "git.submodule.update" git submodule update --init --recursive || true
         fi
 
+        # todo:jve
         # _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
         # _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
         # _update_git_repository "packages/macos/Library/Application Support/Resources" "master"

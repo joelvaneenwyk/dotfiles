@@ -28,8 +28,6 @@ setup() {
 }
 
 @test "cross platform realpath" {
-    _test_path "$HOME/.config/base16-fzf"
-    _test_path "$HOME/.config/base16-fzf/.gitignore"
     _test_path "/bin"
     _test_path "/bin/apt-get"
     _test_path "/bin/apt2"
