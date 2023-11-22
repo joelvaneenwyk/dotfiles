@@ -716,7 +716,7 @@ function initialize_gitconfig() {
 
 function install_hugo {
     _hugo_tmp="$MYCELIO_TEMP/hugo"
-    _hugo_exe="$MYCELIO_GOBIN/hugo$MYCELIO_OS_APP_EXTENSION"
+    _hugo_exe="$MYCELIO_GOBIN/hugo${MYCELIO_OS_APP_EXTENSION:-}"
 
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped 'hugo' install for root user."
@@ -1067,7 +1067,7 @@ function install_stow() {
 
 function install_micro_text_editor() {
     mkdir -p "$MYCELIO_HOME/.local/bin/"
-    _micro_exe="micro$MYCELIO_OS_APP_EXTENSION"
+    _micro_exe="micro${MYCELIO_OS_APP_EXTENSION:-}"
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
