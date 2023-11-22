@@ -9,7 +9,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     sudo micro nano neofetch
 
-RUN sudo apt-get -y --only-upgrade install bash
+RUN sudo apt-get -y --only-upgrade --no-install-recommends install bash
 
 # Create new user and disable password and gecos for later. See '--gecos' explained
 # well here: https://askubuntu.com/a/1195288/635348
@@ -32,7 +32,7 @@ WORKDIR /home/${USERNAME}
 
 # Copy 'dotfiles' project files into the container
 RUN mkdir -p /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} / /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} ./ /home/${USERNAME}/dotfiles/
 
 RUN sudo apt-get update
 
