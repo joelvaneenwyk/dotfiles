@@ -69,7 +69,7 @@ function initialize_environment() {
         fi
     fi
 
-    # shellcheck source=tools/stow-environment.sh
+    # shellcheck source=./stow-environment.sh
     source "$STOW_ROOT/tools/stow-environment.sh" "$@"
 }
 

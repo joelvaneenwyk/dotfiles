@@ -66,7 +66,7 @@ EOL
 function install_dependencies() {
     STOW_ROOT="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && cd ../ && pwd -P)"
 
-    # shellcheck source=tools/stow-environment.sh
+    # shellcheck source=./stow-environment.sh
     source "$STOW_ROOT/tools/stow-environment.sh" "$@"
 
     if [ -f '/etc/post-install/09-stow.post' ]; then

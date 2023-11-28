@@ -25,7 +25,7 @@ if [ -n "${BASH_VERSION:-}" ]; then
     # shellcheck disable=SC3028,SC3054,SC2039
     STOW_ROOT="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-    # shellcheck source=tools/stow-environment.sh
+    # shellcheck source=./tools/stow-environment.sh
     . "$STOW_ROOT/tools/stow-environment.sh"
 
     stow_setup
