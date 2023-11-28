@@ -6,7 +6,9 @@ See https://chrisant996.github.io/clink/clink.html for documentation. This is or
 on the Cmder boot script (see https://github.com/cmderdev/cmder/blob/master/config/cmder.lua) but has
 been somewhat heavily modified and also just out of date with most recent version.
 
-]] local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
+]]
+
+local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
 local mycelio_root_dir = path.normalise(script_dir .. "../../..")
 
 local color_cyan = "\x1b[36m"

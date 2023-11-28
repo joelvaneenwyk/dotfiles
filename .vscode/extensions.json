@@ -1,11 +1,10 @@
 {
     "recommendations": [
-        "hookyqr.beautify",
         "foxundermoon.shell-format",
         "timonwong.shellcheck",
         "mads-hartmann.bash-ide-vscode",
         "rogalmic.bash-debug",
-        "bmalehorn.vscode-fish",
+        // "bmalehorn.vscode-fish",
         "mhutchie.git-graph",
         "eamodio.gitlens",
         "donjayamanne.githistory",

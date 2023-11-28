@@ -170,8 +170,8 @@ function run_command() {
 
     (
         MYCELIO_DISABLE_TRAP=1
-        ( 
-            ( 
+        (
+            (
                 (
                     unset MYCELIO_DISABLE_TRAP
 
@@ -719,7 +719,7 @@ function initialize_gitconfig() {
 
 function install_hugo {
     _hugo_tmp="$MYCELIO_TEMP/hugo"
-    _hugo_exe="$MYCELIO_GOBIN/hugo$MYCELIO_OS_APP_EXTENSION"
+    _hugo_exe="$MYCELIO_GOBIN/hugo${MYCELIO_OS_APP_EXTENSION:-}"
 
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped 'hugo' install for root user."
@@ -861,7 +861,7 @@ function install_oh_my_posh {
         fi
     fi
 
-    _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH$MYCELIO_OS_APP_EXTENSION"
+    _posh_archive="posh-$MYCELIO_OS-$MYCELIO_ARCH${MYCELIO_OS_APP_EXTENSION:-}"
     _posh_url="https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/$_posh_archive"
     if run_task "posh.get" get_file "$_oh_my_posh_exe" "$_posh_url"; then
         chmod +x "$_oh_my_posh_exe"
@@ -1070,7 +1070,7 @@ function install_stow() {
 
 function install_micro_text_editor() {
     mkdir -p "$MYCELIO_HOME/.local/bin/"
-    _micro_exe="micro$MYCELIO_OS_APP_EXTENSION"
+    _micro_exe="micro${MYCELIO_OS_APP_EXTENSION:-}"
 
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         rm -f "$MYCELIO_HOME/.local/bin/$_micro_exe"
@@ -1469,7 +1469,9 @@ function configure_linux() {
         cd "$MYCELIO_ROOT/packages/fish" || true
         rm -f "$MYCELIO_HOME/.base16_theme"
         rm -f ".base16_theme"
-        ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
+
+        # todo:jve Disabled since base16_theme was removed
+        # ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
     )
 
     _fundle_fish="$MYCELIO_HOME/.config/fish/functions/fundle.fish"
@@ -2030,6 +2032,7 @@ function update_repositories() {
             run_command "git.submodule.update" git submodule update --init --recursive || true
         fi
 
+        # todo:jve
         # _update_git_repository "source/stow" "main" "https://github.com/joelvaneenwyk/stow"
         # _update_git_repository "packages/vim/.vim/bundle/vundle" "master"
         # _update_git_repository "packages/macos/Library/Application Support/Resources" "master"

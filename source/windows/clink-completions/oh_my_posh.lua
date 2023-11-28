@@ -8,10 +8,16 @@ local oh_my_posh_executable = ""
 local loaded = false
 
 if not os.isfile(local_oh_my_posh_executable) then
+    local_oh_my_posh_executable = path.normalise("C:\\Program Files (x86)\\oh-my-posh\\bin\\oh-my-posh.exe")
+end
+
+-- Try again
+if not os.isfile(local_oh_my_posh_executable) then
     print('[clink] Oh My Posh not found: ' .. local_oh_my_posh_executable)
 elseif not os.isfile(mycelio_config) then
     print('[clink] Oh My Posh config missing: ' .. mycelio_config)
 else
+    local_oh_my_posh_executable = "\"" .. local_oh_my_posh_executable .. "\""
     io.popen(local_oh_my_posh_executable .. " --version")
     if not os.geterrorlevel == 0 then
         print('[clink] WARNING: Oh My Posh version test failed: \'' .. local_oh_my_posh_executable .. '\'')
@@ -20,7 +26,7 @@ else
         local process = io.popen(oh_my_posh_executable .. " init cmd --config " .. mycelio_config)
         local command = process:read("*a")
         load(command)()
-        print('[clink] Initialized Oh My Posh: \'' .. local_oh_my_posh_executable .. '\'')
+        print('[clink] Initialized Oh My Posh: ' .. local_oh_my_posh_executable)
         loaded = true
     end
 end

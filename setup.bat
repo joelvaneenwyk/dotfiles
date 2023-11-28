@@ -66,7 +66,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     echo.
     echo ##[cmd] %SCRIPT%!_args!
 
-    if "!_clean!"=="1" (
+    if not "!_clean!"=="1" goto:$SetupSkipClean
         set MYCELIO_PROFILE_INITIALIZED=
         if exist "%USERPROFILE%\.local\msys64" rmdir /s /q "%USERPROFILE%\.local\msys64" > nul 2>&1
         if exist "%USERPROFILE%\.tmp" rmdir /s /q "%USERPROFILE%\.tmp" > nul 2>&1
@@ -76,7 +76,7 @@ setlocal EnableExtensions EnableDelayedExpansion
         if exist "%USERPROFILE%\Documents\PowerShell" rmdir /q /s "%USERPROFILE%\Documents\PowerShell" > nul 2>&1
         if exist "%USERPROFILE%\Documents\WindowsPowerShell" rmdir /q /s "%USERPROFILE%\Documents\WindowsPowerShell" > nul 2>&1
         echo [mycelio] Cleared out generated files and reinitializing environment.
-    )
+    :$SetupSkipClean
 
     :: We intentionally setup autorun as soon as possible especially in case there is an
     :: outdated or invalid version already there since it is called in all subsequent 'call'
@@ -284,6 +284,15 @@ endlocal & exit /b
     )
 endlocal & exit /b
 
+:Command
+setlocal EnableDelayedExpansion
+    set "_command=%*"
+    set "_command=!_command:   = !"
+    set "_command=!_command:  = !"
+    echo ##[cmd] !_command!
+    !_command!
+exit /b
+
 :CheckSystemFile %1=SystemFilename
     setlocal EnableExtensions EnableDelayedExpansion
 
@@ -309,20 +318,6 @@ endlocal & exit /b
 endlocal & exit /b
 
 ::-----------------------------------
-:: Query if autorun installed
-::-----------------------------------
-:CheckAutoRunInstalled %1=Hive %2=OutputVarName
-    setlocal EnableExtensions EnableDelayedExpansion
-    set "KEY=%1\Software\Microsoft\Command Processor"
-    for /f "tokens=2,3*" %%a in ('reg query "!KEY!" /v AutoRun 2^>NUL ^| findstr AutoRun') do (
-        set "TYPE=%%a"
-        set "VALUE=%%b"
-        if "%~2"=="" echo !USER[%1]!: !VALUE!
-        if "!TYPE!"=="REG_EXPAND_SZ" call set "VALUE=!VALUE!"
-    )
-endlocal & (if not "%~2"=="" (set "%~2=%VALUE%")) & exit /b
-
-::-----------------------------------
 :: Check if the user has system administrator rights. !ERRORLEVEL! 0=Yes; 5=No
 ::-----------------------------------
 :IsAdmin
@@ -330,25 +325,63 @@ endlocal & (if not "%~2"=="" (set "%~2=%VALUE%")) & exit /b
 exit /b
 
 ::-----------------------------------
+:: Query if autorun installed
+::-----------------------------------
+:CheckAutoRunInstalled %1=Hive %2=OutputVarName
+    setlocal EnableExtensions EnableDelayedExpansion
+    set "KEY=%~1\Software\Microsoft\Command Processor"
+    for /f "tokens=2,3*" %%a in ('reg query "!KEY!" /v AutoRun 2^>NUL ^| findstr AutoRun') do (
+        set "TYPE=%%a"
+        set "VALUE=%%b"
+        if "!TYPE!"=="REG_EXPAND_SZ" call set "VALUE=!VALUE!"
+    )
+    endlocal & (
+        if not "%~2"=="" (set "%~2=%VALUE%")
+    )
+exit /b
+
+:CheckAutoRun %1=Hive %2=VarName
+    setlocal EnableExtensions EnableDelayedExpansion
+    set _check_return_value=2
+
+    set "_hive=%~1"
+    set "_var_name=%~2"
+    set "_profile=!%~2!"
+    if "%SPROFILE%"=="!_profile!" (
+        echo [mycelio] Autorun 'dotfiles' already registered: "!_profile!"
+        set _check_return_value=0
+        goto:$CheckAutoRunDone
+    )
+
+    ::
+    :: C:\Users\{USERNAME}\.dotfiles\source\windows\bin\profile.bat&"C:\Program Files (x86)\clink\clink.bat" inject --autorun
+    ::
+    echo Variables: !_var_name! - !_profile! - %SPROFILE%
+    echo [mycelio] WARNING: Different AutoRun script already installed for %_hive%: "!_profile!"
+
+    :: Delete the key otherwise next will display an error
+    set "KEY=%_hive%\Software\Microsoft\Command Processor"
+    call :Command reg delete "!KEY!" /v "AutoRun" /f
+    if "!ERRORLEVEL!"=="0" (
+        echo [mycelio] Removed existing key: "!KEY!\AutoRun"
+        set _check_return_value=1
+        goto:$CheckAutoRunDone
+    )
+    set _check_return_value=!ERRORLEVEL!
+
+    :$CheckAutoRunDone
+endlocal & (exit /b %_check_return_value%)
+
+::-----------------------------------
 :: Remove existing auto run and replace it if possible
 ::-----------------------------------
 :InstallAutoRun
     setlocal EnableExtensions EnableDelayedExpansion
-    for %%h in (HKLM HKCU) do (
-        call :CheckAutoRunInstalled %%h AutoRun
-        if defined AutoRun (
-            if not "%SPROFILE%"=="!AutoRun!" (
-                >&2 echo WARNING: Different AutoRun script already installed for !USER[%%h]!: !AutoRun!
-
-                :# Delete the key otherwise next will display an error
-                set "KEY=%%h\Software\Microsoft\Command Processor"
-                %EXEC% reg delete "!KEY!" /v "AutoRun" /f
-                %COMMENT% Delete existing key: "!KEY!\AutoRun"
-            ) else (
-                %COMMENT% Profile for dotfiles already registered in AutoRun.
-                endlocal & exit /b 0
-            )
-        )
+    echo [mycelio] Checking AutoRun registry key.
+    for %%h in (HKCU HKLM) do (
+        call :CheckAutoRunInstalled "%%h" "VarAutoRun"
+        call :CheckAutoRun "%%h" "VarAutoRun"
+        if "!ERRORLEVEL!"=="0" goto:$InstallAutoRunComplete
     )
 
     :# No keys should exist now so try to install
@@ -364,4 +397,5 @@ exit /b
     set "KEY=%HIVE%\Software\Microsoft\Command Processor"
     %EXEC% reg add "%KEY%" /v "AutoRun" /t REG_SZ /d "%SPROFILE%" /f
     echo Created registry key "%KEY%" value "AutoRun"
-endlocal & exit /b 0
+    :$InstallAutoRunComplete
+endlocal & (exit /b 0)

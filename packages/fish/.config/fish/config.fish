@@ -102,7 +102,7 @@ end
 
 if test -e "$HOME/.base16_theme"
     set theme_shell (readlink -f "$HOME/.base16_theme")
-    if test -e "$theme_shell"
+    if test -e "$theme_shell" && test -e $HOME/.config/base16-fzf/fish/(basename "$theme_shell" .sh).fish
         set theme (echo $HOME/.config/base16-fzf/fish/(basename "$theme_shell" .sh).fish)
     else
         echo "❌ [Warning] Theme target does not exist: '$theme_shell'"

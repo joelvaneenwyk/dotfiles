@@ -141,6 +141,8 @@ Function Get-Environment {
     $environmentVariables += "$script:MycelioRoot"
     $environmentVariables += "$script:MycelioRoot\source\windows\bin"
 
+    $environmentVariables += "$ENV:UserProfile\.proto"
+
     $environmentVariables += "$ENV:UserProfile\.local\texlive\bin\win32"
     $environmentVariables += "$ENV:UserProfile\.local\git\mingw64\bin"
     $environmentVariables += "$ENV:UserProfile\.local\bin"
@@ -198,7 +200,9 @@ Function Get-Environment {
             }
         }
         catch {
-            Write-Host "[mycelio] Skipped invalid path: '$environmentPath'"
+            if ($Verbose) {
+                Write-Host "[mycelio] Skipped invalid path: '$environmentPath'"
+            }
         }
     }
 
