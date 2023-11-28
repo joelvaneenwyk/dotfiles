@@ -25,6 +25,9 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
+        with:
+          # Get all history so we can generate ChangeLog
+          fetch-depth: 0
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
@@ -178,6 +181,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          # Get all history so we can generate ChangeLog
+          fetch-depth: 0
 
       - name: Download Artifacts
         uses: actions/download-artifact@v2
