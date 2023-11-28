@@ -37,6 +37,9 @@ ENV PATH="${PERLBREW_ROOT_DEFAULT}:${PERLBREW_PATH}:${PATH}"
 
 RUN mkdir -p "$HOME" "$PERLBREW_ROOT_DEFAULT" "$PERLBREW_ROOT"
 
+# Previously had '-k' here which disables certificate validation to get
+# around a problem on the perlbrew site, but that's not secure so removed
+# it. If it breaks again, we'll have to find another solution.
 RUN curl -L https://install.perlbrew.pl | bash
 RUN echo 'source "$PERLBREW_ROOT/etc/bashrc"' >>".bash_profile"
 
@@ -71,7 +74,7 @@ COPY ./tools/run-tests.sh ./tools/
 
 # Clean up at the end after we bootstrap
 RUN apt-get clean \
-&& rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT [ "/bin/bash", "-c" ]
 CMD ["${STOW_ROOT}/tools/run-tests.sh"]
