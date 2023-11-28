@@ -1,17 +1,19 @@
-name: 'Build and Test'
+name: 'stow build'
 
 # Controls when the workflow will run
 on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches:
-      - "**"
+      - main
+      - release
+      - dev
+      - develop
+      - staging
   pull_request:
-    branches:
-      - "**"
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
 
 jobs:
   lint:
@@ -23,15 +25,14 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
         env:
           SHELLCHECK_OPTS: --external-sources
         with:
-          ignore_names: bin doc
+          ignore_paths: ./artifacts/** ./test/test_helper/bats-*/**
+          ignore_names: .zshrc
 
 
   perl_test_matrix:
@@ -70,7 +71,7 @@ jobs:
       MSYS: "winsymlinks:native"
 
       # Default paths but these should be overridden by test scripts
-      STOW_TEST_RESULTS: ${{ github.workspace }}/test_results*.xml
+      STOW_TEST_RESULTS: ${{ github.workspace }}/source/stow/test_results*.xml
       STOW_CPAN_LOGS: ${{ matrix.msys && 'C:\msys64\home\runneradmin\.cpan*\work\**\*.log' || format('{0}/*.log', github.workspace) }}
 
       # Define variants by platform
@@ -85,7 +86,7 @@ jobs:
     defaults:
       run:
         shell: ${{ matrix.msys && 'msys2 {0}' || ( startsWith(matrix.platform, 'windows') && 'cmd' || 'bash' ) }}
-        working-directory: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}/source/stow
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -119,7 +120,6 @@ jobs:
         run: ${{ env.script_tool }}make-stow${{ env.script_extension }}
 
       - name: Run Tests
-
         # Needed so that the coveralls package knows that we are using GitHub Actions
         # and to look for the secret key, see:
         #   https://github.com/kan/coveralls-perl/blob/master/lib/Devel/Cover/Report/Coveralls.pm
