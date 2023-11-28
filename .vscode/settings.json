@@ -21,6 +21,9 @@
     "shellcheck.logLevel": "debug",
     "shellcheck.customArgs": [
         "-W0",
+        "--check-sourced",
+        "--exclude=SC2292,SC2250,SC2248,SC2248,SC2312,SC2310",
+        "--severity=style",
         "--enable=all",
         "--external-sources",
         "--root=${workspaceFolder}",

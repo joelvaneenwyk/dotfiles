@@ -299,7 +299,7 @@ function _timeout() {
         elif _command_exists "perl"; then
             perl -e "alarm $_seconds; exec @ARGV" "$@"
         else
-            eval "$@"
+            "$@"
         fi
     fi
 }
@@ -477,6 +477,9 @@ function _is_windows() {
         ;;
     MSYS*)
         return 0
+        ;;
+    *)
+        # Fall through to default error return
         ;;
     esac
 
@@ -992,7 +995,7 @@ function install_powershell() {
                 run_command_sudo "apt.update" apt-get update
 
                 # Enable the "universe" repositories
-                run_command_sudo "apt.add.repository" add-apt-repository universe || true
+                run_command_sudo "apt.add.repository" add-apt-repository --yes universe || true
 
                 # Install PowerShell
                 if
@@ -1306,6 +1309,9 @@ function install_go {
                     ;;
                 Darwin*)
                     _go_archive="go$_go_version.darwin-$MYCELIO_ARCH.tar.gz"
+                    ;;
+                *)
+                    _go_archive=""
                     ;;
                 esac
             fi
@@ -1937,6 +1943,9 @@ function _setup_environment() {
         ;;
     CYGWIN* | MINGW* | MSYS*)
         MYCELIO_OS='windows'
+        ;;
+    *)
+        # No action needed
         ;;
     esac
     export MYCELIO_OS

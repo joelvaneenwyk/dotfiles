@@ -13,7 +13,7 @@ function _get_real_path() {
     cd "$(dirname "$_input_path")" || true
 
     _link=$(readlink "$(basename "$_input_path")")
-    while [ "$_link" ]; do
+    while [ -n "$_link" ]; do
         cd "$(dirname "$_link")" || true
         _link=$(readlink "$(basename "$_input_path")")
     done
@@ -154,6 +154,7 @@ function _initialize_interactive_bash_profile() {
 
 function _initialize_bash_profile() {
     # Fig pre block. Keep at the top of this file.
+    # shellcheck disable=SC1090,SC1091
     [[ -f "$HOME/.fig/shell/bashrc.pre.bash" ]] && . "$HOME/.fig/shell/bashrc.pre.bash"
 
     # Clear out prompt command to start so that we do not end up with an
@@ -184,7 +185,11 @@ function _initialize_bash_profile() {
     fi
 
     export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
+
+    # shellcheck disable=SC1090,SC1091
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+
+    # shellcheck disable=SC1090,SC1091
     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 
     if [ -e "${HOME:-}/.iterm2_shell_integration.bash" ]; then
@@ -215,7 +220,11 @@ function _initialize_bash_profile() {
     fi
 
     export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"                   # This loads nvm
+
+    # shellcheck disable=SC1090,SC1091
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+
+    # shellcheck disable=SC1090,SC1091
     [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 
     if [ -e "$HOME/.bun" ]; then
@@ -226,6 +235,7 @@ function _initialize_bash_profile() {
     export MYCELIO_BASH_PROFILE_INITIALIZED=1
 
     # Fig post block. Keep at the bottom of this file.
+    # shellcheck disable=SC1090,SC1091
     [[ -f "$HOME/.fig/shell/bashrc.post.bash" ]] && . "$HOME/.fig/shell/bashrc.post.bash"
 }
 
