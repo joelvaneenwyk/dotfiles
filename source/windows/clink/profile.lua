@@ -135,8 +135,9 @@ function get_git_status()
     return os.execute("git diff --quiet --ignore-submodules HEAD 2>nul")
 end
 
-function add_modules(path)
-    local completions_dir = path
+function add_modules(input_path)
+    local completions_dir = path.normalise(input_path)
+    print('[clink] Loading modules from path: "' .. completions_dir .. '"')
     for _, lua_module in ipairs(clink.find_files(completions_dir .. '*.lua')) do
         -- Skip files that starts with _. This could be useful if some files should be ignored
 
@@ -146,9 +147,11 @@ function add_modules(path)
                 -- use dofile instead of require because require caches loaded modules
                 -- so config reloading using Alt-Q won't reload updated modules.
                 dofile(filename)
+                print('[clink] Module loaded: "' .. lua_module .. '"')
             end
         end
     end
+    print('[clink] Added all modules from path: "' .. completions_dir .. '"')
 end
 
 local cwd_prompt = clink.promptfilter(30)
