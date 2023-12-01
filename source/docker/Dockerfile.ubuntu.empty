@@ -21,7 +21,8 @@ RUN echo apt-fast apt-fast/aptmanager string apt-get | debconf-set-selections
 
 # Install apt-fast
 RUN apt-get install -y --no-install-recommends \
-	apt-fast
+	apt-fast \
+	&& apt-get clean
 
 RUN DEBIAN_FRONTEND="noninteractive" apt-fast install -y --no-install-recommends \
 	git stow sudo micro neofetch
