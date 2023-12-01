@@ -37,7 +37,7 @@ ENV PATH="${PERLBREW_ROOT_DEFAULT}:${PERLBREW_PATH}:${PATH}"
 
 RUN mkdir -p "$HOME" "$PERLBREW_ROOT_DEFAULT" "$PERLBREW_ROOT"
 
-RUN curl -k -L https://install.perlbrew.pl | bash
+RUN curl -L https://install.perlbrew.pl | bash
 RUN echo 'source "$PERLBREW_ROOT/etc/bashrc"' >>".bash_profile"
 
 RUN perlbrew init
