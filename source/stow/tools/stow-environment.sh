@@ -261,10 +261,9 @@ function install_packages() {
     packages=("$@")
 
     if [ -x "$(command -v apt-get)" ]; then
-        DEBIAN_FRONTEND=noninteractive use_sudo apt-get update \
-            --allow-releaseinfo-change
-        DEBIAN_FRONTEND=noninteractive use_sudo apt-get -y install \
-            --no-install-recommends "${packages[@]}"
+        DEBIAN_FRONTEND=noninteractive use_sudo apt-get update --allow-releaseinfo-change
+        DEBIAN_FRONTEND=noninteractive use_sudo apt-get install -y --no-install-recommends \
+            "${packages[@]}"
     elif [ -x "$(command -v brew)" ]; then
         brew install "${packages[@]}"
 

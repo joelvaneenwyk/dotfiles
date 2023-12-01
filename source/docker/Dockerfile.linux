@@ -3,7 +3,7 @@ FROM ubuntu:20.04
 ARG USERNAME=default
 
 # ubuntu does not have sudo, so fetch it and install it
-RUN apt-get update && apt-get install -y sudo
+RUN apt-get update && apt-get install -y --no-install-recommends sudo
 
 # Create new user and disable password and gecos for later. See '--gecos' explained
 # well here: https://askubuntu.com/a/1195288/635348

@@ -20,10 +20,12 @@ apt update
 apt upgrade -y
 
 # Get git if we dont have it.
-apt install -y git
+apt install -y --no-install-recommends \
+    git
 
 # Get the linux-azure kernel to add hyper-v sockets to the guest
-apt install -y linux-azure
+apt install -y --no-install-recommends \
+    linux-azure
 
 if [ -f /var/run/reboot-required ]; then
     echo "A reboot is required in order to proceed with the install." >&2
@@ -37,10 +39,12 @@ fi
 export XRDP_PATH=~/git/src/github.com/neutrinolabs/xrdp
 
 # Install the xrdp service so we have the auto start behavior
-apt install -y xrdp
+apt install -y --no-install-recommends \
+    xrdp
 
 # Get XRDP requirements
-apt install -y autoconf libtool libssl-dev libpam0g-dev libx11-dev libxfixes-dev libxrandr-dev libjpeg-dev libfuse-dev nasm libopus-dev
+apt install -y --no-install-recommends \
+    autoconf libtool libssl-dev libpam0g-dev libx11-dev libxfixes-dev libxrandr-dev libjpeg-dev libfuse-dev nasm libopus-dev
 
 # Get XRDP
 if [ ! -d $XRDP_PATH ]; then
@@ -108,11 +112,13 @@ EOF
 export XORGXRDP_PATH=~/git/src/github.com/neutrinolabs/xorgxrdp
 
 # Get XORGXRDP requirements
-apt install -y autoconf libtool xserver-xorg-core xserver-xorg-dev
+apt install -y --no-install-recommends \
+    autoconf libtool xserver-xorg-core xserver-xorg-dev
 
 # 16.04.3 is missing fontutil.h
 if [ ! -f /usr/include/X11/fonts/fontutil.h ]; then
-    apt install -y libxfont1-dev
+    apt install -y --no-install-recommends \
+        libxfont1-dev
 fi
 
 # Get XORGXRDP

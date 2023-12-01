@@ -20,7 +20,7 @@ ARG DEBIAN_VERSION=stretch
 FROM debian:${DEBIAN_VERSION}
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     vim nano \
     sudo bzip2 gawk git curl wget ca-certificates patch \
     build-essential make autotools-dev automake autoconf libssl-dev libz-dev \

@@ -210,7 +210,7 @@ This repository was designed to be used with [GNU Stow](http://www.gnu.org/softw
 [Stow](https://www.gnu.org/software/stow/) is available for all linux and most other unix-like distributions via your favorite package manager.
 
 - `sudo pacman -S --noconfirm --needed stow`
-- `sudo apt-get -y install stow`
+- `sudo apt-get -y --no-install-recommends install stow`
 - `brew install stow`
 
 This repository, however, has Stow as a submodule and builds it [from source](https://savannah.gnu.org/git/?group=stow) on all platforms using a [modified version](https://github.com/joelvaneenwyk/stow) that fully supports Windows.

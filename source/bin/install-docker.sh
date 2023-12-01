@@ -2,7 +2,7 @@
 
 sudo apt-get remove docker docker-engine docker.io containerd runc
 
-sudo apt-get -y install \
+sudo apt-get install -y --no-install-recommends \
     apt-transport-https \
     ca-certificates \
     curl \
@@ -15,7 +15,7 @@ echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] 
     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 
 sudo apt-get update
-sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+sudo apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io
 
 sudo usermod -aG docker "$(whoami)"
 sudo systemctl enable docker.service
