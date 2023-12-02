@@ -3,20 +3,35 @@ local mycelio_root_dir = path.normalise(script_dir .. "../../..")
 
 local home = os.getenv("HOME") or os.getenv("USERPROFILE")
 local mycelio_config = path.normalise(mycelio_root_dir .. "/packages/shell/.poshthemes/mycelio.omp.json")
-local local_oh_my_posh_executable = path.normalise(home .. "/.local/go/bin/oh-my-posh.exe")
+local local_oh_my_posh_executable = ""
 local oh_my_posh_executable = ""
 local loaded = false
+local values = {
+    home .. "/AppData/Local/Programs/oh-my-posh/bin/oh-my-posh.exe",
+    home .. "/.local/go/bin/oh-my-posh.exe",
+    "C:\\Program Files (x86)\\oh-my-posh\\bin\\oh-my-posh.exe"
+}
 
-if not os.isfile(local_oh_my_posh_executable) then
-    local_oh_my_posh_executable = path.normalise("C:\\Program Files (x86)\\oh-my-posh\\bin\\oh-my-posh.exe")
+for key, value in pairs(values) do
+    if os.isfile(local_oh_my_posh_executable) then
+        break
+    else
+        if local_oh_my_posh_executable ~= "" then
+            print('[clink] Oh My Posh not found: ' .. local_oh_my_posh_executable)
+        end
+        local_oh_my_posh_executable = path.normalise(value)
+    end
 end
 
--- Try again
 if not os.isfile(local_oh_my_posh_executable) then
-    print('[clink] Oh My Posh not found: ' .. local_oh_my_posh_executable)
-elseif not os.isfile(mycelio_config) then
-    print('[clink] Oh My Posh config missing: ' .. mycelio_config)
-else
+    print('[clink] [ERROR] Oh My Posh not found: ' .. local_oh_my_posh_executable)
+end
+
+if not os.isfile(mycelio_config) then
+    print('[clink] [ERROR] Oh My Posh config missing: ' .. mycelio_config)
+end
+
+if os.isfile(local_oh_my_posh_executable) and os.isfile(mycelio_config) then
     local_oh_my_posh_executable = "\"" .. local_oh_my_posh_executable .. "\""
     io.popen(local_oh_my_posh_executable .. " --version")
     if not os.geterrorlevel == 0 then
@@ -24,9 +39,13 @@ else
     else
         oh_my_posh_executable = local_oh_my_posh_executable
         local process = io.popen(oh_my_posh_executable .. " init cmd --config " .. mycelio_config)
-        local command = process:read("*a")
-        load(command)()
-        print('[clink] Initialized Oh My Posh: ' .. local_oh_my_posh_executable)
+        if process ~= nil then
+            local command = process:read("*a")
+            load(command)()
+            print('[clink] Initialized Oh My Posh: ' .. local_oh_my_posh_executable)
+        else
+            print('[clink] [ERROR] Oh My Posh init failed: ' .. local_oh_my_posh_executable)
+        end
         loaded = true
     end
 end

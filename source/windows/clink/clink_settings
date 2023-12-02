@@ -1,6 +1,7 @@
 # name: Auto-update the Clink program files
-# type: boolean
-clink.autoupdate = False
+# type: enum
+# options: off,check,prompt,auto
+clink.autoupdate = off
 
 # name: Strips CR and LF chars on paste
 # type: enum
@@ -84,7 +85,7 @@ exec.cwd = True
 # type: boolean
 exec.dirs = True
 
-# name: Enable executable matching for 'complete'
+# name: Enable executable completions
 # type: boolean
 exec.enable = True
 
@@ -95,6 +96,10 @@ exec.path = True
 # name: Whitespace prefix matches files
 # type: boolean
 exec.space_prefix = True
+
+# name: Use default key bindings
+# type: boolean
+fzf.default_bindings = False
 
 # name: Sets how command history expansion is applied
 # type: enum

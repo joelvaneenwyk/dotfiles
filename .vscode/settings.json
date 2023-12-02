@@ -56,7 +56,10 @@
         "source/windows/clink-completions",
         "source/windows/clink",
         "macos/.hammerspoon",
-        "micro/.config"
+        "micro/.config",
+        "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/lldebugger/module/library",
+        "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library",
+        "${3rd}/luassert/library",
     ],
 
     "xml.validation.enabled": false,
@@ -246,6 +249,7 @@
         "**/blib/**": true
     },
     "files.associations": {
+        ".inputrc": "ini",
         "*.json.git": "jsonc",
         "*.omp.json": "jsonc",
         "*.in": "perl",
@@ -353,6 +357,7 @@
         "devcontainer",
         "distro",
         "dockerhub",
+        "doskey"
         "donjayamanne",
         "dotfile",
         "dotfiles",
@@ -415,5 +420,9 @@
     "svn.ignoreMissingSvnWarning": true,
     "esbonio.server.enabled": false,
     "search.useIgnoreFiles": false,
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    "Lua.workspace.checkThirdParty": true,
+    "Lua.format.enable": true,
+    "Lua.hint.setType": true,
+    "Lua.diagnostics.enable": true
 }
