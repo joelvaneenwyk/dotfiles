@@ -1,198 +1,5 @@
 @echo off
-
-if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 65001 >NUL 2>&1
-
-setlocal EnableExtensions EnableDelayedExpansion
-    set "_mycelio_root=%~dp0"
-    set "_starting_directory=%cd%"
-
-    :: Remove trailing slash if there is one
-    if "%_mycelio_root:~-1%"=="\" set "_mycelio_root=%_mycelio_root:~0,-1%"
-
-    set "USER[HKLM]=all users"
-    set "USER[HKCU]=%USERNAME%"
-    set "HIVE="
-    set "HOME=%USERPROFILE%"
-    set "COMMENT=echo"
-    set "SCRIPT=%~nx0"                                              &:# Script name
-    set "SNAME=%~n0"                                                &:# Script name, without its extension
-    set ^"ARG0=%0^"                                                 &:# Script invokation name
-    set ^"ARGS=%*^"                                                 &:# Argument line
-    set "SPROFILE=%_mycelio_root%\source\windows\bin\profile.bat"   &:# Full path to profile script
-    set "STOW=%_mycelio_root%\source\stow\bin\stow"
-    set "COMMAND=%~1"
-
-    set _error=0
-    set _clean=0
-    set _args=
-    set _arg_remainder=
-
-    :: Keep appending arguments until there are none left
-    :$ArgumentParse
-        if "%~1"=="docker" (
-            set COMMAND=%~1
-            goto:$ArgumentNext
-        )
-
-        if "%~1"=="wsl" (
-            set COMMAND=%~1
-            goto:$ArgumentNext
-        )
-
-        if not "!COMMAND!"=="docker" goto:$ArgumentParseRemainder
-        if not "!_container_platform!"=="" goto:$ArgumentParseRemainder
-
-        :: Setup Docker arguments
-        set _container_platform=%~1
-        set _container_name=mycelio:!_container_platform!
-        set _container_instance=mycelio_!_container_platform!
-        goto:$ArgumentNext
-
-        :$ArgumentParseRemainder
-            if "%~1"=="-c" set _clean=1
-            if "%~1"=="--clean" set _clean=1
-            if "%~1"=="clean" set _clean=1
-            if "%~1"=="cls" set _clean=1
-            set "_arg_remainder=!_arg_remainder! %1"
-
-        :$ArgumentNext
-        set "_args=!_args! %1"
-        shift
-    if not "%~1"=="" goto :$ArgumentParse
-
-    echo ======-------
-    echo Mycelio Environment Setup
-    echo ======-------
-    echo.
-    echo ##[cmd] %SCRIPT%!_args!
-
-    if not "!_clean!"=="1" goto:$SetupSkipClean
-        set MYCELIO_PROFILE_INITIALIZED=
-        if exist "%USERPROFILE%\.local\msys64" rmdir /s /q "%USERPROFILE%\.local\msys64" > nul 2>&1
-        if exist "%USERPROFILE%\.tmp" rmdir /s /q "%USERPROFILE%\.tmp" > nul 2>&1
-        if exist "%_mycelio_root%\.tmp" rmdir /s /q "%_mycelio_root%\.tmp" > nul 2>&1
-        if exist "%_mycelio_root%\source\stow\bin\stow" del "%_mycelio_root%\source\stow\bin\stow" > nul 2>&1
-        if exist "%_mycelio_root%\source\stow\bin\chkstow" del "%_mycelio_root%\source\stow\bin\chkstow" > nul 2>&1
-        if exist "%USERPROFILE%\Documents\PowerShell" rmdir /q /s "%USERPROFILE%\Documents\PowerShell" > nul 2>&1
-        if exist "%USERPROFILE%\Documents\WindowsPowerShell" rmdir /q /s "%USERPROFILE%\Documents\WindowsPowerShell" > nul 2>&1
-        echo [mycelio] Cleared out generated files and reinitializing environment.
-    :$SetupSkipClean
-
-    :: We intentionally setup autorun as soon as possible especially in case there is an
-    :: outdated or invalid version already there since it is called in all subsequent 'call'
-    :: commands we issue.
-    call :InstallAutoRun
-    if not "!ERRORLEVEL!"=="0" (
-        set _error=!ERRORLEVEL!
-        echo ERROR: AutoRun setup failed.
-        goto:$InitializeDone
-    )
-
-    call :RunPowerShell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
-    call :RunSudoPowerShell -Command "Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1"
-
-    call :Run "%_mycelio_root%\source\windows\bin\profile.bat"
-    if not "!ERRORLEVEL!"=="0" (
-        set _error=!ERRORLEVEL!
-        echo ERROR: Failed to setup Mycelio profile. 1>&2
-        goto:$InitializeDone
-    )
-
-    :: These files are missing from Windows Nano Server instances in Docker so either
-    :: copy them to local temp folder if running in host or copy them to system folder
-    :: if running in a container.
-    call :CheckSystemFile "Robocopy.exe"
-    call :CheckSystemFile "msiexec.exe"
-    call :CheckSystemFile "msi.dll"
-
-    :$CheckArguments
-    ::
-    :: e.g. init wsl --user username --distribution Ubuntu
-    ::
-    :: https://docs.microsoft.com/en-us/windows/wsl/reference
-    ::
-    if "%COMMAND%"=="wsl" (
-        wsl !_arg_remainder! -- bash -c ./setup.sh
-        exit /b !ERRORLEVEL!
-    )
-
-    ::
-    :: Initialize an Ubuntu container for testing.
-    ::
-    if "%COMMAND%"=="docker" (
-        call :Run docker rm --force "!_container_name!" > nul 2>&1
-        call :Run docker stop "!_container_instance!" > nul 2>&1
-
-        if "!_arg_remainder!"=="" set _arg_remainder=bash
-        set _shell_cmd=cd /usr/workspace ^&^& !_arg_remainder!
-
-        call :Run docker build --progress plain --rm -t "!_container_name!" -f "%_mycelio_root%\source\docker\Dockerfile.!_container_platform!" !_mycelio_root!
-        if errorlevel 1 (
-            echo Docker '!_container_name!' container build failed: '%_mycelio_root%\source\docker\Dockerfile.!_container_platform!'
-        ) else (
-            call :Run docker run -it --rm  --name "!_container_instance!" -v %cd%:/usr/workspace "%_container_name%" bash -c "!_shell_cmd!"
-        )
-
-        exit /b 0
-    )
-
-    call :RunPowerShell -File "%_mycelio_root%\source\powershell\Initialize-PowerShell.ps1"
-    call :RunPowerShell -File "%_mycelio_root%\source\powershell\Initialize-Environment.ps1" %*
-    if not "!ERRORLEVEL!"=="0" (
-        set _error=!ERRORLEVEL!
-    )
-
-    ::
-    :: Re-initialize environment paths now that dependencies are installed
-    ::
-    call :Run "%_mycelio_root%\source\windows\bin\env.bat"
-
-    :: The 'stow' tool should now be installed in our local Perl so we can
-    :: stow the Windows settings.
-    call :GroupStart "Make Stow"
-    call :Run "%_mycelio_root%\source\stow\tools\make-stow.bat"
-    if not "!ERRORLEVEL!"=="0" (
-        set _error=!ERRORLEVEL!
-        echo WARNING: Failed to build Stow for Windows. 1>&2
-        call :GroupEnd
-        goto:$InitializeDone
-    )
-    call :GroupEnd
-
-    :: Initialize 'msys2' ("Minimal System") environment with bash script. We call the shim directly because environment
-    :: may not read path properly after it has just been installed.
-    if not exist "%MSYS_SHELL%" (
-        set _error=55
-        echo ERROR: MSYS2 not installed. Initialization failed. 1>&2
-        goto:$InitializeDone
-    )
-
-    :: We intentionally use MINGW64 here because binaries that we compile (e.g., golang) need
-    :: to be able to run without the MSYS dynamic libraries.
-    call :Run "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "%_mycelio_root%" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
-    if not "!ERRORLEVEL!"=="0" (
-        set _error=!ERRORLEVEL!
-        echo ERROR: Shell setup with 'bash' failed. 1>&2
-        goto:$InitializeDone
-    )
-
-    :$InitializeDone
-    cd /d "%_starting_directory%"
-endlocal & (
-    set "MYCELIO_ROOT=%_mycelio_root%"
-    set "MYCELIO_PROFILE_INITIALIZED=%MYCELIO_PROFILE_INITIALIZED%"
-    set "MYCELIO_ERROR=%_error%"
-    set "PATH=%PATH%"
-    set "POWERSHELL=%_pwsh%"
-)
-
-if "%MYCELIO_ERROR%"=="0" (
-    echo Completed execution of `dotfiles` initialization.
-) else (
-    echo Execution of `dotfiles` initialization failed. Error code: '%MYCELIO_ERROR%' 1>&2
-)
-
-exit /b %MYCELIO_ERROR%
+goto:$Main
 
 ::
 :: Local functions
@@ -304,15 +111,15 @@ exit /b
 :CheckSystemFile %1=SystemFilename
     setlocal EnableExtensions EnableDelayedExpansion
 
-    set _deploy="%MYCELIO_ROOT%\artifacts\windows"
+    set "_deploy=%MYCELIO_ROOT%\artifacts\windows"
+    set "_deploy_path=%_deploy%\%~1"
+    if exist "!_deploy_path!" goto:$SystemDeploy
 
-    if exist "%_deploy%\%~1" goto:$SystemDeploy
-
-    if not exist "%MYCELIO_ROOT%\artifacts" mkdir "%MYCELIO_ROOT%\artifacts"
-    if not exist "%_deploy%" mkdir "%_deploy%"
+    if not exist "%MYCELIO_ROOT%\artifacts" call :Run mkdir "%MYCELIO_ROOT%\artifacts"
+    if not exist "%_deploy%" call :Run mkdir "%_deploy%"
 
     if exist "C:\Windows\System32\%~1" (
-        copy /B /Y /V "C:\Windows\System32\%~1" "%_deploy%\%~1" > nul 2>&1
+        call :Run copy /B /Y /V "C:\Windows\System32\%~1" "!_deploy_path!"
         echo Copied system file for Docker: '%~1'
     )
 
@@ -320,7 +127,7 @@ exit /b
     :: Windows Nano Server does not include Robocopy so copy our local version
     :: to the currently running server if it exists.
     if not exist "C:\Windows\System32\%~1" (
-        copy /B /Y /V "%_deploy%\%~1" "C:\Windows\System32\%~1" > nul 2>&1
+        call :Run copy /B /Y /V "%_deploy%\%~1" "C:\Windows\System32\%~1"
         echo Deployed file to 'C:\Windows\System32\' path: '%~1'
     )
 endlocal & exit /b
@@ -407,3 +214,204 @@ endlocal & (exit /b %_check_return_value%)
     echo Created registry key "%KEY%" value "AutoRun"
     :$InstallAutoRunComplete
 endlocal & (exit /b 0)
+
+::-----------------------------------
+:: Main
+::-----------------------------------
+:$Main
+    if exist "C:\Windows\System32\chcp.com" (
+        call "C:\Windows\System32\chcp.com" 65001 >NUL 2>&1
+    )
+    setlocal EnableExtensions EnableDelayedExpansion
+        set "_mycelio_root=%~dp0"
+        set "_starting_directory=%cd%"
+
+        :: Remove trailing slash if there is one
+        if "%_mycelio_root:~-1%"=="\" (
+            set "_mycelio_root=!_mycelio_root:~0,-1!"
+        )
+
+        set "USER[HKLM]=all users"
+        set "USER[HKCU]=%USERNAME%"
+        set "HIVE="
+        set "HOME=%USERPROFILE%"
+        set "COMMENT=echo"
+        set "SCRIPT=%~nx0"                                              &:# Script name
+        set "SNAME=%~n0"                                                &:# Script name, without its extension
+        set ^"ARG0=%0^"                                                 &:# Script invokation name
+        set ^"ARGS=%*^"                                                 &:# Argument line
+        set "SPROFILE=!_mycelio_root!\source\windows\bin\profile.bat"   &:# Full path to profile script
+        set "STOW=!_mycelio_root!\source\stow\bin\stow"
+        set "_mycelio_arg_command=%~1"
+
+        set _error=0
+        set _clean=0
+        set _args=
+        set _arg_remainder=
+
+        :: Keep appending arguments until there are none left
+        :$ArgumentParse
+            if "%~1"=="docker" (
+                set _mycelio_arg_command=%~1
+                goto:$ArgumentNext
+            )
+
+            if "%~1"=="wsl" (
+                set _mycelio_arg_command=%~1
+                goto:$ArgumentNext
+            )
+
+            if not "!_mycelio_arg_command!"=="docker" goto:$ArgumentParseRemainder
+            if not "!_container_platform!"=="" goto:$ArgumentParseRemainder
+
+            :: Setup Docker arguments
+            set "_container_platform=%~1"
+            goto:$ArgumentNext
+
+            :$ArgumentParseRemainder
+                if "%~1"=="-c" set _clean=1
+                if "%~1"=="--clean" set _clean=1
+                if "%~1"=="clean" set _clean=1
+                if "%~1"=="cls" set _clean=1
+                set "_arg_remainder=!_arg_remainder! %1"
+
+            :$ArgumentNext
+            set "_args=!_args! %1"
+            shift
+        if not "%~1"=="" goto :$ArgumentParse
+
+        if "!_container_platform!"=="" set "_container_platform=linux/amd64"
+        set "_container_name=mycelio:!_container_platform!"
+        set "_container_instance=mycelio_!_container_platform!"
+        echo ======-------
+        echo Mycelio Environment Setup
+        echo ======-------
+        echo.
+        echo ##[cmd] %SCRIPT%!_args!
+
+        if not "!_clean!"=="1" goto:$SetupSkipClean
+            set MYCELIO_PROFILE_INITIALIZED=
+            if exist "%USERPROFILE%\.local\msys64" rmdir /s /q "%USERPROFILE%\.local\msys64" > nul 2>&1
+            if exist "%USERPROFILE%\.tmp" rmdir /s /q "%USERPROFILE%\.tmp" > nul 2>&1
+            if exist "!_mycelio_root!\.tmp" rmdir /s /q "!_mycelio_root!\.tmp" > nul 2>&1
+            if exist "!_mycelio_root!\source\stow\bin\stow" del "!_mycelio_root!\source\stow\bin\stow" > nul 2>&1
+            if exist "!_mycelio_root!\source\stow\bin\chkstow" del "!_mycelio_root!\source\stow\bin\chkstow" > nul 2>&1
+            if exist "%USERPROFILE%\Documents\PowerShell" rmdir /q /s "%USERPROFILE%\Documents\PowerShell" > nul 2>&1
+            if exist "%USERPROFILE%\Documents\WindowsPowerShell" rmdir /q /s "%USERPROFILE%\Documents\WindowsPowerShell" > nul 2>&1
+            echo [mycelio] Cleared out generated files and reinitializing environment.
+        :$SetupSkipClean
+
+        :: We intentionally setup autorun as soon as possible especially in case there is an
+        :: outdated or invalid version already there since it is called in all subsequent 'call'
+        :: commands we issue.
+        call :InstallAutoRun
+        if not "!ERRORLEVEL!"=="0" (
+            set _error=!ERRORLEVEL!
+            echo ERROR: AutoRun setup failed.
+            goto:$InitializeDone
+        )
+
+        call :RunPowerShell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
+        call :RunSudoPowerShell -Command "Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1"
+
+        call :Run "!_mycelio_root!\source\windows\bin\profile.bat"
+        if not "!ERRORLEVEL!"=="0" (
+            set _error=!ERRORLEVEL!
+            echo ERROR: Failed to setup Mycelio profile. 1>&2
+            goto:$InitializeDone
+        )
+
+        :: These files are missing from Windows Nano Server instances in Docker so either
+        :: copy them to local temp folder if running in host or copy them to system folder
+        :: if running in a container.
+        call :CheckSystemFile "Robocopy.exe"
+        call :CheckSystemFile "msiexec.exe"
+        call :CheckSystemFile "msi.dll"
+
+        :$CheckArguments
+        ::
+        :: e.g. init wsl --user username --distribution Ubuntu
+        ::
+        :: https://docs.microsoft.com/en-us/windows/wsl/reference
+        ::
+        if not "%_mycelio_arg_command%"=="wsl" goto:$SkipWSL
+            call :Run wsl !_arg_remainder! -- bash -c ./setup.sh
+            exit /b !ERRORLEVEL!
+        :$SkipWSL
+
+        ::
+        :: Initialize an Ubuntu container for testing.
+        ::
+        if not "%_mycelio_arg_command%"=="docker" goto:$SkipDocker
+            call :Run docker rm --force "!_container_name!" > nul 2>&1
+            call :Run docker stop "!_container_instance!" > nul 2>&1
+
+            if "!_arg_remainder!"=="" set _arg_remainder=bash
+            set _shell_cmd=cd /usr/workspace ^&^& !_arg_remainder!
+
+            call :Run docker build --progress plain --rm -t "!_container_name!" -f "!_mycelio_root!\source\docker\Dockerfile.!_container_platform!" !_mycelio_root!
+            if errorlevel 1 (
+                echo Docker '!_container_name!' container build failed: '!_mycelio_root!\source\docker\Dockerfile.!_container_platform!'
+            ) else (
+                call :Run docker run -it --rm  --name "!_container_instance!" -v %cd%:/usr/workspace "%_container_name%" bash -c "!_shell_cmd!"
+            )
+
+            goto:$InitializeDone
+        :$SkipDocker
+
+        call :RunPowerShell -File "!_mycelio_root!\source\powershell\Initialize-PowerShell.ps1"
+        call :RunPowerShell -File "!_mycelio_root!\source\powershell\Initialize-Environment.ps1" %*
+        if not "!ERRORLEVEL!"=="0" (
+            set _error=!ERRORLEVEL!
+        )
+
+        ::
+        :: Re-initialize environment paths now that dependencies are installed
+        ::
+        call :Run "!_mycelio_root!\source\windows\bin\env.bat"
+
+        :: The 'stow' tool should now be installed in our local Perl so we can
+        :: stow the Windows settings.
+        call :GroupStart "Make Stow"
+        call :Run "!_mycelio_root!\source\stow\tools\make-stow.bat"
+        if not "!ERRORLEVEL!"=="0" (
+            set _error=!ERRORLEVEL!
+            echo WARNING: Failed to build Stow for Windows. 1>&2
+            call :GroupEnd
+            goto:$InitializeDone
+        )
+        call :GroupEnd
+
+        :: Initialize 'msys2' ("Minimal System") environment with bash script. We call the shim directly because environment
+        :: may not read path properly after it has just been installed.
+        if not exist "%MSYS_SHELL%" (
+            set _error=55
+            echo ERROR: MSYS2 not installed. Initialization failed. 1>&2
+            goto:$InitializeDone
+        )
+
+        :: We intentionally use MINGW64 here because binaries that we compile (e.g., golang) need
+        :: to be able to run without the MSYS dynamic libraries.
+        call :Run "%MSYS_SHELL%" -mingw64 -defterm -no-start -where "!_mycelio_root!" -shell bash -c "./setup.sh --home /c/Users/%USERNAME% !_args!"
+        if not "!ERRORLEVEL!"=="0" (
+            set _error=!ERRORLEVEL!
+            echo ERROR: Shell setup with 'bash' failed. 1>&2
+            goto:$InitializeDone
+        )
+
+        :$InitializeDone
+        cd /d "%_starting_directory%"
+    endlocal & (
+        set "MYCELIO_ROOT=%_mycelio_root%"
+        set "MYCELIO_PROFILE_INITIALIZED=%MYCELIO_PROFILE_INITIALIZED%"
+        set "MYCELIO_ERROR=%_error%"
+        set "PATH=%PATH%"
+        set "POWERSHELL=%_pwsh%"
+    )
+
+    if "%MYCELIO_ERROR%"=="0" (
+        echo Completed execution of `dotfiles` initialization: '%MYCELIO_ROOT%'
+    ) else (
+        echo Execution of `dotfiles` initialization failed. Error code: '%MYCELIO_ERROR%' 1>&2
+    )
+exit /b %MYCELIO_ERROR%
