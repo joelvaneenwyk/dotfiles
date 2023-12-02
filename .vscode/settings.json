@@ -13,6 +13,13 @@
         "editor.defaultFormatter": "foxundermoon.shell-format",
         "files.eol": "\n"
     },
+    "sonarlint.output.showAnalyzerLogs": true,
+    "sonarlint.disableTelemetry": true,
+    "sonarlint.connectedMode.project": {
+        "projectKey": "joelvaneenwyk_dotfiles"
+    },
+    "sonarlint.analyzerProperties": {},
+    "sonarlint.connectedMode.connections.sonarqube": [],
     "shellcheck.enable": true,
     "shellcheck.useWorkspaceRootAsCwd": true,
     "shellcheck.executablePath": "shellcheck",
