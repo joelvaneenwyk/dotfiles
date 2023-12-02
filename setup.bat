@@ -208,12 +208,20 @@ exit /b %MYCELIO_ERROR%
 endlocal & exit /b
 
 :RunSudo %*=Command with arguments
-    if "%GITHUB_ACTIONS%"=="" (
-        echo ##[cmd] %*
-    ) else (
-        echo [command]%*
-    )
-    call sudo %*
+    set "_sudo=C:\Program Files\gsudo\Current\gsudo.exe"
+    if exist "%_sudo%" goto:$SudoSet
+
+    set "_sudo=%USERPROFILE%\scoop\apps\gsudo\current\gsudo.exe"
+    if exist "%_sudo%" goto:$SudoSet
+
+    set "_cmd=%*"
+    goto:$SudoRun
+
+    :$SudoSet
+    set "_cmd="%_sudo%" %*"
+
+    :$SudoRun
+    call :Run %_cmd%
 endlocal & exit /b
 
 :RunPowerShell %*=Command with arguments
