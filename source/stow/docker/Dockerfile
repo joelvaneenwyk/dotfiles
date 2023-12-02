@@ -20,7 +20,7 @@ ARG DEBIAN_VERSION=stretch
 FROM debian:${DEBIAN_VERSION}
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     vim nano \
     sudo bzip2 gawk git curl wget ca-certificates patch \
     build-essential make autotools-dev automake autoconf libssl-dev libz-dev \
@@ -37,7 +37,7 @@ ENV PATH="${PERLBREW_ROOT_DEFAULT}:${PERLBREW_PATH}:${PATH}"
 
 RUN mkdir -p "$HOME" "$PERLBREW_ROOT_DEFAULT" "$PERLBREW_ROOT"
 
-RUN curl -k -L https://install.perlbrew.pl | bash
+RUN curl -L https://install.perlbrew.pl | bash
 RUN echo 'source "$PERLBREW_ROOT/etc/bashrc"' >>".bash_profile"
 
 RUN perlbrew init

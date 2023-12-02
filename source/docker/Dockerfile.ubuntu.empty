@@ -4,7 +4,8 @@ FROM ubuntu:${VARIANT}
 
 # Install gnupg to allow apt-key verification, time to allow profiling
 RUN apt-get update
-RUN apt-get install -y gnupg time
+RUN apt-get install -y --no-install-recommends \
+	gnupg time
 
 # Set up PPA for apt-fast
 RUN echo deb http://ppa.launchpad.net/apt-fast/stable/ubuntu ${VARIANT} main >> /etc/apt/sources.list.d/apt-fast.list \
@@ -19,9 +20,12 @@ RUN echo apt-fast apt-fast/dlflag boolean true | debconf-set-selections
 RUN echo apt-fast apt-fast/aptmanager string apt-get | debconf-set-selections
 
 # Install apt-fast
-RUN apt-get install -y apt-fast
+RUN apt-get install -y --no-install-recommends \
+	apt-fast \
+	&& apt-get clean
 
-RUN DEBIAN_FRONTEND="noninteractive" apt-fast install -y --no-install-recommends git stow sudo micro neofetch
+RUN DEBIAN_FRONTEND="noninteractive" apt-fast install -y --no-install-recommends \
+	git stow sudo micro neofetch
 
 # Add a default user and then switch over to that user
 RUN useradd -ms /bin/bash default
