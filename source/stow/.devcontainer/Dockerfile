@@ -7,7 +7,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
 
 RUN apt-get update
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 sudo wget curl unzip xclip git \
 software-properties-common build-essential gcc g++ make automake autoconf \
 bzip2 gawk git libssl-dev make patch \

@@ -6,10 +6,10 @@ ENV USERNAME=${USERNAME}
 
 # ubuntu:latest does not have sudo fetch it and install it
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
+    && apt-get install -y --no-install-recommends \
     sudo micro nano neofetch
 
-RUN sudo apt-get -y --only-upgrade --no-install-recommends install bash
+RUN sudo apt-get -y --no-install-recommends --only-upgrade install bash
 
 # Create new user and disable password and gecos for later. See '--gecos' explained
 # well here: https://askubuntu.com/a/1195288/635348
