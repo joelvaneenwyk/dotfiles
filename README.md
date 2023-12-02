@@ -8,6 +8,8 @@
 
 Custom config files (aka. "dotfiles") for Linux, macOS, and Windows that are deployed to target with [GNU Stow](https://www.gnu.org/software/stow/). It also contains scripts for basic provisioning to install useful applications for developers (e.g., VSCode, gcc, mutagen, go, etc.) and environment tweaks (e.g., nerd fonts).
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=joelvaneenwyk_dotfiles&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=joelvaneenwyk_dotfiles)
+
 ```ansi
       ██            ██     ████ ██  ██
      ░██           ░██    ░██░ ░░  ░██
