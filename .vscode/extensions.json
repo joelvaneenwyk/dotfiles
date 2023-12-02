@@ -4,12 +4,12 @@
         "timonwong.shellcheck",
         "mads-hartmann.bash-ide-vscode",
         "rogalmic.bash-debug",
-        // "bmalehorn.vscode-fish",
         "mhutchie.git-graph",
         "eamodio.gitlens",
         "donjayamanne.githistory",
         "jetmartin.bats",
         "ms-vscode.powershell",
-        "Koihik.vscode-lua-format"
+        "koihik.vscode-lua-format",
+        "github.vscode-github-actions"
     ]
 }
