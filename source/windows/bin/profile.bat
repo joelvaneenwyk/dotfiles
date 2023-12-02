@@ -39,6 +39,14 @@ setlocal EnableExtensions EnableDelayedExpansion
     :: This is not a new top cmd.exe instance
     if /i "!ARG1!"=="/c" goto:$SkipInit
 
+    call :FindTool clink_executable clink
+    if not exist "!clink_executable!" set "clink_executable=C:\Program Files (x86)\clink\clink_x64.exe"
+    if not exist "!clink_executable!" set "clink_executable=C:\Program Files\clink\clink_x64.exe"
+    if not exist "!clink_executable!" set "clink_executable=clink"
+    call :ClearErrorLevel
+    call "!clink_executable!" --version >NUL 2>&1
+    if errorlevel 1 set "clink_executable="
+
     ::
     :: This is a new top 'cmd.exe' instance so initialize it.
     ::
@@ -61,6 +69,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 endlocal & (
     set "MYCELIO_ROOT=%MYCELIO_ROOT%"
     set "MYCELIO_ENV_PATH=%MYCELIO_ENV_PATH%"
+    set "MYCELIO_CLINK=%clink_executable%"
     set "MYCELIO_PROFILE_INITIALIZED=1"
     set "MYCELIO_AUTORUN_INITIALIZED=1"
     set "MYCELIO_SKIP_INIT=%MYCELIO_SKIP_INIT%"
@@ -144,6 +153,33 @@ goto:$MycelioProfileEnd
 :SplitArgs
     set "ARG0=%1"
     set "ARG1=%2"
+exit /b
+
+:FindTool
+    setlocal EnableExtensions EnableDelayedExpansion
+        set _output_variable=%~1
+        set _file=%~2
+
+        :: If the variable already contains a valid path, then exit early
+        set _output=!%_output_variable%!
+        if exist "!_output!" goto:$FindToolDone
+
+        set _where=%SystemRoot%\System32\WHERE.exe
+        if not exist "%_where%" goto:$FindToolDone
+        "!_where!" /Q %_file%
+        if not "!ERRORLEVEL!"=="0" goto:$FindToolDone
+            for /f "tokens=* usebackq" %%a in (`"%_where%" %_file%`) do (
+                set _output=%%a
+                goto:$FindToolDone
+            )
+
+        :$FindToolDone
+        if not exist "!_output!" set _output=%~3
+        if not exist "!_output!" set _output=
+    endlocal & (
+        set "%_output_variable%=%_output%"
+        if not exist "%_output%" exit /b 1
+    )
 exit /b
 
 :GetRoot

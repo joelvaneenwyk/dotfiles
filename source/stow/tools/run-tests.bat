@@ -30,18 +30,18 @@ exit /b
     call "%_root:~0,-1%\tools\stow-environment.bat"
     if not "!ERRORLEVEL!"=="0" exit /b
 
-    set _env=%STOW_PERL_LOCAL_LIB%\.env
-    if exist "%_env%" del "%_env%"
-    if not "%GITHUB_ENV%"=="" set _env=%GITHUB_ENV%
+    set _perl_env=%STOW_PERL_LOCAL_LIB%\.env
+    if exist "%_perl_env%" del "%_perl_env%"
+    if not "%GITHUB_ENV%"=="" set _perl_env=%GITHUB_ENV%
 
     set _result_filename=%STOW_ROOT%\test_results_windows_%STOW_PERL_VERSION:.=_%.xml
-    echo STOW_TEST_RESULTS=%_result_filename%>>"!_env!"
+    echo STOW_TEST_RESULTS=%_result_filename%>>"!_perl_env!"
 
     set STOW_CPAN_LOGS=%PERL_CPANM_CONFIG_DIR%
     if "%STOW_CPAN_LOGS%"=="" set STOW_CPAN_LOGS=%USERPROFILE%\.cpan*
-    echo STOW_CPAN_LOGS=!STOW_CPAN_LOGS!\work\**\*.log>>"!_env!"
+    echo STOW_CPAN_LOGS=!STOW_CPAN_LOGS!\work\**\*.log>>"!_perl_env!"
 
-    echo Updated Environment: '!_env!'
+    echo Updated Environment: '!_perl_env!'
 
     :$SkipGitHubActionSetup
     del "%STOW_ROOT%\Build" > nul 2>&1

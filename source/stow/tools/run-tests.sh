@@ -144,7 +144,7 @@ function test_perl_version() {
         echo "test_results_${os_name}_${_perl_version}.xml" | awk '{print tolower($0)}'
     )"
 
-    _env=${GITHUB_ENV:-${STOW_PERL_LOCAL_LIB}/.env}
+    _perl_env=${GITHUB_ENV:-${STOW_PERL_LOCAL_LIB}/.env}
     _cpanm_root="$HOME/.cpanm/work"
     _env_test_path="$_test_result_output_path"
 
@@ -160,8 +160,8 @@ function test_perl_version() {
         _cpanm_logs="${_cpanm_logs//\//\\}"
     fi
 
-    echo "STOW_CPAN_LOGS=${_cpanm_logs}" | tee -a "$_env"
-    echo "STOW_TEST_RESULTS=${_env_test_path}" | tee -a "$_env"
+    echo "STOW_CPAN_LOGS=${_cpanm_logs}" | tee -a "$_perl_env"
+    echo "STOW_TEST_RESULTS=${_env_test_path}" | tee -a "$_perl_env"
 
     echo "✔ Exported paths for GitHub Action jobs."
 

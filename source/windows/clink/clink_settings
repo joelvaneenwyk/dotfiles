@@ -3,6 +3,8 @@
 # options: off,check,prompt,auto
 clink.autoupdate = off
 
+prompt.async = True
+
 # name: Strips CR and LF chars on paste
 # type: enum
 # options: delete,space,ampersand,crlf
