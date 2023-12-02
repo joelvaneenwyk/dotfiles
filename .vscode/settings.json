@@ -256,6 +256,7 @@
         "**/blib/**": true
     },
     "files.associations": {
+        ".sonarcloud.properties": "ini",
         "*.properties": "ini",
         "TODO": "markdown",
         "AUTHORS": "markdown",
