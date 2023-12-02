@@ -256,6 +256,12 @@
         "**/blib/**": true
     },
     "files.associations": {
+        "*.properties": "ini",
+        "TODO": "markdown",
+        "AUTHORS": "markdown",
+        "COPYING": "markdown",
+        "NEWS": "markdown",
+        "THANKS": "markdown",
         ".inputrc": "ini",
         "*.json.git": "jsonc",
         "*.omp.json": "jsonc",
