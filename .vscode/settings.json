@@ -437,5 +437,8 @@
     "Lua.workspace.checkThirdParty": true,
     "Lua.format.enable": true,
     "Lua.hint.setType": true,
-    "Lua.diagnostics.enable": true
+    "Lua.diagnostics.enable": true,
+    "perl.logLevel": 1,
+    "perl.showLocalVars": true,
+    "perl.useTaintForSyntaxCheck": true
 }
