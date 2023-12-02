@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+#
+# WinGet configuration for Joel Van Eenwyk dotfiles
+#
+# Install 'winget' using the following:
+#
+#   Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe
+#
+# WinGet commands to use the configuration:
+#
+#   winget configure -f configuration.dsc.yaml --accept-configuration-agreements
+
+properties:
+  assertions:
+    - resource: OsVersion
+      directives:
+        description: Verify min OS version requirement
+        module: Microsoft.Windows.Developer
+        allowPrerelease: true
+      settings:
+        MinVersion: 10.0.22621.1778
+  resources:
+    - resource: DeveloperMode
+      directives:
+        description: Enable Developer Mode
+        module: Microsoft.Windows.Developer
+        allowPrerelease: true
+      settings:
+        Ensure: Present
+    - resource: WinGetPackage
+      id: vsPackage
+      directives:
+        description: Install Visual Studio Build Tools
+        module: Microsoft.WinGet.DSC
+        allowPrerelease: false
+      settings:
+        id: Microsoft.VisualStudio.2022.BuildTools
+        source: winget
+    - resource: InstallVSConfig
+      dependsOn:
+        - vsPackage
+      directives:
+        description: Install required VS workloads
+        module: Microsoft.VisualStudio.DSC
+        allowPrerelease: true
+      settings:
+        productId: Microsoft.VisualStudio.Product.Enterprise
+        channelId: VisualStudio.17.Release
+        vsconfigFile: ${WinGetConfigRoot}\..\.vsconfig
+  configurationVersion: 0.2.0

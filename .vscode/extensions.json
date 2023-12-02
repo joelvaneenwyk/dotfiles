@@ -10,6 +10,11 @@
         "jetmartin.bats",
         "ms-vscode.powershell",
         "koihik.vscode-lua-format",
-        "github.vscode-github-actions"
+        "github.vscode-github-actions",
+        "jeff-hykin.better-shellscript-syntax",
+        "jeff-hykin.better-dockerfile-syntax",
+        "tetradresearch.vscode-h2o",
+        "xshrim.txt-syntax",
+        "vsls-contrib.gistfs"
     ]
 }

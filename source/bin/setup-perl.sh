@@ -10,10 +10,10 @@ function import_mycelio_library() {
 
     root="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" &>/dev/null && cd ../../ && pwd)"
 
-    # shellcheck source=source/bin/mycelio.sh
-    source "$root/source/bin/mycelio.sh"
+    # shellcheck source=source/shell/main.sh
+    source "$root/source/shell/main.sh"
 
-    _setup_environment
+    setup_environment
 }
 
 function setup_perl() {

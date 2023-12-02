@@ -24,7 +24,8 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
         with:
-          submodules: recursive
+          # Get all history so we can generate ChangeLog
+          fetch-depth: 0
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master

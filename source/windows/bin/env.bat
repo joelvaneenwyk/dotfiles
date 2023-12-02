@@ -29,6 +29,7 @@ setlocal EnableDelayedExpansion
         "!_powershell!" -NoLogo -NoProfile -File "%_mycelio_root%\source\powershell\Write-EnvironmentSetup.ps1" -ScriptPath "%_mycelio_env%"
     :$SkipPowerShellSetup
 endlocal & (
+    set "MYCELEIO_ROOT=%_mycelio_root%"
     set "MYCELIO_POWERSHELL=%_powershell%"
     set "MYCELIO_ENV=%_mycelio_env%"
 )
@@ -36,4 +37,5 @@ endlocal & (
 if not exist "%MYCELIO_POWERSHELL%" exit /b 2
 if not exist "%MYCELIO_ENV%" exit /b 3
 
+CALL "%MYCELIO_ROOT%\source\stow\tools\stow-environment.bat"
 call "%MYCELIO_ENV%"
