@@ -65,15 +65,16 @@ Function Initialize-PowerShell {
         New-Item -ItemType directory -Path "$tempFolder" | Out-Null
     }
 
+    # DevSkim: ignore DS440020,DS440000
     if ([enum]::GetNames([Net.SecurityProtocolType]) -match 'Tls12') {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12  # DevSkim: ignore DS440000,DS440020
     }
     else {
-        # If you use PowerShell with .Net Framework 2.0 and you want to use TLS1.2, you have
+        # If you use PowerShell with .Net Framework 2.0 and you want to use v1.2 of TLS, you have
         # to set the value 3072 for the [System.Net.ServicePointManager]::SecurityProtocol
         # property which internally is Tls12.
         [Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject(
-            [System.Net.SecurityProtocolType], 3072);
+            [System.Net.SecurityProtocolType], 3072);  # DevSkim: ignore DS440020
     }
 
     if (Test-CommandValid "Install-Module") {
