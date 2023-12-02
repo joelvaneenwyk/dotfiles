@@ -44,7 +44,7 @@ sub create_build_script {
         # },
         meta_add => {
             resources => {
-                license => 'http://www.gnu.org/licenses/gpl-2.0.html' ,
+                license => 'https://www.gnu.org/licenses/gpl-2.0.html' ,
                 homepage => 'https://savannah.gnu.org/projects/stow',
 
                 # Module::Build forces us to use v1.4 of the CPAN Meta Spec:
