@@ -85,7 +85,7 @@ curl -i https://git.io -F "url=https://gist.githubusercontent.com/joelvaneenwyk/
 
 1. Clone the repo from your home directory:
    > `git clone -c core.symlinks=true --recursive https://github.com/joelvaneenwyk/dotfiles.git "%USERPROFILE%\.dotfiles"`
-2. Enter the `%USERPROFILE%\.dotfiles` directory and run `init`
+2. Enter the `%USERPROFILE%\.dotfiles` directory and run `setup`
 3. OPTIONAL: To setup commit signing, download and install [Gpg4win - Kleopatra](https://www.gpg4win.org/index.html)
    - Import Secret Key from secure location e.g. `{cloud}\Documents\Keys`
 
