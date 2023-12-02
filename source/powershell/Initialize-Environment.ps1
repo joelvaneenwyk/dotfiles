@@ -592,24 +592,20 @@ Function Get-TexLive {
     try {
         Write-Host "::group::Get TexLive"
 
-        if ($IsWindows -or $ENV:OS) {
-            Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-        }
-
         if ( -not(Test-Path -Path "$script:MycelioTempDir") ) {
             New-Item -ItemType directory -Path "$script:MycelioTempDir" | Out-Null
         }
 
-        $tempTexFolder = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "texlive-tmp"
-        $tempTexTargetFolder = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "texlive-install"
-        $tempTexTargetInstall = Join-Path -Path "$tempTexTargetFolder" -ChildPath "install-tl-windows.bat"
-        $tempTexArchive = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "install-tl.zip"
+        $tempTexFolder = Join-Path -Path "$script:MycelioLocalDir" -ChildPath 'texlive-tmp'
+        $tempTexTargetFolder = Join-Path -Path "$script:MycelioLocalDir" -ChildPath 'texlive-install'
+        $tempTexTargetInstall = Join-Path -Path "$tempTexTargetFolder" -ChildPath 'install-tl-windows.bat'
+        $tempTexArchive = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath 'install-tl.zip'
 
         if (Test-Path -Path "$tempTexTargetInstall" -PathType Leaf) {
             Write-Host "Installer already available: '$tempTexTargetInstall'"
         }
         else {
-            Get-File -Url "https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip" -Filename "$tempTexArchive"
+            Get-File -Url 'https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip' -Filename "$tempTexArchive"
 
             # Remove tex folder if it exists
             If (Test-Path "$tempTexFolder" -PathType Any) {
@@ -656,8 +652,8 @@ Function Get-TexLive {
         $env:TEXMFVAR = "$env:TEXLIVE_INSTALL_TEXMFVAR"
         $env:TEXMFCONFIG = "$env:TEXLIVE_INSTALL_TEXMFCONFIG"
 
-        $texLiveProfile = Join-Path -Path "$tempTexTargetFolder" -ChildPath "install-texlive.profile"
-        Set-Content -Path "$texLiveProfile" -Value @"
+        $texLiveProfile = Join-Path -Path "$tempTexTargetFolder" -ChildPath 'install-texlive.profile'
+        Set-Content -Path "$texLiveProfile" -Value @'
 # It will NOT be updated and reflects only the
 # installation profile at installation time.
 
@@ -687,13 +683,13 @@ tlpdbopt_sys_bin /usr/local/bin
 tlpdbopt_sys_info /usr/local/share/info
 tlpdbopt_sys_man /usr/local/share/man
 tlpdbopt_w32_multi_user 0
-"@
+'@
 
         # Update PATH environment as we need to make sure 'cmd.exe' is available since the TeX Live manager
         # expected it to work.
         $env:Path = "$ENV:SystemRoot\System32\;$env:TEXLIVE_BIN;$env:Path"
 
-        $texExecutable = Join-Path -Path "$env:TEXLIVE_BIN" -ChildPath "tex.exe"
+        $texExecutable = Join-Path -Path "$env:TEXLIVE_BIN" -ChildPath 'tex.exe'
         If (Test-Path "$texExecutable" -PathType Leaf) {
             Write-Host "Skipped install. TeX already exists: '$texExecutable'"
         }
@@ -703,23 +699,23 @@ tlpdbopt_w32_multi_user 0
 
             # We redirect stderr to stdout because of a seemingly unavoidable error that we get during
             # install e.g. 'Use of uninitialized value $deftmflocal in string at C:\...\texlive-install\install-tl line 1364.'
-            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ""$env:TEXLIVE_INSTALL" -no-gui -portable -profile "$texLiveProfile"" 2>&1
+            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ''$env:TEXLIVE_INSTALL" -no-gui -portable -profile "$texLiveProfile"" 2>&1
 
             $ErrorActionPreference = $errorPreference
         }
         else {
-            Write-Host "TeX Live install process only supported on Windows."
+            Write-Host 'TeX Live install process only supported on Windows.'
         }
 
         if ($IsWindows -or $ENV:OS) {
-            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ""$env:TEXLIVE_BIN\tlmgr.bat" update -all"
+            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ''$env:TEXLIVE_BIN\tlmgr.bat" update -all"
         }
     }
     catch [Exception] {
-        Write-Host "Failed to download and extract TeX Live.", $_.Exception.Message
+        Write-Host 'Failed to download and extract TeX Live.', $_.Exception.Message
     }
     finally {
-        Write-Host "::endgroup::"
+        Write-Host '::endgroup::'
     }
 }
 
@@ -734,7 +730,7 @@ Function Start-Bash() {
         & "$script:MsysTargetDir/usr/bin/bash.exe" @('-lc') + @Args
     }
     else {
-        Write-Host "Skipped command. This is only supported on Windows."
+        Write-Host 'Skipped command. This is only supported on Windows.'
     }
 }
 
@@ -752,7 +748,7 @@ Function Test-SymbolicLink {
 
     # We redirect stderr to stdout because of a seemingly unavoidable error that we get during
     # install e.g. 'Use of uninitialized value $deftmflocal in string at C:\...\texlive-install\install-tl line 1364.'
-    & "$ENV:SystemRoot\System32\cmd.exe" /d /c "mklink "$linkTargetTemp" "$linkSource" > nul 2>&1"
+    & "$ENV:SystemRoot\System32\cmd.exe" /d /c 'mklink '$linkTargetTemp" "$linkSource" > nul 2>&1"
     if ($? -and (Test-Path $linkTargetTemp)) {
         $createdSymbolicLink = $true
         Remove-Item $linkTargetTemp
@@ -764,21 +760,21 @@ Function Test-SymbolicLink {
 }
 Function Install-MSYS2 {
     $script:MsysTargetDir = "$script:MycelioLocalDir/msys64"
-    $script:MsysInstaller = "msys2-base-x86_64-20221028.sfx.exe"
+    $script:MsysInstaller = 'msys2-base-x86_64-20221028.sfx.exe'
     $script:MsysArchive = "$script:MycelioArchivesDir/$script:MsysInstaller"
     $script:MsysUrl = "https://github.com/msys2/msys2-installer/releases/download/2022-10-28/$script:MsysInstaller"
 
     if ( -not(Test-Path -Path "$script:MsysTargetDir/mingw64.exe" -PathType Leaf) ) {
         if ( -not(Test-Path -Path "$script:MsysArchive" -PathType Leaf) ) {
-            Write-Host "::group::Download MSYS2"
+            Write-Host '::group::Download MSYS2'
             Get-File -Url "$script:MsysUrl" -Filename "$script:MsysArchive"
-            Write-Host "::endgroup::"
+            Write-Host '::endgroup::'
         }
 
         if ( -not(Test-Path -Path "$script:MsysTargetDir/usr/bin/bash.exe" -PathType Leaf) ) {
-            Write-Host "::group::Install MSYS2"
+            Write-Host '::group::Install MSYS2'
             Expand-File -Path "$script:MsysArchive" -Destination "$script:MycelioLocalDir"
-            Write-Host "::endgroup::"
+            Write-Host '::endgroup::'
         }
     }
 
@@ -786,7 +782,7 @@ Function Install-MSYS2 {
     $initializedFile = "$script:MsysTargetDir/.initialized"
 
     if (Test-Path -Path "$script:MsysTargetDir/usr/bin/bash.exe" -PathType Leaf) {
-        $mycelioRootCygwin = (& "$script:MsysTargetDir/usr/bin/cygpath.exe" "$script:MycelioRoot").TrimEnd("/")
+        $mycelioRootCygwin = (& "$script:MsysTargetDir/usr/bin/cygpath.exe" "$script:MycelioRoot").TrimEnd('/')
 
         # Create a file that gets automatically called after installation which will silence the
         # clear that happens during a normal install. This may be useful for users by default but
@@ -839,7 +835,7 @@ fi
 "@
 
         if (($IsWindows -or $ENV:OS) -and [String]::IsNullOrEmpty("$env:MSYSTEM")) {
-            $env:MSYS = "winsymlinks:native"
+            $env:MSYS = 'winsymlinks:native'
 
             if (-not (Test-Path -Path "$initializedFile" -PathType Leaf)) {
                 $homeOriginal = $env:HOME
@@ -847,16 +843,16 @@ fi
 
                 # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
                 # as the initial upgrade of msys2 results in it shutting down the console.
-                Write-Host "::group::Initialize MSYS2 Package Manager"
+                Write-Host '::group::Initialize MSYS2 Package Manager'
                 Start-Bash "echo 'First run of MSYS2 to trigger post install.'"
 
-                Write-Host "::group::Upgrade MSYS2 Packages"
+                Write-Host '::group::Upgrade MSYS2 Packages'
                 # Upgrade all packages
                 Start-Bash 'pacman --noconfirm -Syuu'
 
                 # Clean entire package cache
                 Start-Bash 'pacman --noconfirm -Scc'
-                Write-Host "::endgroup::"
+                Write-Host '::endgroup::'
 
                 $env:HOME = "$homeOriginal"
             }
@@ -877,11 +873,11 @@ Function Install-Scoop {
     param()
 
     try {
-        Write-Host "::group::Install Scoop"
+        Write-Host '::group::Install Scoop'
 
-        if (-not(Test-CommandValid "scoop")) {
+        if (-not(Test-CommandValid 'scoop')) {
             Write-Host "Installing 'scoop' package manager..."
-            Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+            Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')  # DevSkim: ignore DS104456
         }
     }
     catch [Exception] {
@@ -1209,15 +1205,15 @@ Function Initialize-Environment {
         $script:ScriptDir = Split-Path $ScriptPath -Parent
     }
 
-    if ([enum]::GetNames([Net.SecurityProtocolType]) -match 'Tls12') {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    if ([enum]::GetNames([Net.SecurityProtocolType]) -match 'Tls12') {  # DevSkim: ignore DS440000,DS440020
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12  # DevSkim: ignore DS440000,DS440020
     }
     else {
         # If you use PowerShell with .Net Framework 2.0 and you want to use TLS1.2, you have
         # to set the value 3072 for the [System.Net.ServicePointManager]::SecurityProtocol
         # property which internally is Tls12.
         [Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject(
-            [System.Net.SecurityProtocolType], 3072);
+            [System.Net.SecurityProtocolType], 3072);  # DevSkim: ignore DS440020
     }
     Write-Host "PowerShell v$($host.Version)"
 

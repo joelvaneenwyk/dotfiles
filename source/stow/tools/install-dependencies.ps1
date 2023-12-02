@@ -236,24 +236,20 @@ Function Get-TexLive {
     try {
         Write-Host "::group::Get TexLive"
 
-        if ($IsWindows -or $ENV:OS) {
-            Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-        }
-
         if ( -not(Test-Path -Path "$script:StowTempDir") ) {
             New-Item -ItemType directory -Path "$script:StowTempDir" | Out-Null
         }
 
-        $tempTexFolder = Join-Path -Path "$script:StowTempDir" -ChildPath "texlive-tmp"
-        $tempTexTargetFolder = Join-Path -Path "$script:StowTempDir" -ChildPath "texlive-install"
-        $tempTexTargetInstall = Join-Path -Path "$tempTexTargetFolder" -ChildPath "install-tl-windows.bat"
-        $tempTexArchive = Join-Path -Path "$script:StowArchivesDir" -ChildPath "install-tl.zip"
+        $tempTexFolder = Join-Path -Path "$script:StowTempDir" -ChildPath 'texlive-tmp'
+        $tempTexTargetFolder = Join-Path -Path "$script:StowTempDir" -ChildPath 'texlive-install'
+        $tempTexTargetInstall = Join-Path -Path "$tempTexTargetFolder" -ChildPath 'install-tl-windows.bat'
+        $tempTexArchive = Join-Path -Path "$script:StowArchivesDir" -ChildPath 'install-tl.zip'
 
         if (Test-Path -Path "$tempTexTargetInstall" -PathType Leaf) {
             Write-Host "Installer already available: '$tempTexTargetInstall'"
         }
         else {
-            Get-File -Url "https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip" -Filename "$tempTexArchive"
+            Get-File -Url 'https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip' -Filename "$tempTexArchive"
 
             # Remove tex folder if it exists
             If (Test-Path "$tempTexFolder" -PathType Any) {
@@ -297,8 +293,8 @@ Function Get-TexLive {
         $env:TEXMFVAR = "$env:TEXLIVE_INSTALL_TEXMFVAR"
         $env:TEXMFCONFIG = "$env:TEXLIVE_INSTALL_TEXMFCONFIG"
 
-        $texLiveProfile = Join-Path -Path "$tempTexTargetFolder" -ChildPath "install-texlive.profile"
-        Set-Content -Path "$texLiveProfile" -Value @"
+        $texLiveProfile = Join-Path -Path "$tempTexTargetFolder" -ChildPath 'install-texlive.profile'
+        Set-Content -Path "$texLiveProfile" -Value @'
 # It will NOT be updated and reflects only the
 # installation profile at installation time.
 
@@ -328,13 +324,13 @@ tlpdbopt_sys_bin /usr/local/bin
 tlpdbopt_sys_info /usr/local/share/info
 tlpdbopt_sys_man /usr/local/share/man
 tlpdbopt_w32_multi_user 0
-"@
+'@
 
         # Update PATH environment as we need to make sure 'cmd.exe' is available since the TeX Live manager
         # expected it to work.
         $env:Path = "$ENV:SystemRoot\System32\;$env:TEXLIVE_BIN;$env:Path"
 
-        $texExecutable = Join-Path -Path "$env:TEXLIVE_BIN" -ChildPath "tex.exe"
+        $texExecutable = Join-Path -Path "$env:TEXLIVE_BIN" -ChildPath 'tex.exe'
         If (Test-Path "$texExecutable" -PathType Leaf) {
             Write-Host "Skipped install. TeX already exists: '$texExecutable'"
         }
@@ -344,23 +340,23 @@ tlpdbopt_w32_multi_user 0
 
             # We redirect stderr to stdout because of a seemingly unavoidable error that we get during
             # install e.g. 'Use of uninitialized value $deftmflocal in string at C:\...\texlive-install\install-tl line 1364.'
-            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ""$env:TEXLIVE_INSTALL" -no-gui -portable -profile "$texLiveProfile"" 2>&1
+            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ''$env:TEXLIVE_INSTALL" -no-gui -portable -profile "$texLiveProfile"" 2>&1
 
             $ErrorActionPreference = $errorPreference
         }
         else {
-            Write-Host "TeX Live install process only supported on Windows."
+            Write-Host 'TeX Live install process only supported on Windows.'
         }
 
         if ($IsWindows -or $ENV:OS) {
-            & "$ENV:SystemRoot\System32\cmd.exe" /d /c "call "$env:TEXLIVE_BIN/tlmgr.bat" update -all"
+            & "$ENV:SystemRoot\System32\cmd.exe" /d /c 'call '$env:TEXLIVE_BIN/tlmgr.bat" update -all"
         }
     }
     catch [Exception] {
-        Write-Host "Failed to download and extract TeX Live.", $_.Exception.Message
+        Write-Host 'Failed to download and extract TeX Live.', $_.Exception.Message
     }
     finally {
-        Write-Host "::endgroup::"
+        Write-Host '::endgroup::'
     }
 }
 
@@ -375,19 +371,19 @@ Function Start-Bash() {
         & "$script:MsysTargetDir/usr/bin/bash.exe" @('-lc') + @Args
     }
     else {
-        Write-Host "Skipped command. This is only supported on Windows."
+        Write-Host 'Skipped command. This is only supported on Windows.'
     }
 }
 
 Function Install-Git {
     # Install git so we can clone repositories
     try {
-        $StowGitDir = Join-Path -Path "$script:StowTempDir" -ChildPath "git"
-        $StowGitBinDir = Join-Path -Path "$StowGitDir" -ChildPath "cmd"
-        $script:StowGit = Join-Path -Path "$StowGitBinDir" -ChildPath "git.exe"
+        $StowGitDir = Join-Path -Path "$script:StowTempDir" -ChildPath 'git'
+        $StowGitBinDir = Join-Path -Path "$StowGitDir" -ChildPath 'cmd'
+        $script:StowGit = Join-Path -Path "$StowGitBinDir" -ChildPath 'git.exe'
 
         if (-Not (Test-Path -Path "$script:StowGit" -PathType Leaf)) {
-            $gitFilename = "MinGit-2.33.0.2-64-bit.zip"
+            $gitFilename = 'MinGit-2.33.0.2-64-bit.zip'
             $gitArchive = Join-Path -Path "$script:StowArchivesDir" -ChildPath "$gitFilename"
             Get-File -Url "https://github.com/git-for-windows/git/releases/download/v2.33.0.windows.2/$gitFilename" -Filename "$gitArchive"
             Expand-File -Path "$gitArchive" -DestinationPath "$StowGitDir"
@@ -405,7 +401,7 @@ Function Get-TexInfo {
             & "$script:StowGit" -C "$script:StowTempDir/texinfo" pull
         }
         else {
-            & "$script:StowGit" clone "https://git.savannah.gnu.org/git/texinfo.git" "$script:StowTempDir/texinfo"
+            & "$script:StowGit" clone 'https://git.savannah.gnu.org/git/texinfo.git' "$script:StowTempDir/texinfo"
         }
 
         if (Test-Path -Path "$script:StowTempDir/autoconf") {
@@ -413,11 +409,11 @@ Function Get-TexInfo {
             & "$script:StowGit" -C "$script:StowTempDir/autoconf" pull
         }
         else {
-            & "$script:StowGit" clone "git://git.sv.gnu.org/autoconf" "$script:StowTempDir/autoconf"
+            & "$script:StowGit" clone 'git://git.sv.gnu.org/autoconf' "$script:StowTempDir/autoconf"
         }
     }
     catch [Exception] {
-        Write-Host "Failed to clone texinfo and autoconf repositories.", $_.Exception.Message
+        Write-Host 'Failed to clone texinfo and autoconf repositories.', $_.Exception.Message
     }
 }
 Function Install-Perl {
@@ -425,7 +421,7 @@ Function Install-Perl {
     # that we always have a version to use.
     try {
         if (-Not (Test-Path -Path "$script:StowTempDir/perl/portableshell.bat" -PathType Leaf)) {
-            $strawberryPerlVersion = "5.12.3.0"
+            $strawberryPerlVersion = '5.12.3.0'
             $strawberryPerlArchive = "strawberry-perl-$strawberryPerlVersion-portable.zip"
             $strawberyPerlUrl = "https://strawberryperl.com/download/$strawberryPerlVersion/$strawberryPerlArchive"
             Get-File -Url "$strawberyPerlUrl" -Filename "$script:StowArchivesDir/$strawberryPerlArchive"
@@ -433,7 +429,7 @@ Function Install-Perl {
         }
     }
     catch [Exception] {
-        Write-Host "Failed to install Strawberry Perl.", $_.Exception.Message
+        Write-Host 'Failed to install Strawberry Perl.', $_.Exception.Message
     }
 }
 
@@ -442,18 +438,18 @@ Function Install-MSYS2 {
     $script:MsysArchive = "$script:StowArchivesDir/msys2.exe"
 
     if ( -not(Test-Path -Path "$script:MsysTargetDir/mingw64.exe" -PathType Leaf) ) {
-        $msysInstaller = "https://github.com/msys2/msys2-installer/releases/download/2021-07-25/msys2-base-x86_64-20210725.sfx.exe"
+        $msysInstaller = 'https://github.com/msys2/msys2-installer/releases/download/2021-07-25/msys2-base-x86_64-20210725.sfx.exe'
 
         if ( -not(Test-Path -Path "$script:MsysArchive" -PathType Leaf) ) {
-            Write-Host "::group::Download MSYS2"
+            Write-Host '::group::Download MSYS2'
             Get-File -Url "$msysInstaller" -Filename "$script:MsysArchive"
-            Write-Host "::endgroup::"
+            Write-Host '::endgroup::'
         }
 
         if ( -not(Test-Path -Path "$script:MsysTargetDir/usr/bin/bash.exe" -PathType Leaf) ) {
-            Write-Host "::group::Install MSYS2"
+            Write-Host '::group::Install MSYS2'
             Expand-File -Path "$script:MsysArchive" -Destination "$script:StowTempDir"
-            Write-Host "::endgroup::"
+            Write-Host '::endgroup::'
         }
     }
 
@@ -464,30 +460,30 @@ Function Install-MSYS2 {
         # Create a file that gets automatically called after installation which will silence the
         # clear that happens during a normal install. This may be useful for users by default but
         # this makes us lose the rest of the console log which is not great for our use case here.
-        Set-Content -Path "$postInstallScript" -Value @"
+        Set-Content -Path "$postInstallScript" -Value @'
 MAYBE_FIRST_START=false
 [ -f '/usr/bin/update-ca-trust' ] && sh /usr/bin/update-ca-trust
 echo '[stow] Post-install complete.'
-"@
+'@
 
         if (($IsWindows -or $ENV:OS) -and [String]::IsNullOrEmpty("$env:MSYSTEM")) {
             # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
             # as the initial upgrade of msys2 results in it shutting down the console.
-            Write-Host "::group::Initialize MSYS2 Package Manager"
+            Write-Host '::group::Initialize MSYS2 Package Manager'
             Start-Bash "echo 'Validate that shell can print data.'"
             $msys2_shell = "$script:MsysTargetDir/msys2_shell.cmd"
             $msys2_shell += " -mingw64 -defterm -no-start -where $script:StowRoot -shell bash"
-            $msys2_shell += " -c ./tools/install-dependencies.sh"
+            $msys2_shell += ' -c ./tools/install-dependencies.sh'
             & "$ENV:SystemRoot\System32\cmd.exe" /d /s /c "$msys2_shell"
-            Write-Host "::endgroup::"
+            Write-Host '::endgroup::'
 
-            Write-Host "::group::Upgrade MSYS2 Packages"
+            Write-Host '::group::Upgrade MSYS2 Packages'
             # Upgrade all packages
             Start-Bash 'pacman --noconfirm -Syuu'
 
             # Clean entire package cache
             Start-Bash 'pacman --noconfirm -Scc'
-            Write-Host "::endgroup::"
+            Write-Host '::endgroup::'
 
             if (Test-Path -Path "$postInstallScript" -PathType Leaf) {
                 Remove-Item -Force "$postInstallScript" | Out-Null
@@ -509,7 +505,7 @@ echo '[stow] Post-install complete.'
 }
 
 Function Install-Toolset {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12  # DevSkim: ignore DS440000,DS440020
 
     $script:StowRoot = Resolve-Path -Path "$PSScriptRoot/.."
 

@@ -11,8 +11,9 @@
 
 .EXAMPLE
 
+
 `Set-ExecutionPolicy RemoteSigned -scope CurrentUser; iwr -useb git.io/mycelio.ps1 | iex`
-`Set-ExecutionPolicy RemoteSigned -scope CurrentUser; iwr -useb https://gist.github.com/joelvaneenwyk/83d48a63cc1c25fd62fb18a5ba49ff9d/raw/6c42aad839c8bdf0ef8a1a9a5fcb9f21a4a933c7/mycelio.ps1 | iex`
+`Set-ExecutionPolicy RemoteSigned -scope CurrentUser; iwr -useb https://gist.github.com/joelvaneenwyk/83d48a63cc1c25fd62fb18a5ba49ff9d/raw/6c42aad839c8bdf0ef8a1a9a5fcb9f21a4a933c7/mycelio.ps1 | iex`  # DevSkim: ignore DS1004456,DS113853,DS104456
 
 .DESCRIPTION
     Provision the environment with basic set of tools and utilities for common use
@@ -24,7 +25,7 @@
         - curl -i https://git.io -F "url=https://gist.githubusercontent.com/joelvaneenwyk/83d48a63cc1c25fd62fb18a5ba49ff9d/raw" -F "code=mycelio.ps1"
 #>
 
-using namespace System.Net.Http;
+using namespace System.Net.Http
 
 Function Initialize-PowerShell {
     Write-Host "PowerShell v$($host.Version)"
@@ -35,7 +36,7 @@ Function Initialize-PowerShell {
         New-Item -ItemType directory -Path "$tempFolder" | Out-Null
     }
 
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12  # DevSkim: ignore DS440020,DS440000
 
     #
     # Import specific version of package management to avoid import errors, see https://stackoverflow.com/a/63235779
@@ -43,7 +44,7 @@ Function Initialize-PowerShell {
     # Error it is attempting to mitigate: "The term 'PackageManagement\Get-PackageSource' is not recognized as the name
     # of a cmdlet, function, script file, or operable program."
     #
-    Write-Host "Importing package management module and validating NuGet package provider."
+    Write-Host 'Importing package management module and validating NuGet package provider.'
     Import-Module PackageManagement -ErrorAction SilentlyContinue >$null
     if (-not $?) {
         Install-Module -Name PackageManagement -Scope CurrentUser -Force -AllowClobber -ErrorAction SilentlyContinue >$null
@@ -63,12 +64,12 @@ Function Initialize-PowerShell {
         }
     }
     else {
-        Write-Host "❌ Failed to import PowerShell package management.", $_.Exception.Message
+        Write-Host '❌ Failed to import PowerShell package management.', $_.Exception.Message
     }
 
     Import-Module PowerShellGet -ErrorAction SilentlyContinue >$null
     if ($?) {
-        Write-Host "✔ PowerShellGet module already installed."
+        Write-Host '✔ PowerShellGet module already installed.'
     }
     else {
         # We do not check if module is installed because 'Get-Package' may not exist yet.
@@ -86,20 +87,20 @@ Function Initialize-PowerShell {
         Import-Module PowerShellGet -ErrorAction SilentlyContinue >$null
         if (-not $?) {
             Write-Host "Failed to import required 'PowerShellGet' module. Exiting initialization."
-            return 1;
+            return 1
         }
     }
 
     # Set Microsoft PowerShell Gallery to 'Trusted' as this is needed for packages
     # like 'WindowsConsoleFonts' and 'PSReadLine' installed below.
     try {
-        $psGallery = Get-PSRepository -Name "*PSGallery*" -ErrorAction SilentlyContinue
+        $psGallery = Get-PSRepository -Name '*PSGallery*' -ErrorAction SilentlyContinue
         if ($null -eq $psGallery) {
             if ($host.Version.Major -ge 5) {
                 Register-PSRepository -Default -InstallationPolicy Trusted
             }
             else {
-                Register-PSRepository -Name PSGallery -SourceLocation "https://www.powershellgallery.com/api/v2/" -InstallationPolicy Trusted
+                Register-PSRepository -Name PSGallery -SourceLocation 'https://www.powershellgallery.com/api/v2/' -InstallationPolicy Trusted
             }
             Write-Host "✔ Registered 'PSGallery' repository."
         }
@@ -108,11 +109,11 @@ Function Initialize-PowerShell {
         }
     }
     catch [Exception] {
-        Write-Host "❌ Failed to add repository.", $_.Exception.Message
+        Write-Host '❌ Failed to add repository.', $_.Exception.Message
     }
 
     try {
-        if ($null -eq (Get-InstalledModule -Name "WindowsConsoleFonts" -ErrorAction SilentlyContinue)) {
+        if ($null -eq (Get-InstalledModule -Name 'WindowsConsoleFonts' -ErrorAction SilentlyContinue)) {
             Install-Module -Name WindowsConsoleFonts -Scope CurrentUser -Force -ErrorAction SilentlyContinue >$null
             if ($?) {
                 Write-Host "✔ Installed 'WindowsConsoleFonts' module."
@@ -126,7 +127,7 @@ Function Initialize-PowerShell {
         Write-Host "❌ Failed to install 'WindowsConsoleFonts' module.", $_.Exception.Message
     }
 
-    Write-Host "✔ Initialized PowerShell environment."
+    Write-Host '✔ Initialized PowerShell environment.'
 }
 
 <#
@@ -137,7 +138,7 @@ Function Initialize-PowerShell {
 .OUTPUTS
     Whether or not the command exists and can be executed.
 #>
-Function Test-CommandExists {
+Function Test-IsValidCommand {
     Param ($command)
 
     $oldPreference = $ErrorActionPreference
@@ -192,7 +193,7 @@ Function Get-File {
 
     # Make absolute local path
     if (![System.IO.Path]::IsPathRooted($Filename)) {
-        $FilePath = Join-Path (Get-Item -Path ".\" -Verbose).FullName $Filename
+        $FilePath = Join-Path (Get-Item -Path '.\' -Verbose).FullName $Filename
     }
 
 
@@ -201,7 +202,7 @@ Function Get-File {
         $handler = New-Object -TypeName System.Net.Http.HttpClientHandler
     }
     catch {
-        Write-Host "HttpClientHandler not available, using Invoke-WebRequest instead."
+        Write-Host 'HttpClientHandler not available, using Invoke-WebRequest instead.'
     }
 
     if ($null -ne ($Url -as [System.URI]).AbsoluteURI) {
@@ -226,7 +227,7 @@ Function Get-File {
 
                     $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
 
-                    Write-Host "Download started..."
+                    Write-Host 'Download started...'
                     $copyStreamOp.Wait()
 
                     $downloadedFileStream.Close()
@@ -247,7 +248,7 @@ Function Get-File {
 Function Initialize-Environment {
     try {
 
-        $fontBaseName = "JetBrains Mono"
+        $fontBaseName = 'JetBrains Mono'
         $fontBaseFilename = $fontBaseName -replace '\s', ''
 
         $fontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$fontBaseFilename.zip"
@@ -258,7 +259,7 @@ Function Initialize-Environment {
         $targetTempFontPath = "$tempFontFolder/$fontName.ttf"
 
         # We save it to system directory with same path it's the name that needs to be short
-        if (Test-Path -Path "C:/Windows/Fonts") {
+        if (Test-Path -Path 'C:/Windows/Fonts') {
             $targetFontPath = "C:/Windows/Fonts/$fontNameOriginal.ttf"
         }
 
@@ -273,7 +274,7 @@ Function Initialize-Environment {
             }
         }
         catch [Exception] {
-            Write-Host "Failed to remove old font.", $_.Exception.Message
+            Write-Host 'Failed to remove old font.', $_.Exception.Message
         }
 
         # https://www.hanselman.com/blog/how-to-make-a-pretty-prompt-in-windows-terminal-with-powerline-nerd-fonts-cascadia-code-wsl-and-ohmyposh
@@ -328,7 +329,7 @@ Function Initialize-Environment {
             }
         }
         catch [Exception] {
-            Write-Host "Failed to download and install font.", $_.Exception.Message
+            Write-Host 'Failed to download and install font.', $_.Exception.Message
         }
 
         # Need to set this for console
@@ -337,7 +338,7 @@ Function Initialize-Environment {
             Set-ItemProperty -Path $key -Name '000' -Value "$fontName" -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Host "Failed to update font registry. Requires administrator access."
+            Write-Host 'Failed to update font registry. Requires administrator access.'
         }
 
         try {
@@ -348,18 +349,18 @@ Function Initialize-Environment {
             }
         }
         catch [Exception] {
-            Write-Host "Failed to install WindowsConsoleFonts.", $_.Exception.Message
+            Write-Host 'Failed to install WindowsConsoleFonts.', $_.Exception.Message
         }
     }
     catch {
-        Write-Host "Failed to initialize terminal."
+        Write-Host 'Failed to initialize terminal.'
     }
 
     try {
         if (!(Test-Path Variable:\IsWindows) -or $IsWindows) {
-            if (-not(Test-CommandExists "scoop")) {
+            if (-not(Test-IsValidCommand 'scoop')) {
                 Write-Host "Installing 'scoop' package manager..."
-                Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+                Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')  # DevSkim: ignore DS104456,DS440020
             }
 
             try {
@@ -371,17 +372,17 @@ Function Initialize-Environment {
                     # Windows Defender may slow down or disrupt installs with realtime scanning.
                     Import-Module Defender
                     sudo Add-MpPreference -ExclusionPath "C:/Users/$env:USERNAME/scoop"
-                    sudo Add-MpPreference -ExclusionPath "C:/ProgramData/scoop"
+                    sudo Add-MpPreference -ExclusionPath 'C:/ProgramData/scoop'
                 }
             }
             catch {
-                Write-Host "WARNING: Failed to set administrator settings."
+                Write-Host 'WARNING: Failed to set administrator settings.'
             }
 
             try {
                 # Make sure git is installed first as scoop uses git to update itself
-                if (-not(Test-CommandExists "git")) {
-                    scoop install "git"
+                if (-not(Test-IsValidCommand 'git')) {
+                    scoop install 'git'
                 }
 
                 Write-Host "Verified that dependencies were installed with 'scoop' package manager."
@@ -390,7 +391,7 @@ Function Initialize-Environment {
                     git -C "$HOME/dotfiles" pull
                 }
                 else {
-                    git -C "$HOME" -c core.symlinks=true clone --recursive "https://github.com/joelvaneenwyk/dotfiles.git"
+                    git -C "$HOME" -c core.symlinks=true clone --recursive 'https://github.com/joelvaneenwyk/dotfiles.git'
                 }
             }
             catch {
@@ -399,20 +400,20 @@ Function Initialize-Environment {
         }
 
         if (!(Test-Path Variable:\IsWindows) -or $IsWindows) {
-            Start-Process -Wait -NoNewWindow "cmd.exe" -ArgumentList @("/d", "/c", "$HOME\dotfiles\setup.bat")
+            Start-Process -Wait -NoNewWindow 'cmd.exe' -ArgumentList @('/d', '/c', "$HOME\dotfiles\setup.bat")
         }
         else {
-            Start-Process -Wait -NoNewWindow "bash" -ArgumentList @("-c", "$HOME/dotfiles/setup.sh")
+            Start-Process -Wait -NoNewWindow 'bash' -ArgumentList @('-c', "$HOME/dotfiles/setup.sh")
         }
     }
     catch [Exception] {
-        Write-Host "Exception caught while initializing environment.", $_.Exception.Message
+        Write-Host 'Exception caught while initializing environment.', $_.Exception.Message
     }
 }
 
 try {
     if ($null -eq $HOME) {
-        Remove-Variable -Force HOME
+        Remove-Variable -Name "HOME" -Force
         Set-Variable HOME "$Env:UserProfile"
     }
 
@@ -422,21 +423,21 @@ try {
     $erroractionpreference = 'stop'
 
     if (($PSVersionTable.PSVersion.Major) -lt 5) {
-        Write-Output "PowerShell 5 or later is required to run Mycelio setup."
-        Write-Output "Upgrade PowerShell: https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell"
+        Write-Output 'PowerShell 5 or later is required to run Mycelio setup.'
+        Write-Output 'Upgrade PowerShell: https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell'
         break
     }
 
     # show notification to change execution policy:
     $allowedExecutionPolicy = @('Unrestricted', 'RemoteSigned', 'ByPass')
     if ((Get-ExecutionPolicy).ToString() -notin $allowedExecutionPolicy) {
-        Write-Output "PowerShell requires an execution policy in [$($allowedExecutionPolicy -join ", ")] to run Scoop."
+        Write-Output "PowerShell requires an execution policy in [$($allowedExecutionPolicy -join ', ')] to run Scoop."
         Write-Output "For example, to set the execution policy to 'RemoteSigned' please run :"
-        Write-Output "'Set-ExecutionPolicy RemoteSigned -scope CurrentUser'"
+        Write-Output "'Set-ExecutionPolicy RemoteSigned -scope CurrentUser'"  # DevSkim: ignore DS113853
         break
     }
 
-    if ([System.Enum]::GetNames([System.Net.SecurityProtocolType]) -notcontains 'Tls12') {
+    if ([System.Enum]::GetNames([System.Net.SecurityProtocolType]) -notcontains 'Tls12') {  # DevSkim: ignore DS440020,DS440000
         Write-Output "Scoop requires at least .NET Framework 4.5"
         Write-Output "Please download and install it first:"
         Write-Output "https://www.microsoft.com/net/download"
@@ -445,7 +446,7 @@ try {
 
     $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
 
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12  # DevSkim: ignore DS440020,DS440000
 
     Initialize-PowerShell
     Initialize-Environment
