@@ -365,7 +365,7 @@ exit /b
     :: C:\Users\{USERNAME}\.dotfiles\source\windows\bin\profile.bat&"C:\Program Files (x86)\clink\clink.bat" inject --autorun
     ::
     echo Variables: !_var_name! - !_profile! - %SPROFILE%
-    echo [mycelio] WARNING: Different AutoRun script already installed for %_hive%: "!_profile!"
+    echo [mycelio] WARNING: AutoRun script must be updated: "%_hive%" does not equal "!_profile!"
 
     :: Delete the key otherwise next will display an error
     set "KEY=%_hive%\Software\Microsoft\Command Processor"
