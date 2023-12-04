@@ -90,7 +90,7 @@ exit /b 0
     :: Generate and run the environment batch script
     set "MYCELIO_ENV_PATH=%~dp0env.bat"
     if not exist "!_env!" (
-        set "MYCELIO_ENV_PATH=!MYCELIO_ROOT!\source\windows\bin\profile.bat"
+        set "MYCELIO_ENV_PATH=!MYCELIO_ROOT!\source\windows\bin\env.bat"
     )
     endlocal & (
         set "MYCELIO_ROOT=%MYCELIO_ROOT%"
@@ -142,6 +142,7 @@ exit /b
     if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 1252 >NUL 2>&1
 
     if not exist "%MYCELIO_ENV_PATH%" goto:$SkipProfileSetup
+    %MYCELIO_ECHO% call "%MYCELIO_ENV_PATH%"
     call "%MYCELIO_ENV_PATH%"
 
     :$SkipProfileSetup
@@ -161,6 +162,7 @@ exit /b
         doskey mv=move $*
         doskey h=doskey /HISTORY
         doskey edit=%HOME%\.local\bin\micro.exe $*
+        doskey ls=dir
         doskey refresh=%MYCELIO_ROOT%\source\windows\bin\profile.bat --refresh
         doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
     :$SkipDosKeySetup
