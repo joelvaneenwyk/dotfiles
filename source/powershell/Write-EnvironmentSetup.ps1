@@ -136,6 +136,7 @@ Function Get-Environment {
     # there is a 'scoop' portable version installed.
     $environmentVariables += "C:\Program Files\Microsoft VS Code\bin"
 
+    $environmentVariables += "$ENV:UserProfile\scoop\apps\mingw\13.2.0-rt_v11-rev0\bin"
     $environmentVariables += "$ENV:UserProfile\scoop\shims"
 
     $environmentVariables += "$script:MycelioRoot"
