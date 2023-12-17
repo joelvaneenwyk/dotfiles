@@ -38,7 +38,7 @@ Function Get-CurrentEnvironment {
     #>
 
     $PathArray = @()
-    $PathString = ""
+    $PathString = ''
 
     if ($null -ne $env:Path) {
         $PathString = $env:Path.ToString().TrimEnd(';')
@@ -125,8 +125,8 @@ function Get-NormalizedPath($file) {
 
     if ($null -ne $resolvedPath) {
         $path = $resolvedPath.Path
-        $path = $path.TrimEnd("\\")
-        $path = $path.TrimEnd("/")
+        $path = $path.TrimEnd('\\')
+        $path = $path.TrimEnd('/')
 
         $item = Get-Item $path
         if ($null -ne $item) {
@@ -134,7 +134,7 @@ function Get-NormalizedPath($file) {
         }
     }
 
-    return $path;
+    return $path
 }
 
 Function Update-Environment() {
@@ -152,11 +152,11 @@ Function Update-Environment() {
     $environmentVariables += "$root\source\windows"
     $environmentVariables += "$Env:UserProfile\.local\bin"
     $environmentVariables += "$Env:UserProfile\.local\go\bin"
-    $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
-    $environmentVariables += "C:\Program Files\Git\bin"
+    $environmentVariables += 'C:\Program Files (x86)\GnuPG\bin'
+    $environmentVariables += 'C:\Program Files\Git\bin'
     $environmentVariables += $(Get-CurrentEnvironment)
     $environmentVariables += "$Env:UserProfile\scoop\shims"
-    $environmentVariables += "C:\Program Files (x86)\Microsoft SDKs\Azure\CLI2\wbin"
+    $environmentVariables += 'C:\Program Files (x86)\Microsoft SDKs\Azure\CLI2\wbin'
 
     $environmentPaths = @()
     $environmentVariables = $environmentVariables | Select-Object -Unique
@@ -166,25 +166,25 @@ Function Update-Environment() {
             $resolvedPath = Get-NormalizedPath "$_"
             $startingPath = $resolvedPath
 
-            if (($resolvedPath -match "msys2") -and ($resolvedPath -match "usr\bin")) {
+            if (($resolvedPath -match 'msys2') -and ($resolvedPath -match 'usr\bin')) {
                 $resolvedPath = $null
             }
-            elseif ($resolvedPath -match "NVIDIA") {
+            elseif ($resolvedPath -match 'NVIDIA') {
                 $resolvedPath = $null
             }
-            elseif ($resolvedPath -match "SQL") {
+            elseif ($resolvedPath -match 'SQL') {
                 $resolvedPath = $null
             }
-            elseif ($resolvedPath -match "Vagrant") {
+            elseif ($resolvedPath -match 'Vagrant') {
                 $resolvedPath = $null
             }
-            elseif ($resolvedPath -match "Salesforce") {
+            elseif ($resolvedPath -match 'Salesforce') {
                 $resolvedPath = $null
             }
-            elseif ($resolvedPath -match "Network Monitor") {
+            elseif ($resolvedPath -match 'Network Monitor') {
                 $resolvedPath = $null
             }
-            elseif ($resolvedPath -match "AdoptOpenJDK") {
+            elseif ($resolvedPath -match 'AdoptOpenJDK') {
                 $resolvedPath = $null
             }
 
@@ -204,13 +204,13 @@ Function Update-Environment() {
     try {
         $environmentPaths = $environmentPaths | Select-Object -Unique
         New-Item -Path "$ENV:UserProfile\.local\bin" -type directory -ErrorAction SilentlyContinue | Out-Null
-        $Env:Path = $($environmentPaths -join ";")
+        $Env:Path = $($environmentPaths -join ';')
         $Env:MYCELIO_ROOT = $root
-        $Env:PATHEXT = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PS1;.PY"
+        $Env:PATHEXT = '.COM;.EXE;.BAT;.CMD'
         $Env:HOME = $ENV:UserProfile
     }
     catch [Exception] {
-        Write-Host "Failed to setup environment.", $_.Exception.Message
+        Write-Host 'Failed to setup environment.', $_.Exception.Message
     }
 }
 
@@ -232,7 +232,7 @@ Function Update-Terminal() {
     # }
 
     try {
-        if ($PSCmdlet.ShouldProcess("oh-my-posh prompt", "init")) {
+        if ($PSCmdlet.ShouldProcess('oh-my-posh prompt', 'init')) {
             oh-my-posh.exe init pwsh --config "$env:UserProfile/.poshthemes/mycelio.omp.json" | Invoke-Expression
         }
     }
@@ -262,7 +262,7 @@ Function Update-Terminal() {
 
 Update-Environment
 Update-Terminal
-Write-Host "Initialized Mycelio environment."
+Write-Host 'Initialized Mycelio environment.'
 
 #
 # NOTE: This script is called in each sub-shell as well so reduce noise by not calling anything
