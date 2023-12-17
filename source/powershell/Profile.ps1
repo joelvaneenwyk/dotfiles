@@ -181,7 +181,7 @@ Function Update-Environment() {
         New-Item -Path "$ENV:UserProfile\.local\bin" -type directory -ErrorAction SilentlyContinue | Out-Null
         $Env:Path = $($environmentPaths -join ";")
         $Env:MYCELIO_ROOT = $root
-        $Env:PATHEXT = ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PS1;.PY"
+        $Env:PATHEXT = ".COM;.EXE;.BAT;.CMD;.PS1;.PY"
         $Env:HOME = $ENV:UserProfile
     }
     catch [Exception] {
