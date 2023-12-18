@@ -38,7 +38,7 @@ Function Get-CurrentEnvironment {
     #>
 
     $PathArray = @()
-    $PathString = ""
+    $PathString = ''
 
     if ($null -ne $env:Path) {
         $PathString = $env:Path.ToString().TrimEnd(';')
@@ -125,8 +125,8 @@ function Get-NormalizedPath($file) {
 
     if ($null -ne $resolvedPath) {
         $path = $resolvedPath.Path
-        $path = $path.TrimEnd("\\")
-        $path = $path.TrimEnd("/")
+        $path = $path.TrimEnd('\\')
+        $path = $path.TrimEnd('/')
 
         $item = Get-Item $path
         if ($null -ne $item) {
@@ -134,7 +134,7 @@ function Get-NormalizedPath($file) {
         }
     }
 
-    return $path;
+    return $path
 }
 
 Function Update-Environment() {
@@ -152,8 +152,8 @@ Function Update-Environment() {
     $environmentVariables += "$root\source\windows"
     $environmentVariables += "$Env:UserProfile\.local\bin"
     $environmentVariables += "$Env:UserProfile\.local\go\bin"
-    $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
-    $environmentVariables += "C:\Program Files\Git\bin"
+    $environmentVariables += 'C:\Program Files (x86)\GnuPG\bin'
+    $environmentVariables += 'C:\Program Files\Git\bin'
     $environmentVariables += $(Get-CurrentEnvironment)
     $environmentVariables += "$Env:UserProfile\scoop\shims"
 
@@ -163,7 +163,7 @@ Function Update-Environment() {
         try {
             $resolvedPath = Get-NormalizedPath "$_"
 
-            if (($resolvePath -Contains "msys2") -and ($resolvePath -Contains "usr\bin")) {
+            if (($resolvePath -Contains 'msys2') -and ($resolvePath -Contains 'usr\bin')) {
                 $resolvedPath = $null
             }
 
@@ -179,18 +179,19 @@ Function Update-Environment() {
     try {
         $environmentPaths = $environmentPaths | Select-Object -Unique
         New-Item -Path "$ENV:UserProfile\.local\bin" -type directory -ErrorAction SilentlyContinue | Out-Null
-        $Env:Path = $($environmentPaths -join ";")
+        $Env:Path = $($environmentPaths -join ';')
         $Env:MYCELIO_ROOT = $root
-        $Env:PATHEXT = ".COM;.EXE;.BAT;.CMD;.PS1;.PY"
+        $Env:PATHEXT = '.COM;.EXE;.BAT;.CMD;.PS1;.PY'
         $Env:HOME = $ENV:UserProfile
     }
     catch [Exception] {
-        Write-Host "Failed to setup environment.", $_.Exception.Message
+        Write-Host 'Failed to setup environment.', $_.Exception.Message
     }
 }
 
 Function Update-Terminal() {
     [CmdletBinding(SupportsShouldProcess)]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '')]
     param()
 
     # WARNING: You appear to have an unsupported Git distribution; setting
@@ -207,7 +208,7 @@ Function Update-Terminal() {
     }
 
     try {
-        oh-my-posh init pwsh --config "$env:UserProfile/dotfiles/packages/shell/.poshthemes/mycelio.omp.json" | Invoke-Expression
+        oh-my-posh init pwsh --config "$env:UserProfile/dotfiles/packages/shell/.poshthemes/mycelio.omp.json" | Invoke-Expression # DevSkim: ignore DS104456
         Write-Host "Initialized 'oh-my-posh' config."
     }
     catch {
@@ -215,7 +216,7 @@ Function Update-Terminal() {
     }
 
     try {
-        $fontName = "JetBrainsMono NF"
+        $fontName = 'JetBrainsMono NF'
         Import-Module WindowsConsoleFonts -ErrorAction SilentlyContinue >$null
         if ($?) {
             $currentFont = Get-ConsoleFont -ErrorAction SilentlyContinue >$null
@@ -231,13 +232,13 @@ Function Update-Terminal() {
         }
     }
     catch [Exception] {
-        Write-Host "Failed to set console font and theme.", $_.Exception.Message
+        Write-Host 'Failed to set console font and theme.', $_.Exception.Message
     }
 }
 
 Update-Environment
 Update-Terminal
-Write-Host "Initialized primary Mycelio environment."
+Write-Host 'Initialized primary Mycelio environment.'
 
 #
 # NOTE: This script is called in each sub-shell as well so reduce noise by not calling anything
