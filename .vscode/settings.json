@@ -44,9 +44,7 @@
     },
     "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
     "bashIde.includeAllWorkspaceSymbols": true,
-
     "markdownlint.ignore": ".markdownlintignore",
-
     "Lua.workspace.ignoreDir": [
         ".vscode",
         "micro/.config/micro",
@@ -61,16 +59,12 @@
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library",
         "${3rd}/luassert/library",
     ],
-
     "xml.validation.enabled": false,
     "stylelint.enable": false,
-
     "vscode-lua-format.configPath": "source/config/.lua-style",
     "git.requireGitUserConfig": false,
-
     "editor.fontFamily": "PragmataPro Nerd Font, PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, JetBrains Mono NL, Menlo, Monaco, Consolas, Courier New, monospace",
     "editor.fontLigatures": true,
-
     "json.validate.enable": true,
     "workbench.colorCustomizations": {
         "terminal.foreground": "#b69f83",
@@ -92,7 +86,9 @@
     "terminal.integrated.profiles.windows": {
         "PowerShell": {
             "source": "PowerShell",
-            "args": ["-nologo"],
+            "args": [
+                "-nologo"
+            ],
             "icon": "terminal-powershell"
         },
         "Command Prompt": {
@@ -107,7 +103,10 @@
             "path": [
                 "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\bash.exe"
             ],
-            "args": ["--login", "-i"],
+            "args": [
+                "--login",
+                "-i"
+            ],
             "env": {
                 "MSYSTEM": "MINGW64",
                 "CHERE_INVOKING": "1",
@@ -119,7 +118,10 @@
             "path": [
                 "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\fish.exe"
             ],
-            "args": ["--login", "-i"],
+            "args": [
+                "--login",
+                "-i"
+            ],
             "env": {
                 "MSYSTEM": "MSYS2",
                 "CHERE_INVOKING": "1",
@@ -132,7 +134,6 @@
             "icon": "terminal-bash"
         }
     },
-
     "terminal.integrated.defaultProfile.osx": "bash",
     "terminal.integrated.profiles.osx": {
         "sh": {
@@ -141,16 +142,22 @@
         },
         "bash": {
             "path": "bash",
-            "args": ["-l"],
+            "args": [
+                "-l"
+            ],
             "icon": "terminal-bash"
         },
         "zsh": {
             "path": "zsh",
-            "args": ["-l"]
+            "args": [
+                "-l"
+            ]
         },
         "fish": {
             "path": "fish",
-            "args": ["-l"]
+            "args": [
+                "-l"
+            ]
         },
         "tmux": {
             "path": "tmux",
@@ -166,11 +173,16 @@
     "terminal.integrated.profiles.linux": {
         "sh": {
             "path": "sh",
-            "args": ["-l"]
+            "args": [
+                "-l"
+            ]
         },
         "bash": {
             "path": "sh",
-            "args": ["-c", "set -x && . ~/.profile && bash"],
+            "args": [
+                "-c",
+                "set -x && . ~/.profile && bash"
+            ],
             "icon": "terminal-bash"
         },
         "zsh": {
@@ -188,7 +200,6 @@
             "icon": "terminal-powershell"
         }
     },
-
     "perl.enable": true,
     "perl.perlCmd": "${env:USERPROFILE}/.local/perl/perl/bin/perl.exe",
     "perl.perlInc": [
@@ -197,17 +208,32 @@
         "${workspaceFolder}/bin",
         "${workspaceFolder}/t"
     ],
-
     "beautify.language": {
         "js": {
-            "type": ["javascript", "json", "json"],
-            "filename": [".jshintrc", ".jsbeautifyrc"],
-            "ext": ["js", "json", "jsonc"]
+            "type": [
+                "javascript",
+                "json",
+                "json"
+            ],
+            "filename": [
+                ".jshintrc",
+                ".jsbeautifyrc"
+            ],
+            "ext": [
+                "js",
+                "json",
+                "jsonc"
+            ]
         },
-        "css": ["css", "scss"],
-        "html": ["htm", "html"]
+        "css": [
+            "css",
+            "scss"
+        ],
+        "html": [
+            "htm",
+            "html"
+        ]
     },
-
     "taskExplorer.autoRefresh": true,
     "taskExplorer.showFavoritesButton": true,
     "taskExplorer.enableNsis": false,
@@ -234,7 +260,6 @@
         "**/.tmp/**",
         "**/.vagrant/**"
     ],
-
     "files.exclude": {
         "**/.git": true,
         "**/.svn": true,
@@ -271,7 +296,6 @@
         ".gitmodules": "properties",
         ".editorconfig": "editorconfig"
     },
-
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features",
         "editor.formatOnSave": true
@@ -281,7 +305,6 @@
         "editor.formatOnSave": true
     },
     "json.format.enable": true,
-
     "[markdown]": {
         "editor.unicodeHighlight.ambiguousCharacters": false,
         "editor.unicodeHighlight.invisibleCharacters": false,
@@ -295,7 +318,6 @@
         "cSpell.advanced.feature.useReferenceProviderWithRename": true,
         "cSpell.advanced.feature.useReferenceProviderRemove": "/^#+\\s/"
     },
-
     "[powershell]": {
         "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
         "editor.semanticHighlighting.enabled": false,
@@ -317,7 +339,6 @@
     "powershell.codeFormatting.ignoreOneLineBlock": false,
     "powershell.codeFormatting.alignPropertyValuePairs": true,
     "powershell.codeFormatting.useCorrectCasing": true,
-
     "cSpell.ignorePaths": [
         "**/package-lock.json",
         "**/node_modules/**",
@@ -424,5 +445,9 @@
     "Lua.workspace.checkThirdParty": true,
     "Lua.format.enable": true,
     "Lua.hint.setType": true,
-    "Lua.diagnostics.enable": true
+    "Lua.diagnostics.enable": true,
+    "sonarlint.connectedMode.project": {
+        "connectionId": "Joel Van Eenwyk",
+        "projectKey": "joelvaneenwyk_dotfiles"
+    }
 }
