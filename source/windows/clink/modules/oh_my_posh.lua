@@ -1,5 +1,5 @@
 local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
-local mycelio_root_dir = path.normalise(script_dir .. "../../..")
+local mycelio_root_dir = path.normalise(script_dir .. "../../../..")
 
 local home = os.getenv("HOME") or os.getenv("USERPROFILE")
 local mycelio_config = path.normalise(mycelio_root_dir .. "/packages/shell/.poshthemes/mycelio.omp.json")
@@ -17,34 +17,34 @@ for key, value in pairs(values) do
         break
     else
         if local_oh_my_posh_executable ~= "" then
-            print('[clink] Oh My Posh not found: ' .. local_oh_my_posh_executable)
+            logger.debug('Oh My Posh not found: ' .. local_oh_my_posh_executable)
         end
         local_oh_my_posh_executable = path.normalise(value)
     end
 end
 
 if not os.isfile(local_oh_my_posh_executable) then
-    print('[clink] [ERROR] Oh My Posh not found: ' .. local_oh_my_posh_executable)
+    logger.warning('Oh My Posh not found: ' .. local_oh_my_posh_executable)
 end
 
 if not os.isfile(mycelio_config) then
-    print('[clink] [ERROR] Oh My Posh config missing: ' .. mycelio_config)
+    logger.warning('Oh My Posh config missing: ' .. mycelio_config)
 end
 
 if os.isfile(local_oh_my_posh_executable) and os.isfile(mycelio_config) then
     local_oh_my_posh_executable = "\"" .. local_oh_my_posh_executable .. "\""
     io.popen(local_oh_my_posh_executable .. " --version")
     if not os.geterrorlevel == 0 then
-        print('[clink] WARNING: Oh My Posh version test failed: \'' .. local_oh_my_posh_executable .. '\'')
+        logger.warning('Oh My Posh version test failed: \'' .. local_oh_my_posh_executable .. '\'')
     else
         oh_my_posh_executable = local_oh_my_posh_executable
         local process = io.popen(oh_my_posh_executable .. " init cmd --config " .. mycelio_config)
         if process ~= nil then
             local command = process:read("*a")
             load(command)()
-            print('[clink] Initialized Oh My Posh: ' .. local_oh_my_posh_executable)
+            logger.info('Initialized Oh My Posh: ' .. local_oh_my_posh_executable)
         else
-            print('[clink] [ERROR] Oh My Posh init failed: ' .. local_oh_my_posh_executable)
+            logger.error('Oh My Posh init failed: ' .. local_oh_my_posh_executable)
         end
         loaded = true
     end

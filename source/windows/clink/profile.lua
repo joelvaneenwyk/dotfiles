@@ -14,7 +14,7 @@ local mycelio_root_dir = path.normalise(script_dir .. "../../..")
 local color_cyan = "\x1b[36m"
 local color_normal = "\x1b[m"
 
-local settings = {
+local local_settings = {
     color_vsc_unknown = "\x1b[30;1m",
     color_vsc_clean = "\x1b[1;37;40m",
     color_vsc_dirty = "\x1b[31;1m",
@@ -25,7 +25,63 @@ local settings = {
     benchmark = false
 }
 
-profile_settings = {extension_npm_cache = 1, extension_npm = 1}
+profile_settings = { extension_npm_cache = 1, extension_npm = 1 }
+--------------------------------------------------------------------------------
+
+function mycelio_log(message, level)
+    local output_message = "[clink] "
+    local should_print_to_console = true
+
+    if level == nil then
+        level = 1
+    end
+
+    if level >= 4 then
+        output_message = output_message .. "debug "
+        if not ((settings ~= nil and settings.get("lua.debug")) or clink.DEBUG) then
+            should_print_to_console = false
+        end
+    elseif level == 3 then
+        output_message = output_message .. "info  "
+    elseif level == 2 then
+        output_message = output_message .. "warn  "
+    else
+        output_message = output_message .. "error "
+    end
+
+    output_message = output_message .. "| " .. message
+
+    if should_print_to_console then
+        print(output_message)
+        log.info(output_message)
+    end
+
+    return message
+end
+
+function mycelio_log_debug(message)
+    mycelio_log(message, 4)
+end
+
+function mycelio_log_info(message)
+    mycelio_log(message, 3)
+end
+
+function mycelio_log_warning(message)
+    mycelio_log(message, 3)
+end
+
+function mycelio_log_error(message)
+    mycelio_log(message, 3)
+end
+
+logger = {
+    debug = mycelio_log_debug,
+    info = mycelio_log_info,
+    warning = mycelio_log_warning,
+    error = mycelio_log_error
+}
+
 
 ---
 -- Resolves closest directory location for specified directory.
@@ -36,7 +92,6 @@ profile_settings = {extension_npm_cache = 1, extension_npm = 1}
 -- @return {string} Path to specified directory or nil if such dir not found
 
 local function get_dir_contains(path, dirname)
-
     -- return parent path for specified entry (either file or directory)
     local function pathname(path)
         local prefix = ""
@@ -137,26 +192,26 @@ end
 
 function add_modules(input_path)
     local completions_dir = path.normalise(input_path)
-    print('[clink] Loading modules from path: "' .. completions_dir .. '"')
+    logger.debug('Loading modules from path: "' .. completions_dir .. '"')
     for _, lua_module in ipairs(clink.find_files(completions_dir .. '*.lua')) do
         -- Skip files that starts with _. This could be useful if some files should be ignored
 
-        if profile_settings["extension_" .. lua_module:match [[(.*).lua$]]] ~= -1 then
+        if profile_settings[ "extension_" .. lua_module:match [[(.*).lua$]] ] ~= -1 then
             if not string.match(lua_module, '^_.*') then
                 local filename = completions_dir .. lua_module
                 -- use dofile instead of require because require caches loaded modules
                 -- so config reloading using Alt-Q won't reload updated modules.
                 dofile(filename)
-                print('[clink] Module loaded: "' .. lua_module .. '"')
+                logger.debug('Module loaded: "' .. lua_module .. '"')
             end
         end
     end
-    print('[clink] Added all modules from path: "' .. completions_dir .. '"')
+    logger.info('Added all modules from path: "' .. completions_dir .. '"')
 end
 
 local cwd_prompt = clink.promptfilter(30)
 function cwd_prompt:filter(prompt)
-    return settings.color_prompt .. os.getcwd() .. color_normal
+    return local_settings.color_prompt .. os.getcwd() .. color_normal
 end
 
 -- A prompt filter that appends the current git branch.
@@ -175,5 +230,6 @@ function bracket_prompt:filter(prompt)
     return prompt .. "\n → "
 end
 
+add_modules(mycelio_root_dir .. "/source/windows/clink/modules/")
 add_modules(mycelio_root_dir .. "/source/windows/clink-completions/")
 add_modules(mycelio_root_dir .. "/source/windows/clink-gizmos/")
