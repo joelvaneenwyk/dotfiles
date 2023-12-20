@@ -11,6 +11,14 @@
     "[yaml]": {
         "editor.formatOnSave": true
     },
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true,
+            "source.fixAll": true
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
     "[shellscript]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "foxundermoon.shell-format",

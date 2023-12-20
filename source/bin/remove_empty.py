@@ -149,11 +149,11 @@ def _get_drives():
     drives = []
 
     try:
-        import win32api  # pyright: ignore
+        import win32api  # type: ignore
         drives_string = win32api.GetLogicalDriveStrings()
         drives = drives_string.split('\000')[:-1]
     except (ImportError, OSError):
-        from ctypes import windll
+        from ctypes import windll  # type: ignore
         bit_mask = windll.kernel32.GetLogicalDrives()
         for letter in range(0, ord('Z') - ord('A')):
             if bit_mask & 1:
