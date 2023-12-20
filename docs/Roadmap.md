@@ -1,4 +1,4 @@
-# TODO
+# Roadmap | `dotfiles`
 
 Remove all submodules and inline everything we need perhaps using `git subtree` or something similar.
 
