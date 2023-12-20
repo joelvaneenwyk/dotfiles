@@ -13,32 +13,32 @@ on:
   push:
     branches: [main, develop]
     paths-ignore:
-      - '*.md'
-      - 'setup'
-      - 'TODO'
-      - 'NEWS'
-      - 'LICENSE'
-      - 'COPYING'
-      - '*.plist'
-      - '.gitconfig*'
-      - 'META.*'
-      - 'THANKS'
-      - '.devcontainer/**'
-      - '.vscode/**'
+      - "*.md"
+      - "setup"
+      - "TODO"
+      - "NEWS"
+      - "LICENSE"
+      - "COPYING"
+      - "*.plist"
+      - ".gitconfig*"
+      - "META.*"
+      - "THANKS"
+      - ".devcontainer/**"
+      - ".vscode/**"
   pull_request:
     paths-ignore:
-      - '*.md'
-      - 'setup'
-      - 'TODO'
-      - 'NEWS'
-      - 'LICENSE'
-      - 'COPYING'
-      - '*.plist'
-      - '.gitconfig*'
-      - 'META.*'
-      - 'THANKS'
-      - '.devcontainer/**'
-      - '.vscode/**'
+      - "*.md"
+      - "setup"
+      - "TODO"
+      - "NEWS"
+      - "LICENSE"
+      - "COPYING"
+      - "*.plist"
+      - ".gitconfig*"
+      - "META.*"
+      - "THANKS"
+      - ".devcontainer/**"
+      - ".vscode/**"
 
 jobs:
   critical:
