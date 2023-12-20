@@ -8,6 +8,17 @@
         "editor.guides.indentation": true,
         "editor.formatOnSave": false
     },
+    "[yaml]": {
+        "editor.formatOnSave": true
+    },
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true,
+            "source.fixAll": true
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
     "[shellscript]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "foxundermoon.shell-format",
@@ -370,12 +381,16 @@
         "agnoster",
         "antialiasing",
         "asdf",
+        "Autobuild",
         "autocrlf",
         "Backblaze",
         "beaners",
         "bmalehorn",
         "buildx",
+        "codacy",
+        "codeql",
         "commandline",
+        "compat",
         "cpan",
         "cpanm",
         "cygdrive",
