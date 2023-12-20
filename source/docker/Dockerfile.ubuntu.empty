@@ -2,6 +2,9 @@ ARG VARIANT=20.04
 
 FROM ubuntu:${VARIANT}
 
+ARG USERNAME=default
+ENV USERNAME=${USERNAME}
+
 # Install gnupg to allow apt-key verification, time to allow profiling
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
@@ -27,23 +30,28 @@ RUN apt-get install -y --no-install-recommends \
 RUN DEBIAN_FRONTEND="noninteractive" apt-fast install -y --no-install-recommends \
 	git stow sudo micro neofetch
 
-# Add a default user and then switch over to that user
-RUN useradd -ms /bin/bash default
-USER default
+# Add a user and then switch over to that user
+RUN useradd -ms /bin/bash ${USERNAME}
+USER ${USERNAME}
 
 # Now switch to working in the user home directory
-WORKDIR /home/default
+WORKDIR /home/${USERNAME}
 
 # Update SSH file so that we can pull from GitHub non-interactively
-RUN mkdir /home/default/.ssh
-RUN echo "Host github.com" >| "/home/default/.ssh/config"
-RUN echo "    StrictHostKeyChecking no" >> "/home/default/.ssh/config"
-RUN chmod 400 "/home/default/.ssh/config"
+RUN mkdir /home/${USERNAME}/.ssh
+RUN echo "Host github.com" >| "/home/${USERNAME}/.ssh/config"
+RUN echo "    StrictHostKeyChecking no" >> "/home/${USERNAME}/.ssh/config"
+RUN chmod 400 "/home/${USERNAME}/.ssh/config"
 
 # Clone latest version mostly just to get the `.git` files in place for updating later
 RUN git clone --recursive https://github.com/joelvaneenwyk/dotfiles.git || true
 
-COPY --chown=default ./ ./dotfiles
+COPY --chown=${USERNAME} --chmod=644 ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./*.md /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./packages/ /home/${USERNAME}/dotfiles/packages/
+COPY --chown=${USERNAME} --chmod=644 ./docs/ /home/${USERNAME}/dotfiles/docs/
+COPY --chown=${USERNAME} --chmod=644 ./test/ /home/${USERNAME}/dotfiles/test/
+COPY --chown=${USERNAME} --chmod=644 ./source/ /home/${USERNAME}/dotfiles/source/
 RUN (cd dotfiles && stow --adopt bash)
 
 ENTRYPOINT [ "/bin/bash", "-c" ]
