@@ -15,7 +15,7 @@ on:
 
 jobs:
   lint:
-    name: "ShellCheck"
+    name: ShellCheck
     runs-on: ubuntu-latest
     if: always()
 
@@ -24,7 +24,8 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          # Get all history
+          fetch-depth: 0
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
@@ -178,6 +179,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Get all history
+          fetch-depth: 0
 
       - name: Download Artifacts
         uses: actions/download-artifact@v2
