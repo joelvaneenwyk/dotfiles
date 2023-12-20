@@ -170,7 +170,8 @@
         },
         "bash": {
             "path": "sh",
-            "args": ["-c", "set -x && . ~/.profile && bash"],
+            // Alternative: "args": ["-c", "set -x && . ~/.profile && bash"],
+            "args": [],
             "icon": "terminal-bash"
         },
         "zsh": {
@@ -249,6 +250,7 @@
         "**/blib/**": true
     },
     "files.associations": {
+        "LICENSE": "plaintext",
         ".inputrc": "ini",
         "*.json.git": "jsonc",
         "*.omp.json": "jsonc",
@@ -357,8 +359,8 @@
         "devcontainer",
         "distro",
         "dockerhub",
-        "doskey"
         "donjayamanne",
+        "doskey",
         "dotfile",
         "dotfiles",
         "eamodio",
@@ -370,6 +372,7 @@
         "gmail",
         "grayscale",
         "hookyqr",
+        "jdve",
         "jetmartin",
         "joelvaneenwyk",
         "keyscan",
@@ -409,6 +412,7 @@
         "Venv",
         "vundle",
         "xclip",
+        "xero",
         "xmonad",
         "yabai"
     ],
