@@ -8,6 +8,6 @@ As described on [Manage Linux Distributions | Microsoft Docs](https://docs.micro
 
 What this means practically is you need to find the distribution executable and run that which may not be in your path. This may be as complicated as e.g.,
 
-```
+```batch
 "C:\Users\username\AppData\Local\Microsoft\WindowsApps\CanonicalGroupLimited.Ubuntu20.04onWindows_79rhkp1fndgsc\ubuntu2004.exe"
 ```

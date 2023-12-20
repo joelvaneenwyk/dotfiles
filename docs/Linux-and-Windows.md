@@ -1,3 +1,5 @@
+# OS Differences
+
 Good summary of differences: https://stackoverflow.com/a/10712976
 
 Cygwin is a library that endeavours to make UNIX programs able to compile and run on Windows systems with minimal or no modifications, and a comprehensive set of packaged UNIX tools and applications compiled with this library. It is almost a complete wrapper around Windows. It includes an X server and an awful lot of the programs that you can expect to find in a Linux distribution. It is great for people who want to learn or use the UNIX command line in Windows.

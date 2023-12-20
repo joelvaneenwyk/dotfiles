@@ -1,3 +1,5 @@
+# Home
+
 Please see the README for high-level details about these "mycelio" dotfiles. The intention of the wiki is to provide supplemental information that is primarily useful for maintaining and updating.
 
 ## GitHub Actions
