@@ -1,7 +1,6 @@
 FROM ubuntu:22.04
 
 ARG USERNAME=default
-
 ENV USERNAME=${USERNAME}
 
 # ubuntu:latest does not have sudo fetch it and install it
@@ -32,12 +31,12 @@ WORKDIR /home/${USERNAME}
 
 # Copy 'dotfiles' project files into the container
 RUN mkdir -p /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} ./*.sh /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} ./*.md /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} ./packages/ /home/${USERNAME}/dotfiles/packages/
-COPY --chown=${USERNAME} ./docs/ /home/${USERNAME}/dotfiles/docs/
-COPY --chown=${USERNAME} ./test/ /home/${USERNAME}/dotfiles/test/
-COPY --chown=${USERNAME} ./source/ /home/${USERNAME}/dotfiles/source/
+COPY --chown=${USERNAME} --chmod=644 ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./*.md /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./packages/ /home/${USERNAME}/dotfiles/packages/
+COPY --chown=${USERNAME} --chmod=644 ./docs/ /home/${USERNAME}/dotfiles/docs/
+COPY --chown=${USERNAME} --chmod=644 ./test/ /home/${USERNAME}/dotfiles/test/
+COPY --chown=${USERNAME} --chmod=644 ./source/ /home/${USERNAME}/dotfiles/source/
 
 RUN sudo apt-get update
 
