@@ -45,11 +45,32 @@ function timestamp() {
     echo "##[timestamp] $(date +"%T")"
 }
 
-function run_command() {
-    local command_display
+function _filter() {
+    local _prefix="$1"
+    local _ifs="$IFS"
+    local _return_value=0
+    IFS=''
+    while read -r line; do
+        if [ -n "$line" ]; then
+            if echo "$line" | grep -i "Permission denied"; then
+                _return_value=22
+            fi
+            # Could use the following to remove all surrounding whitespace but this
+            # is performance heavy so just ignore for now.
+            # line=$(echo $line | xargs)
+            echo "$_prefix $line"
+        fi
+    done
+    IFS="$_ifs"
+    return $_return_value
+}
 
+function run_command() {
+    local _prefix="stow"
+    local command_display
     command_display="$*"
     command_display=${command_display//$'\n'/} # Remove all newlines
+    command_display=${command_display%$'\n'}   # Remove trailing newline
 
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         echo "[command]$command_display"
@@ -57,7 +78,22 @@ function run_command() {
         echo "##[cmd] $command_display"
     fi
 
-    "$@"
+    (
+        STOW_DEBUG_DISABLE_TRAP=1
+        (
+            (
+                (
+                    unset STOW_DEBUG_DISABLE_TRAP
+
+                    #  stdout (#1) -> untouched
+                    #  stderr (#2) -> #3
+                    "$@" 2>&3 3>&-
+                ) | _filter "[$_prefix.out]"           # Output standard log (stdout)
+            ) 3>&1 1>&4 | _filter "[$_prefix.err]" >&2 # Redirects stdout to #4 so that it's not run through error log
+        ) >&4
+    ) 4>&1
+
+    return $?
 }
 
 function run_named_command_group() {
@@ -105,29 +141,31 @@ function use_perl_local_lib() {
     local _perl_local_args
     _perl_local_args=(-I "$STOW_PERL_LOCAL_LIB/lib/perl5")
 
-    if "$STOW_PERL" "${_perl_local_args[@]}" -Mlocal::lib -le 1 2>/dev/null; then
-        # shellcheck disable=SC2054
-        _perl_local_args+=("-Mlocal::lib=""$STOW_PERL_LOCAL_LIB")
+    if perldoc -l Module::Build; then
+        if "$STOW_PERL" "${_perl_local_args[@]}" -Mlocal::lib -le 1 2>/dev/null; then
+            # shellcheck disable=SC2054
+            _perl_local_args+=("-Mlocal::lib=""$STOW_PERL_LOCAL_LIB")
 
-        #
-        # Get the environment setup and convert it to something that works in unix.
-        #
-        #   1. Convert drive to MSYS e.g., D:\ -> /d/
-        #   2. Convert variable references e.g., %MYVAR% -> ${MYVAR}
-        #   3. Convert backslashes to forward slashes e.g., ${HOME}\Is\The\Best -> ${HOME}/Is/The/Best
-        #
-        _perl_local_setup="$(
-            COMSPEC="" "$STOW_PERL" "${_perl_local_args[@]}" |
-                sed 's#\([a-zA-Z]\):\\#/\1#g' |
-                sed 's#\%\([^]]*\)\%#\${\1}#g' |
-                perl -pe 's#\\(?!\")#\/#g' |
-                sed 's#\/\/#\/#g' |
-                sed 's#\/\/#\/#g'
-        )"
+            #
+            # Get the environment setup and convert it to something that works in unix.
+            #
+            #   1. Convert drive to MSYS e.g., D:\ -> /d/
+            #   2. Convert variable references e.g., %MYVAR% -> ${MYVAR}
+            #   3. Convert backslashes to forward slashes e.g., ${HOME}\Is\The\Best -> ${HOME}/Is/The/Best
+            #
+            _perl_local_setup="$(
+                COMSPEC="" "$STOW_PERL" "${_perl_local_args[@]}" |
+                    sed 's#\([a-zA-Z]\):\\#/\1#g' |
+                    sed 's#\%\([^]]*\)\%#\${\1}#g' |
+                    perl -pe 's#\\(?!\")#\/#g' |
+                    sed 's#\/\/#\/#g' |
+                    sed 's#\/\/#\/#g'
+            )"
 
-        echo "$_perl_local_setup"
+            echo "$_perl_local_setup"
 
-        return 0
+            return 0
+        fi
     fi
 
     return 1
@@ -175,10 +213,10 @@ function install_perl_modules() {
     export NO_NETWORK_TESTING=1
     export LOCALTESTS_ONLY=1
 
-    _return_value=0
-    _use_local_lib=0
+    local _return_value=0
+    local _use_local_lib=0
 
-    _cpanm_install="$STOW_PERL_LOCAL_LIB/bin/cpanm_install"
+    local _cpanm_install="$STOW_PERL_LOCAL_LIB/bin/cpanm_install"
     mkdir -p "$STOW_PERL_LOCAL_LIB/bin/"
     if [ ! -f "$_cpanm_install" ]; then
         if [ -x "$(command -v wget)" ] && wget -O "$_cpanm_install" "https://cpanmin.us/"; then
@@ -192,9 +230,9 @@ function install_perl_modules() {
         fi
     fi
 
-    _cpanm=""
-    _perl_bin="$(dirname "$STOW_PERL")"
-    _cpanm_options=(
+    local _cpanm=""
+    local _perl_bin="$(dirname "$STOW_PERL")"
+    local _cpanm_options=(
         "$_perl_bin/cpanm"
         "$_perl_bin/site_perl/$("$STOW_PERL" -e "print substr($^V, 1)")/cpanm"
         "$_perl_bin/core_perl/cpanm"
@@ -207,7 +245,7 @@ function install_perl_modules() {
         fi
     done
 
-    _perl_install_args=("$STOW_PERL")
+    local _perl_install_args=("$STOW_PERL")
 
     while [ -n "${1:-}" ]; do
         package=$1
@@ -225,10 +263,12 @@ function install_perl_modules() {
                 _perl_install_args=("$STOW_PERL" "$_cpanm")
             fi
 
-            if ! run_named_command_group "Install Module(s): '$*'" \
+            if run_named_command_group "Install Module(s): '$*'" \
                 "${_perl_install_args[@]}" --local-lib "$STOW_PERL_LOCAL_LIB" --notest "$@"; then
+                :
+            else
+                _return_value=$?
                 echo "❌ Failed to install modules with CPANM."
-                _return_value=99
             fi
 
             break
@@ -238,10 +278,12 @@ function install_perl_modules() {
         fi
 
         if ! "${_perl_install_args[@]}" -M"$package" -le 1 2>/dev/null; then
-            if ! run_named_command_group "Install '$package'" \
+            if run_named_command_group "Install '$package'" \
                 "${_perl_install_args[@]}" -MCPAN -e "CPAN::Shell->notest('install', '$package')"; then
+                :
+            else
+                _return_value=$?
                 echo "❌ Failed to install '$package' module with CPAN."
-                _return_value=88
                 break
             fi
         fi
@@ -411,8 +453,7 @@ function install_perl_dependencies() {
     # seemingly obscure issues you could run into e.g., missing 'cc1' or 'poll.h' even when they are
     # in fact installed.
     modules=(
-        local::lib App::cpanminus
-        YAML Carp Scalar::Util IO::Scalar Module::Build
+        local::lib App::cpanminus Module::Build YAML Carp Scalar::Util IO::Scalar
     )
 
     # Only add test modules if we are not running on Synology as some packages are not supported
