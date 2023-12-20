@@ -58,12 +58,13 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: bash setup.sh --clean --yes
 
-      # - uses: actions/upload-artifact@v3
-      #   if: always()
-      #   name: Upload Logs
-      #   with:
-      #     name: cpanm-logs-critical
-      #     path: /home/runneradmin/.cpan*/work/**/*.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        name: Upload Logs
+        with:
+          name: cpanm-logs-critical
+          path: /home/runneradmin/.cpan*/work/**/*.log
+          if-no-files-found: ignore
 
   init:
     needs: critical
@@ -113,10 +114,11 @@ jobs:
       #   run: |
       #     mkdir /home/logs
       #     sudo cp -r ${{ matrix.logs }} /home/logs
-      #
-      # - uses: actions/upload-artifact@v3
-      #   if: always()
-      #   name: Upload Logs
-      #   with:
-      #     name: cpanm-logs-${{ matrix.platform }}
-      #     path: ${{ matrix.logs }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        name: Upload Logs
+        with:
+          name: cpanm-logs-${{ matrix.platform }}
+          path: ${{ matrix.logs }}
+          if-no-files-found: ignore

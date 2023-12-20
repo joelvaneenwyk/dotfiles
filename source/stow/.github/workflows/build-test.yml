@@ -154,7 +154,7 @@ jobs:
           ./Build build
           ./Build distcheck
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: always()
         name: Upload Logs
         with:
@@ -163,7 +163,7 @@ jobs:
 
       - name: Upload Unit Test Results
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Test Results
           path: ${{ env.STOW_TEST_RESULTS }}
