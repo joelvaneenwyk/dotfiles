@@ -29,11 +29,25 @@ function install_shellcheck() {
             brew install shellcheck
         elif [ -x "$(command -v apt-get)" ]; then
             sudo apt-get install shellcheck
+        elif [ -x "$(command -v apk)" ]; then
+            sudo apk update
+            sudo apk add shellcheck
         fi
     fi
+
+    if [ ! -x "$(command -v shellcheck)" ]; then
+        echo "Failed to find and install shellcheck"
+        return 1
+    fi
+
+    return 0
 }
 
 function run_shellcheck() {
+    if ! install_shellcheck; then
+        return 1
+    fi
+
     if shellcheck -help 2>&1 | grep -q 'source-path'; then
         _use_source_path=1
     else
