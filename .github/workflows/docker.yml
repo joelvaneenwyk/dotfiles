@@ -2,7 +2,7 @@
 # Workflow to validate that dotfiles are setup correct for all supported platforms
 #
 
-name: 'dotfiles - docker'
+name: "dotfiles - docker"
 
 on:
   # Allows you to run this workflow manually from the Actions tab
@@ -10,14 +10,17 @@ on:
 
   # Run at 2 AM UTC every day
   schedule:
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
 
 jobs:
   docker:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          # Get all history
+          fetch-depth: 0
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2

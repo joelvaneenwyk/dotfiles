@@ -15,16 +15,17 @@ on:
 
 jobs:
   lint:
-    name: "ShellCheck"
+    name: ShellCheck
     runs-on: ubuntu-latest
     if: always()
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          # Get all history
+          fetch-depth: 0
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
@@ -89,7 +90,7 @@ jobs:
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Get all history so we can generate ChangeLog
           fetch-depth: 0
@@ -153,7 +154,7 @@ jobs:
           ./Build build
           ./Build distcheck
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: always()
         name: Upload Logs
         with:
@@ -162,7 +163,7 @@ jobs:
 
       - name: Upload Unit Test Results
         if: always()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: Test Results
           path: ${{ env.STOW_TEST_RESULTS }}
@@ -177,7 +178,10 @@ jobs:
     if: success() || failure()
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          # Get all history
+          fetch-depth: 0
 
       - name: Download Artifacts
         uses: actions/download-artifact@v2

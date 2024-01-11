@@ -6,7 +6,7 @@
  ┛ ┇ ┇ ┗━┛┻━┛┇━┛┇┛━┛
 ```
 
-Custom config files (aka. "dotfiles") for Linux, macOS, and Windows that are deployed to target with [GNU Stow](https://www.gnu.org/software/stow/). It also contains scripts for basic provisioning to install useful applications for developers (e.g., VSCode, gcc, mutagen, go, etc.) and environment tweaks (e.g., nerd fonts).
+Custom config files (aka. "dotfiles") for Linux, macOS, and Windows that are deployed to target with [GNU Stow](https://www.gnu.org/software/stow/). It also contains scripts for basic provisioning to install useful applications for developers (e.g., VSCode, gcc, mutagen, go, etc.) and environment tweaks (e.g., nerd fonts). This is a fork of [jdve/dotfiles](https://gitlab.com/jdve/dotfiles) which itself was [originally based on](https://gitlab.com/jdve/dotfiles/-/commit/939f4bd196524f9d6e11fc5d60a7a888641f5e0c) the actively maintained [xero/dotfiles](https://github.com/xero/dotfiles) with some additional features and tweaks.
 
 ```ansi
       ██            ██     ████ ██  ██
@@ -21,9 +21,9 @@ Custom config files (aka. "dotfiles") for Linux, macOS, and Windows that are dep
 
   ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
  ░▓             ▓
- ░▓ about       ▓  custom config files
- ░▓ code        ▓  https://github.com/joelvaneenwyk/dotfiles
- ░▓ attribution ▓  derived from https://github.com/jdve/dotfiles
+ ░▓ about       ▓  Custom config files for Linux, macOS, and Windows
+ ░▓ code        ▓  Source:【github.com/joelvaneenwyk/dotfiles】
+ ░▓ attribution ▓  Source:【gitlab.com/jdve/dotfiles】←【github.com/xero/dotfiles】
  ░▓             ▓
  ░▓▓▓▓▓▓▓▓▓▓▓▓▓▓
  ░░░░░░░░░░░░░░

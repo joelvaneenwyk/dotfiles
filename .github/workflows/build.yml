@@ -11,38 +11,34 @@ on:
 
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches:
-        - main
-        - staging
-        - develop
-        - dev
+    branches: [main, develop]
     paths-ignore:
-      - '*.md'
-      - 'setup'
-      - 'TODO'
-      - 'NEWS'
-      - 'LICENSE'
-      - 'COPYING'
-      - '*.plist'
-      - '.gitconfig*'
-      - 'META.*'
-      - 'THANKS'
-      - '.devcontainer/**'
-      - '.vscode/**'
+      - "*.md"
+      - "setup"
+      - "TODO"
+      - "NEWS"
+      - "LICENSE"
+      - "COPYING"
+      - "*.plist"
+      - ".gitconfig*"
+      - "META.*"
+      - "THANKS"
+      - ".devcontainer/**"
+      - ".vscode/**"
   pull_request:
     paths-ignore:
-      - '*.md'
-      - 'setup'
-      - 'TODO'
-      - 'NEWS'
-      - 'LICENSE'
-      - 'COPYING'
-      - '*.plist'
-      - '.gitconfig*'
-      - 'META.*'
-      - 'THANKS'
-      - '.devcontainer/**'
-      - '.vscode/**'
+      - "*.md"
+      - "setup"
+      - "TODO"
+      - "NEWS"
+      - "LICENSE"
+      - "COPYING"
+      - "*.plist"
+      - ".gitconfig*"
+      - "META.*"
+      - "THANKS"
+      - ".devcontainer/**"
+      - ".vscode/**"
 
 jobs:
   critical:
@@ -52,19 +48,23 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          # Get all history
+          fetch-depth: 0
 
       # Runs a single command using the runners shell
       - name: Initialize environment
         working-directory: ${{ github.workspace }}
         run: bash setup.sh --clean --yes
 
-      # - uses: actions/upload-artifact@v3
-      #   if: always()
-      #   name: Upload Logs
-      #   with:
-      #     name: cpanm-logs-critical
-      #     path: /home/runneradmin/.cpan*/work/**/*.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        name: Upload Logs
+        with:
+          name: cpanm-logs-critical
+          path: /home/runneradmin/.cpan*/work/**/*.log
+          if-no-files-found: ignore
 
   init:
     needs: critical
@@ -99,7 +99,10 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          # Get all history
+          fetch-depth: 0
 
       # Runs a single command using the runners shell
       - name: Initialize environment
@@ -111,10 +114,11 @@ jobs:
       #   run: |
       #     mkdir /home/logs
       #     sudo cp -r ${{ matrix.logs }} /home/logs
-      #
-      # - uses: actions/upload-artifact@v3
-      #   if: always()
-      #   name: Upload Logs
-      #   with:
-      #     name: cpanm-logs-${{ matrix.platform }}
-      #     path: ${{ matrix.logs }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        name: Upload Logs
+        with:
+          name: cpanm-logs-${{ matrix.platform }}
+          path: ${{ matrix.logs }}
+          if-no-files-found: ignore

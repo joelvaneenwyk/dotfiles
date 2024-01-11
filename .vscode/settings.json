@@ -8,6 +8,17 @@
         "editor.guides.indentation": true,
         "editor.formatOnSave": false
     },
+    "[yaml]": {
+        "editor.formatOnSave": true
+    },
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true,
+            "source.fixAll": true
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
     "[shellscript]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "foxundermoon.shell-format",
@@ -179,10 +190,8 @@
         },
         "bash": {
             "path": "sh",
-            "args": [
-                "-c",
-                "set -x && . ~/.profile && bash"
-            ],
+            // Alternative: "args": ["-c", "set -x && . ~/.profile && bash"],
+            "args": [],
             "icon": "terminal-bash"
         },
         "zsh": {
@@ -274,6 +283,7 @@
         "**/blib/**": true
     },
     "files.associations": {
+        "LICENSE": "plaintext",
         ".inputrc": "ini",
         "*.json.git": "jsonc",
         "*.omp.json": "jsonc",
@@ -316,7 +326,12 @@
         },
         "cSpell.fixSpellingWithRenameProvider": true,
         "cSpell.advanced.feature.useReferenceProviderWithRename": true,
-        "cSpell.advanced.feature.useReferenceProviderRemove": "/^#+\\s/"
+        "cSpell.advanced.feature.useReferenceProviderRemove": "/^#+\\s/",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit"
+        }
     },
     "[powershell]": {
         "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
@@ -366,20 +381,26 @@
         "agnoster",
         "antialiasing",
         "asdf",
+        "Autobuild",
         "autocrlf",
         "Backblaze",
         "beaners",
         "bmalehorn",
         "buildx",
+        "codacy",
+        "codeql",
         "commandline",
+        "compat",
         "cpan",
         "cpanm",
+        "cygdrive",
         "cygpath",
         "devcontainer",
         "distro",
         "dockerhub",
         "doskey",
         "donjayamanne",
+        "doskey",
         "dotfile",
         "dotfiles",
         "eamodio",
@@ -391,6 +412,7 @@
         "gmail",
         "grayscale",
         "hookyqr",
+        "jdve",
         "jetmartin",
         "joelvaneenwyk",
         "keyscan",
@@ -400,7 +422,9 @@
         "mingw",
         "mkdir",
         "MobaXterm",
+        "msvcrt",
         "msys",
+        "msysgit",
         "msystem",
         "mycelio",
         "mycoshiro",
@@ -430,6 +454,7 @@
         "Venv",
         "vundle",
         "xclip",
+        "xero",
         "xmonad",
         "yabai"
     ],
