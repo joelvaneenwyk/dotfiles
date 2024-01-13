@@ -14,11 +14,18 @@ indent_size = 4
 indent_style = space
 indent_size = 2
 
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
 [*.{bat,cmd,ps1,psd1}]
+end_of_line = crlf
+encoding = utf-8
 indent_style = space
 indent_size = 4
 
 [*.{sh,bash,bats,conf,fish,profile}]
+end_of_line = lf
 indent_style = space
 indent_size = 4
 binary_next_line = true
@@ -26,4 +33,3 @@ switch_case_indent = true
 space_redirects = true
 keep_padding = true
 function_next_line = true
-end_of_line = lf
