@@ -80,15 +80,34 @@ goto:$Main
     set "ECHO=REM"
     set "HOME=!HOME!"
     if not exist "!HOME!" set "HOME=%USERPROFILE%"
-    if "!HOME!"=="" set "HOME=%USERPROFILE%"
-    if not exist "!HOME!" set "HOME=%USERPROFILE%"
-    set "MYCELIO_CLINK_SETTINGS=%LOCALAPPDATA%\clink"
+
+    set "MYCELIO_LOCAL_CLINK_SETTINGS=%LOCALAPPDATA%\clink"
+    if not exist "!MYCELIO_LOCAL_CLINK_SETTINGS!" mkdir "!MYCELIO_LOCAL_CLINK_SETTINGS!"
+
+    set "MYCELIO_CLINK_SOURCE=%MYCELIO_ROOT%\source\windows\clink"
+
+    :: Link clink settings to the local application data folder
+    goto:$LinkFileEnd
+    :$LinkFile
+        set "_clink_settings_source=!MYCELIO_CLINK_SOURCE!\%~1"
+        set "_clink_settings_target=!MYCELIO_LOCAL_CLINK_SETTINGS!\%~1"
+        if not exist "!_clink_settings_source!" goto:$LinkFileDone
+        if exist "!_clink_settings_target!" del "!_clink_settings_target!"
+        mklink /H ^
+                "!_clink_settings_target!" ^
+                "!_clink_settings_source!" >NUL 2>&1
+        :$LinkFileDone
+        exit /b 0
+    :$LinkFileEnd
+    call :$LinkFile "clink_settings"
+    call :$LinkFile ".inputrc"
 
     :: Generate and run the environment batch script
     set "MYCELIO_ENV_PATH=%~dp0env.bat"
     if not exist "!MYCELIO_ENV_PATH!" (
         set "MYCELIO_ENV_PATH=!MYCELIO_ROOT!\source\windows\bin\profile.bat"
     )
+    :$GetEnvironmentStateDone
 endlocal & (
     set "MYCELIO_ROOT=%MYCELIO_ROOT%"
     set "MYCELIO_ENV_PATH=%MYCELIO_ENV_PATH%"
@@ -96,7 +115,8 @@ endlocal & (
     set "MYCELIO_AUTORUN_INITIALIZED=1"
     set "MYCELIO_SKIP_INIT=%MYCELIO_SKIP_INIT%"
     set "MYCELIO_ECHO=%ECHO%"
-    set "MYCELIO_CLINK_SETTINGS=%MYCELIO_CLINK_SETTINGS%"
+    set "MYCELIO_CLINK_SOURCE=%MYCELIO_CLINK_SOURCE%"
+    set "MYCELIO_LOCAL_CLINK_SETTINGS=%MYCELIO_LOCAL_CLINK_SETTINGS%"
     set "CLINK_NOAUTORUN=1"
 )
 exit /b 0
@@ -158,10 +178,11 @@ exit /b 0
         doskey cp=copy $*
         doskey mv=move $*
         doskey h=doskey /HISTORY
-        doskey which=where $*
-        doskey edit=%HOME%\.local\bin\micro.exe $*
-        doskey refresh=%MYCELIO_ROOT%\source\windows\bin\profile.bat --refresh
+        doskey edit=call "%HOME%\.local\bin\micro.exe" $*
+        doskey refresh=call "%MYCELIO_ROOT%\source\windows\bin\profile.bat" --refresh
         doskey where=@for %%E in (%PATHEXT%) do @for %%I in ($*%%E) do @if NOT "%%~$PATH:I"=="" echo %%~$PATH:I
+        doskey which=where $*
+        doskey ls=dir $*
     :$SkipDosKeySetup
 
     :: If we have already injected Clink then skip it
@@ -170,11 +191,12 @@ exit /b 0
         if errorlevel 1 goto:$ClinkError
 
         rem Injecting clink must be the last operation we do.
-        if not exist "%MYCELIO_CLINK_SETTINGS%" mkdir "%MYCELIO_CLINK_SETTINGS%"
-        if not exist "%HOME%\.local" mkdir "%HOME%\.local"
-        if not exist "%HOME%\.local\clink" mkdir "%HOME%\.local\clink"
         set CLINK_INJECTED=1
-        call clink inject --session "dot_mycelio" --profile "%MYCELIO_CLINK_SETTINGS%" --scripts "%MYCELIO_ROOT%\source\windows\clink" --quiet --nolog
+        call clink inject ^
+            --session "dot_mycelio" ^
+            --profile "%MYCELIO_LOCAL_CLINK_SETTINGS%" ^
+            --scripts "%MYCELIO_CLINK_SOURCE%" ^
+            --quiet --nolog
 
     :$ClinkError
     goto:$ClinkDone
