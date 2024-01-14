@@ -1,3 +1,7 @@
+#
+# Clink settings for `dotfiles` profile
+#
+
 # name: Auto-update the Clink program files
 # type: enum
 # options: off,check,prompt,auto
