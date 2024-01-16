@@ -1,0 +1,52 @@
+version: "0.2"
+enabled: true
+dictionaryDefinitions:
+  - name: dotfiles-dictionary
+    path: ./.cspell/dotfiles-dictionary.txt
+    addWords: true
+dictionaries:
+  - dotfiles-dictionary
+  - companies
+  - cpp
+  - csharp
+  - docker
+  - css
+  - filetypes
+  - python
+  - data-science
+  - python-common
+  - lua
+language: en,en-GB,en-US
+ignorePaths:
+  - package-lock.json
+  - node_modules/**
+  - vscode-extension/**
+  - .git/objects/**
+  - .vscode/**
+  - .vscode-insiders/**
+  - source/stow/**/*
+  - source/windows/clink-completions/**
+  - packages/fish/.base16_theme
+  - packages/fish/.config/base16-shell/**
+  - packages/fish/.config/base16-fzf/**
+  - packages/fish/.config/git-fuzzy/**
+  - packages/fish/.config/fish/fish_variables
+  - packages/vim/.vim/bundle/vundle/**
+  - packages/micro/.config/micro/**
+  - packages/macos/Library/**
+  - test/bats/**
+  - test/test_helper/**
+  - .Xresources
+  - .xmobarrc
+  - .travis.yml
+  - ./**/*.otf
+  - secrets/
+enableFiletypes:
+  - bat
+  - bats
+  - env
+  - fish
+  - perl
+  - python
+  - toml
+  - vb
