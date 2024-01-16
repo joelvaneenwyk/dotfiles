@@ -50,7 +50,7 @@ settings.add('fuzzy_history.ignore_ext', true, 'Ignores command extension',
 
 --------------------------------------------------------------------------------
 local function log_if_expensive(tick, found, count)
-    -- Anything over about 100 ms is noticable.
+    -- Anything over about 100 ms is noticeable.
     -- Typical search time for 5000 items on my laptop is under 5 ms.
     local elapsed = os.clock() - tick
     if elapsed > 0.200 then

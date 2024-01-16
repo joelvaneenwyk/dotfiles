@@ -1,6 +1,6 @@
 # Overview
 
-As of **August 2021**, GNU Stow does not work on native Windows without patches due to lack of symlink support (see [perlport - symlinks](https://perldoc.perl.org/perlport#symlink)). POSIX style symlinks were not added to Windows until somewhat recently so it is not a surprise, but it is still a bit suprising how much is broken in various libraries (e.g. [symlink() function is unimplemented on this machine error in windows · Issue #114 · thoughtbot/ember-cli-rails](https://github.com/thoughtbot/ember-cli-rails/issues/114)) due to this not being available so it is still surprising it has not been officially fixed. Well, it turns out, after way too much digging, that symlinks are, in fact, fixed on Windows:
+As of **August 2021**, GNU Stow does not work on native Windows without patches due to lack of symlink support (see [perlport - symlinks](https://perldoc.perl.org/perlport#symlink)). POSIX style symlinks were not added to Windows until somewhat recently so it is not a surprise, but it is still a bit surprising how much is broken in various libraries (e.g. [symlink() function is unimplemented on this machine error in windows · Issue #114 · thoughtbot/ember-cli-rails](https://github.com/thoughtbot/ember-cli-rails/issues/114)) due to this not being available so it is still surprising it has not been officially fixed. Well, it turns out, after way too much digging, that symlinks are, in fact, fixed on Windows:
 
 * [symlink for Windows by tonycoz · Pull Request #18306 · Perl/perl5](https://github.com/Perl/perl5/pull/18306/files)
 

@@ -5,7 +5,7 @@ goto:$Main
 :: is also invoked when running e.g. 'for /f %%l in ('some command') do ...'
 ::
 :: In those cases we do not want to run the initialization as it can haveunexpected side effects on the parent
-:: script variables. This severly affects the performance of scripts that heavily use for loops.
+:: script variables. This severely impacts the performance of scripts that heavily use for loops.
 ::
 :: The command for running a new cmd instance is available in the "Command Prompt.lnk" shortcut and would be
 :: feasible to extract it from there using JScript WshShell.Createshortcut() and then compare it to %CMDCMDLINE% variable
