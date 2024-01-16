@@ -28,6 +28,7 @@ doskey
 dotfile
 dotfiles
 eamodio
+endlocal
 eval
 filelocator
 Fullscreen

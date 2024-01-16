@@ -1,11 +1,17 @@
 version: "0.2"
 enabled: true
 dictionaryDefinitions:
-  - name: dotfiles-dictionary
-    path: ./.cspell/dotfiles-dictionary.txt
+  - name: dotfiles-common
+    path: ./.cspell/dotfiles-common.txt
     addWords: true
+  - name: dotfiles-lua
+    path: ./.cspell/dotfiles-lua.txt
+  - name: dotfiles-unknown
+    path: ./.cspell/dotfiles-unknown.txt
 dictionaries:
-  - dotfiles-dictionary
+  - dotfiles-common
+  - dotfiles-lua
+  - dotfiles-unknown
   - companies
   - cpp
   - csharp
