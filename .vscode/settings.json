@@ -56,8 +56,11 @@
     "[yaml]": {
         "editor.formatOnSave": true
     },
+    "angular.log": "normal",
+    "application.experimental.rendererProfiling": true,
     "bashIde.includeAllWorkspaceSymbols": true,
     "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
+    "batch-runner.saveFileBeforeRun": true,
     "beautify.language": {
         "css": [
             "css",
@@ -84,6 +87,10 @@
             ]
         }
     },
+    "bookmarks.saveBookmarksInProject": true,
+    "bookmarks.sideBar.expanded": true,
+    "bookmarks.useWorkaroundForFormatters": true,
+    "C_Cpp.autocompleteAddParentheses": true,
     "cSpell.ignorePaths": [
         "**/package-lock.json",
         "**/node_modules/**",
@@ -193,9 +200,26 @@
         "xmonad",
         "yabai"
     ],
+    "dotnetAcquisitionExtension.installTimeoutValue": 15000,
     "editor.fontFamily": "PragmataPro Nerd Font, PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, JetBrains Mono NL, Menlo, Monaco, Consolas, Courier New, monospace",
     "editor.fontLigatures": true,
     "esbonio.server.enabled": false,
+    "eslint.codeActionsOnSave.mode": "problems",
+    "eslint.debug": true,
+    "eslint.experimental.useFlatConfig": false,
+    "eslint.format.enable": true,
+    "eslint.lintTask.enable": true,
+    "eslint.useESLintClass": true,
+    "evenBetterToml.formatter.alignComments": true,
+    "evenBetterToml.formatter.alignEntries": true,
+    "evenBetterToml.formatter.allowedBlankLines": 1,
+    "evenBetterToml.formatter.columnWidth": 100,
+    "evenBetterToml.formatter.indentEntries": true,
+    "evenBetterToml.formatter.trailingNewline": true,
+    "evenBetterToml.schema.cache.diskExpiration": 6000,
+    "evenBetterToml.schema.cache.memoryExpiration": 200,
+    "evenBetterToml.schema.links": true,
+    "evenBetterToml.semanticTokens": true,
     "files.associations": {
         "*.bats": "shellscript",
         "*.conf": "properties",
@@ -210,9 +234,9 @@
         ".gitignore": "properties",
         ".gitmodules": "properties",
         ".inputrc": "ini",
-        "clink_settings": "ini",
         ".wslconfig": "properties",
         "chkstow": "perl",
+        "clink_settings": "ini",
         "cpanfile": "perl",
         "edf": "shellscript",
         "flake8": "ini",
@@ -221,6 +245,7 @@
         "setup": "shellscript",
         "stow": "perl"
     },
+    "files.autoGuessEncoding": true,
     "files.exclude": {
         "**/.DS_Store": true,
         "**/.git": true,
@@ -234,7 +259,38 @@
         "source/stow/tmp-testing-trees": true,
         "source/stow/tools/texinfo/**": true
     },
+    "gistpad.output": true,
+    "gistpad.scratchNotes.directoryFormat": "yyyy",
+    "gistpad.scratchNotes.fileFormat": "yyyy-MM-dd",
+    "gistpad.wikis.daily.directoryName": "Journal",
+    "gistpad.wikis.daily.titleFormat": "yyyy-MM-dd",
+    "git.allowNoVerifyCommit": true,
+    "git.alwaysShowStagedChangesResourceGroup": true,
+    "git.autofetch": "all",
+    "git.autofetchPeriod": 300,
+    "git.autoStash": true,
+    "git.branchProtection": [
+        "main",
+        "develop"
+    ],
+    "git.closeDiffOnOperation": true,
+    "git.confirmForcePush": true,
+    "git.enableCommitSigning": true,
+    "git.fetchOnPull": true,
+    "git.inputValidationLength": 80,
+    "git.inputValidationSubjectLength": 70,
+    "git.mergeEditor": true,
+    "git.openAfterClone": "whenNoFolderOpen",
+    "git.postCommitCommand": "push",
+    "git.pruneOnFetch": true,
+    "git.pullBeforeCheckout": true,
+    "git.rebaseWhenSync": true,
+    "git.repositoryScanMaxDepth": 10,
     "git.requireGitUserConfig": false,
+    "inlineChat.showToolbarIcon": true,
+    "java.help.collectErrorLog": true,
+    "java.help.firstView": "none",
+    "java.help.showReleaseNotes": false,
     "json.format.enable": true,
     "json.validate.enable": true,
     "Lua.diagnostics.enable": true,
@@ -270,6 +326,12 @@
         "${3rd}/luassert/library",
     ],
     "markdownlint.ignore": ".markdownlintignore",
+    "npm-intellisense.scanDevDependencies": true,
+    "npm-intellisense.showBuildInLibs": true,
+    "npm.enableRunFromFolder": true,
+    "npm.packageManager": "yarn",
+    "npm.scriptExplorerAction": "run",
+    "oneDarkPro.vivid": true,
     "perl.enable": true,
     "perl.perlCmd": "${env:USERPROFILE}/.local/perl/perl/bin/perl.exe",
     "perl.perlInc": [
@@ -293,6 +355,8 @@
     "powershell.integratedConsole.suppressStartupBanner": true,
     "powershell.scriptAnalysis.enable": true,
     "powershell.scriptAnalysis.settingsPath": "source/config/PSScriptAnalyzerSettings.psd1",
+    "problems.showCurrentInStatus": true,
+    "problems.sortOrder": "position",
     "python.analysis.typeCheckingMode": "basic",
     //
     // Ignore/disable features or extensions
@@ -335,6 +399,8 @@
     },
     "stylelint.enable": false,
     "svn.ignoreMissingSvnWarning": true,
+    "task.quickOpen.showAll": true,
+    "task.slowProviderWarning": true,
     "taskExplorer.autoRefresh": true,
     "taskExplorer.enableAnsiconForAnt": false,
     "taskExplorer.enableAnt": false,
@@ -443,21 +509,14 @@
                 // "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
                 // "PATH": "${env:PATH};${env:windir}\\System32;${env:windir}"
                 "CLINK_INJECTED": null,
-                "MYCELIO_SKIP_INIT": null,
-                "MYCELIO_ROOT": null
+                "MYCELIO_ROOT": null,
+                "MYCELIO_SKIP_INIT": null
             },
             "icon": "terminal-cmd",
             "path": [
                 "${env:windir}\\Sysnative\\cmd.exe",
                 "${env:windir}\\System32\\cmd.exe"
             ]
-        },
-        "PowerShell": {
-            "args": [
-                "-nologo"
-            ],
-            "icon": "terminal-powershell",
-            "source": "PowerShell"
         },
         "myco-fish": {
             "args": [
@@ -488,83 +547,24 @@
             "path": [
                 "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\bash.exe"
             ]
+        },
+        "PowerShell": {
+            "args": [
+                "-nologo"
+            ],
+            "icon": "terminal-powershell",
+            "source": "PowerShell"
         }
     },
     "terminal.integrated.scrollback": 20000,
     "terminal.integrated.shellIntegration.enabled": true,
     "terminal.integrated.showExitAlert": false,
+    "timeline.pageOnScroll": true,
     "vscode-lua-format.configPath": "source/config/.lua-style",
+    "window.density.editorTabHeight": "default",
     "workbench.colorCustomizations": {
         "terminal.background": "#181818",
         "terminal.foreground": "#b69f83"
     },
-    "xml.validation.enabled": false,
-    "files.autoGuessEncoding": true,
-    "window.density.editorTabHeight": "default",
-    "task.quickOpen.showAll": true,
-    "task.slowProviderWarning": true,
-    "problems.showCurrentInStatus": true,
-    "problems.sortOrder": "position",
-    "timeline.pageOnScroll": true,
-    "inlineChat.showToolbarIcon": true,
-    "application.experimental.rendererProfiling": true,
-    "dotnetAcquisitionExtension.installTimeoutValue": 15000,
-    "angular.log": "normal",
-    "batch-runner.saveFileBeforeRun": true,
-    "bookmarks.saveBookmarksInProject": true,
-    "bookmarks.sideBar.expanded": true,
-    "bookmarks.useWorkaroundForFormatters": true,
-    "C_Cpp.autocompleteAddParentheses": true,
-    "gistpad.output": true,
-    "gistpad.scratchNotes.directoryFormat": "yyyy",
-    "gistpad.scratchNotes.fileFormat": "yyyy-MM-dd",
-    "gistpad.wikis.daily.directoryName": "Journal",
-    "gistpad.wikis.daily.titleFormat": "yyyy-MM-dd",
-    "git.allowNoVerifyCommit": true,
-    "git.alwaysShowStagedChangesResourceGroup": true,
-    "git.autofetch": "all",
-    "git.autofetchPeriod": 300,
-    "git.autoStash": true,
-    "git.branchProtection": [
-        "main",
-        "develop"
-    ],
-    "git.closeDiffOnOperation": true,
-    "git.confirmForcePush": true,
-    "git.enableCommitSigning": true,
-    "git.fetchOnPull": true,
-    "git.inputValidationLength": 80,
-    "git.inputValidationSubjectLength": 70,
-    "git.mergeEditor": true,
-    "git.openAfterClone": "whenNoFolderOpen",
-    "git.postCommitCommand": "push",
-    "git.pruneOnFetch": true,
-    "git.pullBeforeCheckout": true,
-    "git.rebaseWhenSync": true,
-    "git.repositoryScanMaxDepth": 10,
-    "eslint.codeActionsOnSave.mode": "problems",
-    "eslint.debug": true,
-    "eslint.experimental.useFlatConfig": false,
-    "eslint.format.enable": true,
-    "eslint.lintTask.enable": true,
-    "eslint.useESLintClass": true,
-    "evenBetterToml.formatter.alignComments": true,
-    "evenBetterToml.formatter.alignEntries": true,
-    "evenBetterToml.formatter.allowedBlankLines": 1,
-    "evenBetterToml.formatter.columnWidth": 100,
-    "evenBetterToml.formatter.indentEntries": true,
-    "evenBetterToml.formatter.trailingNewline": true,
-    "evenBetterToml.schema.cache.diskExpiration": 6000,
-    "evenBetterToml.schema.cache.memoryExpiration": 200,
-    "evenBetterToml.schema.links": true,
-    "evenBetterToml.semanticTokens": true,
-    "java.help.collectErrorLog": true,
-    "java.help.firstView": "none",
-    "java.help.showReleaseNotes": false,
-    "npm.enableRunFromFolder": true,
-    "npm.packageManager": "yarn",
-    "npm.scriptExplorerAction": "run",
-    "npm-intellisense.scanDevDependencies": true,
-    "npm-intellisense.showBuildInLibs": true,
-    "oneDarkPro.vivid": true
+    "xml.validation.enabled": false
 }
