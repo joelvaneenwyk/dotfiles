@@ -8,9 +8,12 @@ dictionaryDefinitions:
     path: ./.cspell/dotfiles-lua.txt
   - name: dotfiles-unknown
     path: ./.cspell/dotfiles-unknown.txt
+  - name: dotfiles-stow
+    path: ./.cspell/dotfiles-stow.txt
 dictionaries:
   - dotfiles-common
   - dotfiles-lua
+  - dotfiles-stow
   - dotfiles-unknown
   - companies
   - cpp
@@ -24,29 +27,30 @@ dictionaries:
   - lua
 language: en,en-GB,en-US
 ignorePaths:
-  - package-lock.json
-  - node_modules/**
-  - vscode-extension/**
-  - .git/objects/**
-  - .vscode/**
-  - .vscode-insiders/**
-  - source/stow/**/*
-  - source/windows/clink-completions/**
-  - packages/fish/.base16_theme
-  - packages/fish/.config/base16-shell/**
-  - packages/fish/.config/base16-fzf/**
-  - packages/fish/.config/git-fuzzy/**
-  - packages/fish/.config/fish/fish_variables
-  - packages/vim/.vim/bundle/vundle/**
-  - packages/micro/.config/micro/**
-  - packages/macos/Library/**
-  - test/bats/**
-  - test/test_helper/**
-  - .Xresources
-  - .xmobarrc
-  - .travis.yml
-  - ./**/*.otf
-  - secrets/
+  - "./**/*.otf"
+  - "./**/*.plist"
+  - ".git/objects/**"
+  - ".travis.yml"
+  - ".vscode-insiders/**"
+  - ".vscode/**"
+  - ".xmobarrc"
+  - ".Xresources"
+  - "node_modules/**"
+  - "package-lock.json"
+  - "packages/fish/.base16_theme"
+  - "packages/fish/.config/base16-fzf/**"
+  - "packages/fish/.config/base16-shell/**"
+  - "packages/fish/.config/fish/fish_variables"
+  - "packages/fish/.config/git-fuzzy/**"
+  - "packages/macos/Library/**"
+  - "packages/micro/.config/micro/**"
+  - "packages/vim/.vim/bundle/vundle/**"
+  - "secrets/"
+  - "source/windows/clink-completions/**"
+  - "test/bats/**"
+  - "test/test_helper/**"
+  - "vscode-extension/**"
+  - "yarn.lock"
 enableFiletypes:
   - bat
   - bats

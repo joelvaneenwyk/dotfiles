@@ -115,7 +115,6 @@ nodups
 nofiles
 nohidden
 nosort
-noticable fix: (noticeable
 oldflag
 onadvance
 onarg

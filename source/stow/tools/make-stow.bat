@@ -247,7 +247,7 @@ exit /b
     set CurrentMonth=%CurrentMonth:~-2%
 
     if "!CurrentMonth!"=="01" set CurrentMonthName=January
-    if "!CurrentMonth!"=="02" set CurrentMonthName=Febuary
+    if "!CurrentMonth!"=="02" set CurrentMonthName=February
     if "!CurrentMonth!"=="03" set CurrentMonthName=March
     if "!CurrentMonth!"=="04" set CurrentMonthName=April
     if "!CurrentMonth!"=="05" set CurrentMonthName=May
