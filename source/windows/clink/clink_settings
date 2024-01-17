@@ -154,6 +154,11 @@ history.save = True
 # type: boolean
 history.shared = True
 
+# name: Clink mouse input
+# type: enum
+# options: off,on,auto
+terminal.mouse_input = on
+
 # name: Support Windows' Ctrl-Alt substitute for AltGr
 # type: boolean
 terminal.use_altgr_substitute = True

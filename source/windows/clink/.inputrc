@@ -1,3 +1,11 @@
+#
+# Input configuration file for Readline settings and key bindings.
+#
+# Useful references:
+#
+#   - https://github.com/bluz71/dotfiles/blob/master/inputrc
+#
+
 # Some common Readline config settings.
 
 set colored-stats                 on   # Turn on completion colors.
@@ -21,3 +29,8 @@ $endif
 "\M-b":        "luafunc:fzf_bindings"   # Alt+B lists key bindings; choose one to invoke it.
 "\t":          "luafunc:fzf_complete"   # Tab uses fzf to filter match completions.
 "\e[27;5;32~": "luafunc:fzf_complete"   # Ctrl+Space uses fzf to filter match completions.
+
+# Tab: accept the suggestion via End.
+"\t":           "\e[1;5C"
+# Ctrl-Enter: accept and execute the suggestion via End, Enter.
+"\e[27;5;13~":  "\e[F\r"
