@@ -1,0 +1,32 @@
+version: "0.2"
+ignorePaths:
+  - "**/package-lock.json"
+  - "**/node_modules/**"
+  - "**/vscode-extension/**"
+  - "**/.git/objects/**"
+  - ".vscode/**"
+  - ".vscode-insiders/**"
+  - "source/stow/**/*"
+  - "source/windows/clink-completions/**"
+  - "packages/fish/.base16_theme"
+  - "packages/fish/.config/base16-shell/**"
+  - "packages/fish/.config/base16-fzf/**"
+  - "packages/fish/.config/git-fuzzy/**"
+  - "packages/fish/.config/fish/fish_variables"
+  - "packages/vim/.vim/bundle/vundle/**"
+  - "packages/micro/.config/micro/**"
+  - "packages/macos/Library/**"
+  - "test/bats/**"
+  - "test/test_helper/**"
+  - ".Xresources"
+  - ".xmobarrc"
+  - ".travis.yml"
+dictionaryDefinitions:
+  - name: dotfiles-mycelio-dictionary
+    path: ./.cspell/dotfiles-mycelio-dictionary.txt
+    addWords: true
+dictionaries:
+  - dotfiles-mycelio-dictionary
+words: []
+ignoreWords: []
+import: []
