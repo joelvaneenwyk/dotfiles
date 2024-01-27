@@ -6,23 +6,18 @@ ENV USERNAME=${USERNAME}
 # set up nsswitch.conf for Go's "netgo" implementation
 # - https://github.com/golang/go/blob/go1.9.1/src/net/conf.go#L194-L275
 # - docker run --rm debian:stretch grep '^hosts:' /etc/nsswitch.conf
-RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
-
-# ubuntu:latest does not have sudo fetch it and install it
-RUN apk update && apk add sudo
-
-RUN addgroup -S sudo
+RUN echo 'hosts: files dns' > /etc/nsswitch.conf || true
 
 # Create new user and disable password and gecos for later. See '--gecos' explained
 # well here: https://askubuntu.com/a/1195288/635348
-RUN adduser --home "/home/${USERNAME}" --disabled-password --gecos "" "${USERNAME}"
-
-#  Add new user to sudo group
-RUN addgroup -S "${USERNAME}" "sudo"
-
-# Ensure sudo group users are not asked for a password when using
-# the sudo command by ammending sudoers file.
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN apk update && apk add --no-cache bash==5.2.15-r5 su-exec==0.2-r3 sudo==1.9.13_p3-r2 \
+    && addgroup -S sudo \
+    && adduser --home "/home/${USERNAME}" --disabled-password --gecos "" "${USERNAME}" \
+    #  Add new user to sudo group
+    && addgroup -S "${USERNAME}" "sudo" \
+    # Ensure sudo group users are not asked for a password when using
+    # the sudo command by ammending sudoers file.
+    && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Now we can set USER to the user we just created
 USER ${USERNAME}
@@ -30,17 +25,16 @@ USER ${USERNAME}
 # Now switch to working in the user home directory
 WORKDIR /home/${USERNAME}
 
-RUN sudo apk update
-
-COPY --chown=${USERNAME} --chmod=644 ./*.sh /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./*.md /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./packages/ /home/${USERNAME}/dotfiles/packages/
-COPY --chown=${USERNAME} --chmod=644 ./docs/ /home/${USERNAME}/dotfiles/docs/
-COPY --chown=${USERNAME} --chmod=644 ./test/ /home/${USERNAME}/dotfiles/test/
-COPY --chown=${USERNAME} --chmod=644 ./source/ /home/${USERNAME}/dotfiles/source/
+COPY --chown=${USERNAME} --chmod=755 ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=777 ./*.md /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=777 ./packages/ /home/${USERNAME}/dotfiles/packages/
+COPY --chown=${USERNAME} --chmod=777 ./docs/ /home/${USERNAME}/dotfiles/docs/
+COPY --chown=${USERNAME} --chmod=777 ./test/ /home/${USERNAME}/dotfiles/test/
+COPY --chown=${USERNAME} --chmod=777 ./source/ /home/${USERNAME}/dotfiles/source/
 
 # This will delete existing '.profile' or other configuration files when stowing
-RUN ./dotfiles/setup.sh --clean --force --yes
+RUN chmod a+x /home/${USERNAME}/dotfiles/*.sh /home/${USERNAME}/dotfiles/source/bin/*.sh \
+    && bash /home/${USERNAME}/dotfiles/setup.sh --clean --force --yes
 
 ENTRYPOINT [ "/bin/bash", "-c" ]
 CMD ["neofetch && bash"]
