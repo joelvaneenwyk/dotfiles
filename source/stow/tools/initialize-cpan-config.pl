@@ -44,7 +44,6 @@ sub initialize_config {
     $config->edit(auto_commit => 'yes');
     $config->edit(prerequisites_policy => 'follow');
     $config->edit(build_requires_install_policy => 'yes');
-
     $config->edit(build_dir => normalize_path($CPAN::Config->{build_dir}));
     $config->edit(bzip2 => normalize_path($CPAN::Config->{bzip2}));
     $config->edit(cpan_home => normalize_path($CPAN::Config->{cpan_home}));
@@ -53,7 +52,6 @@ sub initialize_config {
     $config->edit(histfile => normalize_path($CPAN::Config->{histfile}));
     $config->edit(keep_source_where => normalize_path($CPAN::Config->{keep_source_where}));
     $config->edit(make => normalize_path($CPAN::Config->{make}));
-    $config->edit(make_install_make_command => normalize_path($CPAN::Config->{make_install_make_command}));
     $config->edit(pager => normalize_path($CPAN::Config->{pager}));
     $config->edit(patch => normalize_path($CPAN::Config->{patch}));
     $config->edit(shell => normalize_path($CPAN::Config->{shell}));
@@ -61,6 +59,15 @@ sub initialize_config {
     $config->edit(unzip => normalize_path($CPAN::Config->{unzip}));
     $config->edit(wget => normalize_path($CPAN::Config->{wget}));
     $config->edit(prefs_dir => normalize_path($CPAN::Config->{prefs_dir}));
+
+    # Without this you will get errors like the following about permissions:
+    # ----
+    #   ERROR: Can't create '/usr/local/share/man/man3'
+    #   Do not have write permissions on '/usr/local/share/man/man3'
+    #   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    #   at -e line 1
+    #   make: *** [pure_site_install] Error 13
+    $config->edit(make_install_make_command => "sudo " . normalize_path($CPAN::Config->{make_install_make_command}));
 }
 
 initialize_config
