@@ -26,6 +26,7 @@ on:
       - ".devcontainer/**"
       - ".vscode/**"
   pull_request:
+    branches: [main, develop]
     paths-ignore:
       - "*.md"
       - "setup"
@@ -44,17 +45,19 @@ jobs:
   critical:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    name: Build [Linux]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
+        name: Checkout
         with:
           # Get all history
           fetch-depth: 0
 
       # Runs a single command using the runners shell
-      - name: Initialize environment
+      - name: Run Setup
         working-directory: ${{ github.workspace }}
         run: bash setup.sh --clean --yes
 
@@ -78,6 +81,7 @@ jobs:
         include:
           - platform: macos-latest
             launch: bash setup.sh
+            name: macOS
             logs: /home/runneradmin/.cpan*/work/**/*.log
 
           # The following are known errors/warnings when running on Windows:
@@ -86,6 +90,7 @@ jobs:
           #   cp: cannot create symbolic link '/home/runneradmin/dots/test/bats/test/fixtures/parallel/suite/helper.bash': No such file or directory
           #   cp: cannot create symbolic link '/home/runneradmin/dots/vim/.config/nvim/init.vim': No such file or directory
           - platform: windows-latest
+            name: Windows
             launch: cmd /c setup.bat
 
             # https://github.com/msys2/setup-msys2/blob/master/main.js
@@ -93,6 +98,8 @@ jobs:
 
     # The type of runner that the job will run on
     runs-on: ${{ matrix.platform }}
+
+    name: Build [${{ matrix.name }}]
 
     # Always run the matrix even if another job fails
     if: always()

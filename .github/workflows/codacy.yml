@@ -11,13 +11,12 @@
 # For more information on Codacy Analysis CLI in general, see
 # https://github.com/codacy/codacy-analysis-cli.
 
-name: Codacy Security Scan
+name: Codacy Scan
 
 on:
   push:
     branches: [main, develop]
   pull_request:
-    # The branches below must be a subset of the branches above
     branches: [main, develop]
   schedule:
     - cron: "33 20 * * 2"
