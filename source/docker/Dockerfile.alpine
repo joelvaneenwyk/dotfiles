@@ -25,12 +25,28 @@ USER ${USERNAME}
 # Now switch to working in the user home directory
 WORKDIR /home/${USERNAME}
 
+# Copy 'dotfiles' project files into the container
+RUN mkdir -p /home/${USERNAME}/dotfiles/
 COPY --chown=${USERNAME} --chmod=755 ./*.sh /home/${USERNAME}/dotfiles/
 COPY --chown=${USERNAME} --chmod=777 ./*.md /home/${USERNAME}/dotfiles/
 COPY --chown=${USERNAME} --chmod=777 ./packages/ /home/${USERNAME}/dotfiles/packages/
 COPY --chown=${USERNAME} --chmod=777 ./docs/ /home/${USERNAME}/dotfiles/docs/
 COPY --chown=${USERNAME} --chmod=777 ./test/ /home/${USERNAME}/dotfiles/test/
-COPY --chown=${USERNAME} --chmod=777 ./source/ /home/${USERNAME}/dotfiles/source/
+COPY --chown=${USERNAME} --chmod=755 ./source/bin/*.sh /home/${USERNAME}/dotfiles/source/bin/*.sh
+COPY --chown=${USERNAME} --chmod=755 ./source/bin/*.py /home/${USERNAME}/dotfiles/source/bin/*.py
+COPY --chown=${USERNAME} --chmod=777 ./source/bin/*.bat /home/${USERNAME}/dotfiles/source/bin/*.bat
+COPY --chown=${USERNAME} --chmod=777 ./source/bin/*.ps1 /home/${USERNAME}/dotfiles/source/bin/*.ps1
+COPY --chown=${USERNAME} --chmod=777 ./source/config/ /home/${USERNAME}/dotfiles/source/config/
+COPY --chown=${USERNAME} --chmod=777 ./source/docker/ /home/${USERNAME}/dotfiles/source/docker/
+COPY --chown=${USERNAME} --chmod=777 ./source/git/ /home/${USERNAME}/dotfiles/source/git/
+COPY --chown=${USERNAME} --chmod=777 ./source/gnupg/ /home/${USERNAME}/dotfiles/source/gnupg/
+COPY --chown=${USERNAME} --chmod=777 ./source/macos/ /home/${USERNAME}/dotfiles/source/macos/
+COPY --chown=${USERNAME} --chmod=777 ./source/media/ /home/${USERNAME}/dotfiles/source/media/
+COPY --chown=${USERNAME} --chmod=777 ./source/powershell/ /home/${USERNAME}/dotfiles/source/powershell/
+COPY --chown=${USERNAME} --chmod=777 ./source/provisioning/ /home/${USERNAME}/dotfiles/source/provisioning/
+COPY --chown=${USERNAME} --chmod=777 ./source/stow/ /home/${USERNAME}/dotfiles/source/stow/
+COPY --chown=${USERNAME} --chmod=777 ./source/synology/ /home/${USERNAME}/dotfiles/source/synology/
+COPY --chown=${USERNAME} --chmod=777 ./source/windows/ /home/${USERNAME}/dotfiles/source/windows/
 
 # This will delete existing '.profile' or other configuration files when stowing
 RUN chmod a+x /home/${USERNAME}/dotfiles/*.sh /home/${USERNAME}/dotfiles/source/bin/*.sh \
