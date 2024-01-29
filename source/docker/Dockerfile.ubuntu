@@ -5,22 +5,18 @@ ENV USERNAME=${USERNAME}
 
 # ubuntu:latest does not have sudo fetch it and install it
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    sudo micro nano neofetch
-
-RUN sudo apt-get -y --no-install-recommends --only-upgrade install bash
+    && apt-get install -y --no-install-recommends micro sudo nano neofetch \
+    && apt-get -y --no-install-recommends --only-upgrade install bash
 
 # Create new user and disable password and gecos for later. See '--gecos' explained
 # well here: https://askubuntu.com/a/1195288/635348
-RUN adduser --home "/home/${USERNAME}" --disabled-password --gecos "" ${USERNAME}
-
-#  Add new user to sudo group
-RUN usermod -aG sudo "${USERNAME}"
-
-# Ensure sudo group users are not asked for a password when using
-# the sudo command by ammending sudoers file.
-RUN echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-RUN echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN adduser --home "/home/${USERNAME}" --disabled-password --gecos "" ${USERNAME} \
+    #  Add new user to sudo group
+    && usermod -aG sudo "${USERNAME}" \
+    # Ensure sudo group users are not asked for a password when using
+    # the sudo command by ammending sudoers file.
+    && echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
+    && echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Now we can set USER to the user we just created
 USER ${USERNAME}
@@ -29,19 +25,34 @@ ENV USERNAME=${USERNAME}
 # Now switch to working in the user home directory
 WORKDIR /home/${USERNAME}
 
-# Copy 'dotfiles' project files into the container
-RUN mkdir -p /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./*.sh /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./*.md /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./packages/ /home/${USERNAME}/dotfiles/packages/
-COPY --chown=${USERNAME} --chmod=644 ./docs/ /home/${USERNAME}/dotfiles/docs/
-COPY --chown=${USERNAME} --chmod=644 ./test/ /home/${USERNAME}/dotfiles/test/
-COPY --chown=${USERNAME} --chmod=644 ./source/ /home/${USERNAME}/dotfiles/source/
+# Now we can set USER to the user we just created
+USER ${USERNAME}
 
-RUN sudo apt-get update
+# Now switch to working in the user home directory
+WORKDIR /home/${USERNAME}
+
+RUN mkdir -p /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=755 ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=777 ./*.md /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=777 ./packages/ /home/${USERNAME}/dotfiles/packages/
+COPY --chown=${USERNAME} --chmod=777 ./docs/ /home/${USERNAME}/dotfiles/docs/
+COPY --chown=${USERNAME} --chmod=777 ./test/ /home/${USERNAME}/dotfiles/test/
+COPY --chown=${USERNAME} --chmod=755 ./source/bin/ /home/${USERNAME}/dotfiles/source/bin/
+COPY --chown=${USERNAME} --chmod=777 ./source/config/ /home/${USERNAME}/dotfiles/source/config/
+COPY --chown=${USERNAME} --chmod=777 ./source/docker/ /home/${USERNAME}/dotfiles/source/docker/
+COPY --chown=${USERNAME} --chmod=777 ./source/git/ /home/${USERNAME}/dotfiles/source/git/
+COPY --chown=${USERNAME} --chmod=777 ./source/gnupg/ /home/${USERNAME}/dotfiles/source/gnupg/
+COPY --chown=${USERNAME} --chmod=777 ./source/macos/ /home/${USERNAME}/dotfiles/source/macos/
+COPY --chown=${USERNAME} --chmod=777 ./source/media/ /home/${USERNAME}/dotfiles/source/media/
+COPY --chown=${USERNAME} --chmod=777 ./source/powershell/ /home/${USERNAME}/dotfiles/source/powershell/
+COPY --chown=${USERNAME} --chmod=777 ./source/provisioning/ /home/${USERNAME}/dotfiles/source/provisioning/
+COPY --chown=${USERNAME} --chmod=777 ./source/stow/ /home/${USERNAME}/dotfiles/source/stow/
+COPY --chown=${USERNAME} --chmod=777 ./source/synology/ /home/${USERNAME}/dotfiles/source/synology/
+COPY --chown=${USERNAME} --chmod=777 ./source/windows/ /home/${USERNAME}/dotfiles/source/windows/
 
 # This will delete existing '.profile' or other configuration files when stowing
-RUN bash /home/${USERNAME}/dotfiles/setup.sh --clean --force --yes
+RUN sudo apt-get update \
+    && bash /home/${USERNAME}/dotfiles/setup.sh --clean --force --yes
 
 ENTRYPOINT [ "/bin/bash", "-c" ]
 CMD ["neofetch && bash"]
