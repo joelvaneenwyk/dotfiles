@@ -1,0 +1,24 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  DOCKER: '{{if eq .OS "Windows_NT"}}C:/Program Files/Docker/Docker/resources/bin/docker.exe{{else}}docker{{end}}'
+  RM1: '{{if eq .OS "Windows_NT"}}powershell -NoProfile -Command Remove-Item -Recurse -Force {{else}}rm -rf{{end}}'
+  RM: '{{if eq .OS "Windows_NT"}}cmd /d /c rmdir /q /s{{else}}rm -rf{{end}}'
+  PY: '{{if eq .OS "Windows_NT"}}py -3{{else}}python3{{end}}'
+  PIP: '{{if eq .OS "Windows_NT"}}py -3 -m pip{{else}}pip3{{end}}'
+  YARN: yarn
+  DOCKER_SOURCE: "{{.USER_WORKING_DIR}}/source/docker"
+  PROJECT_DIR: "{{.USER_WORKING_DIR}}"
+  KILL: '{{if eq .OS "Windows_NT"}}powershell -NoProfile -Command Stop-Process -Force -EV Err -EA SilentlyContinue -Name{{else}}pkill -f{{end}}'
+
+tasks:
+  default:
+    cmds:
+      - task: docker-alpine
+    silent: true
+
+  docker-alpine:
+    cmds:
+      - '"{{fromSlash .DOCKER}}" build -f "{{fromSlash .DOCKER_SOURCE}}" --pull --force-rm "{{.PROJECT_DIR}}"'
