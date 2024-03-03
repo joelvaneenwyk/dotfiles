@@ -5,8 +5,41 @@ root = true
 
 [*]
 insert_final_newline = true
+trim_trailing_whitespace = true
 
-[*.{json,cjson}]
+#=====
+# shellcheck: Adding this globally even though it only applies to shell scripts.
+#=====
+binary_next_line = true
+switch_case_indent = true
+space_redirects = true
+keep_padding = true
+function_next_line = true
+
+#=====
+# shell scripts: Note that this modifies line endings to 'lf' which is required.
+#=====
+[*.{sh,bash,bats,conf,fish,profile}]
+end_of_line = lf
+indent_style = space
+indent_size = 4
+
+#=====
+# batch scripts: Note that this modifies line endings to 'crlf' which Windows requires.
+#=====
+[*.{bat,cmd,ps1,psd1}]
+end_of_line = crlf
+encoding = utf-8
+indent_style = space
+indent_size = 4
+
+#=====
+# Files that require there NOT having a final newline.
+#=====
+[*{CODEOWNERS}]
+insert_final_newline = false
+
+[*.{json,cjson,jsonc}]
 indent_style = space
 indent_size = 4
 
@@ -14,16 +47,8 @@ indent_size = 4
 indent_style = space
 indent_size = 2
 
-[*.{bat,cmd,ps1,psd1}]
+[*.{yml,yaml}]
 indent_style = space
-indent_size = 4
+indent_size = 2
 
-[*.{sh,bash,bats,conf,fish,profile}]
-indent_style = space
-indent_size = 4
-binary_next_line = true
-switch_case_indent = true
-space_redirects = true
-keep_padding = true
-function_next_line = true
-end_of_line = lf
+
