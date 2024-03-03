@@ -1,61 +1,219 @@
 {
     "[bat]": {
-        "files.encoding": "windows1252",
-        "editor.tabSize": 4,
         "editor.detectIndentation": false,
+        "editor.formatOnSave": false,
+        "editor.guides.indentation": true,
+        "editor.tabSize": 4,
         "editor.trimAutoWhitespace": true,
         "editor.useTabStops": false,
-        "editor.guides.indentation": true,
-        "editor.formatOnSave": false
+        "files.encoding": "windows1252"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features",
+        "editor.formatOnSave": true
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features",
+        "editor.formatOnSave": true
+    },
+    "[markdown]": {
+        "cSpell.advanced.feature.useReferenceProviderRemove": "/^#+\\s/",
+        "cSpell.advanced.feature.useReferenceProviderWithRename": true,
+        "cSpell.fixSpellingWithRenameProvider": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit"
+        },
+        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+        "editor.formatOnSave": true,
+        "editor.quickSuggestions": {
+            "comments": "off",
+            "other": "off",
+            "strings": "off"
+        },
+        "editor.unicodeHighlight.ambiguousCharacters": false,
+        "editor.unicodeHighlight.invisibleCharacters": false,
+        "editor.wordWrap": "on"
+    },
+    "[powershell]": {
+        "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
+        "editor.formatOnSave": true,
+        "editor.semanticHighlighting.enabled": false,
+        "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+    },
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true
+    },
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true
+    },
+    "[shellscript]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format",
+        "editor.formatOnSave": true,
+        "files.eol": "\n"
+    },
+    "[shellscript]": {
+        "editor.defaultFormatter": "foxundermoon.shell-format",
+        "editor.formatOnSave": true,
+        "files.eol": "\n"
     },
     "[yaml]": {
         "editor.formatOnSave": true
     },
-    "[python]": {
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit",
-            "source.fixAll": "explicit"
-        },
-        "editor.defaultFormatter": "charliermarsh.ruff"
-    },
-    "[shellscript]": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "foxundermoon.shell-format",
-        "files.eol": "\n"
-    },
-    "shellcheck.enable": true,
-    "shellcheck.useWorkspaceRootAsCwd": true,
-    "shellcheck.executablePath": "shellcheck",
-    "shellcheck.run": "onType",
-    "shellcheck.enableQuickFix": true,
-    "shellcheck.logLevel": "debug",
-    "shellcheck.customArgs": [
-        "-W0",
-        "--enable=all",
-        "--external-sources",
-        "--root=${workspaceFolder}",
-        "--source-path=${workspaceFolder}",
-        "--source-path=${workspaceFolder}/source/stow"
-    ],
-    "shellcheck.ignorePatterns": {
-        ".gitignore": true,
-        "**/.gitignore": true,
-        "**/.mailcap": true,
-        "**/git-fuzy": true,
-        "**/test_canonicalize_path": true,
-        "**/test_readlink_emulation": true,
-        "**/default.mustache": true,
-        "packages/fish/.config/**/*.sh": true,
-        "packages/fish/.config/base16-shell/**/*": true,
-        "packages/fish/.config/base16-fzf/**/*": true,
-        "packages/fish/.config/git-fuzzy/**/*": true,
-        "test/bats/**/*.bats": true,
-        "test/test_helper/**/*": true
-    },
-    "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
     "bashIde.includeAllWorkspaceSymbols": true,
-    "markdownlint.ignore": ".markdownlintignore",
+    "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
+    "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
+    "batch-runner.saveFileBeforeRun": true,
+    "beautify.language": {
+        "css": [
+            "css",
+            "scss"
+        ],
+        "html": [
+            "htm",
+            "html"
+        ],
+        "js": {
+            "ext": [
+                "js",
+                "json",
+                "jsonc"
+            ],
+            "filename": [
+                ".jshintrc",
+                ".jsbeautifyrc"
+            ],
+            "type": [
+                "javascript",
+                "json",
+                "json"
+            ]
+        }
+    },
+    "bookmarks.saveBookmarksInProject": true,
+    "bookmarks.sideBar.expanded": true,
+    "bookmarks.useWorkaroundForFormatters": true,
+    "C_Cpp.autocompleteAddParentheses": true,
+    "dotnetAcquisitionExtension.installTimeoutValue": 15000,
+    "editor.fontFamily": "PragmataPro Nerd Font, PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, JetBrains Mono NL, Menlo, Monaco, Consolas, Courier New, monospace",
+    "editor.fontLigatures": true,
+    "esbonio.server.enabled": false,
+    "eslint.codeActionsOnSave.mode": "problems",
+    "eslint.debug": true,
+    "eslint.experimental.useFlatConfig": false,
+    "eslint.format.enable": true,
+    "eslint.lintTask.enable": true,
+    "eslint.useESLintClass": true,
+    "evenBetterToml.formatter.alignComments": true,
+    "evenBetterToml.formatter.alignEntries": true,
+    "evenBetterToml.formatter.allowedBlankLines": 1,
+    "evenBetterToml.formatter.columnWidth": 100,
+    "evenBetterToml.formatter.indentEntries": true,
+    "evenBetterToml.formatter.trailingNewline": true,
+    "evenBetterToml.schema.cache.diskExpiration": 6000,
+    "evenBetterToml.schema.cache.memoryExpiration": 200,
+    "evenBetterToml.schema.links": true,
+    "evenBetterToml.semanticTokens": true,
+    "files.associations": {
+        "*.bats": "shellscript",
+        "*.conf": "properties",
+        "*.in": "perl",
+        "*.json.git": "jsonc",
+        "*.omp.json": "jsonc",
+        "*.post": "shellscript",
+        "*.shbat": "shellscript",
+        "*.template": "properties",
+        ".editorconfig": "editorconfig",
+        ".gitconfig_*": "properties",
+        ".gitignore": "properties",
+        ".gitmodules": "properties",
+        ".inputrc": "ini",
+        ".wslconfig": "properties",
+        "chkstow": "perl",
+        "clink_settings": "ini",
+        "cpanfile": "perl",
+        "edf": "shellscript",
+        "flake8": "ini",
+        "get-version": "perl",
+        "LICENSE": "plaintext",
+        "setup": "shellscript",
+        "stow": "perl"
+    },
+    "files.autoGuessEncoding": true,
+    "files.exclude": {
+        "**/.DS_Store": true,
+        "**/.git": true,
+        "**/.hg": true,
+        "**/.svn": true,
+        "**/_build/**": true,
+        "**/blib/**": true,
+        "**/CVS": true,
+        "source/stow/autom4te.cache": true,
+        "source/stow/lib/**/*.pm": true,
+        "source/stow/tmp-testing-trees": true,
+        "source/stow/tools/texinfo/**": true
+    },
+    "gistpad.output": true,
+    "gistpad.scratchNotes.directoryFormat": "yyyy",
+    "gistpad.scratchNotes.fileFormat": "yyyy-MM-dd",
+    "gistpad.wikis.daily.directoryName": "Journal",
+    "gistpad.wikis.daily.titleFormat": "yyyy-MM-dd",
+    "git.allowNoVerifyCommit": true,
+    "git.alwaysShowStagedChangesResourceGroup": true,
+    "git.autofetch": "all",
+    "git.autofetchPeriod": 300,
+    "git.autoStash": true,
+    "git.branchProtection": [
+        "main",
+        "develop"
+    ],
+    "git.closeDiffOnOperation": true,
+    "git.confirmForcePush": true,
+    "git.enableCommitSigning": true,
+    "git.fetchOnPull": true,
+    "git.inputValidationLength": 80,
+    "git.inputValidationSubjectLength": 70,
+    "git.mergeEditor": true,
+    "git.openAfterClone": "whenNoFolderOpen",
+    "git.postCommitCommand": "push",
+    "git.pruneOnFetch": true,
+    "git.pullBeforeCheckout": true,
+    "git.rebaseWhenSync": true,
+    "git.repositoryScanMaxDepth": 10,
+    "git.requireGitUserConfig": false,
+    "inlineChat.showToolbarIcon": true,
+    "java.help.collectErrorLog": true,
+    "java.help.firstView": "none",
+    "java.help.showReleaseNotes": false,
+    "json.format.enable": true,
+    "json.validate.enable": true,
+    "Lua.diagnostics.enable": true,
+    "Lua.diagnostics.globals": [
+        "path",
+        "settings",
+        "rl",
+        "cmderGitStatusOptIn",
+        "pause",
+        "logger",
+        "hs",
+        "usbWatcher",
+        "keyboardLayout",
+        "log",
+        "unicode",
+        "console"
+    ],
+    "Lua.format.enable": true,
+    "Lua.hint.setType": true,
+    "Lua.workspace.checkThirdParty": true,
     "Lua.workspace.ignoreDir": [
         ".vscode",
         "micro/.config/micro",
@@ -70,145 +228,13 @@
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library",
         "${3rd}/luassert/library",
     ],
-    "xml.validation.enabled": false,
-    "stylelint.enable": false,
-    "vscode-lua-format.configPath": "source/config/.lua-style",
-    "git.requireGitUserConfig": false,
-    "editor.fontFamily": "PragmataPro Nerd Font, PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, JetBrains Mono NL, Menlo, Monaco, Consolas, Courier New, monospace",
-    "editor.fontLigatures": true,
-    "json.validate.enable": true,
-    "workbench.colorCustomizations": {
-        "terminal.foreground": "#b69f83",
-        "terminal.background": "#181818"
-    },
-    "terminal.integrated.env.windows": {
-        "PATH": "${env:PATH};${workspaceFolder};${workspaceFolder}\\source\\windows\\bin;${workspaceFolder}\\source\\bin;${workspaceFolder}\\secrets\\bin;${workspaceFolder}\\source\\stow\\tools"
-    },
-    "terminal.integrated.fontSize": 16,
-    "terminal.integrated.cursorBlinking": true,
-    "terminal.integrated.shellIntegration.enabled": true,
-    "terminal.integrated.minimumContrastRatio": 1,
-    "terminal.integrated.fontFamily": "PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
-    "terminal.integrated.environmentChangesRelaunch": false,
-    "terminal.integrated.confirmOnExit": "never",
-    "terminal.integrated.showExitAlert": false,
-    "terminal.integrated.cwd": "${workspaceFolder}",
-    "terminal.integrated.defaultProfile.windows": "Command Prompt",
-    "terminal.integrated.profiles.windows": {
-        "PowerShell": {
-            "source": "PowerShell",
-            "args": [
-                "-nologo"
-            ],
-            "icon": "terminal-powershell"
-        },
-        "Command Prompt": {
-            "path": [
-                "${env:windir}\\Sysnative\\cmd.exe",
-                "${env:windir}\\System32\\cmd.exe"
-            ],
-            "args": [],
-            "icon": "terminal-cmd"
-        },
-        "MSYS2": {
-            "path": [
-                "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\bash.exe"
-            ],
-            "args": [
-                "--login",
-                "-i"
-            ],
-            "env": {
-                "MSYSTEM": "MINGW64",
-                "CHERE_INVOKING": "1",
-                "MSYS2_PATH_TYPE": "inherit"
-            },
-            "icon": "terminal-bash"
-        },
-        "Fish": {
-            "path": [
-                "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\fish.exe"
-            ],
-            "args": [
-                "--login",
-                "-i"
-            ],
-            "env": {
-                "MSYSTEM": "MSYS2",
-                "CHERE_INVOKING": "1",
-                "MSYS2_PATH_TYPE": "inherit"
-            },
-            "icon": "terminal"
-        },
-        "Git Bash": {
-            "source": "Git Bash",
-            "icon": "terminal-bash"
-        }
-    },
-    "terminal.integrated.defaultProfile.osx": "bash",
-    "terminal.integrated.profiles.osx": {
-        "sh": {
-            "path": "sh",
-            "args": []
-        },
-        "bash": {
-            "path": "bash",
-            "args": [
-                "-l"
-            ],
-            "icon": "terminal-bash"
-        },
-        "zsh": {
-            "path": "zsh",
-            "args": [
-                "-l"
-            ]
-        },
-        "fish": {
-            "path": "fish",
-            "args": [
-                "-l"
-            ]
-        },
-        "tmux": {
-            "path": "tmux",
-            "icon": "terminal-tmux"
-        },
-        "pwsh": {
-            "path": "pwsh",
-            "icon": "terminal-powershell"
-        }
-    },
-    "terminal.integrated.scrollback": 20000,
-    "terminal.integrated.defaultProfile.linux": "bash",
-    "terminal.integrated.profiles.linux": {
-        "sh": {
-            "path": "sh",
-            "args": [
-                "-l"
-            ]
-        },
-        "bash": {
-            "path": "sh",
-            // Alternative: "args": ["-c", "set -x && . ~/.profile && bash"],
-            "args": [],
-            "icon": "terminal-bash"
-        },
-        "zsh": {
-            "path": "zsh"
-        },
-        "fish": {
-            "path": "fish"
-        },
-        "tmux": {
-            "path": "tmux",
-            "icon": "terminal-tmux"
-        },
-        "pwsh": {
-            "path": "pwsh",
-            "icon": "terminal-powershell"
-        }
-    },
+    "markdownlint.ignore": ".markdownlintignore",
+    "npm-intellisense.scanDevDependencies": true,
+    "npm-intellisense.showBuildInLibs": true,
+    "npm.enableRunFromFolder": true,
+    "npm.packageManager": "yarn",
+    "npm.scriptExplorerAction": "run",
+    "oneDarkPro.vivid": true,
     "perl.enable": true,
     "perl.perlCmd": "${env:USERPROFILE}/.local/perl/perl/bin/perl.exe",
     "perl.perlInc": [
@@ -217,48 +243,110 @@
         "${workspaceFolder}/bin",
         "${workspaceFolder}/t"
     ],
-    "beautify.language": {
-        "js": {
-            "type": [
-                "javascript",
-                "json",
-                "json"
-            ],
-            "filename": [
-                ".jshintrc",
-                ".jsbeautifyrc"
-            ],
-            "ext": [
-                "js",
-                "json",
-                "jsonc"
-            ]
-        },
-        "css": [
-            "css",
-            "scss"
-        ],
-        "html": [
-            "htm",
-            "html"
-        ]
+    "powershell.codeFormatting.addWhitespaceAroundPipe": true,
+    "powershell.codeFormatting.alignPropertyValuePairs": true,
+    "powershell.codeFormatting.ignoreOneLineBlock": false,
+    "powershell.codeFormatting.trimWhitespaceAroundPipe": false,
+    "powershell.codeFormatting.useCorrectCasing": true,
+    "powershell.codeFormatting.whitespaceAfterSeparator": true,
+    "powershell.codeFormatting.whitespaceAroundOperator": true,
+    "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
+    "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
+    "powershell.codeFormatting.whitespaceBetweenParameters": true,
+    "powershell.codeFormatting.whitespaceInsideBrace": true,
+    "powershell.integratedConsole.showOnStartup": false,
+    "powershell.integratedConsole.suppressStartupBanner": true,
+    "powershell.scriptAnalysis.enable": true,
+    "powershell.scriptAnalysis.settingsPath": "source/config/PSScriptAnalyzerSettings.psd1",
+    "problems.showCurrentInStatus": true,
+    "problems.sortOrder": "position",
+    "python.analysis.typeCheckingMode": "basic",
+    //
+    // Ignore/disable features or extensions
+    //
+    "restructuredtext.languageServer.disabled": true,
+    "restructuredtext.syntaxHighlighting.disabled": true,
+    "search.useIgnoreFiles": false,
+    "shellcheck.customArgs": [
+        "-W0",
+        "--enable=all",
+        "--external-sources",
+        "--root=${workspaceFolder}",
+        "--source-path=${workspaceFolder}",
+        "--source-path=${workspaceFolder}/source/stow"
+    ],
+    "shellcheck.customArgs": [
+        "-W0",
+        "--enable=all",
+        "--external-sources",
+        "--root=${workspaceFolder}",
+        "--source-path=${workspaceFolder}",
+        "--source-path=${workspaceFolder}/source/stow"
+    ],
+    "shellcheck.enable": true,
+    "shellcheck.enable": true,
+    "shellcheck.enableQuickFix": true,
+    "shellcheck.enableQuickFix": true,
+    "shellcheck.executablePath": "shellcheck",
+    "shellcheck.executablePath": "shellcheck",
+    "shellcheck.ignorePatterns": {
+        "**/.gitignore": true,
+        "**/.mailcap": true,
+        "**/default.mustache": true,
+        "**/git-fuzy": true,
+        "**/test_canonicalize_path": true,
+        "**/test_readlink_emulation": true,
+        ".gitignore": true,
+        "packages/fish/.config/**/*.sh": true,
+        "packages/fish/.config/base16-fzf/**/*": true,
+        "packages/fish/.config/base16-shell/**/*": true,
+        "packages/fish/.config/git-fuzzy/**/*": true,
+        "test/bats/**/*.bats": true,
+        "test/test_helper/**/*": true
     },
+    "shellcheck.ignorePatterns": {
+        "**/.gitignore": true,
+        "**/.mailcap": true,
+        "**/default.mustache": true,
+        "**/git-fuzy": true,
+        "**/test_canonicalize_path": true,
+        "**/test_readlink_emulation": true,
+        ".gitignore": true,
+        "packages/fish/.config/**/*.sh": true,
+        "packages/fish/.config/base16-fzf/**/*": true,
+        "packages/fish/.config/base16-shell/**/*": true,
+        "packages/fish/.config/git-fuzzy/**/*": true,
+        "test/bats/**/*.bats": true,
+        "test/test_helper/**/*": true
+    },
+    "shellcheck.logLevel": "debug",
+    "shellcheck.logLevel": "debug",
+    "shellcheck.run": "onType",
+    "shellcheck.run": "onType",
+    "shellcheck.useWorkspaceRootAsCwd": true,
+    "shellcheck.useWorkspaceRootAsCwd": true,
+    "sonarlint.connectedMode.project": {
+        "connectionId": "Joel Van Eenwyk",
+        "projectKey": "joelvaneenwyk_dotfiles"
+    },
+    "stylelint.enable": false,
+    "svn.ignoreMissingSvnWarning": true,
+    "task.quickOpen.showAll": true,
+    "task.slowProviderWarning": true,
     "taskExplorer.autoRefresh": true,
-    "taskExplorer.showFavoritesButton": true,
-    "taskExplorer.enableNsis": false,
-    "taskExplorer.enableGradle": false,
-    "taskExplorer.showLastTasks": false,
     "taskExplorer.enableAnsiconForAnt": false,
     "taskExplorer.enableAnt": false,
     "taskExplorer.enableAppPublisher": false,
     "taskExplorer.enableBash": true,
     "taskExplorer.enableBatch": true,
+    "taskExplorer.enableGradle": false,
     "taskExplorer.enableGrunt": false,
     "taskExplorer.enableGulp": false,
+    "taskExplorer.enableMake": false,
+    "taskExplorer.enableMaven": false,
+    "taskExplorer.enableNsis": false,
     "taskExplorer.enablePerl": true,
     "taskExplorer.enableRuby": false,
-    "taskExplorer.enableMaven": false,
-    "taskExplorer.enableMake": false,
     "taskExplorer.exclude": [
         "**/_Inline/**",
         "**/.mypy_cache/**",
@@ -269,205 +357,146 @@
         "**/.tmp/**",
         "**/.vagrant/**"
     ],
-    "files.exclude": {
-        "**/.git": true,
-        "**/.svn": true,
-        "**/.hg": true,
-        "**/CVS": true,
-        "**/.DS_Store": true,
-        "source/stow/lib/**/*.pm": true,
-        "source/stow/tmp-testing-trees": true,
-        "source/stow/autom4te.cache": true,
-        "source/stow/tools/texinfo/**": true,
-        "**/_build/**": true,
-        "**/blib/**": true
+    "taskExplorer.showFavoritesButton": true,
+    "taskExplorer.showLastTasks": false,
+    "terminal.integrated.confirmOnExit": "never",
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.defaultProfile.osx": "bash",
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "terminal.integrated.env.windows": {
+        "PATH": "${env:PATH};${workspaceFolder};${workspaceFolder}\\source\\windows\\bin;${workspaceFolder}\\source\\bin;${workspaceFolder}\\secrets\\bin;${workspaceFolder}\\source\\stow\\tools"
     },
-    "files.associations": {
-        "LICENSE": "plaintext",
-        ".inputrc": "ini",
-        "*.json.git": "jsonc",
-        "*.omp.json": "jsonc",
-        "*.in": "perl",
-        "edf": "shellscript",
-        "*.shbat": "shellscript",
-        "*.bats": "shellscript",
-        "*.post": "shellscript",
-        "setup": "shellscript",
-        "stow": "perl",
-        "chkstow": "perl",
-        "get-version": "perl",
-        "cpanfile": "perl",
-        "flake8": "ini",
-        "*.conf": "properties",
-        ".wslconfig": "properties",
-        "*.template": "properties",
-        ".gitconfig_*": "properties",
-        ".gitignore": "properties",
-        ".gitmodules": "properties",
-        ".editorconfig": "editorconfig"
-    },
-    "[json]": {
-        "editor.defaultFormatter": "vscode.json-language-features",
-        "editor.formatOnSave": true
-    },
-    "[jsonc]": {
-        "editor.defaultFormatter": "vscode.json-language-features",
-        "editor.formatOnSave": true
-    },
-    "json.format.enable": true,
-    "[markdown]": {
-        "editor.unicodeHighlight.ambiguousCharacters": false,
-        "editor.unicodeHighlight.invisibleCharacters": false,
-        "editor.wordWrap": "on",
-        "editor.quickSuggestions": {
-            "comments": "off",
-            "strings": "off",
-            "other": "off"
+    "terminal.integrated.environmentChangesRelaunch": false,
+    "terminal.integrated.fontFamily": "PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
+    "terminal.integrated.fontSize": 16,
+    "terminal.integrated.minimumContrastRatio": 1,
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            // Alternative: "args": ["-c", "set -x && . ~/.profile && bash"],
+            "args": [],
+            "icon": "terminal-bash",
+            "path": "sh"
         },
-        "cSpell.fixSpellingWithRenameProvider": true,
-        "cSpell.advanced.feature.useReferenceProviderWithRename": true,
-        "cSpell.advanced.feature.useReferenceProviderRemove": "/^#+\\s/",
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
-        "editor.codeActionsOnSave": {
-            "source.fixAll": "explicit"
+        "fish": {
+            "path": "fish"
+        },
+        "pwsh": {
+            "icon": "terminal-powershell",
+            "path": "pwsh"
+        },
+        "sh": {
+            "args": [
+                "-l"
+            ],
+            "path": "sh"
+        },
+        "tmux": {
+            "icon": "terminal-tmux",
+            "path": "tmux"
+        },
+        "zsh": {
+            "path": "zsh"
         }
     },
-    "[powershell]": {
-        "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
-        "editor.semanticHighlighting.enabled": false,
-        "editor.formatOnSave": true,
-        "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+    "terminal.integrated.profiles.osx": {
+        "bash": {
+            "args": [
+                "-l"
+            ],
+            "icon": "terminal-bash",
+            "path": "bash"
+        },
+        "fish": {
+            "args": [
+                "-l"
+            ],
+            "path": "fish"
+        },
+        "pwsh": {
+            "icon": "terminal-powershell",
+            "path": "pwsh"
+        },
+        "sh": {
+            "args": [],
+            "path": "sh"
+        },
+        "tmux": {
+            "icon": "terminal-tmux",
+            "path": "tmux"
+        },
+        "zsh": {
+            "args": [
+                "-l"
+            ],
+            "path": "zsh"
+        }
     },
-    "powershell.integratedConsole.showOnStartup": false,
-    "powershell.integratedConsole.suppressStartupBanner": true,
-    "powershell.scriptAnalysis.enable": true,
-    "powershell.scriptAnalysis.settingsPath": "source/config/PSScriptAnalyzerSettings.psd1",
-    "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
-    "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
-    "powershell.codeFormatting.whitespaceAroundOperator": true,
-    "powershell.codeFormatting.whitespaceAfterSeparator": true,
-    "powershell.codeFormatting.whitespaceInsideBrace": true,
-    "powershell.codeFormatting.whitespaceBetweenParameters": true,
-    "powershell.codeFormatting.addWhitespaceAroundPipe": true,
-    "powershell.codeFormatting.trimWhitespaceAroundPipe": false,
-    "powershell.codeFormatting.ignoreOneLineBlock": false,
-    "powershell.codeFormatting.alignPropertyValuePairs": true,
-    "powershell.codeFormatting.useCorrectCasing": true,
-    "cSpell.ignorePaths": [
-        "**/package-lock.json",
-        "**/node_modules/**",
-        "**/vscode-extension/**",
-        "**/.git/objects/**",
-        ".vscode/**",
-        ".vscode-insiders/**",
-        "source/stow/**/*",
-        "source/windows/clink-completions/**",
-        "packages/fish/.base16_theme",
-        "packages/fish/.config/base16-shell/**",
-        "packages/fish/.config/base16-fzf/**",
-        "packages/fish/.config/git-fuzzy/**",
-        "packages/fish/.config/fish/fish_variables",
-        "packages/vim/.vim/bundle/vundle/**",
-        "packages/micro/.config/micro/**",
-        "packages/macos/Library/**",
-        "test/bats/**",
-        "test/test_helper/**",
-        ".Xresources",
-        ".xmobarrc",
-        ".travis.yml"
-    ],
-    "cSpell.words": [
-        "agnoster",
-        "antialiasing",
-        "asdf",
-        "Autobuild",
-        "autocrlf",
-        "Backblaze",
-        "beaners",
-        "bmalehorn",
-        "buildx",
-        "codacy",
-        "codeql",
-        "commandline",
-        "compat",
-        "cpan",
-        "cpanm",
-        "cygdrive",
-        "cygpath",
-        "devcontainer",
-        "distro",
-        "dockerhub",
-        "donjayamanne",
-        "doskey",
-        "dotfile",
-        "dotfiles",
-        "eamodio",
-        "eval",
-        "filelocator",
-        "Fullscreen",
-        "fundle",
-        "githistory",
-        "gmail",
-        "grayscale",
-        "hookyqr",
-        "jdve",
-        "jetmartin",
-        "joelvaneenwyk",
-        "keyscan",
-        "kleopatra",
-        "Mailmate",
-        "mhutchie",
-        "mingw",
-        "mkdir",
-        "MobaXterm",
-        "msvcrt",
-        "msys",
-        "msysgit",
-        "msystem",
-        "mycelio",
-        "mycoshiro",
-        "noconfirm",
-        "nvim",
-        "pacman",
-        "powerline",
-        "PragmataProMonoLiga",
-        "pwsh",
-        "pyright",
-        "qemu",
-        "restow",
-        "rlespinasse",
-        "rogalmic",
-        "runneradmin",
-        "semver",
-        "shellcheck",
-        "submodules",
-        "symlink",
-        "symlinking",
-        "symlinks",
-        "synoservicectl",
-        "timonwong",
-        "tldr",
-        "trackpad",
-        "USERPROFILE",
-        "Venv",
-        "vundle",
-        "xclip",
-        "xero",
-        "xmonad",
-        "yabai"
-    ],
-    //
-    // Ignore/disable features or extensions
-    //
-    "restructuredtext.languageServer.disabled": true,
-    "restructuredtext.syntaxHighlighting.disabled": true,
-    "svn.ignoreMissingSvnWarning": true,
-    "esbonio.server.enabled": false,
-    "search.useIgnoreFiles": false,
-    "python.analysis.typeCheckingMode": "basic",
-    "Lua.workspace.checkThirdParty": true,
-    "Lua.format.enable": true,
-    "Lua.hint.setType": true,
-    "Lua.diagnostics.enable": true
+    "terminal.integrated.profiles.windows": {
+        "Command Prompt": {
+            "args": [],
+            "env": {
+                // "PROMPT": "$P$G",
+                // "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
+                // "PATH": "${env:PATH};${env:windir}\\System32;${env:windir}"
+                "CLINK_INJECTED": null,
+                "MYCELIO_ROOT": null,
+                "MYCELIO_SKIP_INIT": null
+            },
+            "icon": "terminal-cmd",
+            "path": [
+                "${env:windir}\\Sysnative\\cmd.exe",
+                "${env:windir}\\System32\\cmd.exe"
+            ]
+        },
+        "myco-fish": {
+            "args": [
+                "--login",
+                "-i"
+            ],
+            "env": {
+                "CHERE_INVOKING": "1",
+                "MSYS2_PATH_TYPE": "inherit",
+                "MSYSTEM": "MSYS2"
+            },
+            "icon": "terminal",
+            "path": [
+                "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\fish.exe"
+            ]
+        },
+        "myco-msys2": {
+            "args": [
+                "--login",
+                "-i"
+            ],
+            "env": {
+                "CHERE_INVOKING": "1",
+                "MSYS2_PATH_TYPE": "inherit",
+                "MSYSTEM": "MINGW64"
+            },
+            "icon": "terminal-bash",
+            "path": [
+                "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\bash.exe"
+            ]
+        },
+        "PowerShell": {
+            "args": [
+                "-nologo"
+            ],
+            "icon": "terminal-powershell",
+            "source": "PowerShell"
+        }
+    },
+    "terminal.integrated.scrollback": 20000,
+    "terminal.integrated.shellIntegration.enabled": true,
+    "terminal.integrated.showExitAlert": false,
+    "timeline.pageOnScroll": true,
+    "vscode-lua-format.configPath": "source/config/.lua-style",
+    "window.density.editorTabHeight": "default",
+    "workbench.colorCustomizations": {
+        "terminal.background": "#181818",
+        "terminal.foreground": "#b69f83"
+    },
+    "xml.validation.enabled": false
 }
