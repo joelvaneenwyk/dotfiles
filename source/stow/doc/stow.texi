@@ -463,7 +463,7 @@ number of times.
 
 @item -S
 @item --stow
-explictly stow the package name(s) that follow this option.  May be
+explicitly stow the package name(s) that follow this option.  May be
 omitted if you are not using the @option{-D} or @option{-R} options in the
 same invocation.  @xref{Mixing Operations}, for details of when you
 might like to use this feature. This option may be repeated any number
