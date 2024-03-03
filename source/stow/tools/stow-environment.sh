@@ -467,7 +467,7 @@ function install_perl_dependencies() {
         )
     fi
 
-    # Additional modules if runing in MSYS2
+    # Additional modules if running in MSYS2
     if [ -n "${MSYSTEM:-}" ]; then
         modules+=(ExtUtils::PL2Bat Inline::C Win32::Mutex)
     fi
