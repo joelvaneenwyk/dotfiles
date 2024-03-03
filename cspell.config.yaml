@@ -1,0 +1,62 @@
+version: "0.2"
+enabled: true
+dictionaryDefinitions:
+  - name: dotfiles-common
+    path: ./.cspell/dotfiles-common.txt
+    addWords: true
+  - name: dotfiles-lua
+    path: ./.cspell/dotfiles-lua.txt
+  - name: dotfiles-unknown
+    path: ./.cspell/dotfiles-unknown.txt
+  - name: dotfiles-stow
+    path: ./.cspell/dotfiles-stow.txt
+dictionaries:
+  - dotfiles-common
+  - dotfiles-lua
+  - dotfiles-stow
+  - dotfiles-unknown
+  - companies
+  - cpp
+  - csharp
+  - docker
+  - css
+  - filetypes
+  - python
+  - data-science
+  - python-common
+  - lua
+language: en,en-GB,en-US
+ignorePaths:
+  - "./**/*.otf"
+  - "./**/*.plist"
+  - ".git/objects/**"
+  - ".travis.yml"
+  - ".vscode-insiders/**"
+  - ".vscode/**"
+  - ".xmobarrc"
+  - ".Xresources"
+  - "node_modules/**"
+  - "package-lock.json"
+  - "packages/fish/.base16_theme"
+  - "packages/fish/.config/base16-fzf/**"
+  - "packages/fish/.config/base16-shell/**"
+  - "packages/fish/.config/fish/fish_variables"
+  - "packages/fish/.config/git-fuzzy/**"
+  - "packages/macos/Library/**"
+  - "packages/micro/.config/micro/**"
+  - "packages/vim/.vim/bundle/vundle/**"
+  - "secrets/"
+  - "source/windows/clink-completions/**"
+  - "test/bats/**"
+  - "test/test_helper/**"
+  - "vscode-extension/**"
+  - "yarn.lock"
+enableFiletypes:
+  - bat
+  - bats
+  - env
+  - fish
+  - perl
+  - python
+  - toml
+  - vb
