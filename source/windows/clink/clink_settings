@@ -1,3 +1,7 @@
+#
+# Clink settings for `dotfiles` profile
+#
+
 # name: Auto-update the Clink program files
 # type: enum
 # options: off,check,prompt,auto
@@ -21,6 +25,10 @@ color.arg = bold yellow
 # type: color
 color.arginfo = yellow
 
+# name: Color for home dir tilde
+# type: color
+color.autoexpandtilde = bright cyan
+
 # name: Shell command completions
 # type: color
 color.cmd = bold yellow
@@ -41,9 +49,21 @@ color.comment_row = bright white on cyan
 # type: color
 color.description = bright cyan
 
+# name: Color for command divider line
+# type: color
+color.divider_line = sgr 30;48;5;25
+
+# name: Color for command end divider line
+# type: color
+color.divider_line_end = sgr 38;5;25
+
 # name: Doskey completions
 # type: color
 color.doskey = bold cyan
+
+# name: Color for escape for plain tilde
+# type: color
+color.escapetilde = bright cyan on blue
 
 # name: Filtered completion color
 # type: color
@@ -61,6 +81,10 @@ color.git.star = bright green
 # type: color
 color.interact = bold
 
+# name: Color for 'rem lua:' prefix
+# type: color
+color.luaprefix = bright cyan on blue
+
 # name: Message area color
 # type: color
 color.message = default
@@ -76,6 +100,14 @@ color.suggestion = bright black
 # name: Unexpected argument color
 # type: color
 color.unexpected = default
+
+# name: Color for yarn run local module
+# type: color
+color.yarn.module = bright green
+
+# name: Color for yarn run project.json script
+# type: color
+color.yarn.script = bright blue
 
 # name: Match executables in current directory
 # type: boolean
@@ -122,7 +154,16 @@ history.save = True
 # type: boolean
 history.shared = True
 
+# name: Clink mouse input
+# type: enum
+# options: off,on,auto
+terminal.mouse_input = on
+
 # name: Support Windows' Ctrl-Alt substitute for AltGr
 # type: boolean
 terminal.use_altgr_substitute = True
+
+# name: Show a tip when Clink starts
+# type: boolean
+tips.enable = False
 
