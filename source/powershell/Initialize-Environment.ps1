@@ -46,13 +46,13 @@ Function Test-CommandValid {
 Function AddSymbolicLinkPermissions($accountToAdd) {
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if (-not ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))) {
-        Write-Host "Unable to add symbolic link privileges. Please run as administrator."
+        Write-Host 'Unable to add symbolic link privileges. Please run as administrator.'
     }
     else {
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord | Out-Null
         Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\.NetFramework\v4.0.30319' -Name 'SchUseStrongCrypto' -Value '1' -Type DWord | Out-Null
 
-        Write-Host "Checking SymLink permissions.."
+        Write-Host 'Checking SymLink permissions..'
         $sidstr = $null
         try {
             $ntprincipal = New-Object System.Security.Principal.NTAccount "$accountToAdd"
@@ -65,26 +65,26 @@ Function AddSymbolicLinkPermissions($accountToAdd) {
 
         Write-Host "Account: $($accountToAdd)" -ForegroundColor DarkCyan
         if ( [string]::IsNullOrEmpty($sidstr) ) {
-            Write-Host "Account not found!" -ForegroundColor Red
+            Write-Host 'Account not found!' -ForegroundColor Red
             exit -1
         }
 
         Write-Host "Account SID: $($sidstr)" -ForegroundColor DarkCyan
         $tmp = [System.IO.Path]::GetTempFileName()
-        Write-Host "Export current Local Security Policy" -ForegroundColor DarkCyan
+        Write-Host 'Export current Local Security Policy' -ForegroundColor DarkCyan
         C:\Windows\System32\SecEdit.exe /export /cfg "$($tmp)"
         $c = Get-Content -Path $tmp
-        $currentSetting = ""
+        $currentSetting = ''
         foreach ($s in $c) {
-            if ( $s -like "SECreateSymbolicLinkPrivilege*") {
-                $x = $s.split("=", [System.StringSplitOptions]::RemoveEmptyEntries)
+            if ( $s -like 'SECreateSymbolicLinkPrivilege*') {
+                $x = $s.split('=', [System.StringSplitOptions]::RemoveEmptyEntries)
                 $currentSetting = $x[1].Trim()
             }
         }
         if ( $currentSetting -notlike "*$($sidstr)*" ) {
-            Write-Host "Need to add permissions to SymLink" -ForegroundColor Yellow
+            Write-Host 'Need to add permissions to SymLink' -ForegroundColor Yellow
 
-            Write-Host "Modify Setting ""Create SymLink""" -ForegroundColor DarkCyan
+            Write-Host 'Modify Setting "Create SymLink"' -ForegroundColor DarkCyan
 
             if ( [string]::IsNullOrEmpty($currentSetting) ) {
                 $currentSetting = "*$($sidstr)"
@@ -103,20 +103,20 @@ Revision=1
 SECreateSymbolicLinkPrivilege = $($currentSetting)
 "@
             $tmp2 = [System.IO.Path]::GetTempFileName()
-            Write-Host "Import new settings to Local Security Policy" -ForegroundColor DarkCyan
+            Write-Host 'Import new settings to Local Security Policy' -ForegroundColor DarkCyan
             $outfile | Set-Content -Path $tmp2 -Encoding Unicode -Force
             Push-Location (Split-Path $tmp2)
             try {
-                C:\Windows\System32\SecEdit.exe /configure /db "secedit.sdb" /cfg "$($tmp2)" /areas USER_RIGHTS
+                C:\Windows\System32\SecEdit.exe /configure /db 'secedit.sdb' /cfg "$($tmp2)" /areas USER_RIGHTS
             }
             finally {
                 Pop-Location
             }
         }
         else {
-            Write-Host "NO ACTIONS REQUIRED! Account already in ""Create SymLink""" -ForegroundColor DarkCyan
+            Write-Host 'NO ACTIONS REQUIRED! Account already in "Create SymLink"' -ForegroundColor DarkCyan
             Write-Host "Account $accountToAdd already has permissions to SymLink" -ForegroundColor Green
-            return $true;
+            return $true
         }
     }
 }
@@ -141,22 +141,22 @@ Function Expand-File {
     )
 
     if (![System.IO.Path]::IsPathRooted($DestinationPath)) {
-        $DestinationPath = Join-Path (Get-Item -Path "./" -Verbose).FullName $DestinationPath
+        $DestinationPath = Join-Path (Get-Item -Path './' -Verbose).FullName $DestinationPath
     }
 
     if (![System.IO.Path]::IsPathRooted($Path)) {
-        $Path = Join-Path (Get-Item -Path "./" -Verbose).FullName $Path
+        $Path = Join-Path (Get-Item -Path './' -Verbose).FullName $Path
     }
 
-    $7zip = ""
+    $7zip = ''
 
     if ($IsWindows -or $ENV:OS) {
-        $7za920zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7za920.zip"
-        $7za920 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7za920"
+        $7za920zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath '7za920.zip'
+        $7za920 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath '7za920'
 
         # Download 7zip that was stored in a zip file so that we can extract the latest version stored in 7z format
         if (-not(Test-Path -Path "$7za920zip" -PathType Leaf)) {
-            Get-File -Url "https://www.7-zip.org/a/7za920.zip" -Filename "$7za920zip"
+            Get-File -Url 'https://www.7-zip.org/a/7za920.zip' -Filename "$7za920zip"
         }
 
         # Extract previous version of 7zip first
@@ -179,12 +179,12 @@ Function Expand-File {
 
         # If older vresion is available, download and extract latest
         if (Test-Path -Path "$7za920/7za.exe" -PathType Leaf) {
-            $7z2201zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2201-extra.7z"
-            $7z2201 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2201"
+            $7z2201zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath '7z2201-extra.7z'
+            $7z2201 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath '7z2201'
 
             # Download latest version of 7zip
             if (-not(Test-Path -Path "$7z2201zip" -PathType Leaf)) {
-                Get-File -Url "https://www.7-zip.org/a/7z2201-extra.7z" -Filename "$7z2201zip"
+                Get-File -Url 'https://www.7-zip.org/a/7z2201-extra.7z' -Filename "$7z2201zip"
             }
 
             # Extract latest vesrion using old version
@@ -196,7 +196,7 @@ Function Expand-File {
                 if (-not(Test-Path -Path "$7z2201/7za.exe" -PathType Leaf)) {
                     Write-Host "$7za920/7za.exe x $7z2201zip -aoa -o$7z2201 -r -y"
                     & "$7za920/7za.exe" @(
-                        "x", "$7z2201zip", "-aoa", "-o$7z2201", "-r", "-y")
+                        'x', "$7z2201zip", '-aoa', "-o$7z2201", '-r', '-y')
                     Write-Host "Extracted archive: '$7z2201'"
                 }
             }
@@ -208,12 +208,12 @@ Function Expand-File {
         }
     }
     else {
-        $7z2201zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "7z2201-linux-x64.tar.xz"
-        $7z2201 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "7z2201"
+        $7z2201zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath '7z2201-linux-x64.tar.xz'
+        $7z2201 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath '7z2201'
 
         # Download 7zip that was stored in a zip file so that we can extract the latest version stored in 7z format
         if (-not(Test-Path -Path "$7z2201zip" -PathType Leaf)) {
-            Get-File -Url "https://www.7-zip.org/a/7z2201-linux-x64.tar.xz" -Filename "$7z2201zip"
+            Get-File -Url 'https://www.7-zip.org/a/7z2201-linux-x64.tar.xz' -Filename "$7z2201zip"
         }
 
         # Extract previous version of 7zipTempDir first
@@ -236,11 +236,11 @@ Function Expand-File {
         Write-Host "Extracting archive: '$Path'"
         if ($Path -match '\.sfx\.exe$') {
             & "$Path" @(
-                "x", "-o$DestinationPath", "-y")
+                'x', "-o$DestinationPath", '-y')
         }
         elseif (Test-Path -Path "$7zip" -PathType Leaf) {
             & "$7zip" @(
-                "x", "$Path", "-aoa", "-o$DestinationPath", "-r", "-y")
+                'x', "$Path", '-aoa', "-o$DestinationPath", '-r', '-y')
         }
         else {
             Write-Host "7-zip not found: '$7zip'"
@@ -300,7 +300,7 @@ Function Get-File {
 
     # Convert local/relative path to absolute path
     if (![System.IO.Path]::IsPathRooted($Filename)) {
-        $FilePath = Join-Path (Get-Item -Path "./" -Verbose).FullName $Filename
+        $FilePath = Join-Path (Get-Item -Path './' -Verbose).FullName $Filename
     }
     else {
         $FilePath = $Filename
@@ -347,7 +347,7 @@ Function Get-File {
 
                         $copyStreamOp = $response.Content.CopyToAsync($downloadedFileStream)
 
-                        Write-Host "Download started..."
+                        Write-Host 'Download started...'
                         $copyStreamOp.Wait()
 
                         $downloadedFileStream.Close()
@@ -378,9 +378,9 @@ Function Get-File {
 Function Install-Git {
     # Install git so we can clone repositories
     try {
-        $script:MycelioGit = ""
+        $script:MycelioGit = ''
 
-        $gitCommand = (Get-Command -Name "git" -CommandType Application -ErrorAction SilentlyContinue)
+        $gitCommand = (Get-Command -Name 'git' -CommandType Application -ErrorAction SilentlyContinue)
         if ($null -ne $gitCommand) {
             $script:MycelioGit = ($gitCommand `
                 | Where-Object {
@@ -396,12 +396,12 @@ Function Install-Git {
                 | Select-Object -First 1).Definition
         }
 
-        $MycelioLocalGitDir = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "git"
-        $MycelioLocalGitBinDir = Join-Path -Path "$MycelioLocalGitDir" -ChildPath "cmd"
-        $script:MycelioLocalGit = Join-Path -Path "$MycelioLocalGitBinDir" -ChildPath "git.exe"
+        $MycelioLocalGitDir = Join-Path -Path "$script:MycelioLocalDir" -ChildPath 'git'
+        $MycelioLocalGitBinDir = Join-Path -Path "$MycelioLocalGitDir" -ChildPath 'cmd'
+        $script:MycelioLocalGit = Join-Path -Path "$MycelioLocalGitBinDir" -ChildPath 'git.exe'
 
         if (-Not (Test-Path -Path "$script:MycelioLocalGit" -PathType Leaf)) {
-            $gitFilename = "MinGit-2.33.0.2-64-bit.zip"
+            $gitFilename = 'MinGit-2.33.0.2-64-bit.zip'
             $gitArchive = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "$gitFilename"
             Get-File -Url "https://github.com/git-for-windows/git/releases/download/v2.33.0.windows.2/$gitFilename" -Filename "$gitArchive"
             Expand-File -Path "$gitArchive" -DestinationPath "$MycelioLocalGitDir"
@@ -463,9 +463,9 @@ Function Write-WindowsSandboxTemplate {
 }
 
 Function Initialize-ConsoleFont {
-    Write-Host "::group::Initialize Console Font"
+    Write-Host '::group::Initialize Console Font'
 
-    $fontBaseName = "JetBrains Mono"
+    $fontBaseName = 'JetBrains Mono'
     $fontBaseFilename = $fontBaseName -replace '\s', ''
     $fontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$fontBaseFilename.zip"
     $fontNameOriginal = "$fontBaseName Regular Nerd Font Complete Windows Compatible"
@@ -488,7 +488,7 @@ Function Initialize-ConsoleFont {
         }
     }
     catch [Exception] {
-        Write-Host "Failed to remove old font.", $_.Exception.Message
+        Write-Host 'Failed to remove old font.', $_.Exception.Message
     }
 
     # https://www.hanselman.com/blog/how-to-make-a-pretty-prompt-in-windows-terminal-with-powerline-nerd-fonts-cascadia-code-wsl-and-ohmyposh
@@ -542,7 +542,7 @@ Function Initialize-ConsoleFont {
         }
     }
     catch [Exception] {
-        Write-Host "Failed to download and install font.", $_.Exception.Message
+        Write-Host 'Failed to download and install font.', $_.Exception.Message
     }
 
     # Need to set this for console
@@ -551,7 +551,7 @@ Function Initialize-ConsoleFont {
         Set-ItemProperty -Path $key -Name '000' -Value "$fontName" -ErrorAction SilentlyContinue
     }
     catch {
-        Write-Host "Failed to update font registry. Requires administrator access."
+        Write-Host 'Failed to update font registry. Requires administrator access.'
     }
 
     # TODO Add to local local data
@@ -571,7 +571,7 @@ Function Initialize-ConsoleFont {
         }
     }
     catch [Exception] {
-        Write-Host "Failed to install WindowsConsoleFonts.", $_.Exception.Message
+        Write-Host 'Failed to install WindowsConsoleFonts.', $_.Exception.Message
     }
 
     try {
@@ -579,18 +579,18 @@ Function Initialize-ConsoleFont {
         Import-Module Terminal-Icons -ErrorAction SilentlyContinue >$null
         Set-TerminalIconsTheme -ColorTheme DevBlackOps -IconTheme DevBlackOps
 
-        Write-Host "Updated terminal icons and font."
+        Write-Host 'Updated terminal icons and font.'
     }
     catch [Exception] {
         Write-Host "Failed to update console to '$fontName' font.", $_.Exception.Message
     }
 
-    Write-Host "::endgroup::"
+    Write-Host '::endgroup::'
 }
 
 Function Get-TexLive {
     try {
-        Write-Host "::group::Get TexLive"
+        Write-Host '::group::Get TexLive'
 
         if ($IsWindows -or $ENV:OS) {
             Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -600,16 +600,16 @@ Function Get-TexLive {
             New-Item -ItemType directory -Path "$script:MycelioTempDir" | Out-Null
         }
 
-        $tempTexFolder = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "texlive-tmp"
-        $tempTexTargetFolder = Join-Path -Path "$script:MycelioLocalDir" -ChildPath "texlive-install"
-        $tempTexTargetInstall = Join-Path -Path "$tempTexTargetFolder" -ChildPath "install-tl-windows.bat"
-        $tempTexArchive = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "install-tl.zip"
+        $tempTexFolder = Join-Path -Path "$script:MycelioLocalDir" -ChildPath 'texlive-tmp'
+        $tempTexTargetFolder = Join-Path -Path "$script:MycelioLocalDir" -ChildPath 'texlive-install'
+        $tempTexTargetInstall = Join-Path -Path "$tempTexTargetFolder" -ChildPath 'install-tl-windows.bat'
+        $tempTexArchive = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath 'install-tl.zip'
 
         if (Test-Path -Path "$tempTexTargetInstall" -PathType Leaf) {
             Write-Host "Installer already available: '$tempTexTargetInstall'"
         }
         else {
-            Get-File -Url "https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip" -Filename "$tempTexArchive"
+            Get-File -Url 'https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip' -Filename "$tempTexArchive"
 
             # Remove tex folder if it exists
             If (Test-Path "$tempTexFolder" -PathType Any) {
@@ -656,8 +656,8 @@ Function Get-TexLive {
         $env:TEXMFVAR = "$env:TEXLIVE_INSTALL_TEXMFVAR"
         $env:TEXMFCONFIG = "$env:TEXLIVE_INSTALL_TEXMFCONFIG"
 
-        $texLiveProfile = Join-Path -Path "$tempTexTargetFolder" -ChildPath "install-texlive.profile"
-        Set-Content -Path "$texLiveProfile" -Value @"
+        $texLiveProfile = Join-Path -Path "$tempTexTargetFolder" -ChildPath 'install-texlive.profile'
+        Set-Content -Path "$texLiveProfile" -Value @'
 # It will NOT be updated and reflects only the
 # installation profile at installation time.
 
@@ -687,13 +687,13 @@ tlpdbopt_sys_bin /usr/local/bin
 tlpdbopt_sys_info /usr/local/share/info
 tlpdbopt_sys_man /usr/local/share/man
 tlpdbopt_w32_multi_user 0
-"@
+'@
 
         # Update PATH environment as we need to make sure 'cmd.exe' is available since the TeX Live manager
         # expected it to work.
         $env:Path = "$ENV:SystemRoot\System32\;$env:TEXLIVE_BIN;$env:Path"
 
-        $texExecutable = Join-Path -Path "$env:TEXLIVE_BIN" -ChildPath "tex.exe"
+        $texExecutable = Join-Path -Path "$env:TEXLIVE_BIN" -ChildPath 'tex.exe'
         If (Test-Path "$texExecutable" -PathType Leaf) {
             Write-Host "Skipped install. TeX already exists: '$texExecutable'"
         }
@@ -703,23 +703,23 @@ tlpdbopt_w32_multi_user 0
 
             # We redirect stderr to stdout because of a seemingly unavoidable error that we get during
             # install e.g. 'Use of uninitialized value $deftmflocal in string at C:\...\texlive-install\install-tl line 1364.'
-            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ""$env:TEXLIVE_INSTALL" -no-gui -portable -profile "$texLiveProfile"" 2>&1
+            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ''$env:TEXLIVE_INSTALL" -no-gui -portable -profile "$texLiveProfile"" 2>&1
 
             $ErrorActionPreference = $errorPreference
         }
         else {
-            Write-Host "TeX Live install process only supported on Windows."
+            Write-Host 'TeX Live install process only supported on Windows.'
         }
 
         if ($IsWindows -or $ENV:OS) {
-            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ""$env:TEXLIVE_BIN\tlmgr.bat" update -all"
+            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ''$env:TEXLIVE_BIN\tlmgr.bat" update -all"
         }
     }
     catch [Exception] {
-        Write-Host "Failed to download and extract TeX Live.", $_.Exception.Message
+        Write-Host 'Failed to download and extract TeX Live.', $_.Exception.Message
     }
     finally {
-        Write-Host "::endgroup::"
+        Write-Host '::endgroup::'
     }
 }
 
@@ -734,7 +734,7 @@ Function Start-Bash() {
         & "$script:MsysTargetDir/usr/bin/bash.exe" @('-lc') + @Args
     }
     else {
-        Write-Host "Skipped command. This is only supported on Windows."
+        Write-Host 'Skipped command. This is only supported on Windows.'
     }
 }
 
@@ -752,7 +752,7 @@ Function Test-SymbolicLink {
 
     # We redirect stderr to stdout because of a seemingly unavoidable error that we get during
     # install e.g. 'Use of uninitialized value $deftmflocal in string at C:\...\texlive-install\install-tl line 1364.'
-    & "$ENV:SystemRoot\System32\cmd.exe" /d /c "mklink "$linkTargetTemp" "$linkSource" > nul 2>&1"
+    & "$ENV:SystemRoot\System32\cmd.exe" /d /c 'mklink '$linkTargetTemp" "$linkSource" > nul 2>&1"
     if ($? -and (Test-Path $linkTargetTemp)) {
         $createdSymbolicLink = $true
         Remove-Item $linkTargetTemp
@@ -764,21 +764,21 @@ Function Test-SymbolicLink {
 }
 Function Install-MSYS2 {
     $script:MsysTargetDir = "$script:MycelioLocalDir/msys64"
-    $script:MsysInstaller = "msys2-base-x86_64-20221028.sfx.exe"
+    $script:MsysInstaller = 'msys2-base-x86_64-20221028.sfx.exe'
     $script:MsysArchive = "$script:MycelioArchivesDir/$script:MsysInstaller"
     $script:MsysUrl = "https://github.com/msys2/msys2-installer/releases/download/2022-10-28/$script:MsysInstaller"
 
     if ( -not(Test-Path -Path "$script:MsysTargetDir/mingw64.exe" -PathType Leaf) ) {
         if ( -not(Test-Path -Path "$script:MsysArchive" -PathType Leaf) ) {
-            Write-Host "::group::Download MSYS2"
+            Write-Host '::group::Download MSYS2'
             Get-File -Url "$script:MsysUrl" -Filename "$script:MsysArchive"
-            Write-Host "::endgroup::"
+            Write-Host '::endgroup::'
         }
 
         if ( -not(Test-Path -Path "$script:MsysTargetDir/usr/bin/bash.exe" -PathType Leaf) ) {
-            Write-Host "::group::Install MSYS2"
+            Write-Host '::group::Install MSYS2'
             Expand-File -Path "$script:MsysArchive" -Destination "$script:MycelioLocalDir"
-            Write-Host "::endgroup::"
+            Write-Host '::endgroup::'
         }
     }
 
@@ -786,7 +786,7 @@ Function Install-MSYS2 {
     $initializedFile = "$script:MsysTargetDir/.initialized"
 
     if (Test-Path -Path "$script:MsysTargetDir/usr/bin/bash.exe" -PathType Leaf) {
-        $mycelioRootCygwin = (& "$script:MsysTargetDir/usr/bin/cygpath.exe" "$script:MycelioRoot").TrimEnd("/")
+        $mycelioRootCygwin = (& "$script:MsysTargetDir/usr/bin/cygpath.exe" "$script:MycelioRoot").TrimEnd('/')
 
         # Create a file that gets automatically called after installation which will silence the
         # clear that happens during a normal install. This may be useful for users by default but
@@ -839,7 +839,7 @@ fi
 "@
 
         if (($IsWindows -or $ENV:OS) -and [String]::IsNullOrEmpty("$env:MSYSTEM")) {
-            $env:MSYS = "winsymlinks:native"
+            $env:MSYS = 'winsymlinks:native'
 
             if (-not (Test-Path -Path "$initializedFile" -PathType Leaf)) {
                 $homeOriginal = $env:HOME
@@ -847,16 +847,16 @@ fi
 
                 # We run this here to ensure that the first run of msys2 is done before the 'setup.sh' call
                 # as the initial upgrade of msys2 results in it shutting down the console.
-                Write-Host "::group::Initialize MSYS2 Package Manager"
+                Write-Host '::group::Initialize MSYS2 Package Manager'
                 Start-Bash "echo 'First run of MSYS2 to trigger post install.'"
 
-                Write-Host "::group::Upgrade MSYS2 Packages"
+                Write-Host '::group::Upgrade MSYS2 Packages'
                 # Upgrade all packages
                 Start-Bash 'pacman --noconfirm -Syuu'
 
                 # Clean entire package cache
                 Start-Bash 'pacman --noconfirm -Scc'
-                Write-Host "::endgroup::"
+                Write-Host '::endgroup::'
 
                 $env:HOME = "$homeOriginal"
             }
@@ -877,9 +877,9 @@ Function Install-Scoop {
     param()
 
     try {
-        Write-Host "::group::Install Scoop"
+        Write-Host '::group::Install Scoop'
 
-        if (-not(Test-CommandValid "scoop")) {
+        if (-not(Test-CommandValid 'scoop')) {
             Write-Host "Installing 'scoop' package manager..."
             Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
         }
@@ -888,7 +888,7 @@ Function Install-Scoop {
         Write-Host "Exception caught while installing 'scoop' package manager.", $_.Exception.Message
     }
     finally {
-        Write-Host "::endgroup::"
+        Write-Host '::endgroup::'
     }
 }
 
@@ -896,27 +896,27 @@ Function Install-Toolset {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPositionalParameters', '', Scope = 'Function')]
     param()
 
-    Write-Host "::group::Install Toolset"
+    Write-Host '::group::Install Toolset'
 
     Get-TexLive
 
     # Install Perl which is necessary for 'Mycelio' so that we can run it outside of MSYS2 environment.
     try {
         if (-Not (Test-Path -Path "$script:MycelioLocalDir/perl/portableshell.bat" -PathType Leaf)) {
-            $strawberryPerlVersion = "5.32.1.1"
+            $strawberryPerlVersion = '5.32.1.1'
             $strawberyPerlUrl = "https://strawberryperl.com/download/$strawberryPerlVersion/strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
             Get-File -Url "$strawberyPerlUrl" -Filename "$script:MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
             Expand-File -Path "$script:MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip" -DestinationPath "$script:MycelioLocalDir/perl"
         }
     }
     catch [Exception] {
-        Write-Host "Failed to install Strawberry Perl.", $_.Exception.Message
+        Write-Host 'Failed to install Strawberry Perl.', $_.Exception.Message
     }
 
     # Install mutagen so that we can synchronize folders much like 'rclone' but better
     try {
         if (-Not (Test-Path -Path "$script:MycelioLocalDir/mutagen/mutagen.exe" -PathType Leaf)) {
-            $mutagenVersion = "v0.11.8"
+            $mutagenVersion = 'v0.11.8'
             $mutagenArchive = "mutagen_windows_amd64_$mutagenVersion.zip"
             $mutagenUrl = "https://github.com/mutagen-io/mutagen/releases/download/$mutagenVersion/$mutagenArchive"
             Get-File -Url "$mutagenUrl" -Filename "$script:MycelioTempDir/$mutagenArchive"
@@ -924,34 +924,34 @@ Function Install-Toolset {
         }
     }
     catch [Exception] {
-        Write-Host "Failed to install mutagen.", $_.Exception.Message
+        Write-Host 'Failed to install mutagen.', $_.Exception.Message
     }
 
     try {
-        if (Test-CommandValid "scoop") {
+        if (Test-CommandValid 'scoop') {
             $scoopShim = (scoop config shim)
-            if ("$scoopShim" -ne "kiennq") {
+            if ("$scoopShim" -ne 'kiennq') {
                 scoop config shim kiennq
                 scoop reset *
             }
 
             # Install first as this gives us faster multi-connection downloads
-            Install-Tool "aria2"
+            Install-Tool 'aria2'
 
             # gsudo: Run commands as administrator.
-            Install-Tool "gsudo"
+            Install-Tool 'gsudo'
 
             # innounp: Required for unpacking InnoSetup files.
-            Install-Tool "innounp"
+            Install-Tool 'innounp'
 
             # dark: Unpack installers created with the WiX Toolset.
-            Install-Tool "dark"
+            Install-Tool 'dark'
 
             # Need this for VSCode
-            scoop bucket add extras "https://github.com/lukesampson/scoop-extras.git"
+            scoop bucket add extras 'https://github.com/lukesampson/scoop-extras.git'
 
             # Need this for 'keepassxc'
-            scoop bucket add nonportable "https://github.com/TheRandomLabs/scoop-nonportable.git"
+            scoop bucket add nonportable 'https://github.com/TheRandomLabs/scoop-nonportable.git'
 
             # Get latest buckets (requires 'git')
             scoop update
@@ -959,7 +959,7 @@ Function Install-Toolset {
             $vscode_installed = $false
 
             # Install portable version even if it is already installed locally
-            if (Test-Path -Path "C:\Program Files\Microsoft VS Code\Code.exe" -PathType Leaf) {
+            if (Test-Path -Path 'C:\Program Files\Microsoft VS Code\Code.exe' -PathType Leaf) {
                 $vscode_installed = $true
             }
             elseif (Test-Path -Path "$env:LOCALAPPDATA\Programs\Microsoft VS Code\Code.exe" -PathType Leaf) {
@@ -969,16 +969,28 @@ Function Install-Toolset {
             if ($vscode_installed) {
                 # Already installed nothing to do
             }
-            elseif (Test-CommandValid "winget") {
+            elseif (Test-CommandValid 'winget') {
                 winget install -e --id Microsoft.VisualStudioCode --silent
             }
             else {
                 scoop install vscode-portable
             }
 
+            if (Test-CommandValid 'winget') {
+                sudo cache on
+                sudo winget install -e --id 'Python.Python.3.10' -v '3.10.11' --scope machine
+                sudo winget pin add 'Python.Python.3.9'
+                sudo winget pin add 'Python.Python.3.10'
+                sudo winget pin add 'Python.Python.3.12'
+                sudo winget pin add 'Python.Python.3.11'
+                sudo winget pin add 'Python.Python.3'
+                sudo winget pin add 'Python.Python.2'
+                sudo winget install -e --id 'Nushell.Nushell' --scope machine
+            }
+
             # Much better than default Windows terminal
-            if (-not(Test-CommandValid "wt")) {
-                elseif (Test-CommandValid "winget") {
+            if (-not(Test-CommandValid 'wt')) {
+                elseif (Test-CommandValid 'winget') {
                     winget install -e --id Microsoft.WindowsTerminal --silent
                 }
                 else {
@@ -986,21 +998,21 @@ Function Install-Toolset {
                 }
             }
 
-            Install-Tool "keepassxc"
+            Install-Tool 'keepassxc'
 
             # Useful tool for syncing folders (like rsync) which is sometimes necessary with
             # environments like MSYS which do not work in containerized spaces that mount local
             # volumes as you can get 'Too many levels of symbolic links'
-            Install-Tool "rclone"
+            Install-Tool 'rclone'
 
             # 'gsudo' is more robust than 'sudo' package and not just a PowerShell
             # script, see https://github.com/gerardog/gsudo
-            Install-Tool "gsudo"
+            Install-Tool 'gsudo'
 
-            Install-Tool "nuget"
+            Install-Tool 'nuget'
 
             # https://github.com/chrisant996/clink
-            Install-Tool "clink"
+            Install-Tool 'clink'
 
             Write-Host "Verified that dependencies were installed with 'scoop' package manager."
         }
@@ -1008,23 +1020,26 @@ Function Install-Toolset {
     catch {
         Write-Host "Failed to install packages with 'scoop' manager."
     }
+    finally {
+        gsudo cache off
+    }
 
     try {
-        if (Test-CommandValid "scoop") {
+        if (Test-CommandValid 'scoop') {
             $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
             if ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
                 # Add SSH client, see https://stackoverflow.com/a/58029292
-                Add-WindowsCapability -Online -Name "OpenSSH.Client~~~~0.0.1.0"
+                Add-WindowsCapability -Online -Name 'OpenSSH.Client~~~~0.0.1.0'
 
                 # Windows Defender may slow down or disrupt installs with realtime scanning.
                 Import-Module Defender
                 gsudo Add-MpPreference -ExclusionPath "$script:MycelioUserProfile\scoop"
-                gsudo Add-MpPreference -ExclusionPath "C:\ProgramData\scoop"
+                gsudo Add-MpPreference -ExclusionPath 'C:\ProgramData\scoop'
 
                 Write-Host "Initialized administrator settings for 'scoop' package manager."
             }
             else {
-                Write-Host "Skipped initialization of administrator settings."
+                Write-Host 'Skipped initialization of administrator settings.'
             }
         }
     }
@@ -1032,7 +1047,7 @@ Function Install-Toolset {
         Write-Host "Failed to setup administrator settings for 'scoop' package manager."
     }
 
-    Write-Host "::endgroup::"
+    Write-Host '::endgroup::'
 }
 
 function New-TerminatingErrorRecord {
@@ -1066,13 +1081,13 @@ function Test-Compatibility() {
 
     ## OS is below Windows Vista
     if ($BuildVersion.Major -lt '6') {
-        Write-Warning "WMF 5.1 is not supported on BuildVersion: {0}" -f $BuildVersion.ToString()
+        Write-Warning 'WMF 5.1 is not supported on BuildVersion: {0}' -f $BuildVersion.ToString()
         $returnValue = $false
     }
 
     ## OS is Windows Vista
     if ($BuildVersion.Major -eq '6' -and $BuildVersion.Minor -le '0') {
-        Write-Warning "WMF 5.1 is not supported on BuildVersion: {0}" -f $BuildVersion.ToString()
+        Write-Warning 'WMF 5.1 is not supported on BuildVersion: {0}' -f $BuildVersion.ToString()
         $returnValue = $false
     }
 
@@ -1080,7 +1095,7 @@ function Test-Compatibility() {
     $wmf3 = Get-WmiObject -Query "select * from Win32_QuickFixEngineering where HotFixID = 'KB2506143'"
 
     if ($wmf3) {
-        Write-Warning "WMF 5.1 is not supported when WMF 3.0 is installed."
+        Write-Warning 'WMF 5.1 is not supported when WMF 3.0 is installed.'
         $returnValue = $false
     }
 
@@ -1090,11 +1105,11 @@ function Test-Compatibility() {
     $installed = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\' -Name Install -ErrorAction SilentlyContinue -ErrorVariable evInstalled).install
 
     if ($evRelease -or $evInstalled) {
-        Write-Warning "WMF 5.1 requires .Net 4.5."
+        Write-Warning 'WMF 5.1 requires .Net 4.5.'
         $returnValue = $false
     }
     elseif (($installed -ne 1) -or ($release -lt 378389)) {
-        Write-Warning "WMF 5.1 requires .Net 4.5."
+        Write-Warning 'WMF 5.1 requires .Net 4.5.'
         $returnValue = $false
     }
 
@@ -1117,24 +1132,24 @@ Function Install-PowerShell {
     )
 
     if ($host.Version.Major -ge 5) {
-        Write-Host "Skipped PowerShell install as v5 is already available."
+        Write-Host 'Skipped PowerShell install as v5 is already available.'
     }
     else {
-        $windowsUpdateFilename = "Win7AndW2K8R2-KB3191566-x64.zip"
+        $windowsUpdateFilename = 'Win7AndW2K8R2-KB3191566-x64.zip'
         $url = "https://download.microsoft.com/download/6/F/5/6F5FF66C-6775-42B0-86C4-47D41F2DA187/$windowsUpdateFilename"
         $path = Join-Path $script:MycelioArchivesDir $windowsUpdateFilename
         Get-File -Filename $path -Url $url
 
-        $powerShellInstallers = Join-Path $script:MycelioTempDir "powershell_KB3191566"
+        $powerShellInstallers = Join-Path $script:MycelioTempDir 'powershell_KB3191566'
         Expand-File -Path $path $powerShellInstallers
         $ErrorActionPreference = 'Stop'
 
         if ($PSBoundParameters.ContainsKey('AllowRestart') -and (-not $PSBoundParameters.ContainsKey('AcceptEULA'))) {
             $errorParameters = @{
-                exception        = 'System.Management.Automation.ParameterBindingException';
-                exceptionMessage = "AcceptEULA must be specified when AllowRestart is used.";
-                errorCategory    = [System.Management.Automation.ErrorCategory]::InvalidArgument;
-                targetObject     = ""
+                exception        = 'System.Management.Automation.ParameterBindingException'
+                exceptionMessage = 'AcceptEULA must be specified when AllowRestart is used.'
+                errorCategory    = [System.Management.Automation.ErrorCategory]::InvalidArgument
+                targetObject     = ''
             }
 
             $PSCmdlet.ThrowTerminatingError((New-TerminatingErrorRecord @errorParameters))
@@ -1156,23 +1171,23 @@ Function Install-PowerShell {
 
                 ##We assume that AcceptEULA is also specified
                 if ($AllowRestart) {
-                    $wusaParameters += @("/passive")
+                    $wusaParameters += @('/passive')
                 }
                 ## Here AllowRestart is not specified but AcceptEULA is.
                 elseif ($AcceptEULA) {
-                    $wusaParameters += @("/quiet", "/promptrestart")
+                    $wusaParameters += @('/quiet', '/promptrestart')
                 }
 
-                $wusaParameterString = $wusaParameters -join " "
-                Write-Host "Initiating install of PowerShell 5 with Windows Update. This will prompt you to restart the machine."
+                $wusaParameterString = $wusaParameters -join ' '
+                Write-Host 'Initiating install of PowerShell 5 with Windows Update. This will prompt you to restart the machine.'
                 Write-Host "##[cmd] $wusaExe $wusaParameterString"
                 & $wusaExe $wusaParameterString
             }
             else {
                 $errorParameters = @{
-                    exception        = 'System.InvalidOperationException';
-                    exceptionMessage = "WMF 5.1 cannot be installed as pre-requisites are not met. See Install and Configure WMF 5.1 documentation: https://go.microsoft.com/fwlink/?linkid=839022";
-                    errorCategory    = [System.Management.Automation.ErrorCategory]::InvalidOperation;
+                    exception        = 'System.InvalidOperationException'
+                    exceptionMessage = 'WMF 5.1 cannot be installed as pre-requisites are not met. See Install and Configure WMF 5.1 documentation: https://go.microsoft.com/fwlink/?linkid=839022'
+                    errorCategory    = [System.Management.Automation.ErrorCategory]::InvalidOperation
                     targetObject     = $packagePath
                 }
 
@@ -1181,9 +1196,9 @@ Function Install-PowerShell {
         }
         else {
             $errorParameters = @{
-                exception        = 'System.IO.FileNotFoundException';
-                exceptionMessage = "Expected WMF 5.1 Package: `"$packageName`" was not found.";
-                errorCategory    = [System.Management.Automation.ErrorCategory]::ResourceUnavailable;
+                exception        = 'System.IO.FileNotFoundException'
+                exceptionMessage = "Expected WMF 5.1 Package: `"$packageName`" was not found."
+                errorCategory    = [System.Management.Automation.ErrorCategory]::ResourceUnavailable
                 targetObject     = $packagePath
             }
 
@@ -1217,7 +1232,7 @@ Function Initialize-Environment {
         # to set the value 3072 for the [System.Net.ServicePointManager]::SecurityProtocol
         # property which internally is Tls12.
         [Net.ServicePointManager]::SecurityProtocol = [Enum]::ToObject(
-            [System.Net.SecurityProtocolType], 3072);
+            [System.Net.SecurityProtocolType], 3072)
     }
     Write-Host "PowerShell v$($host.Version)"
 
@@ -1251,10 +1266,10 @@ Function Initialize-Environment {
     AddSymbolicLinkPermissions([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)
 
     if (Test-SymbolicLink) {
-        Write-Host "System supports creating symbolic links."
+        Write-Host 'System supports creating symbolic links.'
     }
     else {
-        Write-Host "WARNING: System does not support creating symbolic links."
+        Write-Host 'WARNING: System does not support creating symbolic links.'
     }
 
     # We use our own Git install instead of scoop as sometimes scoop shims stop working and they
@@ -1274,18 +1289,18 @@ Function Initialize-Environment {
         # Useful tool for syncing folders (like rsync) which is sometimes necessary with
         # environments like MSYS which do not work in containerized spaces that mount local
         # volumes as you can get 'Too many levels of symbolic links'
-        if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
+        if (("$Env:Username" -eq 'WDAGUtilityAccount') -and (Test-Path -Path 'C:\Workspace')) {
             if (Test-Path -Path "$mutagen" -PathType Leaf) {
-                & "$mutagen" terminate "dotfiles"
-                & "$mutagen" sync create "C:\Workspace\" "$script:MycelioUserProfile\dotfiles" --name "dotfiles" --sync-mode "two-way-resolved" --symlink-mode "portable" --ignore-vcs --ignore "fzf_key_bindings.fish" --ignore "clink_history*" --ignore "_Inline/" --ignore "_build/"
+                & "$mutagen" terminate 'dotfiles'
+                & "$mutagen" sync create 'C:\Workspace\' "$script:MycelioUserProfile\dotfiles" --name 'dotfiles' --sync-mode 'two-way-resolved' --symlink-mode 'portable' --ignore-vcs --ignore 'fzf_key_bindings.fish' --ignore 'clink_history*' --ignore '_Inline/' --ignore '_build/'
                 & "$mutagen" sync flush --all
             }
             else {
                 Write-Host "⚠ Missing 'mutagen' tool."
 
                 if (Test-Path -Path "$rclone" -PathType Leaf) {
-                    if (("$Env:Username" -eq "WDAGUtilityAccount") -and (Test-Path -Path "C:\Workspace")) {
-                        & "$rclone" sync "C:\Workspace" "$script:MycelioUserProfile\dotfiles" --copy-links --exclude ".git/" --exclude "fzf_key_bindings.fish" --exclude "clink_history*"
+                    if (("$Env:Username" -eq 'WDAGUtilityAccount') -and (Test-Path -Path 'C:\Workspace')) {
+                        & "$rclone" sync 'C:\Workspace' "$script:MycelioUserProfile\dotfiles" --copy-links --exclude '.git/' --exclude 'fzf_key_bindings.fish' --exclude 'clink_history*'
                     }
                     else {
                         Write-Host "Skipped 'dotfiles' sync since we are not in container."
@@ -1301,7 +1316,7 @@ Function Initialize-Environment {
         }
     }
     catch [Exception] {
-        Write-Host "Failed to sync dotfiles to user profile.", $_.Exception.Message
+        Write-Host 'Failed to sync dotfiles to user profile.', $_.Exception.Message
     }
 
     Initialize-ConsoleFont
@@ -1309,7 +1324,7 @@ Function Initialize-Environment {
     Install-Scoop
     Install-Toolset
 
-    Write-Host "Initialized Mycelio environment for Windows."
+    Write-Host 'Initialized Mycelio environment for Windows.'
 }
 
 Initialize-Environment $MyInvocation.MyCommand.Path
