@@ -207,18 +207,28 @@ function task_group() {
         echo "##[task] $_name"
     fi
 
-    "$@"
+    if "$@"; then
+        _error=0
+    else
+        _error=$?
+    fi
 
     if [ -n "${GITHUB_ACTIONS:-}" ]; then
         echo "::endgroup::"
     fi
+
+    return $_error
 }
 
 function run_task() {
     _name="${1:-}"
     _prefix="$(echo "${_name// /.}" | awk '{print tolower($0)}')"
     shift
-    task_group "$_name" run_command "$_prefix" "$@"
+    if task_group "$_name" run_command "$_prefix" "$@"; then
+        return 0
+    else
+        return $?
+    fi
 }
 
 function run_task_sudo() {
@@ -1125,7 +1135,9 @@ function install_go {
     _local_go_bootstrap_root="$_local_root/gobootstrap"
     _go_bootstrap_exe="$_local_go_bootstrap_root/bin/go"
     _go_requires_update=0
-    _go_required_version_minor=18
+    _go_required_version_major=1
+    _go_required_version_minor=21
+    _go_required_version_patch=6
 
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped 'go' install for root user."
@@ -1160,7 +1172,7 @@ function install_go {
     fi
 
     if [ "$_go_requires_update" = "1" ]; then
-        _go_version="1.$_go_required_version_minor"
+        _go_version="$_go_required_version_major.$_go_required_version_minor.$_go_required_version_patch"
         _go_compiled=0
 
         if [ ! -x "$(command -v gcc)" ] && [ ! -x "$(command -v make)" ]; then
@@ -1241,7 +1253,7 @@ function install_go {
             # https://golang.org/doc/install/source
             if [ -f "$_go_bootstrap_exe" ]; then
                 _go_src_archive="$MYCELIO_TEMP/go.tgz"
-                run_task "go.get" get_file "$_go_src_archive" "https://dl.google.com/go/go$_go_version.src.tar.gz"
+                run_task "go.get" get_file "$_go_src_archive" "https://go.dev/dl/go$_go_version.src.tar.gz"
 
                 run_task "go.source.extract" tar -C "$_local_root" -xzf "$_go_src_archive"
                 rm "$_go_src_archive"
@@ -1630,6 +1642,14 @@ function initialize_linux() {
     fi
 
     task_group "Install Packages" install_packages
+
+    install_go
+    install_oh_my_posh
+    install_hugo
+    install_fzf
+    install_powershell
+    install_micro_text_editor
+
     task_group "Install Python" install_python
 
     if [ ! -d "$MYCELIO_HOME/.asdf" ]; then
@@ -1641,13 +1661,6 @@ function initialize_linux() {
     fi
 
     install_stow
-
-    install_go
-    install_oh_my_posh
-    install_hugo
-    install_fzf
-    install_powershell
-    install_micro_text_editor
 }
 
 function initialize_macos() {
