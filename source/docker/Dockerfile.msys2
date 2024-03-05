@@ -41,7 +41,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     msys 'pacman --noconfirm -Syuu'; `
     msys 'pacman --noconfirm -Syuu'; `
     msys 'pacman --noconfirm -Scc'; `
-    Write-Host 'Finished MSYS2 install.'
+    Write-Host 'Finished MSYS2 install into Docker.'
 
 SHELL ["cmd.exe", "/s", "/c"]
 

@@ -27,17 +27,18 @@ USER ${USERNAME}
 # Now switch to working in the user home directory
 WORKDIR /home/${USERNAME}
 
-COPY --chown=${USERNAME} --chmod=644 ./*.sh /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./*.md /home/${USERNAME}/dotfiles/
+RUN mkdir -p /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./source/ /home/${USERNAME}/dotfiles/source/
+COPY --chown=${USERNAME} --chmod=555 ./source/bin/*.sh /home/${USERNAME}/dotfiles/source/bin/
 COPY --chown=${USERNAME} --chmod=644 ./packages/ /home/${USERNAME}/dotfiles/packages/
 COPY --chown=${USERNAME} --chmod=644 ./docs/ /home/${USERNAME}/dotfiles/docs/
 COPY --chown=${USERNAME} --chmod=644 ./test/ /home/${USERNAME}/dotfiles/test/
-COPY --chown=${USERNAME} --chmod=644 ./source/ /home/${USERNAME}/dotfiles/source/
+COPY --chown=${USERNAME} --chmod=555 ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./*.md /home/${USERNAME}/dotfiles/
 
 # This will delete existing '.profile' or other configuration files when stowing
 # hadolint ignore=DL3004
-RUN sudo apt-get update \
-    && ./dotfiles/setup.sh --clean --force --yes
+RUN ./dotfiles/setup.sh --clean --force --yes
 
 ENTRYPOINT [ "/bin/bash", "-c" ]
 CMD ["neofetch && bash"]
