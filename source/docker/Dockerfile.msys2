@@ -43,8 +43,6 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
     msys 'pacman --noconfirm -Scc'; `
     Write-Host 'Finished MSYS2 install.'
 
-RUN Write-Host 'Initiating configuration steps.'
-
 SHELL ["cmd.exe", "/s", "/c"]
 
 # Create post-load function so that screen (and log) are not cleared after initialization
@@ -53,9 +51,9 @@ SHELL ["cmd.exe", "/s", "/c"]
 #^&^& sh /usr/bin/update-ca-trust `
 #^&^& echo "Post-install complete." >%POST_INSTALL_DOTFILES%
 
-RUN echo Initiating configuration steps.
-
-RUN call %MSYS_ROOT%\usr\bin\bash -lc " "
+RUN `
+    echo Initiating configuration steps. `
+    && call "%MSYS_ROOT%\\usr\\bin\\bash" -lc " "
 
 # First run of the shell does numerous post-install steps so we run this manually.
 #RUN call C:\\msys64\\msys2_shell.cmd -where C:\\Users\\ContainerAdministrator -no-start -msys2 -defterm -shell bash -lc exit `
@@ -72,10 +70,11 @@ RUN call %MSYS_ROOT%\usr\bin\bash -lc " "
 # https://www.msys2.org/docs/ci/#docker
 #SHELL ["cmd.exe", "/s", "/c", "C:\\bash.bat"]
 
-RUN pacman --noconfirm -Syuu
-RUN pacman --noconfirm -Syuu
-RUN pacman --noconfirm -Scc
-RUN pacman -S --quiet --noconfirm --needed `
+RUN `
+    pacman --noconfirm -Syuu `
+    && pacman --noconfirm -Syuu `
+    && pacman --noconfirm -Scc `
+    && pacman -S --quiet --noconfirm --needed `
     msys2-devel msys2-runtime-devel msys2-keyring `
     base-devel git autoconf automake1.16 automake-wrapper libtool libcrypt-devel openssl `
     mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils `
@@ -85,17 +84,23 @@ RUN pacman -S --quiet --noconfirm --needed `
 
 # Copy at the end so that iteration time is faster if changes are made as the above
 # steps should not need an update.
-COPY ./ ./
+RUN mkdir -p /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./*.md /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./packages/ /home/${USERNAME}/dotfiles/packages/
+COPY --chown=${USERNAME} --chmod=644 ./docs/ /home/${USERNAME}/dotfiles/docs/
+COPY --chown=${USERNAME} --chmod=644 ./test/ /home/${USERNAME}/dotfiles/test/
+COPY --chown=${USERNAME} --chmod=644 ./source/ /home/${USERNAME}/dotfiles/source/
 
 # Setup home directory and profile scripts.
 RUN ./setup.sh
 
 ENTRYPOINT [ `
     "cmd.exe", "/s", "/c" `
-]
+    ]
 
 CMD [ `
     "C:\\msys64\\msys2_shell.cmd", `
     "-no-start", "-msys2", "-defterm", "-shell", `
     "bash", "-l" `
-]
+    ]
