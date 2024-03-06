@@ -805,7 +805,7 @@ function install_oh_my_posh {
 
     font_base_name="JetBrains Mono"
     font_base_filename=${font_base_name// /}
-    font_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/$font_base_filename.zip"
+    font_url="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/$font_base_filename.zip"
     _fonts_path="$MYCELIO_HOME/.fonts"
 
     if [ ! -f "$_fonts_path/JetBrains Mono Regular Nerd Font Complete.ttf" ]; then
@@ -848,7 +848,7 @@ function install_oh_my_posh {
     fi
 
     if [ -f "$_oh_my_posh_exe" ]; then
-        if [ ! "${MYCELIO_ARG_CLEAN:-}" = "1" ] && _version=$("$_oh_my_posh_exe" --version 2>&1) && [ "$_version" = "8.32.4" ]; then
+        if [ ! "${MYCELIO_ARG_CLEAN:-}" = "1" ] && _version=$("$_oh_my_posh_exe" --version 2>&1) && [ "$_version" = "19.13.0" ]; then
             echo "✔ 'oh-my-posh' v$_version already installed."
             return 0
         else
