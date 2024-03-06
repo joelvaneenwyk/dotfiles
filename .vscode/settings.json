@@ -37,6 +37,10 @@
     "[powershell]": {
         "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
         "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
         "editor.semanticHighlighting.enabled": false,
         "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
     },
@@ -341,11 +345,8 @@
     "terminal.integrated.cwd": "${workspaceFolder}",
     "terminal.integrated.defaultProfile.linux": "bash",
     "terminal.integrated.defaultProfile.osx": "bash",
-    "terminal.integrated.defaultProfile.windows": "Command Prompt",
-    "terminal.integrated.env.windows": {
-        "PATH": "${env:PATH};${workspaceFolder};${workspaceFolder}\\source\\windows\\bin;${workspaceFolder}\\source\\bin;${workspaceFolder}\\secrets\\bin;${workspaceFolder}\\source\\stow\\tools"
-    },
-    "terminal.integrated.environmentChangesRelaunch": false,
+    "terminal.integrated.defaultProfile.windows": "Mycoshiro",
+    "terminal.integrated.environmentChangesRelaunch": true,
     "terminal.integrated.fontFamily": "PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
     "terminal.integrated.fontSize": 16,
     "terminal.integrated.minimumContrastRatio": 1,
@@ -411,32 +412,18 @@
         }
     },
     "terminal.integrated.profiles.windows": {
-        "Command Prompt": {
+        "Mycoshiro": {
             "args": [],
+            "env": {
+                "PATH": ";${workspaceFolder};${workspaceFolder}\\source\\windows\\bin;${workspaceFolder}\\source\\bin;${workspaceFolder}\\secrets\\bin;${workspaceFolder}\\source\\stow\\tools;${env:USERPROFILE}\\.proto\\bin;${env:PATH};${env:windir}\\System32;${env:windir}",
+                "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
+                "PROMPT": "$P$G"
+            },
             "icon": "terminal-cmd",
             "path": [
                 "${env:windir}\\Sysnative\\cmd.exe",
                 "${env:windir}\\System32\\cmd.exe"
             ]
-        },
-        "Fish": {
-            "args": [
-                "--login",
-                "-i"
-            ],
-            "env": {
-                "CHERE_INVOKING": "1",
-                "MSYS2_PATH_TYPE": "inherit",
-                "MSYSTEM": "MSYS2"
-            },
-            "icon": "terminal",
-            "path": [
-                "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\fish.exe"
-            ]
-        },
-        "Git Bash": {
-            "icon": "terminal-bash",
-            "source": "Git Bash"
         },
         "MSYS2": {
             "args": [
@@ -469,5 +456,7 @@
         "terminal.background": "#181818",
         "terminal.foreground": "#b69f83"
     },
-    "xml.validation.enabled": false
+    "xml.validation.enabled": false,
+    "powershell.buttons.showRunButtons": true,
+    "powershell.codeFormatting.preset": "Custom"
 }
