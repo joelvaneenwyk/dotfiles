@@ -1,0 +1,21 @@
+# Custom Dictionary Words
+autorun
+Autorun
+chcp
+chkstow
+defterm
+endgroup
+endlocal
+errorlevel
+ERRORLEVEL
+findstr
+HKCU
+HKLM
+invokation
+msiexec
+pwshs
+Robocopy
+setlocal
+SNAME
+SPROFILE
+SYSTEMROOT
