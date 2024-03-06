@@ -18,7 +18,7 @@ indent_size = 2
 indent_style = space
 indent_size = 4
 
-[*.{sh,bash,bats,conf,fish,profile}]
+[*.sh,*.bash,*.bats,*.conf,*.fish,.profile,.bashrc]
 indent_style = space
 indent_size = 4
 binary_next_line = true
