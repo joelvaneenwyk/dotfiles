@@ -3,7 +3,9 @@
 #
 
 # Local temporary files not intended to be committed or used in Docker instances
-.tmp
+.tmp/
+
+.gdn/
 
 # Generated files that may be used in Docker
 artifacts/
