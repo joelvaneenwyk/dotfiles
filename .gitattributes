@@ -4,13 +4,6 @@
 *          text=auto
 
 #
-# Unique settings
-#
-
-setup      text eol=lf
-pre-commit text eol=lf
-
-#
 # The above will handle all files NOT found below
 #
 
