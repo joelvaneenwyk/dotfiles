@@ -551,7 +551,7 @@ function _stow_internal() {
         fi
     fi
 
-    if [[ ! "$*" == *"--delete"* ]] && [ ! -f "$_stow_bin" ] && [ -e "$_target" ]; then
+    if [[ ! "$*" == *"--delete"* ]] && [ ! -f "$_stow_bin" ] && [ ! -e "$_target" ]; then
         if [ -f "$_source" ]; then
             mkdir -p "$(dirname "$_target")"
         fi
