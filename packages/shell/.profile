@@ -164,7 +164,7 @@ _unique_list() {
 #   prepend:  dir2:dir1:OLD_PATH
 #   append:   OLD_PATH:dir1:dir2
 #
-# If called with no paramters, returns PATH with duplicate directories removed
+# If called with no parameters, returns PATH with duplicate directories removed
 #
 _add_path() {
     _list=":$(_unique_list "${PATH:-}"):"
@@ -539,9 +539,9 @@ initialize_profile() {
         _initialize_synology
     fi
 
-    _log_debug "Initialized default enviornment variables."
+    _log_debug "Initialized default environment variables."
 
-    # Import environment varaibles from dotenv file. Primarily used to grab
+    # Import environment variables from dotenv file. Primarily used to grab
     # the 'MYCELIO_ROOT' path as it is sometimes hard (if not impossible) to calculate
     # on some shells/platforms. If needed, this could be replaced with something
     # more advanced e.g., https://github.com/ko1nksm/shdotenv

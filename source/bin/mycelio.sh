@@ -7,6 +7,8 @@
 #   - Sets some app settings which were derived from https://github.com/Sajjadhosn/dotfiles
 #
 
+export MYCELIO_CONFIG_USE_FISH=0
+
 function __print_stack() {
     if [ -n "${BASH:-}" ]; then
 
@@ -405,7 +407,9 @@ function _load_profile() {
         _root=$MYCELIO_ROOT
 
         # shellcheck source=packages/shell/.profile
-        source "$MYCELIO_ROOT/packages/shell/.profile"
+        if ! source "$MYCELIO_ROOT/packages/shell/.profile"; then
+            return 99
+        fi
 
         # Restore previous root folder
         export MYCELIO_ROOT="${_root:-MYCELIO_ROOT}"
@@ -442,7 +446,7 @@ function _mycelio_get_profile_root() {
     _windows_root="$(_get_windows_root)"
     _cmd="$_windows_root/Windows/System32/cmd.exe"
 
-    if [ -x "$(command -v wslpath)" ]; then
+    if [ -x "$(command -v wslpath)" ] && [ -x "$(command -v wslvar)" ]; then
         _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"
     fi
 
@@ -484,13 +488,21 @@ function _is_windows() {
 }
 
 function _stow_internal() {
-    _source="$1"
-    _target="$2"
+    local return_value=0
+    local _remove=0
+    local _source="$1"
+    local _target="$2"
     shift 2
 
-    _remove=0
+    if [ -x "$(command -v wslpath)" ]; then
+        _target="$(wslpath "$_target" 2>&1)"
+    fi
 
+    local _is_target_link_invalid=0
     if [ -f "$_target" ] || [ -d "$_target" ] || [ -L "$_target" ]; then
+        if [ ! -e "$_target" ]; then
+            _is_target_link_invalid=1
+        fi
         _remove=1
     fi
 
@@ -513,7 +525,7 @@ function _stow_internal() {
 
         if [ -f "$_source" ]; then
             _name="$_name (file)"
-            if [[ "$*" == *"--delete"* ]]; then
+            if [[ "$*" == *"--delete"* ]] || [ $_is_target_link_invalid = 1 ]; then
                 if rm -f "$_target" >/dev/null 2>&1; then
                     echo "REMOVED: $_name"
                 else
@@ -524,7 +536,7 @@ function _stow_internal() {
             fi
         elif [ -d "$_source" ]; then
             _name="$_name (directory)"
-            if [[ "$*" == *"--delete"* ]]; then
+            if [[ "$*" == *"--delete"* ]] || [ $_is_target_link_invalid = 1 ]; then
                 # Remove empty directories in target. It will not delete directories
                 # that have files in them.
                 if find "$_target" -type d -empty -delete >/dev/null 2>&1 &&
@@ -539,19 +551,23 @@ function _stow_internal() {
         fi
     fi
 
-    if [[ ! "$*" == *"--delete"* ]] && [ ! -f "$_stow_bin" ]; then
+    if [[ ! "$*" == *"--delete"* ]] && [ ! -f "$_stow_bin" ] && [ -e "$_target" ]; then
         if [ -f "$_source" ]; then
             mkdir -p "$(dirname "$_target")"
         fi
 
         if [ -f "$_source" ] || [ -d "$_source" ]; then
-            if ln -s "$_source" "$_target" >/dev/null 2>&1; then
+            if result="$(ln -s "$_source" "$_target" 2>&1)"; then
                 echo "✔ Stowed target: '$_target'"
             else
-                log_error "Unable to stow target: '$_target'"
+                return_value=$?
+                log_error "Failed to stow target: '$_target'"
+                log_error "> $result"
             fi
         fi
     fi
+
+    return $return_value
 }
 
 function _stow() {
@@ -614,7 +630,9 @@ function _stow_packages() {
     # We intentionally stow 'fish' config first to populate the directories
     # and then we create additional links (e.g. keybindings) and download
     # the fish package manager fundle, see https://github.com/danhper/fundle
-    _stow "$@" fish
+    if [ ${MYCELIO_CONFIG_USE_FISH:-} = 1 ]; then
+        _stow "$@" fish
+    fi
 
     if [ "${MYCELIO_OS:-}" = "darwin" ]; then
         mkdir -p "$MYCELIO_HOME/Library/Application\ Support/Code"
@@ -992,7 +1010,7 @@ function install_powershell() {
                 run_command_sudo "apt.update" apt-get update
 
                 # Enable the "universe" repositories
-                run_command_sudo "apt.add.repository" add-apt-repository universe || true
+                run_command_sudo "apt.add.repository" add-apt-repository --yes universe || true
 
                 # Install PowerShell
                 if
@@ -1432,9 +1450,25 @@ function generate_gnugp_config() {
     fi
 }
 
-function configure_linux() {
-    if [ "$MYCELIO_ARG_CLEAN" = "1" ] || [ "$MYCELIO_ARG_FORCE" = "1" ]; then
-        task_group "Stow: Sterilize Target" _stow_packages --delete
+function install_fish_fundle() {
+    if [ ! ${MYCELIO_CONFIG_USE_FISH:-} = 1 ]; then
+        return 0
+    fi
+
+    _fundle_fish="$MYCELIO_HOME/.config/fish/functions/fundle.fish"
+    if [ ! -f "$_fundle_fish" ]; then
+        mkdir -p "$MYCELIO_HOME/.config/fish/functions"
+        run_task "fundle.get" get_file "$_fundle_fish" "https://git.io/fundle" || true
+
+        if [ -f "$_fundle_fish" ]; then
+            chmod a+x "$_fundle_fish"
+        fi
+    fi
+}
+
+function configure_fish() {
+    if [ ! ${MYCELIO_CONFIG_USE_FISH:-} = 1 ]; then
+        return 0
     fi
 
     mkdir -p "$MYCELIO_HOME/.config/fish/functions"
@@ -1468,24 +1502,22 @@ function configure_linux() {
         # ln -s ".config/base16-shell/scripts/base16-irblack.sh" ".base16_theme"
     )
 
-    _fundle_fish="$MYCELIO_HOME/.config/fish/functions/fundle.fish"
-    if [ ! -f "$_fundle_fish" ]; then
-        mkdir -p "$MYCELIO_HOME/.config/fish/functions"
-        run_task "fundle.get" get_file "$_fundle_fish" "https://git.io/fundle" || true
+    install_fish_fundle
+}
 
-        if [ -f "$_fundle_fish" ]; then
-            chmod a+x "$_fundle_fish"
-        fi
+function configure_linux() {
+    if [ "$MYCELIO_ARG_CLEAN" = "1" ] || [ "$MYCELIO_ARG_FORCE" = "1" ]; then
+        task_group "Stow: Sterilize Target" _stow_packages --delete
     fi
 
-    # Stow packages after we have installed fundle and setup custom links
+    # Stow packages after we have installed dependencies and created links
     if [ "${MYCELIO_ARG_CLEAN:-}" = "1" ]; then
         task_group "Stow: Regenerate Mycelium" _stow_packages --restow
     else
         task_group "Stow: Inoculate Mycelium" _stow_packages
     fi
 
-    if [ -x "$(command -v fish)" ]; then
+    if [ ${MYCELIO_CONFIG_USE_FISH:-} = 1 ] && [ -x "$(command -v fish)" ]; then
         if [ ! -f "$_fundle_fish" ]; then
             log_error "Fundle not installed in home directory: '$MYCELIO_HOME/.config/fish/functions/fundle.fish'"
         else

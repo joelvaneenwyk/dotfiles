@@ -36,13 +36,13 @@ WORKDIR /home/${USERNAME}
 
 # Copy 'dotfiles' project files into the container
 RUN mkdir -p /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./source/ /home/${USERNAME}/dotfiles/source/
-COPY --chown=${USERNAME} --chmod=555 ./source/bin/*.sh /home/${USERNAME}/dotfiles/source/bin/
-COPY --chown=${USERNAME} --chmod=644 ./packages/ /home/${USERNAME}/dotfiles/packages/
-COPY --chown=${USERNAME} --chmod=644 ./docs/ /home/${USERNAME}/dotfiles/docs/
-COPY --chown=${USERNAME} --chmod=644 ./test/ /home/${USERNAME}/dotfiles/test/
-COPY --chown=${USERNAME} --chmod=555 ./*.sh /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./*.md /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=0644 ./source/ /home/${USERNAME}/dotfiles/source/
+COPY --chown=${USERNAME} --chmod=0755 ./source/bin/*.sh /home/${USERNAME}/dotfiles/source/bin/
+COPY --chown=${USERNAME} --chmod=0644 ./packages/ /home/${USERNAME}/dotfiles/packages/
+COPY --chown=${USERNAME} --chmod=0644 ./docs/ /home/${USERNAME}/dotfiles/docs/
+COPY --chown=${USERNAME} --chmod=0644 ./test/ /home/${USERNAME}/dotfiles/test/
+COPY --chown=${USERNAME} --chmod=0755 ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=0644 ./*.md /home/${USERNAME}/dotfiles/
 
 # This will delete existing '.profile' or other configuration files when stowing
 # hadolint ignore=DL3004
