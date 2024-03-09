@@ -1,5 +1,4 @@
-@echo off
-goto:$Main
+:: -*- coding: utf-8 -*-
 ::
 :: This is used as an auto-run script and invoked for every new instance of 'cmd.exe' starts. This script
 :: is also invoked when running e.g. 'for /f %%l in ('some command') do ...'
@@ -16,26 +15,25 @@ goto:$Main
 ::
 :: IMPORTANT: Do not use %CMDCMDLINE% as is may contain unprotected | & > < characters. Use !CMDCMDLINE! instead.
 ::
-
-::-----------------------------------
-:: Extract the ARG0 and ARG1 from %CMDCMDLINE% using cmd.exe own parser
-::-----------------------------------
-:SplitArgs
-    set "ARG0=%1"
-    set "ARG1=%2"
-exit /b
+@echo off
+goto:$Main
 
 :GetRoot
-    if exist "%MYCELIO_ROOT%\setup.bat" exit /b 0
+setlocal EnableDelayedExpansion
+    if exist "%MYCELIO_ROOT%\setup.bat" goto:$GetRootDone
     if "%MYCELIO_ROOT%"=="" (
         set "MYCELIO_ROOT=%~dp1"
-        goto:$UpdateRoot
     )
 
     :$UpdateRoot
     if "!MYCELIO_ROOT:~-1!"=="\" set "MYCELIO_ROOT=!MYCELIO_ROOT:~0,-1!"
-    set "ARG1=%2"
-exit /b
+    goto:$GetRootDone
+
+    :$GetRootDone
+endlocal & (
+    set "MYCELIO_ROOT=%MYCELIO_ROOT%"
+    exit /b %errorlevel%
+)
 
 :ClearErrorLevel
 exit /b 0
@@ -55,6 +53,15 @@ setlocal EnableExtensions EnableDelayedExpansion
     set "CMD=!CMD:<=\x3C!"
     set "CMD=!CMD:&=\x36!"
 
+    ::-----------------------------------
+    :: Extract the ARG0 and ARG1 from %CMDCMDLINE% using cmd.exe own parser
+    ::-----------------------------------
+    goto:$SplitArgs
+    :SplitArgs
+        set "ARG0=%1"
+        set "ARG1=%2"
+    exit /b %errorlevel%
+    :$SplitArgs
     call :SplitArgs !CMD!
 
     :: for /f invokes %COMSPEC% without quotes, whereas new shells' ARG0 have quotes. If
@@ -128,25 +135,28 @@ endlocal & (
 exit /b %errorlevel%
 
 :SetupDosKey
+setlocal
     :: Some versions of Windows do not support using 'doskey' command
     :: so test it out before running all the commands.
-    if not exist "C:\Windows\System32\doskey.exe" goto:$SkipDosKeySetup
+    set "_doskey=C:\Windows\System32\doskey.exe"
+    if not exist "%_doskey%" goto:$SkipDosKeySetup
 
     :: Check to see if 'doskey' is valid first as some versions
     :: of Windows (e.g. nanoserver) do not have 'doskey' support.
     if "%USERNAME%"=="ContainerAdministrator" goto:$SkipDosKeySetup
 
     :: Make sure calling doskey works at all before we attempt to setup aliases
-    call "C:\Windows\System32\doskey.exe" /? >NUL 2>&1
-
+    call "%_doskey%" /? >NUL 2>&1
     if errorlevel 1 goto:$SkipDosKeySetup
-        call "C:\Windows\System32\doskey.exe" cd.=cd /d "%MYCELIO_ROOT%"
-        call "C:\Windows\System32\doskey.exe" cd~ =cd /d "%HOME%"
-        call "C:\Windows\System32\doskey.exe" cp=copy $*
-        call "C:\Windows\System32\doskey.exe" mv=move $*
-        call "C:\Windows\System32\doskey.exe" h=doskey /HISTORY
-        call "C:\Windows\System32\doskey.exe" edit=%HOME%\.local\bin\micro.exe $*
-        call "C:\Windows\System32\doskey.exe" refresh=%MYCELIO_ROOT%\source\windows\bin\profile.bat --refresh
+        call "%_doskey%" cd.=cd /d "%MYCELIO_ROOT%"
+        call "%_doskey%" cd~ =cd /d "%HOME%"
+        call "%_doskey%" cp=copy $*
+        call "%_doskey%" mv=move $*
+        call "%_doskey%" h=doskey /HISTORY
+        call "%_doskey%" ls=dir $*
+        call "%_doskey%" cat=type $*
+        call "%_doskey%" edit=%HOME%\.local\bin\micro.exe $*
+        call "%_doskey%" refresh=%MYCELIO_ROOT%\source\windows\bin\profile.bat --refresh
     :$SkipDosKeySetup
 exit /b %errorlevel%
 
