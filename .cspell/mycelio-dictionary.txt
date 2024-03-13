@@ -195,6 +195,7 @@ setw
 sharehistory
 shellcheck
 shellenv
+shfmt
 SNAME
 softfloat
 solargraph
