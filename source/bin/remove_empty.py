@@ -3,16 +3,18 @@
 Remove empty directories.
 """
 
+import logging
 import os
-import time
 import sys
+import time
+from typing import Any, Callable, Generator
 
-DRY_RUN = '--dry' in sys.argv
+DRY_RUN = "--dry" in sys.argv
 CLOUD_PAUSE_SECONDS = 10
 CLOUD_MAX_FILES = 20
 
 
-def _breadth_first_path_scanner(root):
+def _breadth_first_path_scanner(root) -> Generator[Any, Any, None]:
     dirs = [root]
     output = []
 
@@ -56,17 +58,20 @@ def _breadth_first_path_scanner(root):
         yield output_entry
 
 
-def _get_delete():
+def _get_delete() -> Callable[..., Any]:
     start = [0, 0]
 
     def _track_delete(path):
         start[1] += 1
 
-        if 'OneDrive' in path:
+        if "OneDrive" in path:
             start[0] += 1
 
         if start[0] > CLOUD_MAX_FILES:
-            print("Pausing delete for '%d' seconds to let cloud synchronize..." % CLOUD_PAUSE_SECONDS)
+            print(
+                "Pausing delete for '%d' seconds to let cloud synchronize..."
+                % CLOUD_PAUSE_SECONDS
+            )
             time.sleep(CLOUD_PAUSE_SECONDS)
             start[0] = 0
 
@@ -75,20 +80,20 @@ def _get_delete():
 
     def _delete_inner(item_path, force):
         try:
-            remove = ''
+            remove = ""
 
             if os.path.isfile(item_path):
                 filename, _ = os.path.splitext(item_path)
-                if filename.endswith(' - Copy') and 'OneDrive' in item_path:
-                    remove = 'duplicate file'
+                if filename.endswith(" - Copy") and "OneDrive" in item_path:
+                    remove = "duplicate file"
                 elif force:
-                    remove = 'file'
+                    remove = "file"
             elif os.path.isdir(item_path):
                 dir_files = os.listdir(item_path)
                 if not dir_files:
-                    remove = 'empty directory'
+                    remove = "empty directory"
                 elif force:
-                    remove = 'directory'
+                    remove = "directory"
 
             if remove:
                 _track_delete(item_path)
@@ -111,7 +116,7 @@ def _get_delete():
     return _delete_inner
 
 
-def _clean_path(root, force=False, parent=None):
+def _clean_path(root, force=False, parent=None) -> int:
     if not os.path.exists(root):
         print("Skipped remove on non-existent path: '%s'" % root)
         return 0
@@ -129,7 +134,10 @@ def _clean_path(root, force=False, parent=None):
         directories = [os.path.isdir(item) for item in items]
         if items and (len(root) < 10 or len(directories) > 10 or len(directories) < 2):
             for item in items:
-                if os.path.basename(item) not in {'$RECYCLE.BIN', 'System Volume Information'}:
+                if os.path.basename(item) not in {
+                    "$RECYCLE.BIN",
+                    "System Volume Information",
+                }:
                     total += _clean_path(item, force, parent=root)
         else:
             for path_item in _breadth_first_path_scanner(root):
@@ -145,53 +153,69 @@ def _clean_path(root, force=False, parent=None):
     return total
 
 
-def _get_drives():
-    drives = []
+def _get_drives() -> list[str]:
+    drives: list[str] = []
 
     try:
         import win32api  # type: ignore
+
         drives_string = win32api.GetLogicalDriveStrings()
-        drives = drives_string.split('\000')[:-1]
+        drives = drives_string.split("\000")[:-1]
     except (ImportError, OSError):
         from ctypes import windll  # type: ignore
+
         bit_mask = windll.kernel32.GetLogicalDrives()
-        for letter in range(0, ord('Z') - ord('A')):
+        for letter in range(0, ord("Z") - ord("A")):
             if bit_mask & 1:
-                drives.append(chr(ord('A') + letter))
+                drives.append(chr(ord("A") + letter))
             bit_mask >>= 1
 
-    windowsDrive = os.environ.get('WinDir', None)
-    windowsDriveLetter = '' if not windowsDrive else windowsDrive[0].lower()
+    windowsDrive = os.environ.get("WinDir", None)
+    windowsDriveLetter = "" if not windowsDrive else windowsDrive[0].lower()
     if not windowsDrive:
         drives = []
     else:
         drives = [
-            '%s:\\' % drive
+            "%s:\\" % drive
             for drive in drives
             if drive[:1].lower() != windowsDriveLetter
         ]
 
     return drives
 
-def main():
+
+def main() -> int:
     """
     Entrypoint for removing unused or empty directories.
     """
 
-    home = os.path.expanduser("~")
-    drives = _get_drives()
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger("mycelio")
 
+    return_code = 0
     total = 0
-    total += _clean_path(os.path.join(home, "OneDrive - Microsoft", "Archive", "MobaXterm", "slash"), True)
-    total += _clean_path(os.path.join(home, "OneDrive - Microsoft"))
 
-    for drive in drives:
-        total += _clean_path(drive)
+    try:
+        home = os.path.expanduser("~")
+        drives = _get_drives()
 
-    print("Scanned '%d' path entries." % total)
+        for drive in drives:
+            total += _clean_path(drive)
 
-    return 0
+        one_drive_business = os.path.join(home, "OneDrive - Microsoft")
+        total += _clean_path(
+            os.path.join(one_drive_business, "Archive", "MobaXterm", "slash"),
+            True,
+        )
+        total += _clean_path(one_drive_business)
+    except Exception:
+        return_code = 10
+        logger.exception("Failed to clean paths.")
+    finally:
+        logger.info("Scanned '%d' path entries." % total)
+
+    return return_code
 
 
-if __name__=='__main__':
+if __name__ == "__main__":
     sys.exit(main())
