@@ -7,8 +7,8 @@
     an absolute directory for 'MYCELIO_ROOT' but it also adds some critical directories
     the 'PATH' variable and removes duplicates.
 .EXAMPLE
-    CMD C:\> pwsh -NoLogo -NoProfile -File "powershell\Write-EnvironmentSetup.ps1" -ScriptPath "setupEnv.bat"
-    CMD C:\> call setupEnv.bat
+    CMD C:\> pwsh -NoLogo -NoProfile -File "powershell\Write-EnvironmentSetup.ps1" -ScriptPath "env.bat"
+    CMD C:\> call env.bat
 
     After running the above, the environment will be setup such that you can now run Mycelio
     specific commands e.g., "gpgtest"
