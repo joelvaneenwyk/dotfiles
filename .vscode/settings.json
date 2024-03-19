@@ -6,7 +6,7 @@
         "editor.tabSize": 4,
         "editor.trimAutoWhitespace": true,
         "editor.useTabStops": false,
-        "files.encoding": "windows1252"
+        "files.encoding": "utf8"
     },
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features",
@@ -23,7 +23,7 @@
         "editor.codeActionsOnSave": {
             "source.fixAll": "explicit"
         },
-        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+        "editor.defaultFormatter": "vscode.markdown-language-features",
         "editor.formatOnSave": true,
         "editor.quickSuggestions": {
             "comments": "off",
@@ -36,6 +36,10 @@
     },
     "[powershell]": {
         "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
         "editor.formatOnSave": true,
         "editor.semanticHighlighting.enabled": false,
         "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
@@ -45,22 +49,19 @@
             "source.fixAll": "explicit",
             "source.organizeImports": "explicit"
         },
-        "editor.defaultFormatter": "charliermarsh.ruff",
+        // "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true
     },
     "[shellscript]": {
-        "editor.defaultFormatter": "foxundermoon.shell-format",
+        // "editor.defaultFormatter": "foxundermoon.shell-format",
         "editor.formatOnSave": true,
         "files.eol": "\n"
     },
     "[yaml]": {
         "editor.formatOnSave": true
     },
-    "angular.log": "normal",
-    "application.experimental.rendererProfiling": true,
     "bashIde.includeAllWorkspaceSymbols": true,
     "bashIde.shellcheckArguments": "--enable=all --external-sources --root=${workspaceFolder} --source-path=${workspaceFolder} --source-path=${workspaceFolder}/source/stow",
-    "batch-runner.saveFileBeforeRun": true,
     "beautify.language": {
         "css": [
             "css",
@@ -87,30 +88,32 @@
             ]
         }
     },
-    "bookmarks.saveBookmarksInProject": true,
-    "bookmarks.sideBar.expanded": true,
-    "bookmarks.useWorkaroundForFormatters": true,
-    "C_Cpp.autocompleteAddParentheses": true,
-    "dotnetAcquisitionExtension.installTimeoutValue": 15000,
+    "cSpell.ignorePaths": [
+        "**/package-lock.json",
+        "**/node_modules/**",
+        "**/vscode-extension/**",
+        "**/.git/objects/**",
+        ".vscode/**",
+        ".vscode-insiders/**",
+        "source/stow/**/*",
+        "source/windows/clink-completions/**",
+        "packages/fish/.base16_theme",
+        "packages/fish/.config/base16-shell/**",
+        "packages/fish/.config/base16-fzf/**",
+        "packages/fish/.config/git-fuzzy/**",
+        "packages/fish/.config/fish/fish_variables",
+        "packages/vim/.vim/bundle/vundle/**",
+        "packages/micro/.config/micro/**",
+        "packages/macos/Library/**",
+        "test/bats/**",
+        "test/test_helper/**",
+        ".Xresources",
+        ".xmobarrc",
+        ".travis.yml"
+    ],
     "editor.fontFamily": "PragmataPro Nerd Font, PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, JetBrains Mono NL, Menlo, Monaco, Consolas, Courier New, monospace",
     "editor.fontLigatures": true,
     "esbonio.server.enabled": false,
-    "eslint.codeActionsOnSave.mode": "problems",
-    "eslint.debug": true,
-    "eslint.experimental.useFlatConfig": false,
-    "eslint.format.enable": true,
-    "eslint.lintTask.enable": true,
-    "eslint.useESLintClass": true,
-    "evenBetterToml.formatter.alignComments": true,
-    "evenBetterToml.formatter.alignEntries": true,
-    "evenBetterToml.formatter.allowedBlankLines": 1,
-    "evenBetterToml.formatter.columnWidth": 100,
-    "evenBetterToml.formatter.indentEntries": true,
-    "evenBetterToml.formatter.trailingNewline": true,
-    "evenBetterToml.schema.cache.diskExpiration": 6000,
-    "evenBetterToml.schema.cache.memoryExpiration": 200,
-    "evenBetterToml.schema.links": true,
-    "evenBetterToml.semanticTokens": true,
     "files.associations": {
         "*.bats": "shellscript",
         "*.conf": "properties",
@@ -127,7 +130,6 @@
         ".inputrc": "ini",
         ".wslconfig": "properties",
         "chkstow": "perl",
-        "clink_settings": "ini",
         "cpanfile": "perl",
         "edf": "shellscript",
         "flake8": "ini",
@@ -136,7 +138,6 @@
         "setup": "shellscript",
         "stow": "perl"
     },
-    "files.autoGuessEncoding": true,
     "files.exclude": {
         "**/.DS_Store": true,
         "**/.git": true,
@@ -150,55 +151,10 @@
         "source/stow/tmp-testing-trees": true,
         "source/stow/tools/texinfo/**": true
     },
-    "gistpad.output": true,
-    "gistpad.scratchNotes.directoryFormat": "yyyy",
-    "gistpad.scratchNotes.fileFormat": "yyyy-MM-dd",
-    "gistpad.wikis.daily.directoryName": "Journal",
-    "gistpad.wikis.daily.titleFormat": "yyyy-MM-dd",
-    "git.allowNoVerifyCommit": true,
-    "git.alwaysShowStagedChangesResourceGroup": true,
-    "git.autofetch": "all",
-    "git.autofetchPeriod": 300,
-    "git.autoStash": true,
-    "git.branchProtection": [
-        "main",
-        "develop"
-    ],
-    "git.closeDiffOnOperation": true,
-    "git.confirmForcePush": true,
-    "git.enableCommitSigning": true,
-    "git.fetchOnPull": true,
-    "git.inputValidationLength": 80,
-    "git.inputValidationSubjectLength": 70,
-    "git.mergeEditor": true,
-    "git.openAfterClone": "whenNoFolderOpen",
-    "git.postCommitCommand": "push",
-    "git.pruneOnFetch": true,
-    "git.pullBeforeCheckout": true,
-    "git.rebaseWhenSync": true,
-    "git.repositoryScanMaxDepth": 10,
     "git.requireGitUserConfig": false,
-    "inlineChat.showToolbarIcon": true,
-    "java.help.collectErrorLog": true,
-    "java.help.firstView": "none",
-    "java.help.showReleaseNotes": false,
     "json.format.enable": true,
     "json.validate.enable": true,
     "Lua.diagnostics.enable": true,
-    "Lua.diagnostics.globals": [
-        "path",
-        "settings",
-        "rl",
-        "cmderGitStatusOptIn",
-        "pause",
-        "logger",
-        "hs",
-        "usbWatcher",
-        "keyboardLayout",
-        "log",
-        "unicode",
-        "console"
-    ],
     "Lua.format.enable": true,
     "Lua.hint.setType": true,
     "Lua.workspace.checkThirdParty": true,
@@ -214,15 +170,9 @@
         "micro/.config",
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/lldebugger/module/library",
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library",
-        "${3rd}/luassert/library",
+        "${3rd}/luassert/library"
     ],
     "markdownlint.ignore": ".markdownlintignore",
-    "npm-intellisense.scanDevDependencies": true,
-    "npm-intellisense.showBuildInLibs": true,
-    "npm.enableRunFromFolder": true,
-    "npm.packageManager": "yarn",
-    "npm.scriptExplorerAction": "run",
-    "oneDarkPro.vivid": true,
     "perl.enable": true,
     "perl.perlCmd": "${env:USERPROFILE}/.local/perl/perl/bin/perl.exe",
     "perl.perlInc": [
@@ -231,9 +181,11 @@
         "${workspaceFolder}/bin",
         "${workspaceFolder}/t"
     ],
+    "powershell.buttons.showRunButtons": true,
     "powershell.codeFormatting.addWhitespaceAroundPipe": true,
     "powershell.codeFormatting.alignPropertyValuePairs": true,
     "powershell.codeFormatting.ignoreOneLineBlock": false,
+    "powershell.codeFormatting.preset": "Custom",
     "powershell.codeFormatting.trimWhitespaceAroundPipe": false,
     "powershell.codeFormatting.useCorrectCasing": true,
     "powershell.codeFormatting.whitespaceAfterSeparator": true,
@@ -246,8 +198,6 @@
     "powershell.integratedConsole.suppressStartupBanner": true,
     "powershell.scriptAnalysis.enable": true,
     "powershell.scriptAnalysis.settingsPath": "source/config/PSScriptAnalyzerSettings.psd1",
-    "problems.showCurrentInStatus": true,
-    "problems.sortOrder": "position",
     "python.analysis.typeCheckingMode": "basic",
     //
     // Ignore/disable features or extensions
@@ -284,14 +234,8 @@
     "shellcheck.logLevel": "debug",
     "shellcheck.run": "onType",
     "shellcheck.useWorkspaceRootAsCwd": true,
-    "sonarlint.connectedMode.project": {
-        "connectionId": "Joel Van Eenwyk",
-        "projectKey": "joelvaneenwyk_dotfiles"
-    },
     "stylelint.enable": false,
     "svn.ignoreMissingSvnWarning": true,
-    "task.quickOpen.showAll": true,
-    "task.slowProviderWarning": true,
     "taskExplorer.autoRefresh": true,
     "taskExplorer.enableAnsiconForAnt": false,
     "taskExplorer.enableAnt": false,
@@ -323,18 +267,22 @@
     "terminal.integrated.cwd": "${workspaceFolder}",
     "terminal.integrated.defaultProfile.linux": "bash",
     "terminal.integrated.defaultProfile.osx": "bash",
-    "terminal.integrated.defaultProfile.windows": "Command Prompt",
-    "terminal.integrated.env.windows": {
-        "PATH": "${env:PATH};${workspaceFolder};${workspaceFolder}\\source\\windows\\bin;${workspaceFolder}\\source\\bin;${workspaceFolder}\\secrets\\bin;${workspaceFolder}\\source\\stow\\tools"
-    },
-    "terminal.integrated.environmentChangesRelaunch": false,
+    "terminal.integrated.defaultProfile.windows": "Mycelio",
+    "terminal.integrated.environmentChangesRelaunch": true,
     "terminal.integrated.fontFamily": "PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
     "terminal.integrated.fontSize": 16,
     "terminal.integrated.minimumContrastRatio": 1,
     "terminal.integrated.profiles.linux": {
         "bash": {
-            // Alternative: "args": ["-c", "set -x && . ~/.profile && bash"],
             "args": [],
+            "icon": "terminal-bash",
+            "path": "sh"
+        },
+        "bash_profile": {
+            "args": [
+                "-c",
+                "set -x && . ~/.profile && bash"
+            ],
             "icon": "terminal-bash",
             "path": "sh"
         },
@@ -393,15 +341,20 @@
         }
     },
     "terminal.integrated.profiles.windows": {
-        "Command Prompt": {
-            "args": [],
+        "Mycelio": {
+            "args": [
+                "/K"
+            ],
             "env": {
-                // "PROMPT": "$P$G",
-                // "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
-                // "PATH": "${env:PATH};${env:windir}\\System32;${env:windir}"
                 "CLINK_INJECTED": null,
                 "MYCELIO_ROOT": null,
-                "MYCELIO_SKIP_INIT": null
+                "MYCELIO_SKIP_INIT": null,
+                "MYCELIO_AUTORUN_INITIALIZED": null,
+                "MYCELIO_ENV_PATH": null,
+                "MYCELIO_ECHO": null,
+                "PROMPT": "$P$G",
+                "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
+                "PATH": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Program Files\\Docker\\Docker\\resources\\bin;C:\\Program Files\\RedHat\\Podman;${workspaceFolder}\\source\\bin;${workspaceFolder}\\source\\windows\\bin;${env:USERPROFILE}\\.proto\\bin;${env:USERPROFILE}\\scoop\\shims;C:\\Program Files\\Git\\bin;${env:windir}\\System32;${env:windir}"
             },
             "icon": "terminal-cmd",
             "path": [
@@ -409,22 +362,7 @@
                 "${env:windir}\\System32\\cmd.exe"
             ]
         },
-        "myco-fish": {
-            "args": [
-                "--login",
-                "-i"
-            ],
-            "env": {
-                "CHERE_INVOKING": "1",
-                "MSYS2_PATH_TYPE": "inherit",
-                "MSYSTEM": "MSYS2"
-            },
-            "icon": "terminal",
-            "path": [
-                "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\fish.exe"
-            ]
-        },
-        "myco-msys2": {
+        "MSYS2": {
             "args": [
                 "--login",
                 "-i"
@@ -450,9 +388,7 @@
     "terminal.integrated.scrollback": 20000,
     "terminal.integrated.shellIntegration.enabled": true,
     "terminal.integrated.showExitAlert": false,
-    "timeline.pageOnScroll": true,
     "vscode-lua-format.configPath": "source/config/.lua-style",
-    "window.density.editorTabHeight": "default",
     "workbench.colorCustomizations": {
         "terminal.background": "#181818",
         "terminal.foreground": "#b69f83"

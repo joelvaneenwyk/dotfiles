@@ -152,13 +152,39 @@ function _initialize_interactive_bash_profile() {
     fi
 }
 
+function _conda_setup_external() {
+    # >>> conda initialize >>>
+    # !! Contents within this block are managed by 'conda init' !!
+    __conda_setup="$('/opt/miniconda/bin/conda' 'shell.bash' 'hook' 2>/dev/null)"
+    if [ $? -eq 0 ]; then
+        eval "$__conda_setup"
+    else
+        if [ -f "/opt/miniconda/etc/profile.d/conda.sh" ]; then
+            . "/opt/miniconda/etc/profile.d/conda.sh"
+        else
+            export PATH="/opt/miniconda/bin:$PATH"
+        fi
+    fi
+    unset __conda_setup
+    # <<< conda initialize <<<
+}
+
+function _conda_setup() {
+    if [ -e "/opt/miniconda/bin/conda" ]; then
+        _conda_setup_external
+    fi
+}
+
 function _initialize_bash_profile() {
-    # Fig pre block. Keep at the top of this file.
-    [[ -f "$HOME/.fig/shell/bashrc.pre.bash" ]] && . "$HOME/.fig/shell/bashrc.pre.bash"
+    if [ -f "$HOME/.fig/shell/profile.pre.bash" ]; then
+        . "$HOME/.fig/shell/profile.pre.bash"
+    fi
 
     # Clear out prompt command to start so that we do not end up with an
     # unknown function (e.g., '_omp_hook') being called after every call.
     unset PROMPT_COMMAND
+
+    _conda_setup
 
     # We alias 'grep' in '.profile' so initialize Synology first
     if uname -a | grep -q "synology"; then
@@ -225,8 +251,9 @@ function _initialize_bash_profile() {
 
     export MYCELIO_BASH_PROFILE_INITIALIZED=1
 
-    # Fig post block. Keep at the bottom of this file.
-    [[ -f "$HOME/.fig/shell/bashrc.post.bash" ]] && . "$HOME/.fig/shell/bashrc.post.bash"
+    if [ -f "$HOME/.fig/shell/profile.post.bash" ]; then
+        . "$HOME/.fig/shell/profile.post.bash"
+    fi
 }
 
 _initialize_bash_profile "$@"

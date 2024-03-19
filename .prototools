@@ -1,0 +1,16 @@
+act = "~0.2"
+actionlint = "~1.6"
+go = "~1.21"
+moon = "~1.22"
+python = "~3.12"
+shellcheck = "~0.10"
+shfmt = "~3"
+task = "~3"
+
+[plugins]
+act = "source:https://raw.githubusercontent.com/theomessin/proto-toml-plugins/master/act.toml"
+actionlint = "source:https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/actionlint/plugin.toml"
+moon = "source:https://raw.githubusercontent.com/moonrepo/moon/master/proto-plugin.toml"
+shellcheck = "source:https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/shellcheck/plugin.toml"
+shfmt = "source:https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/shfmt/plugin.toml"
+task = "source:https://raw.githubusercontent.com/Phault/proto-toml-plugins/main/task/plugin.toml"

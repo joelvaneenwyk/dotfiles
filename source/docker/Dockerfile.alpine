@@ -1,6 +1,7 @@
-FROM alpine:3.18.5
+FROM alpine:3.19.1
 
 ARG USERNAME=default
+ENV USERNAME=${USERNAME}
 
 # set up nsswitch.conf for Go's "netgo" implementation
 # - https://github.com/golang/go/blob/go1.9.1/src/net/conf.go#L194-L275
@@ -31,7 +32,12 @@ WORKDIR /home/${USERNAME}
 
 RUN sudo apk update
 
-COPY --chown=${USERNAME} ./ ./dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./*.md /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=644 ./packages/ /home/${USERNAME}/dotfiles/packages/
+COPY --chown=${USERNAME} --chmod=644 ./docs/ /home/${USERNAME}/dotfiles/docs/
+COPY --chown=${USERNAME} --chmod=644 ./test/ /home/${USERNAME}/dotfiles/test/
+COPY --chown=${USERNAME} --chmod=644 ./source/ /home/${USERNAME}/dotfiles/source/
 
 # This will delete existing '.profile' or other configuration files when stowing
 RUN ./dotfiles/setup.sh --clean --force --yes

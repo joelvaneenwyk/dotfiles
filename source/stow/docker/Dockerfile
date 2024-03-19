@@ -19,13 +19,19 @@
 ARG DEBIAN_VERSION=stretch
 FROM debian:${DEBIAN_VERSION}
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+ENV DEBIAN_FRONTEND=noninteractive
+
+# hadolint ignore=DL3008
+RUN \
+    apt-get update \
+    && apt-get install -y --no-install-recommends \
     vim nano \
     sudo bzip2 gawk git curl wget ca-certificates patch \
     build-essential make autotools-dev automake autoconf libssl-dev libz-dev \
     perl cpanminus \
-    texinfo texlive texi2html
+    texinfo texlive texi2html \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set up perlbrew environment
 ENV HOME=/root
@@ -37,12 +43,12 @@ ENV PATH="${PERLBREW_ROOT_DEFAULT}:${PERLBREW_PATH}:${PATH}"
 
 RUN mkdir -p "$HOME" "$PERLBREW_ROOT_DEFAULT" "$PERLBREW_ROOT"
 
-RUN curl -L https://install.perlbrew.pl | bash
-RUN echo 'source "$PERLBREW_ROOT/etc/bashrc"' >>".bash_profile"
-
-RUN perlbrew init
-RUN perlbrew install-cpanm
-RUN perlbrew install-patchperl
+# hadolint ignore=DL4006,SC2016
+RUN curl --tlsv1.2 -sSf -L "https://install.perlbrew.pl" | bash \
+    && echo 'source "$PERLBREW_ROOT/etc/bashrc"' >>".bash_profile" \
+    && perlbrew init \
+    && perlbrew install-cpanm \
+    && perlbrew install-patchperl
 
 # Archive of old versions which we install first so that we have to rebuild
 # these infrequently
@@ -51,9 +57,8 @@ RUN perlbrew install-multiple -j 4 --notest \
     perl-5.16.3 \
     perl-5.18.4 \
     perl-5.28.0 \
-    perl-5.34.0
-
-RUN perlbrew clean
+    perl-5.34.0 \
+    && perlbrew clean
 
 ENV STOW_ROOT=/stow
 
@@ -71,7 +76,7 @@ COPY ./tools/run-tests.sh ./tools/
 
 # Clean up at the end after we bootstrap
 RUN apt-get clean \
-&& rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT [ "/bin/bash", "-c" ]
 CMD ["${STOW_ROOT}/tools/run-tests.sh"]
