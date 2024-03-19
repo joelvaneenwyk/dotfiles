@@ -12,8 +12,7 @@ local function load_oh_my_posh()
     local oh_my_posh_executable = ""
     local loaded = false
     local values = {
-        home .. "/AppData/Local/Programs/oh-my-posh/bin/oh-my-posh.exe",
-        home .. "/.local/go/bin/oh-my-posh.exe",
+        home .. "/AppData/Local/Programs/oh-my-posh/bin/oh-my-posh.exe", home .. "/.local/go/bin/oh-my-posh.exe",
         "C:\\Program Files (x86)\\oh-my-posh\\bin\\oh-my-posh.exe"
     }
 
@@ -67,7 +66,7 @@ end
 local function setup_prompt()
     local starship_config = os.getenv("STARSHIP_CONFIG")
 
-    if os.isfile(starship_config) then
+    if starship_config ~= nil and os.isfile(starship_config) then
         load_starship()
     else
         load_oh_my_posh()
