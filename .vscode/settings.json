@@ -57,6 +57,16 @@
         "editor.formatOnSave": true,
         "files.eol": "\n"
     },
+    "[lua]": {
+        "editor.defaultFormatter": "sumneko.lua",
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": false,
+        "editor.formatOnSaveMode": "modificationsIfAvailable",
+        "editor.formatOnType": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit"
+        }
+    },
     "[yaml]": {
         "editor.formatOnSave": true
     },
@@ -115,6 +125,9 @@
     "editor.fontLigatures": true,
     "esbonio.server.enabled": false,
     "files.associations": {
+        ".luarc": "lua",
+        ".lua-format": "yaml",
+        ".luacov": "lua",
         "*.bats": "shellscript",
         "*.conf": "properties",
         "*.in": "perl",
@@ -154,10 +167,51 @@
     "git.requireGitUserConfig": false,
     "json.format.enable": true,
     "json.validate.enable": true,
+    "Lua.addonManager.enable": true,
+    "Lua.codeLens.enable": true,
+    "Lua.completion.enable": true,
     "Lua.diagnostics.enable": true,
+    "Lua.diagnostics.disable": [
+        "undefined-field"
+    ],
+    "Lua.diagnostics.globals": [
+        "path",
+        "settings",
+        "rl",
+        "string.explode",
+        "explode",
+        "os.getcwd",
+        "cmderGitStatusOptIn",
+        "pause",
+        "log",
+        "unicode",
+        "rl_state",
+        "it",
+        "describe",
+        "hs",
+        "NONL",
+        "ARGHELPER_DISABLE_DESCRIPTIONS",
+        "matchicons",
+        "DISABLE_GIT_REMOTE_IN_PROMPT",
+        "console",
+        "msbuild_parser_data",
+        "clink",
+        "fzf_complete_internal",
+        "fzf_complete",
+        "fzf_selectcomplete",
+        "fzf_complete_force",
+        "fzf_history",
+        "fzf_file",
+        "fzf_directory",
+        "fzf_bindings"
+    ],
+    "Lua.format.defaultConfig": {
+        "indentSize": "2"
+    },
     "Lua.format.enable": true,
     "Lua.hint.setType": true,
-    "Lua.workspace.checkThirdParty": true,
+    "Lua.semantic.enable": true,
+    "Lua.workspace.checkThirdParty": false,
     "Lua.workspace.ignoreDir": [
         ".vscode",
         "micro/.config/micro",
@@ -170,7 +224,9 @@
         "micro/.config",
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/lldebugger/module/library",
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library",
-        "${3rd}/luassert/library"
+        "${3rd}/luassert/library",
+        "C:/Users/jovaneen/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/lualogging/module/library",
+        "C:/Users/jovaneen/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/luaunit/module/library"
     ],
     "markdownlint.ignore": ".markdownlintignore",
     "perl.enable": true,
@@ -341,27 +397,6 @@
         }
     },
     "terminal.integrated.profiles.windows": {
-        "Mycelio": {
-            "args": [
-                "/K"
-            ],
-            "env": {
-                "CLINK_INJECTED": null,
-                "MYCELIO_ROOT": null,
-                "MYCELIO_SKIP_INIT": null,
-                "MYCELIO_AUTORUN_INITIALIZED": null,
-                "MYCELIO_ENV_PATH": null,
-                "MYCELIO_ECHO": null,
-                "PROMPT": "$P$G",
-                "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
-                "PATH": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Program Files\\Docker\\Docker\\resources\\bin;C:\\Program Files\\RedHat\\Podman;${workspaceFolder}\\source\\bin;${workspaceFolder}\\source\\windows\\bin;${env:USERPROFILE}\\.proto\\bin;${env:USERPROFILE}\\scoop\\shims;C:\\Program Files\\Git\\bin;${env:windir}\\System32;${env:windir}"
-            },
-            "icon": "terminal-cmd",
-            "path": [
-                "${env:windir}\\Sysnative\\cmd.exe",
-                "${env:windir}\\System32\\cmd.exe"
-            ]
-        },
         "MSYS2": {
             "args": [
                 "--login",
@@ -377,6 +412,27 @@
                 "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\bash.exe"
             ]
         },
+        "Mycelio": {
+            "args": [
+                "/K"
+            ],
+            "env": {
+                "CLINK_INJECTED": null,
+                "MYCELIO_AUTORUN_INITIALIZED": null,
+                "MYCELIO_ECHO": null,
+                "MYCELIO_ENV_PATH": null,
+                "MYCELIO_ROOT": null,
+                "MYCELIO_SKIP_INIT": null,
+                "PATH": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Program Files\\Docker\\Docker\\resources\\bin;C:\\Program Files\\RedHat\\Podman;${workspaceFolder}\\source\\bin;${workspaceFolder}\\source\\windows\\bin;${env:USERPROFILE}\\.proto\\bin;${env:USERPROFILE}\\scoop\\shims;C:\\Program Files\\Git\\bin;${env:windir}\\System32;${env:windir}",
+                "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
+                "PROMPT": "$P$G"
+            },
+            "icon": "terminal-cmd",
+            "path": [
+                "${env:windir}\\Sysnative\\cmd.exe",
+                "${env:windir}\\System32\\cmd.exe"
+            ]
+        },
         "PowerShell": {
             "args": [
                 "-nologo"
@@ -388,38 +444,10 @@
     "terminal.integrated.scrollback": 20000,
     "terminal.integrated.shellIntegration.enabled": true,
     "terminal.integrated.showExitAlert": false,
-    "vscode-lua-format.configPath": "source/config/.lua-style",
+    "vscode-lua-format.configPath": ".lua-format",
     "workbench.colorCustomizations": {
         "terminal.background": "#181818",
         "terminal.foreground": "#b69f83"
     },
-    "xml.validation.enabled": false,
-    "Lua.diagnostics.globals": [
-        "path",
-        "settings",
-        "rl",
-        "cmderGitStatusOptIn",
-        "pause",
-        "log",
-        "unicode",
-        "rl_state",
-        "it",
-        "describe",
-        "hs",
-        "NONL",
-        "ARGHELPER_DISABLE_DESCRIPTIONS",
-        "matchicons",
-        "DISABLE_GIT_REMOTE_IN_PROMPT",
-        "console",
-        "msbuild_parser_data",
-        "clink",
-        "fzf_complete_internal",
-        "fzf_complete",
-        "fzf_selectcomplete",
-        "fzf_complete_force",
-        "fzf_history",
-        "fzf_file",
-        "fzf_directory",
-        "fzf_bindings"
-    ]
+    "xml.validation.enabled": false
 }
