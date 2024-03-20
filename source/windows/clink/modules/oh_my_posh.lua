@@ -1,5 +1,5 @@
 local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
-local mycelio_root_dir = path.normalise(script_dir .. "../../..")
+local mycelio_root_dir = path.normalise(script_dir .. "../../../..")
 
 local home = os.getenv("HOME") or os.getenv("USERPROFILE")
 local mycelio_config = path.normalise(mycelio_root_dir .. "/packages/shell/.poshthemes/mycelio.omp.json")
