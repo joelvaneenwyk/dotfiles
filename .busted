@@ -2,6 +2,6 @@ return {
     default = {
         coverage = true,
         verbose = true,
-        lpath = "./modules/?.lua"
+        lpath = "./source/windows/clink-completions/modules/?.lua"
     }
 }

@@ -1,8 +1,8 @@
 --
 -- Clink parsers for Mycelio dotfiles project
 --
--- The documentation for parsers is perhaps the best source (see https://chrisant996.github.io/clink/clink.html) but be aware
--- that some of this was written for the original clink so some of this uses outdated syntax.
+-- The official documentation for parsers (see
+-- https://chrisant996.github.io/clink/clink.html) is your best resource for adding new parsers.
 --
 
 require("arghelper")
