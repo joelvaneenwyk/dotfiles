@@ -16,6 +16,16 @@
         "editor.defaultFormatter": "vscode.json-language-features",
         "editor.formatOnSave": true
     },
+    "[lua]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit"
+        },
+        "editor.defaultFormatter": "sumneko.lua",
+        "editor.formatOnPaste": false,
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "modificationsIfAvailable",
+        "editor.formatOnType": true
+    },
     "[markdown]": {
         "cSpell.advanced.feature.useReferenceProviderRemove": "/^#+\\s/",
         "cSpell.advanced.feature.useReferenceProviderWithRename": true,
@@ -56,16 +66,6 @@
         // "editor.defaultFormatter": "foxundermoon.shell-format",
         "editor.formatOnSave": true,
         "files.eol": "\n"
-    },
-    "[lua]": {
-        "editor.defaultFormatter": "sumneko.lua",
-        "editor.formatOnSave": true,
-        "editor.formatOnPaste": false,
-        "editor.formatOnSaveMode": "modificationsIfAvailable",
-        "editor.formatOnType": true,
-        "editor.codeActionsOnSave": {
-            "source.fixAll": "explicit"
-        }
     },
     "[yaml]": {
         "editor.formatOnSave": true
@@ -125,9 +125,6 @@
     "editor.fontLigatures": true,
     "esbonio.server.enabled": false,
     "files.associations": {
-        ".luarc": "lua",
-        ".lua-format": "yaml",
-        ".luacov": "lua",
         "*.bats": "shellscript",
         "*.conf": "properties",
         "*.in": "perl",
@@ -136,11 +133,15 @@
         "*.post": "shellscript",
         "*.shbat": "shellscript",
         "*.template": "properties",
+        ".busted": "lua",
         ".editorconfig": "editorconfig",
         ".gitconfig_*": "properties",
         ".gitignore": "properties",
         ".gitmodules": "properties",
         ".inputrc": "ini",
+        ".lua-format": "yaml",
+        ".luacov": "lua",
+        ".luarc": "lua",
         ".wslconfig": "properties",
         "chkstow": "perl",
         "cpanfile": "perl",
@@ -170,10 +171,10 @@
     "Lua.addonManager.enable": true,
     "Lua.codeLens.enable": true,
     "Lua.completion.enable": true,
-    "Lua.diagnostics.enable": true,
     "Lua.diagnostics.disable": [
         "undefined-field"
     ],
+    "Lua.diagnostics.enable": true,
     "Lua.diagnostics.globals": [
         "path",
         "settings",
