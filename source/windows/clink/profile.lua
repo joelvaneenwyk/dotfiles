@@ -175,5 +175,5 @@ function bracket_prompt:filter(prompt)
     return prompt .. "\n → "
 end
 
-add_modules(mycelio_root_dir .. "/source/windows/clink/modules/")
 add_modules(mycelio_root_dir .. "/source/windows/clink-completions/")
+add_modules(mycelio_root_dir .. "/source/windows/clink/modules/")
