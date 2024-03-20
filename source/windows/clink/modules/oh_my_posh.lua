@@ -7,12 +7,11 @@ local local_oh_my_posh_executable = ""
 local oh_my_posh_executable = ""
 local loaded = false
 local values = {
-    home .. "/AppData/Local/Programs/oh-my-posh/bin/oh-my-posh.exe",
-    home .. "/.local/go/bin/oh-my-posh.exe",
+    home .. "/AppData/Local/Programs/oh-my-posh/bin/oh-my-posh.exe", home .. "/.local/go/bin/oh-my-posh.exe",
     "C:\\Program Files (x86)\\oh-my-posh\\bin\\oh-my-posh.exe"
 }
 
-for key, value in pairs(values) do
+for _key, value in pairs(values) do
     if os.isfile(local_oh_my_posh_executable) then
         break
     else
@@ -23,6 +22,7 @@ for key, value in pairs(values) do
     end
 end
 
+---@diagnostic disable-next-line: undefined-field
 if not os.isfile(local_oh_my_posh_executable) then
     print('[clink] [ERROR] Oh My Posh not found: ' .. local_oh_my_posh_executable)
 end
@@ -34,7 +34,9 @@ end
 if os.isfile(local_oh_my_posh_executable) and os.isfile(mycelio_config) then
     local_oh_my_posh_executable = "\"" .. local_oh_my_posh_executable .. "\""
     io.popen(local_oh_my_posh_executable .. " --version")
-    if not os.geterrorlevel == 0 then
+    
+    ---@diagnostic disable-next-line: undefined-field
+    if os.geterrorlevel ~= 0 then
         print('[clink] WARNING: Oh My Posh version test failed: \'' .. local_oh_my_posh_executable .. '\'')
     else
         oh_my_posh_executable = local_oh_my_posh_executable

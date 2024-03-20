@@ -11,9 +11,7 @@ been somewhat heavily modified and also just out of date with most recent versio
 local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
 local mycelio_root_dir = path.normalise(script_dir .. "../../..")
 
-local color_cyan = "\x1b[36m"
 local color_normal = "\x1b[m"
-
 local settings = {
     color_vsc_unknown = "\x1b[30;1m",
     color_vsc_clean = "\x1b[1;37;40m",
@@ -25,7 +23,7 @@ local settings = {
     benchmark = false
 }
 
-profile_settings = {extension_npm_cache = 1, extension_npm = 1}
+local profile_settings = {extension_npm_cache = 1, extension_npm = 1}
 
 local function add_modules(input_path)
     local completions_dir = path.normalise(input_path)
@@ -47,18 +45,9 @@ local function add_modules(input_path)
 end
 
 local cwd_prompt = clink.promptfilter(30)
-function cwd_prompt:filter(prompt)
+function cwd_prompt:filter(_)
+    ---@diagnostic disable-next-line: undefined-field
     return settings.color_prompt .. os.getcwd() .. color_normal
-end
-
--- A prompt filter that appends the current git branch.
-local git_branch_prompt = clink.promptfilter(65)
-function git_branch_prompt:filter(prompt)
-    local line = io.popen("git branch --show-current 2>nul"):read("*a")
-    local branch = line:match("(.+)\n")
-    if branch then
-        return prompt .. " " .. color_cyan .. "[" .. branch .. "]" .. color_normal
-    end
 end
 
 -- A prompt filter that adds a line feed and angle bracket.

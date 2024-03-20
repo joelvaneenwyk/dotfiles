@@ -393,5 +393,33 @@
         "terminal.background": "#181818",
         "terminal.foreground": "#b69f83"
     },
-    "xml.validation.enabled": false
+    "xml.validation.enabled": false,
+    "Lua.diagnostics.globals": [
+        "path",
+        "settings",
+        "rl",
+        "cmderGitStatusOptIn",
+        "pause",
+        "log",
+        "unicode",
+        "rl_state",
+        "it",
+        "describe",
+        "hs",
+        "NONL",
+        "ARGHELPER_DISABLE_DESCRIPTIONS",
+        "matchicons",
+        "DISABLE_GIT_REMOTE_IN_PROMPT",
+        "console",
+        "msbuild_parser_data",
+        "clink",
+        "fzf_complete_internal",
+        "fzf_complete",
+        "fzf_selectcomplete",
+        "fzf_complete_force",
+        "fzf_history",
+        "fzf_file",
+        "fzf_directory",
+        "fzf_bindings"
+    ]
 }

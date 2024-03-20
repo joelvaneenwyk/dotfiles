@@ -49,6 +49,7 @@ CURPOS
 cygdrive
 cygpath
 defterm
+deletestats
 devcontainer
 devel
 dircolors
@@ -126,6 +127,7 @@ libz
 linuxbrew
 localtime
 LSCOLORS
+luacov
 Mailmate
 MANPATH
 maxdepth
@@ -182,6 +184,7 @@ rlespinasse
 Robocopy
 rogalmic
 runneradmin
+runreport
 rxvt
 SAVEHIST
 screencapture
