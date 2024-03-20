@@ -164,7 +164,7 @@ _unique_list() {
 #   prepend:  dir2:dir1:OLD_PATH
 #   append:   OLD_PATH:dir1:dir2
 #
-# If called with no paramters, returns PATH with duplicate directories removed
+# If called with no parameters, returns PATH with duplicate directories removed
 #
 _add_path() {
     _list=":$(_unique_list "${PATH:-}"):"
@@ -430,10 +430,10 @@ initialize_interactive_profile() {
         fi
 
         if [ -n "$_theme" ]; then
-            if ! eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")" >/dev/null 2>&1; then
-                echo "❌ Failed to initialize Oh My Posh."
-            else
+            if eval "$(oh-my-posh --init --shell "$_shell" --config "$_theme")" >/dev/null 2>&1; then
                 _log_debug "Initialized 'Oh My Posh' callback."
+            else
+                _log_warning "❌ Failed to initialize Oh My Posh."
             fi
         fi
     fi
@@ -467,7 +467,7 @@ _get_profile_root() {
     _windows_root="$(_get_windows_root)"
     _cmd="$_windows_root/Windows/System32/cmd.exe"
 
-    if [ -x "$(command -v wslpath)" ]; then
+    if [ -x "$(command -v wslpath)" -a -x "$(command -v wslvar)" ]; then
         _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"
     fi
 
@@ -539,9 +539,9 @@ initialize_profile() {
         _initialize_synology
     fi
 
-    _log_debug "Initialized default enviornment variables."
+    _log_debug "Initialized default environment variables."
 
-    # Import environment varaibles from dotenv file. Primarily used to grab
+    # Import environment variables from dotenv file. Primarily used to grab
     # the 'MYCELIO_ROOT' path as it is sometimes hard (if not impossible) to calculate
     # on some shells/platforms. If needed, this could be replaced with something
     # more advanced e.g., https://github.com/ko1nksm/shdotenv
@@ -699,7 +699,6 @@ initialize_profile() {
 }
 
 initialize() {
-    # Fig pre block. Keep at the top of this file.
     if [ -f "$HOME/.fig/shell/profile.pre.bash" ]; then
         . "$HOME/.fig/shell/profile.pre.bash"
     fi
@@ -723,7 +722,6 @@ initialize() {
 
     export MYCELIO_PROFILE_INITIALIZED=1
 
-    # Fig pre block. Keep at the top of this file.
     if [ -f "$HOME/.fig/shell/profile.post.bash" ]; then
         . "$HOME/.fig/shell/profile.post.bash"
     fi

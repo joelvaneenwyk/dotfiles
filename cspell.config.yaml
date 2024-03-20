@@ -1,0 +1,13 @@
+version: "0.2"
+ignorePaths: []
+dictionaryDefinitions:
+  - name: mycelio-dictionary
+    path: ./.cspell/mycelio-dictionary.txt
+    addWords: true
+dictionaries:
+  - mycelio-dictionary
+  - perl
+  - en_us
+words: []
+ignoreWords: []
+import: []

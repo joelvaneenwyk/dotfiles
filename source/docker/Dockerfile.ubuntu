@@ -4,23 +4,28 @@ ARG USERNAME=default
 ENV USERNAME=${USERNAME}
 
 # ubuntu:latest does not have sudo fetch it and install it
+# hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    sudo micro nano neofetch
+    sudo micro nano neofetch \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN sudo apt-get -y --no-install-recommends --only-upgrade install bash
+# hadolint ignore=DL3004
+RUN \
+    sudo apt-get -y --no-install-recommends --only-upgrade install bash \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create new user and disable password and gecos for later. See '--gecos' explained
-# well here: https://askubuntu.com/a/1195288/635348
-RUN adduser --home "/home/${USERNAME}" --disabled-password --gecos "" ${USERNAME}
-
-#  Add new user to sudo group
-RUN usermod -aG sudo "${USERNAME}"
-
-# Ensure sudo group users are not asked for a password when using
-# the sudo command by ammending sudoers file.
-RUN echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-RUN echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+# 1. Create new user and disable password and gecos for later. See '--gecos' explained
+#    well here: https://askubuntu.com/a/1195288/635348
+# 2. Add new user to sudo group
+# 3. Ensure sudo group users are not asked for a password when using
+#    the sudo command by ammending sudoers file.
+RUN adduser --home "/home/${USERNAME}" --disabled-password --gecos "" ${USERNAME} \
+    && usermod -aG sudo "${USERNAME}" \
+    && echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
+    && echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Now we can set USER to the user we just created
 USER ${USERNAME}
@@ -31,16 +36,16 @@ WORKDIR /home/${USERNAME}
 
 # Copy 'dotfiles' project files into the container
 RUN mkdir -p /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./*.sh /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./*.md /home/${USERNAME}/dotfiles/
-COPY --chown=${USERNAME} --chmod=644 ./packages/ /home/${USERNAME}/dotfiles/packages/
-COPY --chown=${USERNAME} --chmod=644 ./docs/ /home/${USERNAME}/dotfiles/docs/
-COPY --chown=${USERNAME} --chmod=644 ./test/ /home/${USERNAME}/dotfiles/test/
-COPY --chown=${USERNAME} --chmod=644 ./source/ /home/${USERNAME}/dotfiles/source/
-
-RUN sudo apt-get update
+COPY --chown=${USERNAME} --chmod=0644 ./source/ /home/${USERNAME}/dotfiles/source/
+COPY --chown=${USERNAME} --chmod=0755 ./source/bin/*.sh /home/${USERNAME}/dotfiles/source/bin/
+COPY --chown=${USERNAME} --chmod=0644 ./packages/ /home/${USERNAME}/dotfiles/packages/
+COPY --chown=${USERNAME} --chmod=0644 ./docs/ /home/${USERNAME}/dotfiles/docs/
+COPY --chown=${USERNAME} --chmod=0644 ./test/ /home/${USERNAME}/dotfiles/test/
+COPY --chown=${USERNAME} --chmod=0755 ./*.sh /home/${USERNAME}/dotfiles/
+COPY --chown=${USERNAME} --chmod=0644 ./*.md /home/${USERNAME}/dotfiles/
 
 # This will delete existing '.profile' or other configuration files when stowing
+# hadolint ignore=DL3004
 RUN bash /home/${USERNAME}/dotfiles/setup.sh --clean --force --yes
 
 ENTRYPOINT [ "/bin/bash", "-c" ]

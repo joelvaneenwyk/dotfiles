@@ -7,8 +7,8 @@
     an absolute directory for 'MYCELIO_ROOT' but it also adds some critical directories
     the 'PATH' variable and removes duplicates.
 .EXAMPLE
-    CMD C:\> pwsh -NoLogo -NoProfile -File "powershell\Write-EnvironmentSetup.ps1" -ScriptPath "setupEnv.bat"
-    CMD C:\> call setupEnv.bat
+    CMD C:\> pwsh -NoLogo -NoProfile -File "powershell\Write-EnvironmentSetup.ps1" -ScriptPath "env.bat"
+    CMD C:\> call env.bat
 
     After running the above, the environment will be setup such that you can now run Mycelio
     specific commands e.g., "gpgtest"
@@ -130,41 +130,38 @@ Function Get-Environment {
         }
     }
 
-    $programFiles64 = "C:/Program Files"
-    $programFiles86 = "C:/Program Files (x86)"
     $environmentVariables = @()
 
     # We put this here because we want the global install to take precedence even if
     # there is a 'scoop' portable version installed.
-    $environmentVariables += "$programFiles64/Microsoft VS Code/bin"
+    $environmentVariables += "C:\Program Files\Microsoft VS Code\bin"
 
-    $environmentVariables += "$ENV:UserProfile/scoop/shims"
+    $environmentVariables += "$ENV:UserProfile\scoop\shims"
 
     $environmentVariables += "$script:MycelioRoot"
-    $environmentVariables += "$script:MycelioRoot/source/windows/bin"
+    $environmentVariables += "$script:MycelioRoot\source\windows\bin"
 
-    $environmentVariables += "$ENV:UserProfile/.proto"
-    $environmentVariables += "$ENV:UserProfile/.proto/bin"
+    $environmentVariables += "$ENV:UserProfile\.proto"
 
-    $environmentVariables += "$ENV:UserProfile/.local/texlive/bin/win32"
-    $environmentVariables += "$ENV:UserProfile/.local/git/mingw64/bin"
-    $environmentVariables += "$ENV:UserProfile/.local/bin"
-    $environmentVariables += "$ENV:UserProfile/.local/msys64"
-    $environmentVariables += "$ENV:UserProfile/.local/mutagen"
-    $environmentVariables += "$ENV:UserProfile/.local/go/bin"
-    $environmentVariables += "$ENV:UserProfile/.local/perl/c/bin"
-    $environmentVariables += "$ENV:UserProfile/.local/perl/perl/bin"
+    $environmentVariables += "$ENV:UserProfile\.local\texlive\bin\win32"
+    $environmentVariables += "$ENV:UserProfile\.local\git\mingw64\bin"
+    $environmentVariables += "$ENV:UserProfile\.local\bin"
+    $environmentVariables += "$ENV:UserProfile\.local\msys64"
+    $environmentVariables += "$ENV:UserProfile\.local\mutagen"
+    $environmentVariables += "$ENV:UserProfile\.local\go\bin"
+    $environmentVariables += "$ENV:UserProfile\.local\perl\c\bin"
+    $environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"
 
-    $environmentVariables += "$ENV:UserProfile/scoop/persist/rustup/.cargo/bin"
+    $environmentVariables += "$ENV:UserProfile\scoop\persist\rustup\.cargo\bin"
 
     # Expected to contain 'cpan' and other related utilities
-    $environmentVariables += "$ENV:UserProfile/.local/perl/perl/site/bin"
+    $environmentVariables += "$ENV:UserProfile\.local\perl\perl\site\bin"
 
     # If installed, will give you access to 'gpg' and 'gpgconf' as well as 'Kleopatra'
-    $environmentVariables += "$programFiles86/GnuPG/bin"
-    $environmentVariables += "$programFiles86/Gpg4win/bin"
+    $environmentVariables += "C:\Program Files (x86)\GnuPG\bin"
+    $environmentVariables += "C:\Program Files (x86)\Gpg4win\bin"
 
-    $environmentVariables += "$programFiles64/Docker"
+    $environmentVariables += "C:\Program Files\Docker"
 
     # Initially seemed like a good idea to include these tools in the environment, but there are a
     # lot of dependencies between these tools from dynamic libraries to just include folders that
@@ -176,16 +173,16 @@ Function Get-Environment {
 
     if ($includeUnixTools) {
         # Home to tools like 'gcc' and 'make'
-        $environmentVariables += "$ENV:UserProfile/.local/msys64/mingw64/bin"
+        $environmentVariables += "$ENV:UserProfile\.local\msys64\mingw64\bin"
 
         # This is intentionally at the very end as we want to pick non-MSYS2 (or Cygwin) style
         # versions if at all possible. This is mainly required for tools like 'make' which are
         # only available in the 'usr/bin' folder.
-        $environmentVariables += "$ENV:UserProfile/.local/msys64/usr/bin"
+        $environmentVariables += "$ENV:UserProfile\.local\msys64\usr\bin"
     }
 
     # This also contains 'bash' and other utilities so put this near the end
-    $environmentVariables += "$programFiles64/Git/bin"
+    $environmentVariables += "C:\Program Files\Git\bin"
 
     $environmentVariables += $(Get-CurrentEnvironment)
 

@@ -2,7 +2,7 @@
 #
 # Usage: ./setup.sh
 #
-#   - Install commonly used apps using "brew bundle" (see Brewfile) or apt-get (on Ubunutu/Debian).
+#   - Install commonly used apps using "brew bundle" (see Brewfile) or apt-get (on Ubuntu/Debian).
 #   - Uses "stow" to link config files into home directory.
 #   - Sets some app settings which were derived from https://github.com/Sajjadhosn/dotfiles
 #

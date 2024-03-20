@@ -588,9 +588,11 @@ Function Initialize-ConsoleFont {
     Write-Host '::endgroup::'
 }
 
-Function Get-TexLive {
+Function Install-TexLive {
     try {
         Write-Host '::group::Get TexLive'
+
+        [Environment]::SetEnvironmentVariable("TEXLIVE_INSTALL_ENV_NOCHECK", $env:TEXLIVE_INSTALL_ENV_NOCHECK, [System.EnvironmentVariableTarget]::User)
 
         if ($IsWindows -or $ENV:OS) {
             Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -611,7 +613,7 @@ Function Get-TexLive {
         else {
             Get-File -Url 'https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip' -Filename "$tempTexArchive"
 
-            # Remove tex folder if it exists
+            # Remove tex foFFlder if it exists
             If (Test-Path "$tempTexFolder" -PathType Any) {
                 Remove-Item -Recurse -Force "$tempTexFolder" | Out-Null
             }
@@ -648,7 +650,7 @@ Function Get-TexLive {
         $env:TEXLIVE_INSTALL_TEXMFVAR = "$TexLiveInstallRoot\texmf-var"
         $env:TEXLIVE_INSTALL_TEXMFCONFIG = "$TexLiveInstallRoot\texmf-config"
 
-        $env:TEXLIVE_BIN = "$env:TEXLIVE_INSTALL_PREFIX\bin\win32"
+        $env:TEXLIVE_BIN = "$env:TEXLIVE_INSTALL_PREFIX\bin\windows"
         $env:TEXMFSYSCONFIG = "$env:TEXLIVE_INSTALL_TEXMFSYSCONFIG"
         $env:TEXMFSYSVAR = "$env:TEXLIVE_INSTALL_TEXMFSYSVAR"
         $env:TEXMFHOME = "$env:TEXLIVE_INSTALL_TEXMFHOME"
@@ -697,22 +699,27 @@ tlpdbopt_w32_multi_user 0
         If (Test-Path "$texExecutable" -PathType Leaf) {
             Write-Host "Skipped install. TeX already exists: '$texExecutable'"
         }
-        elseif ($IsWindows -or $ENV:OS) {
-            $errorPreference = $ErrorActionPreference
-            $ErrorActionPreference = 'SilentlyContinue'
+        elseif (($IsWindows -or $ENV:OS) -and (Test-Path -Path "$env:TEXLIVE_INSTALL" -PathType Leaf)) {
+            try {
+                $errorPreference = $ErrorActionPreference
+                $ErrorActionPreference = 'SilentlyContinue'
 
-            # We redirect stderr to stdout because of a seemingly unavoidable error that we get during
-            # install e.g. 'Use of uninitialized value $deftmflocal in string at C:\...\texlive-install\install-tl line 1364.'
-            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ''$env:TEXLIVE_INSTALL" -no-gui -portable -profile "$texLiveProfile"" 2>&1
+                # We redirect stderr to stdout because of a seemingly unavoidable error that we get during
+                # install e.g. 'Use of uninitialized value $deftmflocal in string at C:\...\texlive-install\install-tl line 1364.'
+                & "$ENV:SystemRoot\System32\cmd.exe" /d /c """$env:TEXLIVE_INSTALL"" -no-gui -portable -profile ""$texLiveProfile""" | Tee-Object -FilePath "$script:MycelioArtifactsDir\texlive-install.log"
+            } finally {
+                $ErrorActionPreference = $errorPreference
+            }
 
-            $ErrorActionPreference = $errorPreference
+            # e.g., "C:\Users\{my_username}\.local\texlive\bin\windows\tlmgr.bat"
+            $tlmgr = "$env:TEXLIVE_BIN\tlmgr.bat"
+
+            if (($IsWindows -or $ENV:OS) -and (Test-Path -Path "$tlmgr" -PathType Leaf)) {
+                & "$ENV:SystemRoot\System32\cmd.exe" /d /c """$tlmgr"" update -all"
+            }
         }
         else {
             Write-Host 'TeX Live install process only supported on Windows.'
-        }
-
-        if ($IsWindows -or $ENV:OS) {
-            & "$ENV:SystemRoot\System32\cmd.exe" /d /c ''$env:TEXLIVE_BIN\tlmgr.bat" update -all"
         }
     }
     catch [Exception] {
@@ -898,8 +905,6 @@ Function Install-Toolset {
 
     Write-Host '::group::Install Toolset'
 
-    Get-TexLive
-
     # Install Perl which is necessary for 'Mycelio' so that we can run it outside of MSYS2 environment.
     try {
         if (-Not (Test-Path -Path "$script:MycelioLocalDir/perl/portableshell.bat" -PathType Leaf)) {
@@ -976,18 +981,6 @@ Function Install-Toolset {
                 scoop install vscode-portable
             }
 
-            if (Test-CommandValid 'winget') {
-                sudo cache on
-                sudo winget install -e --id 'Python.Python.3.10' -v '3.10.11' --scope machine
-                sudo winget pin add 'Python.Python.3.9'
-                sudo winget pin add 'Python.Python.3.10'
-                sudo winget pin add 'Python.Python.3.12'
-                sudo winget pin add 'Python.Python.3.11'
-                sudo winget pin add 'Python.Python.3'
-                sudo winget pin add 'Python.Python.2'
-                sudo winget install -e --id 'Nushell.Nushell' --scope machine
-            }
-
             # Much better than default Windows terminal
             if (-not(Test-CommandValid 'wt')) {
                 elseif (Test-CommandValid 'winget') {
@@ -1019,9 +1012,6 @@ Function Install-Toolset {
     }
     catch {
         Write-Host "Failed to install packages with 'scoop' manager."
-    }
-    finally {
-        gsudo cache off
     }
 
     try {
@@ -1207,7 +1197,7 @@ Function Install-PowerShell {
     }
 }
 
-Function Initialize-Environment {
+Function Prepare-Environment {
     Param(
         [Parameter(Position = 0, mandatory = $true)]
         [string]$ScriptPath
@@ -1271,17 +1261,9 @@ Function Initialize-Environment {
     else {
         Write-Host 'WARNING: System does not support creating symbolic links.'
     }
+}
 
-    # We use our own Git install instead of scoop as sometimes scoop shims stop working and they
-    # are generally slower. We care a lot about the performance of Git since it is used everywhere
-    # including the prompt.
-    Install-Git
-
-    Write-WindowsSandboxTemplate
-
-    Install-MSYS2
-    Install-PowerShell
-
+Function Install-Mutagen {
     try {
         $mutagen = "$script:MycelioUserProfile\.local\mutagen\mutagen.exe"
         $rclone = "$script:MycelioUserProfile\scoop\apps\rclone\current\rclone.exe"
@@ -1318,13 +1300,33 @@ Function Initialize-Environment {
     catch [Exception] {
         Write-Host 'Failed to sync dotfiles to user profile.', $_.Exception.Message
     }
+}
+
+Function Initialize-Environment {
+    Param(
+        [Parameter(Position = 0, mandatory = $true)]
+        [string]$ScriptPath
+    )
+
+    Prepare-Environment -ScriptPath $ScriptPath
 
     Initialize-ConsoleFont
 
+    # We use our own Git install instead of scoop as sometimes scoop shims stop working and they
+    # are generally slower. We care a lot about the performance of Git since it is used everywhere
+    # including the prompt.
+    Install-Git
+
+    Install-TexLive
+    Install-MSYS2
+    Install-PowerShell
+    Install-Mutagen
     Install-Scoop
     Install-Toolset
+
+    Write-WindowsSandboxTemplate
 
     Write-Host 'Initialized Mycelio environment for Windows.'
 }
 
-Initialize-Environment $MyInvocation.MyCommand.Path
+Initialize-Environment "$($MyInvocation.MyCommand.Path)"

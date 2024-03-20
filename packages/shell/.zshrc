@@ -38,7 +38,10 @@ export LSCOLORS="Gxfxcxdxbxegedabagacad"
 
 if [ -x /usr/bin/dircolors ]; then
     eval "$(dircolors -b)"
-    zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+
+    # Color completion for some things.
+    # http://linuxshellaccount.blogspot.com/2008/12/color-completion-using-zsh-modules-on.html
+    zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 
     alias ls='ls --color'
 else

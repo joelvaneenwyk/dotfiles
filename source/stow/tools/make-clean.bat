@@ -34,11 +34,11 @@ exit /b
 
         :: Shut down 'gpg-agent' otherwise some files can't be deleted from 'msys64' folder
         echo Terminate any 'gpg-agent' processes.
-        "%SystemRoot%\System32\wbem\wmic.exe" process where "ExecutablePath LIKE '%%gpg-agent.exe%%'" call terminate 2>&1
+        call "%SystemRoot%\System32\wbem\wmic.exe" process where "ExecutablePath LIKE '%%gpg-agent.exe%%'" call terminate 2>&1
 
         :: Shut down 'dirmngr' otherwise some files can't be deleted from 'msys64' folder
         echo Terminate any 'dirmngr' processes.
-        "%SystemRoot%\System32\wbem\wmic.exe" process where "ExecutablePath LIKE '%%dirmngr.exe%%'" call terminate 2>&1
+        call "%SystemRoot%\System32\wbem\wmic.exe" process where "ExecutablePath LIKE '%%dirmngr.exe%%'" call terminate 2>&1
 
         rmdir /q /s "%WIN_UNIX_DIR%" > nul 2>&1
         echo Removed local 'MSYS2' install.

@@ -6,7 +6,7 @@
         "editor.tabSize": 4,
         "editor.trimAutoWhitespace": true,
         "editor.useTabStops": false,
-        "files.encoding": "windows1252"
+        "files.encoding": "utf8"
     },
     "[json]": {
         "editor.defaultFormatter": "vscode.json-language-features",
@@ -23,7 +23,7 @@
         "editor.codeActionsOnSave": {
             "source.fixAll": "explicit"
         },
-        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+        "editor.defaultFormatter": "vscode.markdown-language-features",
         "editor.formatOnSave": true,
         "editor.quickSuggestions": {
             "comments": "off",
@@ -36,6 +36,10 @@
     },
     "[powershell]": {
         "debug.saveBeforeStart": "nonUntitledEditorsInActiveGroup",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
         "editor.formatOnSave": true,
         "editor.semanticHighlighting.enabled": false,
         "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
@@ -45,11 +49,11 @@
             "source.fixAll": "explicit",
             "source.organizeImports": "explicit"
         },
-        "editor.defaultFormatter": "charliermarsh.ruff",
+        // "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true
     },
     "[shellscript]": {
-        "editor.defaultFormatter": "foxundermoon.shell-format",
+        // "editor.defaultFormatter": "foxundermoon.shell-format",
         "editor.formatOnSave": true,
         "files.eol": "\n"
     },
@@ -106,117 +110,6 @@
         ".Xresources",
         ".xmobarrc",
         ".travis.yml"
-    ],
-    "cSpell.words": [
-        "agnoster",
-        "ankitsultana",
-        "antialiasing",
-        "asdf",
-        "Autobuild",
-        "autocrlf",
-        "AUTORUN",
-        "Backblaze",
-        "beaners",
-        "bmalehorn",
-        "buildx",
-        "chcp",
-        "chkstow",
-        "CMDCMDLINE",
-        "codacy",
-        "codeql",
-        "commandline",
-        "compat",
-        "cpan",
-        "cpanm",
-        "Createshortcut",
-        "cygdrive",
-        "cygpath",
-        "defterm",
-        "devcontainer",
-        "distro",
-        "dockerhub",
-        "donjayamanne",
-        "doskey",
-        "dotfile",
-        "dotfiles",
-        "dpnx",
-        "eamodio",
-        "endgroup",
-        "endlocal",
-        "errorlevel",
-        "eval",
-        "figlet",
-        "filelocator",
-        "findstr",
-        "Fullscreen",
-        "fundle",
-        "gintronic",
-        "githistory",
-        "gmail",
-        "grayscale",
-        "hasklig",
-        "haveunexpected",
-        "HKCU",
-        "HKLM",
-        "hookyqr",
-        "invokation",
-        "jdve",
-        "jetbrains",
-        "jetmartin",
-        "joelvaneenwyk",
-        "keyscan",
-        "kleopatra",
-        "Mailmate",
-        "mhutchie",
-        "mingw",
-        "mkdir",
-        "MobaXterm",
-        "msiexec",
-        "msvcrt",
-        "msys",
-        "msysgit",
-        "msystem",
-        "myceli",
-        "mycelio",
-        "mycoshiro",
-        "nanoserver",
-        "noconfirm",
-        "nolog",
-        "nvim",
-        "pacman",
-        "powerline",
-        "PragmataProMonoLiga",
-        "pwsh",
-        "pwshs",
-        "pyright",
-        "qemu",
-        "restow",
-        "rlespinasse",
-        "Robocopy",
-        "rogalmic",
-        "runneradmin",
-        "semver",
-        "setlocal",
-        "severly",
-        "shellcheck",
-        "SNAME",
-        "SPROFILE",
-        "submodules",
-        "symlink",
-        "symlinking",
-        "symlinks",
-        "synoservicectl",
-        "SYSTEMROOT",
-        "timonwong",
-        "tldr",
-        "trackpad",
-        "USERPROFILE",
-        "Venv",
-        "vundle",
-        "xclip",
-        "xero",
-        "xmonad",
-        "yabai"
     ],
     "editor.fontFamily": "PragmataPro Nerd Font, PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, JetBrains Mono NL, Menlo, Monaco, Consolas, Courier New, monospace",
     "editor.fontLigatures": true,
@@ -277,7 +170,7 @@
         "micro/.config",
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/lldebugger/module/library",
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library",
-        "${3rd}/luassert/library",
+        "${3rd}/luassert/library"
     ],
     "markdownlint.ignore": ".markdownlintignore",
     "perl.enable": true,
@@ -288,9 +181,11 @@
         "${workspaceFolder}/bin",
         "${workspaceFolder}/t"
     ],
+    "powershell.buttons.showRunButtons": true,
     "powershell.codeFormatting.addWhitespaceAroundPipe": true,
     "powershell.codeFormatting.alignPropertyValuePairs": true,
     "powershell.codeFormatting.ignoreOneLineBlock": false,
+    "powershell.codeFormatting.preset": "Custom",
     "powershell.codeFormatting.trimWhitespaceAroundPipe": false,
     "powershell.codeFormatting.useCorrectCasing": true,
     "powershell.codeFormatting.whitespaceAfterSeparator": true,
@@ -372,18 +267,22 @@
     "terminal.integrated.cwd": "${workspaceFolder}",
     "terminal.integrated.defaultProfile.linux": "bash",
     "terminal.integrated.defaultProfile.osx": "bash",
-    "terminal.integrated.defaultProfile.windows": "Command Prompt",
-    "terminal.integrated.env.windows": {
-        "PATH": "${env:PATH};${workspaceFolder};${workspaceFolder}\\source\\windows\\bin;${workspaceFolder}\\source\\bin;${workspaceFolder}\\secrets\\bin;${workspaceFolder}\\source\\stow\\tools"
-    },
-    "terminal.integrated.environmentChangesRelaunch": false,
+    "terminal.integrated.defaultProfile.windows": "Mycelio",
+    "terminal.integrated.environmentChangesRelaunch": true,
     "terminal.integrated.fontFamily": "PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
     "terminal.integrated.fontSize": 16,
     "terminal.integrated.minimumContrastRatio": 1,
     "terminal.integrated.profiles.linux": {
         "bash": {
-            // Alternative: "args": ["-c", "set -x && . ~/.profile && bash"],
             "args": [],
+            "icon": "terminal-bash",
+            "path": "sh"
+        },
+        "bash_profile": {
+            "args": [
+                "-c",
+                "set -x && . ~/.profile && bash"
+            ],
             "icon": "terminal-bash",
             "path": "sh"
         },
@@ -442,32 +341,26 @@
         }
     },
     "terminal.integrated.profiles.windows": {
-        "Command Prompt": {
-            "args": [],
+        "Mycelio": {
+            "args": [
+                "/K"
+            ],
+            "env": {
+                "CLINK_INJECTED": null,
+                "MYCELIO_ROOT": null,
+                "MYCELIO_SKIP_INIT": null,
+                "MYCELIO_AUTORUN_INITIALIZED": null,
+                "MYCELIO_ENV_PATH": null,
+                "MYCELIO_ECHO": null,
+                "PROMPT": "$P$G",
+                "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
+                "PATH": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Program Files\\Docker\\Docker\\resources\\bin;C:\\Program Files\\RedHat\\Podman;${workspaceFolder}\\source\\bin;${workspaceFolder}\\source\\windows\\bin;${env:USERPROFILE}\\.proto\\bin;${env:USERPROFILE}\\scoop\\shims;C:\\Program Files\\Git\\bin;${env:windir}\\System32;${env:windir}"
+            },
             "icon": "terminal-cmd",
             "path": [
                 "${env:windir}\\Sysnative\\cmd.exe",
                 "${env:windir}\\System32\\cmd.exe"
             ]
-        },
-        "Fish": {
-            "args": [
-                "--login",
-                "-i"
-            ],
-            "env": {
-                "CHERE_INVOKING": "1",
-                "MSYS2_PATH_TYPE": "inherit",
-                "MSYSTEM": "MSYS2"
-            },
-            "icon": "terminal",
-            "path": [
-                "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\fish.exe"
-            ]
-        },
-        "Git Bash": {
-            "icon": "terminal-bash",
-            "source": "Git Bash"
         },
         "MSYS2": {
             "args": [
