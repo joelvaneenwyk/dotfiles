@@ -4,7 +4,8 @@
     "codeLens.enable": true,
     "completion.enable": true,
     "diagnostics.disable": [
-        "undefined-field"
+        "undefined-field",
+        "cast-local-type"
     ],
     "diagnostics.enable": true,
     "diagnostics.globals": [
@@ -36,7 +37,13 @@
         "fzf_history",
         "fzf_file",
         "fzf_directory",
-        "fzf_bindings"
+        "fzf_bindings",
+        "mycelio_log",
+        "mycelio_log_debug",
+        "mycelio_log_info",
+        "mycelio_log_warning",
+        "mycelio_log_error",
+        "logger"
     ],
     "format.defaultConfig": {
         "indentSize": "2"
