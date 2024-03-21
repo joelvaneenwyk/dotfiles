@@ -7,6 +7,10 @@ return {
             std = "+busted"
         }
     },
+    ignore = {
+        "212",
+        "631"
+    },
     globals = {
         "clink", "error", "log", "os", "path", "pause", "rl", "rl_state", "settings", "string.comparematches",
         "popenrw", "string.equalsi", "string.explode", "string.matchlen", "unicode", "path", "settings", "rl",  "usbWatcher", "keyboardLayout", "setLayout", "setHindi", "hs",
