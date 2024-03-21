@@ -14,7 +14,7 @@ local function load_oh_my_posh(mycelio_root_dir)
             break
         else
             if local_oh_my_posh_executable ~= "" then
-                print('[clink] Oh My Posh not found: ' .. local_oh_my_posh_executable)
+                logger.debug('Oh-My-Posh not here: ' .. local_oh_my_posh_executable)
             end
             local_oh_my_posh_executable = path.normalise(value)
         end
@@ -22,28 +22,33 @@ local function load_oh_my_posh(mycelio_root_dir)
 
     ---@diagnostic disable-next-line: undefined-field
     if not os.isfile(local_oh_my_posh_executable) then
-        print('[clink] [ERROR] Oh My Posh not found: ' .. local_oh_my_posh_executable)
+        logger.error('Oh-My-Posh not found: ' .. local_oh_my_posh_executable)
     end
 
     if not os.isfile(mycelio_config) then
-        print('[clink] [ERROR] Oh My Posh config missing: ' .. mycelio_config)
+        logger.error('Oh My Posh config missing: ' .. mycelio_config)
     end
 
     if os.isfile(local_oh_my_posh_executable) and os.isfile(mycelio_config) then
-        local_oh_my_posh_executable = "\"" .. local_oh_my_posh_executable .. "\""
-        io.popen(local_oh_my_posh_executable .. " --version")
+        local omp = "\"" .. local_oh_my_posh_executable .. "\""
+        local version_process = io.popen(omp .. " --version")
+        local version = nil
 
         ---@diagnostic disable-next-line: undefined-field
-        if os.geterrorlevel ~= 0 then
-            print('[clink] WARNING: Oh My Posh version test failed: \'' .. local_oh_my_posh_executable .. '\'')
+        if version_process ~= nil then
+            version = version_process:read("*a")
+        end
+
+        if version == nil then
+            logger.warning('Failed to get Oh-My-Posh version: ' .. omp)
         else
-            local process = io.popen(local_oh_my_posh_executable .. " init cmd --config " .. mycelio_config)
+            local process = io.popen(omp .. " init cmd --config " .. mycelio_config)
             if process ~= nil then
                 local command = process:read("*a")
                 load(command)()
-                print('[clink] Initialized Oh My Posh: ' .. local_oh_my_posh_executable)
+                logger.info('Initialized Oh-My-Posh: ' .. omp)
             else
-                print('[clink] [ERROR] Oh My Posh init failed: ' .. local_oh_my_posh_executable)
+                logger.warning('Oh-My-Posh init failed: ' .. omp)
             end
             loaded = true
         end
