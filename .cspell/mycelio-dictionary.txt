@@ -2,6 +2,7 @@ aarch
 adoc
 agnoster
 antialiasing
+ARGHELPER
 armhf
 armv
 asdf
@@ -80,7 +81,10 @@ fishd
 Flwv
 fontconfig
 Fullscreen
+functioncall
+functiondef
 fundle
+getcwd
 gintronic
 githistory
 gmail
@@ -100,6 +104,7 @@ gpgtest
 grayscale
 gtimeout
 Gxfxcxdxbxegedabagacad
+hammerspoon
 hasklig
 histappend
 histignorealldups
@@ -125,11 +130,16 @@ LIBGL
 libnotify
 libz
 linuxbrew
+lldebugger
 localtime
 LSCOLORS
 luacov
+lualogging
+luassert
+luaunit
 Mailmate
 MANPATH
+matchicons
 maxdepth
 mhutchie
 mingw
@@ -138,6 +148,7 @@ mkdir
 mkgroup
 mkpasswd
 MobaXterm
+msbuild
 msiexec
 mstow
 msvcrt
@@ -159,9 +170,11 @@ noconfirm
 noheadings
 nolog
 noninteractive
+NONL
 nsswitch
 nvim
 pacman
+parens
 pgptest
 pinentry
 poshthemes
@@ -188,6 +201,7 @@ runreport
 rxvt
 SAVEHIST
 screencapture
+selectcomplete
 semver
 seprately
 setaf

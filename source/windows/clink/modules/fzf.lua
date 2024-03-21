@@ -46,6 +46,7 @@
 -- luacheck: pop
 --------------------------------------------------------------------------------
 ---@diagnostic disable: cast-local-type,undefined-field
+
 -- Compatibility check.
 if not io.popenrw then
     print('fzf.lua requires a newer version of Clink; please upgrade.')
