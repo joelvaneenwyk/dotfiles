@@ -133,6 +133,7 @@ linuxbrew
 lldebugger
 localtime
 LSCOLORS
+luacheck
 luacov
 lualogging
 luassert
