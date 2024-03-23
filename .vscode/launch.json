@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "PowerShell Launch Current File",
+            "name": "[pwsh] Current File",
             "type": "PowerShell",
             "request": "launch",
             "script": "${file}",
@@ -11,11 +11,11 @@
         {
             "type": "bashdb",
             "request": "launch",
-            "name": "Bash-Debug (simplest configuration)",
+            "name": "[bash] Debug",
             "program": "${file}"
         },
         {
-            "name": "Python Debugger: Python File",
+            "name": "[python] Remove Empty",
             "type": "debugpy",
             "request": "launch",
             "program": "source/bin/remove_empty.py"

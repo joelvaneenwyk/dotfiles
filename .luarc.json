@@ -1,0 +1,73 @@
+{
+    "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+    "addonManager.enable": true,
+    "codeLens.enable": true,
+    "completion.enable": true,
+    "diagnostics.disable": [
+        "undefined-field",
+        "cast-local-type"
+    ],
+    "diagnostics.enable": true,
+    "diagnostics.globals": [
+        "path",
+        "settings",
+        "rl",
+        "string.explode",
+        "explode",
+        "os.getcwd",
+        "cmderGitStatusOptIn",
+        "pause",
+        "log",
+        "unicode",
+        "rl_state",
+        "it",
+        "describe",
+        "hs",
+        "NONL",
+        "ARGHELPER_DISABLE_DESCRIPTIONS",
+        "matchicons",
+        "DISABLE_GIT_REMOTE_IN_PROMPT",
+        "console",
+        "msbuild_parser_data",
+        "clink",
+        "fzf_complete_internal",
+        "fzf_complete",
+        "fzf_selectcomplete",
+        "fzf_complete_force",
+        "fzf_history",
+        "fzf_file",
+        "fzf_directory",
+        "fzf_bindings",
+        "mycelio_log",
+        "mycelio_log_debug",
+        "mycelio_log_info",
+        "mycelio_log_warning",
+        "mycelio_log_error",
+        "logger"
+    ],
+    "format.defaultConfig": {
+        "indentSize": "2"
+    },
+    "format.enable": true,
+    "hint.setType": true,
+    "semantic.enable": true,
+    "workspace.checkThirdParty": false,
+    "workspace.ignoreDir": [
+        ".vscode",
+        "micro/.config/micro",
+        "source/windows/clink"
+    ],
+    "workspace.library": [
+        "source/windows/clink-completions",
+        "source/windows/clink",
+        "macos/.hammerspoon",
+        "micro/.config",
+        "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/lldebugger/module/library",
+        "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library",
+        "${3rd}/luassert/library",
+        "C:/Users/jovaneen/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/lualogging/module/library",
+        "C:/Users/jovaneen/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/luaunit/module/library"
+    ],
+    "runtime.version": "Lua 5.3",
+    "hint.enable": false
+}

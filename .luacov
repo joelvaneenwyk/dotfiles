@@ -1,0 +1,6 @@
+return {
+    include = { "source/windows/clink-completions/modules/*" },
+    exclude = { "lua_modules/*", ".lua/*", "source/windows/clink-completions/modules/clink_version.lua" },
+    deletestats = false,
+    runreport = true
+}

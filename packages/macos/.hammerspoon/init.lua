@@ -1,3 +1,5 @@
+---@diagnostic disable: lowercase-global
+
 usbWatcher = nil
 keyboardLayout = nil
 

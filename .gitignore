@@ -2,6 +2,33 @@
 # Files to ignore for dotfiles repository
 #
 
+.mypy_cache/
+.exe*/
+
+/it/
+/instance/
+/initialize/
+/so/
+
+#===============================
+# clink-completions
+#===============================
+
+.history
+*.sublime-*
+settings
+
+# testing stuff
+lua_modules
+luacov.*.out
+
+#local lua
+.lua
+
+#===============================
+# Common
+#===============================
+
 # Local temporary files not intended to be committed or used in Docker instances
 .tmp/
 

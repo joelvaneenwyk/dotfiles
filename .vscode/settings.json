@@ -16,6 +16,16 @@
         "editor.defaultFormatter": "vscode.json-language-features",
         "editor.formatOnSave": true
     },
+    "[lua]": {
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit"
+        },
+        "editor.defaultFormatter": "sumneko.lua",
+        "editor.formatOnPaste": false,
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "modificationsIfAvailable",
+        "editor.formatOnType": true
+    },
     "[markdown]": {
         "cSpell.advanced.feature.useReferenceProviderRemove": "/^#+\\s/",
         "cSpell.advanced.feature.useReferenceProviderWithRename": true,
@@ -123,11 +133,16 @@
         "*.post": "shellscript",
         "*.shbat": "shellscript",
         "*.template": "properties",
+        ".busted": "lua",
         ".editorconfig": "editorconfig",
         ".gitconfig_*": "properties",
         ".gitignore": "properties",
         ".gitmodules": "properties",
         ".inputrc": "ini",
+        ".lua-format": "yaml",
+        ".luacheckrc": "lua",
+        ".luacov": "lua",
+        ".luarc": "lua",
         ".wslconfig": "properties",
         "chkstow": "perl",
         "cpanfile": "perl",
@@ -154,24 +169,6 @@
     "git.requireGitUserConfig": false,
     "json.format.enable": true,
     "json.validate.enable": true,
-    "Lua.diagnostics.enable": true,
-    "Lua.format.enable": true,
-    "Lua.hint.setType": true,
-    "Lua.workspace.checkThirdParty": true,
-    "Lua.workspace.ignoreDir": [
-        ".vscode",
-        "micro/.config/micro",
-        "source/windows/clink"
-    ],
-    "Lua.workspace.library": [
-        "source/windows/clink-completions",
-        "source/windows/clink",
-        "macos/.hammerspoon",
-        "micro/.config",
-        "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/lldebugger/module/library",
-        "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library",
-        "${3rd}/luassert/library"
-    ],
     "markdownlint.ignore": ".markdownlintignore",
     "perl.enable": true,
     "perl.perlCmd": "${env:USERPROFILE}/.local/perl/perl/bin/perl.exe",
@@ -341,27 +338,6 @@
         }
     },
     "terminal.integrated.profiles.windows": {
-        "Mycelio": {
-            "args": [
-                "/K"
-            ],
-            "env": {
-                "CLINK_INJECTED": null,
-                "MYCELIO_ROOT": null,
-                "MYCELIO_SKIP_INIT": null,
-                "MYCELIO_AUTORUN_INITIALIZED": null,
-                "MYCELIO_ENV_PATH": null,
-                "MYCELIO_ECHO": null,
-                "PROMPT": "$P$G",
-                "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
-                "PATH": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Program Files\\Docker\\Docker\\resources\\bin;C:\\Program Files\\RedHat\\Podman;${workspaceFolder}\\source\\bin;${workspaceFolder}\\source\\windows\\bin;${env:USERPROFILE}\\.proto\\bin;${env:USERPROFILE}\\scoop\\shims;C:\\Program Files\\Git\\bin;${env:windir}\\System32;${env:windir}"
-            },
-            "icon": "terminal-cmd",
-            "path": [
-                "${env:windir}\\Sysnative\\cmd.exe",
-                "${env:windir}\\System32\\cmd.exe"
-            ]
-        },
         "MSYS2": {
             "args": [
                 "--login",
@@ -377,6 +353,27 @@
                 "${env:USERPROFILE}\\scoop\\apps\\msys2\\current\\usr\\bin\\bash.exe"
             ]
         },
+        "Mycelio": {
+            "args": [
+                "/K"
+            ],
+            "env": {
+                "CLINK_INJECTED": null,
+                "MYCELIO_AUTORUN_INITIALIZED": null,
+                "MYCELIO_ECHO": null,
+                "MYCELIO_ENV_PATH": null,
+                "MYCELIO_ROOT": null,
+                "MYCELIO_SKIP_INIT": null,
+                "PATH": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Program Files\\Docker\\Docker\\resources\\bin;C:\\Program Files\\RedHat\\Podman;${workspaceFolder}\\source\\bin;${workspaceFolder}\\source\\windows\\bin;${env:USERPROFILE}\\.proto\\bin;${env:USERPROFILE}\\scoop\\shims;C:\\Program Files\\Git\\bin;${env:windir}\\System32;${env:windir}",
+                "PATHEXT": ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
+                "PROMPT": "$P$G"
+            },
+            "icon": "terminal-cmd",
+            "path": [
+                "${env:windir}\\Sysnative\\cmd.exe",
+                "${env:windir}\\System32\\cmd.exe"
+            ]
+        },
         "PowerShell": {
             "args": [
                 "-nologo"
@@ -388,7 +385,7 @@
     "terminal.integrated.scrollback": 20000,
     "terminal.integrated.shellIntegration.enabled": true,
     "terminal.integrated.showExitAlert": false,
-    "vscode-lua-format.configPath": "source/config/.lua-style",
+    "vscode-lua-format.configPath": ".lua-format",
     "workbench.colorCustomizations": {
         "terminal.background": "#181818",
         "terminal.foreground": "#b69f83"
