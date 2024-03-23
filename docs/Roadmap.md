@@ -2,17 +2,21 @@
 
 Remove all submodules and inline everything we need perhaps using `git subtree` or something similar.
 
-One of the ideas behind this project was to use `bash`/`sh` more as a replacement for either `cmd` or `powershell` so that less has to be installed to get up and running. This felt like a decent concept but in the end, it is too difficult to manage `bash` scripts at scale.
+One of the ideas behind this project was to use `bash`/`sh` more as a replacement for either `cmd` or `powershell`
+so that less has to be installed to get up and running. This felt like a decent concept but in the end, it is too
+difficult to manage `bash` scripts at scale.
 
 On top of that, submodules are just a nightmare. They work and mostly fine but can be annoying to work with:
 
 1. Submodules may not work if your git is not setup correctly e.g., does not have the correct `core.autocrlf` setting.
-2. The existence of submodules results in certain views in VSCode becoming cluttered with repositories we do not actually care to look at. They will even come back again after you "close" them in VSCode.
+2. The existence of submodules results in certain views in VSCode becoming cluttered with repositories we do not
+3. actually care to look at. They will even come back again after you "close" them in VSCode.
 
 ## Windows Nano Server
 
 - [ ] 'where' does not exist.
-- [ ] No version of PowerShell is available by default so we grab from mcr.microsoft.com/powershell on Docker though we need another solution if testing locally.
+- [ ] No version of PowerShell is available by default so we grab from mcr.microsoft.com/powershell on Docker though
+      we need another solution if testing locally.
 
 ## Stow
 
