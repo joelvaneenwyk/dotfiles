@@ -2,6 +2,14 @@
 # Files to ignore for dotfiles repository
 #
 
+.mypy_cache/
+.exe*/
+
+/it/
+/instance/
+/initialize/
+/so/
+
 #===============================
 # clink-completions
 #===============================

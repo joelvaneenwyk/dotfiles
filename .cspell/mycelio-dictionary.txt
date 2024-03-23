@@ -34,8 +34,10 @@ chkstow
 CHOST
 CLICOLOR
 clmv
+cluacov
 CMDCMDLINE
 codacy
+codecov
 codeql
 commandline
 compat
@@ -125,6 +127,7 @@ keyscan
 kleopatra
 ldflags
 LDFLAGS
+leafo
 lesspipe
 LIBGL
 libnotify
@@ -136,6 +139,7 @@ LSCOLORS
 luacheck
 luacov
 lualogging
+luarocks
 luassert
 luaunit
 Mailmate
