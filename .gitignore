@@ -4,6 +4,7 @@
 
 .mypy_cache/
 .exe*/
+.venv/
 
 /it/
 /instance/
