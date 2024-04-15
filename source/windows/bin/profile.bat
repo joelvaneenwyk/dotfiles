@@ -94,7 +94,7 @@ setlocal EnableDelayedExpansion EnableExtensions
     if not exist "!MYCELIO_ENV_PATH!" (
         set "MYCELIO_ENV_PATH=!MYCELIO_ROOT!\source\windows\bin\env.bat"
     )
-    if not exist "!_env!" (
+    if not exist "!MYCELIO_ENV_PATH!" (
         set "MYCELIO_ENV_PATH="
     )
 endlocal & (

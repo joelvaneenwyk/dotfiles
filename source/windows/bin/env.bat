@@ -59,10 +59,9 @@ setlocal EnableExtensions
     )
     :$MainDone
 endlocal & (
-    set "MYCELIO_POWERSHELL=%_powershell%"
-    set "MYCELIO_ENV=%_mycelio_env%"
+    set "MYCELIO_POWERSHELL=%MYCELIO_POWERSHELL%"
+    set "MYCELIO_ENV=%MYCELIO_ENV%"
     set "MYCELIO_ROOT=%MYCELIO_ROOT%"
-    exit /b %errorlevel%
 )
 
 if exist "%MYCELIO_ENV%" (
