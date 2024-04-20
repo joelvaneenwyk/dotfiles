@@ -10,6 +10,7 @@
         "jetmartin.bats",
         "ms-vscode.powershell",
         "github.vscode-github-actions",
-        "editorconfig.editorconfig"
+        "editorconfig.editorconfig",
+        "usernamehw.errorlens"
     ]
 }

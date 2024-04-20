@@ -5,15 +5,6 @@
     # not Information diagnostic records.
     Severity     = @('Error', 'Warning', 'Information')
 
-    # Use IncludeRules when you want to run only a subset of the default rule set.
-    #IncludeRules = @('PSAvoidDefaultValueSwitchParameter',
-    #                 'PSMissingModuleManifestField',
-    #                 'PSReservedCmdletChar',
-    #                 'PSReservedParams',
-    #                 'PSShouldProcess',
-    #                 'PSUseApprovedVerbs',
-    #                 'PSUseDeclaredVarsMoreThanAssigments')
-
     # Use ExcludeRules when you want to run most of the default set of rules except
     # for a few rules you wish to "exclude".  Note: if a rule is in both IncludeRules
     # and ExcludeRules, the rule will be excluded.
@@ -37,7 +28,9 @@
                 '2.0',
                 '3.0',
                 '5.1',
-                '6.2'
+                '6.2',
+                '7.0',
+                '8.0'
             )
         }
 

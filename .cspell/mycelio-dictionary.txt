@@ -12,6 +12,7 @@ Autobuild
 autocrlf
 autohide
 automake
+automount
 autorun
 Autorun
 autostash
@@ -81,6 +82,7 @@ filelocator
 findstr
 fishd
 Flwv
+fmask
 fontconfig
 Fullscreen
 functioncall

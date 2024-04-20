@@ -51,7 +51,8 @@
             "source.organizeImports": "explicit"
         },
         "editor.formatOnSave": true,
-        "editor.semanticHighlighting.enabled": false,
+        "editor.codeLens": true,
+        "editor.semanticHighlighting.enabled": true,
         "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
     },
     "[python]": {
@@ -191,8 +192,11 @@
     "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
     "powershell.codeFormatting.whitespaceBetweenParameters": true,
     "powershell.codeFormatting.whitespaceInsideBrace": true,
-    "powershell.integratedConsole.showOnStartup": false,
+    "powershell.integratedConsole.startInBackground": true,
+    "powershell.integratedConsole.showOnStartup": true,
     "powershell.integratedConsole.suppressStartupBanner": true,
+    "powershell.analyzeOpenDocumentsOnly": false,
+    "powershell.startAutomatically": true,
     "powershell.scriptAnalysis.enable": true,
     "powershell.scriptAnalysis.settingsPath": "source/config/PSScriptAnalyzerSettings.psd1",
     "python.analysis.typeCheckingMode": "basic",

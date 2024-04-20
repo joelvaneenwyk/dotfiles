@@ -9,7 +9,6 @@ local function load_oh_my_posh(mycelio_root_dir)
     }
 
     for _, value in pairs(values) do
-        ---@diagnostic disable-next-line: undefined-field
         if os.isfile(local_oh_my_posh_executable) then
             break
         else
@@ -20,7 +19,6 @@ local function load_oh_my_posh(mycelio_root_dir)
         end
     end
 
-    ---@diagnostic disable-next-line: undefined-field
     if not os.isfile(local_oh_my_posh_executable) then
         logger.error('Oh-My-Posh not found: ' .. local_oh_my_posh_executable)
     end
