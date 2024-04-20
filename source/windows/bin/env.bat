@@ -1,5 +1,6 @@
 ::
-::
+:: Call PowerShell to generate a batch script that sets up the
+:: environment variables for the current user.
 ::
 @echo off
 goto:$Main
@@ -19,54 +20,53 @@ setlocal EnableDelayedExpansion
     call :GetRoot "%~dp0..\..\..\"
 
     set "_mycelio_env=%USERPROFILE%\.local\bin\use_mycelio_environment.bat"
-    set _powershell=
-    if exist "C:\Program Files\PowerShell\7\pwsh.exe" (
-        set "_powershell=C:\Program Files\PowerShell\7\pwsh.exe"
-        goto:$BuildEnvironment
-    )
+    if not exist "%USERPROFILE%\.local" mkdir "%USERPROFILE%\.local"
+    if not exist "%USERPROFILE%\.local\bin" mkdir "%USERPROFILE%\.local\bin"
 
-    if exist "C:\Program Files\PowerShell\pwsh.exe" (
-        set "_powershell=C:\Program Files\PowerShell\pwsh.exe"
-        goto:$BuildEnvironment
-    )
+    set "_powershell=C:\Program Files\PowerShell\7\pwsh.exe"
+    if exist "!_powershell!" goto:$BuildEnvironment
 
-    if exist "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" (
-        set "_powershell=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-        goto:$BuildEnvironment
-    )
+    set "_powershell=C:\Program Files\PowerShell\pwsh.exe"
+    if exist "!_powershell!" goto:$BuildEnvironment
+
+    set "_powershell=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    if exist "!_powershell!" goto:$BuildEnvironment
+
+    set "_powershell="
+    goto:$GenerateDone
 
     :$BuildEnvironment
-    if not exist "!_powershell!" goto:$SkipPowerShellSetup
         if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 437 > nul
-        "!_powershell!" -NoLogo -NoProfile -File "%MYCELIO_ROOT%\source\powershell\Write-EnvironmentSetup.ps1" -ScriptPath "%_mycelio_env%"
-    :$SkipPowerShellSetup
+        call "!_powershell!" ^
+            -NoLogo -NoProfile ^
+            -File "%MYCELIO_ROOT%\source\powershell\Write-EnvironmentSetup.ps1" ^
+            -ScriptPath "%_mycelio_env%"
+        goto:$GenerateDone
+
+    :$GenerateDone
 endlocal & (
+    set "MYCELIO_LAST_ERROR=%errorlevel%"
     set "MYCELIO_POWERSHELL=%_powershell%"
     set "MYCELIO_ENV=%_mycelio_env%"
     set "MYCELIO_ROOT=%MYCELIO_ROOT%"
-    exit /b %errorlevel%
 )
+exit /b %MYCELIO_LAST_ERROR%
 
 :SetError
 exit /b %~1
 
 :$Main
-setlocal EnableExtensions
-    call :Generate
-    if not exist "%MYCELIO_POWERSHELL%" (
-        call :SetError 2
-        goto:$MainDone
-    )
-    :$MainDone
-endlocal & (
-    set "MYCELIO_POWERSHELL=%MYCELIO_POWERSHELL%"
-    set "MYCELIO_ENV=%MYCELIO_ENV%"
-    set "MYCELIO_ROOT=%MYCELIO_ROOT%"
-)
+    call :Generate %*
 
-if exist "%MYCELIO_ENV%" (
-    call "%MYCELIO_ENV%"
-) else (
-    echo [ERROR] Failed to setup environment.
-    exit /b 77
-)
+    if exist "%MYCELIO_ENV%" (
+        call "%MYCELIO_ENV%"
+    ) else (
+        echo [ERROR] Failed to setup environment.
+        exit /b 90
+    )
+
+    if not exist "%MYCELIO_POWERSHELL%" (
+        echo [ERROR] PowerShell not found.
+        exit /b 91
+    )
+exit /b 0
