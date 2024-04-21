@@ -37,7 +37,7 @@ endlocal & (
     ::
     :: Initialize each installed PowerShell we find
     ::
-    set _powershell=
+    set "_powershell="
     set _pwsh=^
         "C:\Program Files\PowerShell\7\pwsh.exe"^
         "C:\Program Files\PowerShell\pwsh.exe"^
@@ -151,17 +151,14 @@ exit /b %ERRORLEVEL%
 :: Query if autorun installed
 ::-----------------------------------
 :CheckAutoRunInstalled %1=Hive %2=OutputVarName
-    setlocal EnableExtensions EnableDelayedExpansion
-    set "KEY=%~1\Software\Microsoft\Command Processor"
-    for /f "tokens=2,3*" %%a in ('reg query "!KEY!" /v AutoRun 2^>NUL ^| findstr AutoRun') do (
-        set "TYPE=%%a"
-        set "VALUE=%%b"
-        if "!TYPE!"=="REG_EXPAND_SZ" call set "VALUE=!VALUE!"
-    )
-endlocal & (
-    if not "%~2"=="" (set "%~2=%VALUE%")
-    exit /b %ERRORLEVEL%
+setlocal EnableExtensions EnableDelayedExpansion
+set "KEY=%~1\Software\Microsoft\Command Processor"
+for /f "tokens=2,3*" %%a in ('reg query "!KEY!" /v AutoRun 2^>NUL ^| findstr AutoRun') do (
+  set "TYPE=%%a"
+  call set "VALUE=%%b"
+  if "!TYPE!"=="REG_EXPAND_SZ" call set "VALUE=!VALUE!"
 )
+endlocal & (if not "%~2"=="" (set "%~2=%VALUE%")) & exit /b
 
 :CheckAutoRun %1=Hive %2=VarName
     setlocal EnableExtensions EnableDelayedExpansion
@@ -193,7 +190,7 @@ endlocal & (
     set _check_return_value=!ERRORLEVEL!
 
     :$CheckAutoRunDone
-endlocal & (exit /b %_check_return_value%)
+endlocal & exit /b %_check_return_value%
 
 ::-----------------------------------
 :: Remove existing auto run and replace it if possible
