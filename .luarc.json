@@ -43,7 +43,8 @@
         "mycelio_log_info",
         "mycelio_log_warning",
         "mycelio_log_error",
-        "logger"
+        "logger",
+        "lfs"
     ],
     "format.defaultConfig": {
         "indentSize": "2"
@@ -66,7 +67,8 @@
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library",
         "${3rd}/luassert/library",
         "C:/Users/jovaneen/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/lualogging/module/library",
-        "C:/Users/jovaneen/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/luaunit/module/library"
+        "C:/Users/jovaneen/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/luaunit/module/library",
+        "C:/Users/JoelVanEenwyk/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/luafilesystem/module/library"
     ],
     "runtime.version": "Lua 5.3",
     "hint.enable": false

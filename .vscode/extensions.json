@@ -11,6 +11,7 @@
         "ms-vscode.powershell",
         "github.vscode-github-actions",
         "editorconfig.editorconfig",
-        "usernamehw.errorlens"
+        "usernamehw.errorlens",
+        "sumneko.lua"
     ]
 }

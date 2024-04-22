@@ -57,6 +57,7 @@ deletestats
 devcontainer
 devel
 dircolors
+dirx
 distro
 dockerenv
 dockerhub
@@ -85,6 +86,7 @@ Flwv
 fmask
 fontconfig
 Fullscreen
+funclib
 functioncall
 functiondef
 fundle
@@ -106,6 +108,7 @@ gpgconf
 gpgreset
 gpgtest
 grayscale
+gsudo
 gtimeout
 Gxfxcxdxbxegedabagacad
 hammerspoon
@@ -207,6 +210,7 @@ runneradmin
 runreport
 rxvt
 SAVEHIST
+scrcpy
 screencapture
 selectcomplete
 semver
@@ -256,8 +260,10 @@ wslpath
 wslvar
 wvous
 xclip
+xcopy
 xero
 xmonad
 yabai
 zoneinfo
+zoxide
 zstyle
