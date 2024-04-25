@@ -113,6 +113,7 @@ local function load_modules()
     local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
     local mycelio_root_dir = path.normalise(script_dir .. "../../..")
     add_modules(mycelio_root_dir .. "/source/windows/clink-completions/")
+    add_modules(mycelio_root_dir .. "/source/windows/clink-gizmos/")
     add_modules(mycelio_root_dir .. "/source/windows/clink/modules/")
 end
 
