@@ -133,6 +133,7 @@ Function Get-Environment {
     $environmentVariables = @()
 
     $environmentVariables += "$ENV:UserProfile\.rye\shims"
+    $environmentVariables += "$ENV:UserProfile\scoop\persist\rye\shims"
 
     # We put this here because we want the global install to take precedence even if
     # there is a 'scoop' portable version installed.
