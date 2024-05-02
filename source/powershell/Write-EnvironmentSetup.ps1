@@ -155,6 +155,7 @@ Function Get-Environment {
     $environmentVariables += "$ENV:UserProfile\.local\perl\c\bin"
     $environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"
 
+    $environmentVariables += "$ENV:CARGO_HOME\bin"
     $environmentVariables += "$ENV:UserProfile\scoop\persist\rustup\.cargo\bin"
 
     # Expected to contain 'cpan' and other related utilities
