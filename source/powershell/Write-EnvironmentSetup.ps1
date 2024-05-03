@@ -44,6 +44,8 @@ Function Get-CurrentEnvironment {
 
     $PathArray = @()
     $PathString = ''
+    $PathSplitChar = ';'
+    $PathTrimChars = '";'
 
     if ($null -ne $env:Path) {
         $PathString = $env:Path.ToString().TrimEnd(';')
@@ -52,12 +54,12 @@ Function Get-CurrentEnvironment {
     # Remove a trailing semicolon from the path then split it into an array using a double-quote
     # as the delimiter keeping the delimiter
     $PathString -split '(?=["])' | ForEach-Object {
-        If ($_ -eq '";') {
+        If ($_ -eq $PathTrimChars) {
             # throw away a blank line
         }
-        ElseIf ($_.ToString().StartsWith('";')) {
+        ElseIf ($_.ToString().StartsWith($PathTrimChars)) {
             # if line starts with "; remove the "; and any trailing backslash
-            $PathArray += ($_.ToString().TrimStart('";')).TrimEnd('')
+            $PathArray += ($_.ToString().TrimStart($PathTrimChars)).TrimEnd('')
         }
         ElseIf ($_.ToString().StartsWith('"')) {
             # if line starts with " remove the " and any trailing backslash
@@ -65,15 +67,17 @@ Function Get-CurrentEnvironment {
         }
         Else {
             # split by semicolon and remove any trailing backslash
-            $_.ToString().Split(';') | ForEach-Object {
+            $_.ToString().Split($PathSplitChar) | ForEach-Object {
                 If ($_.Length -gt 0) {
                     $PathArray += $_.TrimEnd('')
                 }
             }
         }
     }
-
-    Return $PathArray
+    # Remove duplicates from the unsorted path array while still preserving the
+    # existing order.
+    $OutputPathArray = $PathArray | Select-Object -Unique
+    Return $OutputPathArray
 }
 
 Function Initialize-Environment {
@@ -130,6 +134,10 @@ Function Get-Environment {
         }
     }
 
+    # Split environment path and remove duplicates -- we add this set of paths
+    # at the end of our custom list.
+    $currentEnvironment = $(Get-CurrentEnvironment)
+
     $environmentVariables = @()
 
     $environmentVariables += "$ENV:UserProfile\.rye\shims"
@@ -149,6 +157,9 @@ Function Get-Environment {
 
     $environmentVariables += "$ENV:UserProfile\.proto\bin"
     $environmentVariables += "$ENV:UserProfile\.proto\shims"
+
+    # Add GitHub CLI ('gh') to environment after shims
+    $environmentVariables += 'C:\Program Files\GitHub CLI'
 
     $environmentVariables += "$ENV:UserProfile\.local\texlive\bin\win32"
     $environmentVariables += "$ENV:UserProfile\.local\git\mingw64\bin"
@@ -192,19 +203,16 @@ Function Get-Environment {
     # This also contains 'bash' and other utilities so put this near the end
     $environmentVariables += 'C:\Program Files\Git\bin'
 
-    $environmentVariables += $(Get-CurrentEnvironment)
+    $environmentVariables += $currentEnvironment
 
     # Gather all valid paths into one array which we will output at the end.
     $environmentPaths = @()
     $environmentVariables | ForEach-Object {
-        $environmentPath = "$_"
+        $environmentPath = [System.Environment]::ExpandEnvironmentVariables("$_")
         try {
-            $resolvedPath = Resolve-Path -ErrorAction SilentlyContinue -Path "$_"
+            $resolvedPath = Resolve-Path -ErrorAction SilentlyContinue -Path "$environmentPath"
             if ($null -ne $resolvedPath) {
-                $path = $resolvedPath.Path
-                $path = $path.TrimEnd('\\')
-                $path = $path.TrimEnd('/')
-                $environmentPaths += $path
+                $environmentPaths += $resolvedPath.Path.TrimEnd('\\').TrimEnd('/')
             }
         }
         catch {
@@ -214,7 +222,9 @@ Function Get-Environment {
         }
     }
 
-    return $environmentPaths | Select-Object -Unique
+    $environment = $environmentPaths | Select-Object -Unique
+
+    return $environment
 }
 
 Function Save-Environment {
