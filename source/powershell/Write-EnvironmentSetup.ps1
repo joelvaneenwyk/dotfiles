@@ -132,6 +132,9 @@ Function Get-Environment {
 
     $environmentVariables = @()
 
+    $environmentVariables += "$ENV:UserProfile\.rye\shims"
+    $environmentVariables += "$ENV:UserProfile\scoop\persist\rye\shims"
+
     # We put this here because we want the global install to take precedence even if
     # there is a 'scoop' portable version installed.
     $environmentVariables += 'C:\Program Files\Microsoft VS Code\bin'
@@ -142,7 +145,10 @@ Function Get-Environment {
     $environmentVariables += "$script:MycelioRoot"
     $environmentVariables += "$script:MycelioRoot\source\windows\bin"
 
+    $environmentVariables += "$ENV:UserProfile\.pyenv\pyenv-win\bin"
+
     $environmentVariables += "$ENV:UserProfile\.proto\bin"
+    $environmentVariables += "$ENV:UserProfile\.proto\shims"
 
     $environmentVariables += "$ENV:UserProfile\.local\texlive\bin\win32"
     $environmentVariables += "$ENV:UserProfile\.local\git\mingw64\bin"
@@ -153,6 +159,7 @@ Function Get-Environment {
     $environmentVariables += "$ENV:UserProfile\.local\perl\c\bin"
     $environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"
 
+    $environmentVariables += "$ENV:CARGO_HOME\bin"
     $environmentVariables += "$ENV:UserProfile\scoop\persist\rustup\.cargo\bin"
 
     # Expected to contain 'cpan' and other related utilities

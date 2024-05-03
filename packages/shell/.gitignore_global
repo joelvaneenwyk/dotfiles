@@ -1,4 +1,7 @@
-Pipfile.lock
+#
+# mycelio | gitignore_global
+#
+
 .DS_Store
 node_modules/
 yarn-error.log
