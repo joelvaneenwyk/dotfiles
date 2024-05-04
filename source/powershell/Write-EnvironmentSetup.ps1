@@ -140,9 +140,10 @@ Function Get-Environment {
     $environmentVariables += 'C:\Program Files\Microsoft VS Code\bin'
 
     $environmentVariables += "$ENV:UserProfile\scoop\shims"
-    $environmentVariables += "$ENV:UserProfile\AppData\Local\Microsoft\WindowsApps"
 
-    $environmentVariables += "$script:MycelioRoot"
+    $environmentVariables += "$ENV:CARGO_HOME\bin"
+    $environmentVariables += "$ENV:UserProfile\scoop\persist\rustup\.cargo\bin"
+
     $environmentVariables += "$script:MycelioRoot\source\windows\bin"
 
     $environmentVariables += "$ENV:UserProfile\.pyenv\pyenv-win\bin"
@@ -159,18 +160,21 @@ Function Get-Environment {
     $environmentVariables += "$ENV:UserProfile\.local\perl\c\bin"
     $environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"
 
-    $environmentVariables += "$ENV:CARGO_HOME\bin"
-    $environmentVariables += "$ENV:UserProfile\scoop\persist\rustup\.cargo\bin"
-
     # Expected to contain 'cpan' and other related utilities
     $environmentVariables += "$ENV:UserProfile\.local\perl\perl\site\bin"
+
+    # It is important that this comes *after* the shim folders from proto, rye, scoop, etc.
+    $environmentVariables += "$ENV:UserProfile\AppData\Local\Microsoft\WindowsApps"
 
     # If installed, will give you access to 'gpg' and 'gpgconf' as well as 'Kleopatra'
     $environmentVariables += 'C:\Program Files (x86)\GnuPG\bin'
     $environmentVariables += 'C:\Program Files (x86)\Gpg4win\bin'
 
-    $environmentVariables += "C:\Program Files\PowerShell\7"
-    $environmentVariables += "C:\Program Files\Docker"
+    $environmentVariables += 'C:\Program Files\PowerShell\7'
+    $environmentVariables += 'C:\Program Files\Docker'
+
+    # Root has generic scripts like 'setup.bat' so add this last.
+    $environmentVariables += "$script:MycelioRoot"
 
     # Initially seemed like a good idea to include these tools in the environment, but there are a
     # lot of dependencies between these tools from dynamic libraries to just include folders that
