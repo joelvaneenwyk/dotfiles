@@ -156,8 +156,9 @@ Function Get-Environment {
 
     $environmentVariables += "$ENV:UserProfile\.pyenv\pyenv-win\bin"
 
-    $environmentVariables += "$ENV:UserProfile\.proto\bin"
+    # Shims must come before the binary folders otherwise tools like Python will fail to run.
     $environmentVariables += "$ENV:UserProfile\.proto\shims"
+    $environmentVariables += "$ENV:UserProfile\.proto\bin"
 
     # Add GitHub CLI ('gh') to environment after shims
     $environmentVariables += 'C:\Program Files\GitHub CLI'
