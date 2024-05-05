@@ -154,12 +154,12 @@ function use_perl_local_lib() {
             #   3. Convert backslashes to forward slashes e.g., ${HOME}\Is\The\Best -> ${HOME}/Is/The/Best
             #
             _perl_local_setup="$(
-                COMSPEC="" "$STOW_PERL" "${_perl_local_args[@]}" |
-                    sed 's#\([a-zA-Z]\):\\#/\1#g' |
-                    sed 's#\%\([^]]*\)\%#\${\1}#g' |
-                    perl -pe 's#\\(?!\")#\/#g' |
-                    sed 's#\/\/#\/#g' |
-                    sed 's#\/\/#\/#g'
+                COMSPEC="" "$STOW_PERL" "${_perl_local_args[@]}" \
+                    | sed 's#\([a-zA-Z]\):\\#/\1#g' \
+                    | sed 's#\%\([^]]*\)\%#\${\1}#g' \
+                    | perl -pe 's#\\(?!\")#\/#g' \
+                    | sed 's#\/\/#\/#g' \
+                    | sed 's#\/\/#\/#g'
             )"
 
             echo "$_perl_local_setup"
@@ -172,7 +172,7 @@ function use_perl_local_lib() {
 }
 
 function activate_local_perl_library() {
-    if _perl_export=$(use_perl_local_lib); then
+    if _perl_export="$(use_perl_local_lib)"; then
         echo "Perl: '$STOW_PERL'"
         echo "-------------"
         echo "$_perl_export"
@@ -527,22 +527,22 @@ function update_stow_environment() {
     while [[ $# -gt 0 ]]; do
         key="$1"
         case $key in
-        -w | --use-windows-tools)
-            export STOW_USE_WINDOWS_TOOLS=1
-            shift # past argument
-            ;;
-        -r | --refresh)
-            unset STOW_ENVIRONMENT_INITIALIZED
-            shift # past argument
-            ;;
-        -d | --debug)
-            set -x
-            shift # past argument
-            ;;
-        *)                     # unknown option
-            POSITIONAL+=("$1") # save it in an array for later
-            shift              # past argument
-            ;;
+            -w | --use-windows-tools)
+                export STOW_USE_WINDOWS_TOOLS=1
+                shift # past argument
+                ;;
+            -r | --refresh)
+                unset STOW_ENVIRONMENT_INITIALIZED
+                shift # past argument
+                ;;
+            -d | --debug)
+                set -x
+                shift # past argument
+                ;;
+            *)                     # unknown option
+                POSITIONAL+=("$1") # save it in an array for later
+                shift              # past argument
+                ;;
         esac
     done
 
@@ -577,13 +577,13 @@ function update_stow_environment() {
     PDFTEX=$(normalize_path "${PDFTEX:-}")
 
     case "$(uname -s)" in
-    CYGWIN* | MINGW32* | MSYS* | MINGW*)
-        _localTexLive="$STOW_LOCAL_BUILD_ROOT/texlive/bin/win32"
-        if [ ! -f "$TEX" ] && [ -f "$_localTexLive/tex.exe" ]; then
-            TEX="$_localTexLive/tex.exe"
-            PDFTEX="$_localTexLive/pdfetex.exe"
-        fi
-        ;;
+        CYGWIN* | MINGW32* | MSYS* | MINGW*)
+            _localTexLive="$STOW_LOCAL_BUILD_ROOT/texlive/bin/win32"
+            if [ ! -f "$TEX" ] && [ -f "$_localTexLive/tex.exe" ]; then
+                TEX="$_localTexLive/tex.exe"
+                PDFTEX="$_localTexLive/pdfetex.exe"
+            fi
+            ;;
     esac
 
     if [ "${TEX: -4}" == ".exe" ]; then
@@ -702,10 +702,10 @@ function update_stow_environment() {
 
         if [ ! -d "${PMDIR:-}" ]; then
             PMDIR="$(
-                "$STOW_PERL" -V |
-                    awk '/@INC:/ {p=1; next} (p==1) {print $1}' |
-                    sed 's/\\/\//g' |
-                    head -n 1
+                "$STOW_PERL" -V \
+                    | awk '/@INC:/ {p=1; next} (p==1) {print $1}' \
+                    | sed 's/\\/\//g' \
+                    | head -n 1
             )"
         fi
         PMDIR=$(resolve_path "$PMDIR")
