@@ -13,6 +13,7 @@ autocrlf
 autohide
 automake
 automount
+autoreconf
 autorun
 Autorun
 autostash
@@ -62,6 +63,7 @@ distro
 dockerenv
 dockerhub
 donjayamanne
+dorny
 doskey
 dotenv
 dotfile
@@ -147,6 +149,7 @@ lualogging
 luarocks
 luassert
 luaunit
+ludeeus
 Mailmate
 MANPATH
 matchicons
@@ -224,6 +227,7 @@ sharehistory
 shellcheck
 shellenv
 shfmt
+shogo
 SNAME
 softfloat
 solargraph
