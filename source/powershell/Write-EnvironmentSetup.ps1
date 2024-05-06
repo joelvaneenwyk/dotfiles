@@ -149,7 +149,9 @@ Function Get-Environment {
 
     $environmentVariables += "$ENV:UserProfile\scoop\shims"
 
-    $environmentVariables += "$ENV:CARGO_HOME\bin"
+    $cargoHome = [System.Environment]::GetEnvironmentVariable('CARGO_HOME')
+    $environmentVariables += "$cargoHome\bin"
+    $environmentVariables += "$ENV:UserProfile\.cargo\bin"
     $environmentVariables += "$ENV:UserProfile\scoop\persist\rustup\.cargo\bin"
 
     $environmentVariables += "$script:MycelioRoot\source\windows\bin"
