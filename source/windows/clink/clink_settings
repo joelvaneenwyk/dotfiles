@@ -153,7 +153,7 @@ history.shared = True
 # name: Clink mouse input
 # type: enum
 # options: off,on,auto
-terminal.mouse_input = on
+terminal.mouse_input = auto
 
 # name: Support Windows' Ctrl-Alt substitute for AltGr
 # type: boolean
