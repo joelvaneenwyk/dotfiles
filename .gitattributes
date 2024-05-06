@@ -30,8 +30,13 @@
 *.yml                         text eol=lf
 Brewfile                      text eol=lf
 clink_settings                text eol=lf
+Dockerfile                    text eol=lf
 Dockerfile.*                  text eol=lf
 Dockerfile.*.*                text eol=lf
+
+# Perl source files
+*.pl              text diff=perl
+*.pm              text diff=perl
 
 # Documents
 *.bibtex   text diff=bibtex
@@ -79,10 +84,14 @@ Dockerfile.*.*                text eol=lf
 *.ksh      text eol=lf
 *.sh       text eol=lf
 *.zsh      text eol=lf
-# These are explicitly windows files and should use crlf
-*.bat      text eol=crlf
-*.cmd      text eol=crlf
-*.ps1      text eol=crlf
+
+
+# Force batch scripts to always use CRLF line endings so that if a repo is accessed
+# in Windows via a file share from Linux, the scripts will work.
+*.{cmd,[cC][mM][dD]} text eol=crlf
+*.{bat,[bB][aA][tT]} text eol=crlf
+*.{ics,[iI][cC][sS]} text eol=crlf
+*.ps1                text eol=crlf
 
 # Serialisation
 *.json     text
@@ -125,8 +134,6 @@ Dockerfile.*.*                text eol=lf
 
 # Source code
 *.bash            text eol=lf
-*.bat             text eol=crlf
-*.cmd             text eol=crlf
 *.coffee          text
 *.css             text diff=css
 *.htm             text diff=html
@@ -144,8 +151,6 @@ Dockerfile.*.*                text eol=lf
 *.od              text
 *.onlydata        text
 *.php             text diff=php
-*.pl              text
-*.ps1             text eol=crlf
 *.py              text diff=python
 *.rb              text diff=ruby
 *.sass            text
@@ -160,9 +165,6 @@ Dockerfile.*.*                text eol=lf
 *.tsx             text
 *.xml             text
 *.xhtml           text diff=html
-
-# Docker
-Dockerfile        text
 
 # Documentation
 *.ipynb           text eol=lf

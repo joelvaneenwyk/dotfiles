@@ -7,9 +7,11 @@ apexlog
 ARGHELPER
 armhf
 armv
+ASAN
 asdf
 astextplain
 atlascode
+ATLMFC
 authonly
 Autobuild
 Autocloaking
@@ -20,7 +22,6 @@ automake
 automount
 autoreconf
 autorefresh
-autoreconf
 autorun
 Autorun
 autostash
@@ -221,7 +222,6 @@ luarocks
 luassert
 luaunit
 ludeeus
-ludeeus
 Mailmate
 Mandalorian
 MANPATH
@@ -306,6 +306,7 @@ qemu
 rasi
 realpath
 rech
+Redist
 Reflogs
 reloadagent
 resolv
@@ -319,6 +320,7 @@ rstow
 runc
 runneradmin
 runreport
+Runtimes
 rxvt
 sarif
 SAVEHIST
