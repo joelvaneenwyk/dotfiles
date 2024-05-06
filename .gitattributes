@@ -7,6 +7,37 @@
 # The above will handle all files NOT found below
 #
 
+.ctags                        text eol=lf
+.default-gems                 text eol=lf
+.dockerignore                 text eol=lf
+.gitattributes                text eol=lf
+.gitignore                    text eol=lf
+.lua-format                   text eol=lf
+.markdownlintignore           text eol=lf
+.stow-local-ignore            text eol=lf
+*.bat                         text eol=lf
+*.conf                        text eol=lf
+*.cpanfile                    text eol=lf
+*.json                        text eol=lf
+*.linux                       text eol=lf
+*.lua                         text eol=lf
+*.lua-format                  text eol=lf
+*.markdownlintignore          text eol=lf
+*.pl                          text eol=lf
+*.py                          text eol=lf
+*.rockspec                    text eol=lf
+*.sublime-settings            text eol=lf
+*.t                           text eol=lf
+*.template                    text eol=lf
+*.texi                        text eol=lf
+*.txt                         text eol=lf
+*.vsconfig                    text eol=lf
+*.yml                         text eol=lf
+Brewfile                      text eol=lf
+clink_settings                text eol=lf
+Dockerfile.*                  text eol=lf
+Dockerfile.*.*                text eol=lf
+
 # Documents
 *.bibtex   text diff=bibtex
 *.doc      diff=astextplain
