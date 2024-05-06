@@ -162,6 +162,9 @@ Function Get-Environment {
 
     # Add GitHub CLI ('gh') to environment after shims
     $environmentVariables += 'C:\Program Files\GitHub CLI'
+    $environmentVariables += 'C:\Program Files\Git\bin'
+    $environmentVariables += 'C:\Program Files\Git\cmd'
+    $environmentVariables += 'C:\Program Files\Git\usr\bin\'
 
     $environmentVariables += "$ENV:UserProfile\.local\texlive\bin\win32"
     $environmentVariables += "$ENV:UserProfile\.local\git\mingw64\bin"
