@@ -58,7 +58,9 @@ local lua_prefix = "rem lua: "
 local lua_prefix_match = "^ *rem +lua: *"
 
 --------------------------------------------------------------------------------
+---@diagnostic disable-next-line: different-requires
 local dv = require("dumpvar")
+---@diagnostic disable-next-line: duplicate-set-field
 dv.init = function()
     dv.show_type = settings.get("lua.show_match_type")
     dv.type_colors = settings.get("lua.type_colors")

@@ -61,6 +61,7 @@
 -- because this script does not understand the rest of the command line and
 -- doesn't evaluate things in the right order.
 
+---@diagnostic disable-next-line: undefined-global
 if not clink_gizmos_command_substitution then -- luacheck: no global
     return
 end

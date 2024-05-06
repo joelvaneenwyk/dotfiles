@@ -128,6 +128,7 @@ exports.get_git_branch = function (dir)
     -- if HEAD matches branch expression, then we're on named branch
     -- otherwise it is a detached commit
     local branch_name = HEAD:match('ref: refs/heads/(.+)')
+    ---@diagnostic disable-next-line: ambiguity-1
     return branch_name or 'HEAD detached at '..HEAD:sub(1, 7)
 end
 
