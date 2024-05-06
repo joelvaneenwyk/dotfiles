@@ -5,7 +5,8 @@
     "completion.enable": true,
     "diagnostics.disable": [
         "undefined-field",
-        "cast-local-type"
+        "cast-local-type",
+        "lowercase-global"
     ],
     "diagnostics.enable": true,
     "diagnostics.globals": [

@@ -24,8 +24,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
         with:
-          # Get all history
+          # Get all history so we can generate ChangeLog
           fetch-depth: 0
+          submodules: recursive
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
@@ -85,7 +86,7 @@ jobs:
     defaults:
       run:
         shell: ${{ matrix.msys && 'msys2 {0}' || ( startsWith(matrix.platform, 'windows') && 'cmd' || 'bash' ) }}
-        working-directory: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}/source/stow
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -93,6 +94,7 @@ jobs:
         with:
           # Get all history so we can generate ChangeLog
           fetch-depth: 0
+          submodules: recursive
 
       - uses: msys2/setup-msys2@v2
         if: ${{ matrix.msys }}
@@ -119,15 +121,12 @@ jobs:
         run: ${{ env.script_tool }}make-stow${{ env.script_extension }}
 
       - name: Run Tests
-
+        env:
         # Needed so that the coveralls package knows that we are using GitHub Actions
         # and to look for the secret key, see:
         #   https://github.com/kan/coveralls-perl/blob/master/lib/Devel/Cover/Report/Coveralls.pm
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-        run: |
-          ${{ env.script_tool }}run-tests${{ env.script_extension }}
+        run: ${{ env.script_tool }}run-tests${{ env.script_extension }}
 
       - name: Unix Install
         if: ${{ ! startsWith(matrix.platform, 'windows') }}
@@ -176,11 +175,17 @@ jobs:
     # The other jobs might be skipped, we don't need to run this job then
     if: success() || failure()
 
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ github.workspace }}/source/stow
+
     steps:
       - uses: actions/checkout@v4
         with:
-          # Get all history
+          # Get all history so we can generate ChangeLog
           fetch-depth: 0
+          submodules: recursive
 
       - name: Download Artifacts
         uses: actions/download-artifact@v2
