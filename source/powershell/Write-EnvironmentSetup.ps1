@@ -146,6 +146,7 @@ Function Get-Environment {
     # We put this here because we want the global install to take precedence even if
     # there is a 'scoop' portable version installed.
     $environmentVariables += 'C:\Program Files\Microsoft VS Code\bin'
+    $environmentVariables += "$ENV:UserProfile\AppData\Local\Programs\Microsoft VS Code\bin\"
 
     $environmentVariables += "$ENV:UserProfile\scoop\shims"
 
@@ -153,7 +154,6 @@ Function Get-Environment {
     $environmentVariables += "$cargoHome\bin"
     $environmentVariables += "$ENV:UserProfile\.cargo\bin"
     $environmentVariables += "$ENV:UserProfile\scoop\persist\rustup\.cargo\bin"
-
     $environmentVariables += "$script:MycelioRoot\source\windows\bin"
 
     $environmentVariables += "$ENV:UserProfile\.pyenv\pyenv-win\bin"
