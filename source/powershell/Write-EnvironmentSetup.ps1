@@ -140,23 +140,27 @@ Function Get-Environment {
 
     $environmentVariables = @()
 
-    $environmentVariables += "$ENV:UserProfile\.rye\shims"
-    $environmentVariables += "$ENV:UserProfile\scoop\persist\rye\shims"
-
-    # We put this here because we want the global install to take precedence even if
+    # We put this here because we want the global install of VSCode to take precedence even if
     # there is a 'scoop' portable version installed.
     $environmentVariables += 'C:\Program Files\Microsoft VS Code\bin'
     $environmentVariables += "$ENV:UserProfile\AppData\Local\Programs\Microsoft VS Code\bin\"
 
-    $environmentVariables += "$ENV:UserProfile\scoop\shims"
-
+    # We prefer the executable we build ourselves so ensure that Cargo binaries
+    # come before other shims.
     $cargoHome = [System.Environment]::GetEnvironmentVariable('CARGO_HOME')
     $environmentVariables += "$cargoHome\bin"
     $environmentVariables += "$ENV:UserProfile\.cargo\bin"
     $environmentVariables += "$ENV:UserProfile\scoop\persist\rustup\.cargo\bin"
-    $environmentVariables += "$script:MycelioRoot\source\windows\bin"
+
+    # Python Rye shims
+    $environmentVariables += "$ENV:UserProfile\.rye\shims"
+    $environmentVariables += "$ENV:UserProfile\scoop\persist\rye\shims"
 
     $environmentVariables += "$ENV:UserProfile\.pyenv\pyenv-win\bin"
+
+    $environmentVariables += "$ENV:UserProfile\scoop\shims"
+
+    $environmentVariables += "$script:MycelioRoot\source\windows\bin"
 
     # Shims must come before the binary folders otherwise tools like Python will fail to run.
     $environmentVariables += "$ENV:UserProfile\.proto\shims"
