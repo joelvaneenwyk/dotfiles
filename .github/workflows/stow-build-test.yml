@@ -122,9 +122,9 @@ jobs:
 
       - name: Run Tests
         env:
-        # Needed so that the coveralls package knows that we are using GitHub Actions
-        # and to look for the secret key, see:
-        #   https://github.com/kan/coveralls-perl/blob/master/lib/Devel/Cover/Report/Coveralls.pm
+          # Needed so that the coveralls package knows that we are using GitHub Actions
+          # and to look for the secret key, see:
+          #   https://github.com/kan/coveralls-perl/blob/master/lib/Devel/Cover/Report/Coveralls.pm
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ${{ env.script_tool }}run-tests${{ env.script_extension }}
 

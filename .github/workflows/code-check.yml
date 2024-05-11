@@ -13,12 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
-      - uses: leafo/gh-actions-lua@v10
+      - uses: joelvaneenwyk/gh-actions-lua@v10
         with:
           luaVersion: "5.2.4"
 
-      - uses: leafo/gh-actions-luarocks@v4
+      - uses: joelvaneenwyk/gh-actions-luarocks@v4
 
       - name: Install dependencies
         run: |

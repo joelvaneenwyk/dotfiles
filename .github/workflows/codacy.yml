@@ -42,8 +42,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # Get all history
           fetch-depth: 0
+          submodules: recursive
 
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI
