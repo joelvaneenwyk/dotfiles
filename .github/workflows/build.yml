@@ -26,6 +26,7 @@ on:
       - ".devcontainer/**"
       - ".vscode/**"
   pull_request:
+    branches: [main, develop]
     paths-ignore:
       - "*.md"
       - "setup"
