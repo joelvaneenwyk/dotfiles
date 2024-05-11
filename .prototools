@@ -1,11 +1,11 @@
-act = "0.2.61"
-actionlint = "1.6.27"
-go = "1.21.9"
-moon = "1.22.10"
-python = "^3.12"
+act = "0.2.62"
+actionlint = "1.7.0"
+go = "1.22.3"
+moon = "1.24.4"
+python = "3.12.3"
 shellcheck = "0.10.0"
 shfmt = "3.8.0"
-task = "3.36.0"
+task = "3.37.1"
 
 [plugins]
 act = "source:https://raw.githubusercontent.com/theomessin/proto-toml-plugins/master/act.toml"
