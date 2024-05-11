@@ -1942,6 +1942,9 @@ function _setup_environment() {
         'x86_64')
             MYCELIO_ARCH='amd64'
             ;;
+        'arm64')
+            MYCELIO_ARCH='arm64'
+            ;;
         'armhf')
             MYCELIO_ARCH='arm' MYCELIO_ARM='6'
             ;;
