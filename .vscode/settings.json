@@ -274,7 +274,7 @@
     "terminal.integrated.cwd": "${workspaceFolder}",
     "terminal.integrated.defaultProfile.linux": "bash",
     "terminal.integrated.defaultProfile.osx": "bash",
-    "terminal.integrated.defaultProfile.windows": "Mycelio",
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
     "terminal.integrated.environmentChangesRelaunch": true,
     "terminal.integrated.fontFamily": "PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
     "terminal.integrated.fontSize": 16,
