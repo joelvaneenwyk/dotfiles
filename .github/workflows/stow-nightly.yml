@@ -1,4 +1,4 @@
-name: "Nightly"
+name: Stow Scheduled Build
 
 on:
   # Run at 2 AM UTC every day
