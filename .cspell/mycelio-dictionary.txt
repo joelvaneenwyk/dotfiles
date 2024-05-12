@@ -55,6 +55,7 @@ clmv
 cluacov
 CMDCMDLINE
 cmder
+cmds
 codacy
 codecov
 codeql

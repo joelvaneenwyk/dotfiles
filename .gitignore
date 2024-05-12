@@ -2,6 +2,9 @@
 # Files to ignore for dotfiles repository
 #
 
+.clj-kondo/
+.lsp/
+
 .mypy_cache/
 .exe*/
 .venv/
