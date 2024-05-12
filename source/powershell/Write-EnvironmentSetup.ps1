@@ -156,9 +156,9 @@ Function Get-Environment {
     $environmentVariables += "$ENV:UserProfile\.rye\shims"
     $environmentVariables += "$ENV:UserProfile\scoop\persist\rye\shims"
 
-    $environmentVariables += "$ENV:UserProfile\.pyenv\pyenv-win\bin"
-
     $environmentVariables += "$ENV:UserProfile\scoop\shims"
+
+    $environmentVariables += "$ENV:UserProfile\.pyenv\pyenv-win\bin"
 
     $environmentVariables += "$script:MycelioRoot\source\windows\bin"
 
