@@ -40,6 +40,7 @@ function install_shellcheck() {
         return 1
     fi
 
+    echo "Found 'shellcheck' executable."
     return 0
 }
 
