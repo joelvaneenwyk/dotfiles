@@ -18,8 +18,29 @@
             "problemMatcher": [],
             "group": {
                 "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "shellcheck",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "${workspaceFolder}/source/bin/run-shellcheck.sh"
+            ],
+            "problemMatcher": "$gulp-tsc",
+            "group": {
+                "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "markdownlint",
+            "problemMatcher": [
+                "$markdownlint"
+            ],
+            "label": "markdownlint: Lint all Markdown files in the workspace with markdownlint"
         }
     ]
 }
