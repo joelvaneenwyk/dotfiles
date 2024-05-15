@@ -394,7 +394,7 @@ local function checkout_spec_generator_usedisplay(token)
     local git_dir = git.get_git_common_dir()
 
     local files = list_git_status_files(token, "-uno"):filter(is_token_match)
-    local local_branches = branches(token):filter(is_token_match)
+    local local_branches = branches():filter(is_token_match)
     local remote_branches = list_remote_branches(git_dir):filter(is_token_match)
 
     local predicted_branches = list_remote_branches(git_dir)
@@ -455,7 +455,7 @@ end
 local function checkout_spec_generator_nosort(token)
     local git_dir = git.get_git_common_dir()
 
-    local local_branches = branches(token)
+    local local_branches = branches()
     local local_branches_idx = make_indexed_table(local_branches)
 
     local remote_branches = list_remote_branches(git_dir)
@@ -557,7 +557,7 @@ local function push_branch_spec(token)
     if not s then
         -- setup display filter to prevent display '+' symbol in completion list
         if clink_version.supports_display_filter_description then
-            local b = branches(branch_spec):map(function(branch)
+            local b = branches():map(function(branch)
                 -- append '+' to results if it was specified
                 return { match=plus_prefix and '+'..branch or branch, display=branch }
             end)
@@ -566,7 +566,7 @@ local function push_branch_spec(token)
             end)
             return b
         else
-            local b = branches(branch_spec)
+            local b = branches()
             clink.match_display_filter = function ()
                 return b
             end

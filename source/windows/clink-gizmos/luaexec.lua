@@ -58,7 +58,6 @@ local lua_prefix = "rem lua: "
 local lua_prefix_match = "^ *rem +lua: *"
 
 --------------------------------------------------------------------------------
----@diagnostic disable-next-line: different-requires
 local dv = require("dumpvar")
 ---@diagnostic disable-next-line: duplicate-set-field
 dv.init = function()
@@ -252,7 +251,7 @@ function lua_generator:generate(line_state, match_builder) -- luacheck: no unuse
         table.insert(fields, "")
         count = count + 1
     end
-
+    -- luacheck: globals flexprompt clink
     -- Force regen every time, so we can generate different matches for "fle"
     -- and then for "flexprompt.set".
     clink.ondisplaymatches(xlate_matches)

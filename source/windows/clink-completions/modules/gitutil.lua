@@ -103,6 +103,7 @@ exports.get_git_common_dir = function (start_dir)
     if commondirfile then
         -- If there's a commondir file, we're in a git worktree
         local commondir = commondirfile:read()
+        ---@diagnostic disable-next-line: missing-parameter
         commondirfile.close()
         return path.is_absolute(commondir) and commondir
             or git_dir..'/'..commondir

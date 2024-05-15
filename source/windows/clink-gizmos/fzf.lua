@@ -28,7 +28,8 @@
 "\t":          "luafunc:fzf_complete"       # Tab uses fzf to filter match completions, but only when preceded by '**' (recursive).
 "\e[27;5;32~": "luafunc:fzf_complete_force" # Ctrl+Space uses fzf to filter match completions (and supports '**' for recursive).
 
-]] --
+]]
+--
 -- Optional:  You can set the following environment variables to customize the
 -- behavior:
 --
@@ -36,20 +37,49 @@
 --          FZF_CTRL_R_OPTS     = fzf options for fzf_history() function.
 --          FZF_ALT_C_OPTS      = fzf options for fzf_directory() function.
 --          FZF_BINDINGS_OPTS   = fzf options for fzf_bindings() function.
---          FZF_COMPLETE_OPTS   = fzf options for fzf_complete() and fzf_complete_force() and fzf_selectcomplete() functions.
+--          FZF_COMPLETE_OPTS   = fzf options for fzf_complete() and
+--                                fzf_complete_force() and fzf_selectcomplete()
+--                                functions.
 --
---          FZF_CTRL_T_COMMAND  = command to run for collecting files for fzf_file() function.
---          FZF_ALT_C_COMMAND   = command to run for collecting directories for fzf_directory() function.
+--          FZF_CTRL_T_COMMAND  = command to run for collecting files for
+--                                fzf_file() function.
+--          FZF_ALT_C_COMMAND   = command to run for collecting directories for
+--                                fzf_directory() function.
 --
---          FZF_COMPLETION_DIR_COMMANDS = commands that should complete only directories, separated by spaces.
+--          FZF_COMPLETION_DIR_COMMANDS = commands that should complete only
+--                                        directories, separated by spaces.
+--
+--          FZF_ICON_WIDTH      = number of cells/spaces to strip from the
+--                                beginning of each match, to remove icons that
+--                                inserted by customized FZF_CTRL_T_COMMAND and
+--                                FZF_ALT_C_COMMAND commands.
+--
+-- To get file icons to show up in FZF, you can use DIRX v0.9 or newer with
+-- Clink v1.6.5, and set the FZF env vars like this:
+--
+--      set FZF_CTRL_T_COMMAND=dirx.exe /b /s /X:d /a:-s-h --bare-relative --icons=always --utf8 $dir
+--      set FZF_ALT_C_COMMAND=dirx.exe /b /s /X:d /a:d-s-h --bare-relative --icons=always --utf8 $dir
+--      set FZF_ICON_WIDTH=2
+--
+-- If you want it to recurse into hidden directories, then remove the `/X:d`
+-- part from the commands in the environment variables.
+--
+-- If you want it to list hidden files and directories, then remove the `-h`
+-- part at the end of the `/a:` flags in the environment variables.
+--
+-- DIRX is available at https://github.com/chrisant996/dirx
+-- Clink is available at https://github.com/chrisant996/clink
 --
 -- luacheck: pop
---------------------------------------------------------------------------------
----@diagnostic disable: cast-local-type,undefined-field
 
+--------------------------------------------------------------------------------
 -- Compatibility check.
 if not io.popenrw then
-    print('fzf.lua requires a newer version of Clink; please upgrade.')
+    if clink then
+        print('`fzf.lua` requires a newer version of Clink; please upgrade.')
+    else
+        print('`fzf.lua` requires `io.popenrw` which is only availble in `Clink` instances.')
+    end
     return
 end
 
@@ -60,11 +90,15 @@ settings.add('fzf.height', '40%', 'Height to use for the --height flag')
 settings.add('fzf.exe_location', '', 'Location of fzf.exe if not on the PATH')
 
 if rl.setbinding then
-    settings.add('fzf.default_bindings', false, 'Use default key bindings',
-                 'To avoid interference with your existing key bindings, key bindings for\n' ..
-                     'fzf are initially not enabled.  Set this to true to enable the default\n' ..
-                     'key bindings for fzf, or add bindings manually to your .inputrc file.\n\n' ..
-                     'Changing this takes effect for the next Clink session.')
+
+    settings.add(
+        'fzf.default_bindings',
+        false,
+        'Use default key bindings',
+        'To avoid interference with your existing key bindings, key bindings for\n'..
+        'fzf are initially not enabled.  Set this to true to enable the default\n'..
+        'key bindings for fzf, or add bindings manually to your .inputrc file.\n\n'..
+        'Changing this takes effect for the next Clink session.')
 
     if settings.get('fzf.default_bindings') then
         rl.setbinding([["\C-t"]], [["luafunc:fzf_file"]])
@@ -74,6 +108,7 @@ if rl.setbinding then
         rl.setbinding([["\t"]], [["luafunc:fzf_complete"]])
         rl.setbinding([["\e[27;5;32~"]], [["luafunc:fzf_complete_force"]])
     end
+
 end
 
 --------------------------------------------------------------------------------
@@ -86,6 +121,46 @@ local function add_help_desc(macro, desc)
     if rl.describemacro then
         rl.describemacro(macro, desc)
     end
+end
+
+local function need_cd_drive(dir)
+    local drive = path.getdrive(dir)
+    if drive then
+        local cwd = os.getcwd()
+        if cwd then
+            local cwd_drive = path.getdrive(cwd)
+            if cwd_drive and cwd_drive:lower() == drive:lower() then
+                return
+            end
+        end
+    end
+    return drive
+end
+
+local function maybe_strip_icon(str)
+    local fzf_icon_width = os.getenv("FZF_ICON_WIDTH")
+    if fzf_icon_width then
+        local width = tonumber(fzf_icon_width)
+        if width and width > 0 then
+            if unicode.iter then
+                local iter = unicode.iter(str)
+                local c = iter()
+                if c then
+                    return str:sub(#c + (width - 1) + 1)
+                end
+            else
+                if str:byte() == 32 then
+                    return str:sub(width + 1)
+                elseif width > 1 then
+                    local tmp = str:match("^[^ ]+(.*)$")
+                    if tmp then
+                        return tmp:sub(width)
+                    end
+                end
+            end
+        end
+    end
+    return str
 end
 
 local function make_query_string(rl_buffer)
@@ -115,12 +190,12 @@ local function make_query_string(rl_buffer)
         local tmp = ''
         local i = 1
         while i <= #s do
-            local pre, suf = s:match('^(.-)(\\*)"', i)
+            local pre,suf = s:match('^(.-)(\\*)"', i)
             if pre and suf then
-                tmp = tmp .. pre .. suf .. suf .. '\\"'
+                tmp = tmp..pre..suf..suf..'\\"'
                 i = i + #pre + #suf + 1
             else
-                tmp = tmp .. s:sub(i)
+                tmp = tmp..s:sub(i)
                 break
             end
         end
@@ -128,18 +203,18 @@ local function make_query_string(rl_buffer)
 
         -- Must double any trailing \ characters and add another, since we're
         -- about to append a trailing double quote (same 2N rule as above).
-        local pre, suf = s:match('^(.-)(\\*)$')
+        local pre,suf = s:match('^(.-)(\\*)$')
         if pre and suf then
-            s = pre .. suf .. suf
+            s = pre..suf..suf
         end
 
-        s = '--query "' .. s .. '"'
+        s = '--query "'..s..'"'
     end
 
     return s
 end
 
-local function get_fzf(env)
+local function get_fzf(env, addl_options)
     local command = settings.get('fzf.exe_location')
     if not command or command == '' then
         command = 'fzf.exe'
@@ -150,20 +225,24 @@ local function get_fzf(env)
     -- malfunction and potentially fall into a code injection situation.
     if path.getname(command) ~= command then
         local command_path = path.toparent(command)
-        command = path.join(command_path, path.getbasename(command) .. ".exe")
+        command = path.join(command_path, path.getbasename(command)..".exe")
     else
-        command = path.getbasename(command) .. ".exe"
+        command = path.getbasename(command)..".exe"
     end
 
     local height = settings.get('fzf.height')
     if height and height ~= '' then
-        command = '"' .. command .. '" --height ' .. height
+        command = '"'..command..'" --height '..height
+    end
+
+    if addl_options then
+        command = command..' '..addl_options
     end
 
     if env then
         local options = os.getenv(env)
         if options then
-            command = command .. ' ' .. options
+            command = command..' '..options
         end
     end
 
@@ -171,11 +250,11 @@ local function get_fzf(env)
 end
 
 local function get_clink()
-    local clink_alias = os.getalias('clink')
-    if not clink_alias or clink_alias == '' then
+    local exe = CLINK_EXE
+    if not exe or exe == '' then
         return ''
     end
-    return clink_alias:gsub(' $[*]', '')
+    return '"'..exe..'"'
 end
 
 local function need_quote(word)
@@ -189,11 +268,25 @@ local function maybe_quote(word)
     return word
 end
 
+local function escape_quotes(text)
+    return text:gsub('"', '\\"')
+end
+
 local function replace_dir(str, word)
-    if word then
-        word = maybe_quote(rl.expandtilde(word))
+    if word == '.' then
+        word = nil
     end
-    return str:gsub('$dir', word or '.')
+    if word then
+        if word:find('^%.[/\\]') then
+            word = word:match('^%.[/\\]+(.*)$')
+        end
+        word = rl.expandtilde(word)
+        if not os.isdir(word) then
+            word = word.."*"
+        end
+        word = maybe_quote(word)
+    end
+    return str:gsub('$dir', word or '')
 end
 
 local function get_word_at_cursor(line_state)
@@ -261,11 +354,25 @@ end
 local function is_dir_command(line_state)
     local command = line_state:getword(1)
     local dir_commands = os.getenv('FZF_COMPLETION_DIR_COMMANDS') or 'cd chdir rd rmdir pushd'
-    for _, c in ipairs(string.explode(dir_commands)) do
+    for _,c in ipairs(string.explode(dir_commands)) do
         if string.equalsi(c, command) then
             return true
         end
     end
+end
+
+local function insert_match(rl_buffer, first, last, has_quote, match)
+    match = maybe_strip_icon(match)
+    local quote = has_quote or '"'
+    local use_quote = ((has_quote or need_quote(match)) and quote) or ''
+    rl_buffer:beginundogroup()
+    rl_buffer:remove(first, last + 1)
+    rl_buffer:setcursor(first)
+    rl_buffer:insert(use_quote)
+    rl_buffer:insert(match)
+    rl_buffer:insert(use_quote)
+    rl_buffer:insert(' ')
+    rl_buffer:endundogroup()
 end
 
 local function fzf_recursive(rl_buffer, line_state, search, dirs_only) -- luacheck: no unused
@@ -281,9 +388,8 @@ local function fzf_recursive(rl_buffer, line_state, search, dirs_only) -- luache
     end
 
     local first, last, has_quote, delimit = get_word_insert_bounds(line_state) -- luacheck: no unused
-    local quote = has_quote or '"'
 
-    local r = io.popen('2>nul ' .. command .. ' | ' .. get_fzf('FZF_COMPLETE_OPTS') .. ' -q "' .. word .. '"')
+    local r = io.popen('2>nul '..command..' | '..get_fzf('FZF_COMPLETE_OPTS')..' -q "'..word..'"')
     if not r then
         rl_buffer:ding()
         return
@@ -302,20 +408,9 @@ local function fzf_recursive(rl_buffer, line_state, search, dirs_only) -- luache
     end
     r:close()
 
-    if not match then
-        return
+    if match then
+        insert_match(rl_buffer, first, last, has_quote, match)
     end
-
-    -- Insert match.
-    local use_quote = ((has_quote or need_quote(match)) and quote) or ''
-    rl_buffer:beginundogroup()
-    rl_buffer:remove(first, last + 1)
-    rl_buffer:setcursor(first)
-    rl_buffer:insert(use_quote)
-    rl_buffer:insert(match)
-    rl_buffer:insert(use_quote)
-    rl_buffer:insert(' ')
-    rl_buffer:endundogroup()
 end
 
 -- luacheck: globals fzf_complete_internal
@@ -345,9 +440,24 @@ end
 -- Functions for use with 'luafunc:' key bindings.
 
 -- luacheck: globals fzf_complete
-add_help_desc("luafunc:fzf_complete", "Use fzf for completion if ** is immediately before the cursor position")
+add_help_desc("luafunc:fzf_complete",
+              "Use fzf for completion if ** is immediately before the cursor position")
 function fzf_complete(rl_buffer, line_state)
     fzf_complete_internal(rl_buffer, line_state, false)
+end
+
+-- luacheck: globals fzf_menucomplete
+add_help_desc("luafunc:fzf_menucomplete",
+              "Use fzf for completion after ** otherwise use 'menu-complete' command")
+function fzf_menucomplete(rl_buffer, line_state)
+    fzf_complete_internal(rl_buffer, line_state, false, "menu-complete")
+end
+
+-- luacheck: globals fzf_oldmenucomplete
+add_help_desc("luafunc:fzf_oldmenucomplete",
+              "Use fzf for completion after ** otherwise use 'old-menu-complete' command")
+function fzf_oldmenucomplete(rl_buffer, line_state)
+    fzf_complete_internal(rl_buffer, line_state, false, "old-menu-complete")
 end
 
 -- luacheck: globals fzf_selectcomplete
@@ -358,13 +468,15 @@ function fzf_selectcomplete(rl_buffer, line_state)
 end
 
 -- luacheck: globals fzf_complete_force
-add_help_desc("luafunc:fzf_complete_force", "Use fzf for completion")
+add_help_desc("luafunc:fzf_complete_force",
+              "Use fzf for completion")
 function fzf_complete_force(rl_buffer, line_state)
     fzf_complete_internal(rl_buffer, line_state, true)
 end
 
 -- luacheck: globals fzf_history
-add_help_desc("luafunc:fzf_history", "List history entries; choose one to insert it")
+add_help_desc("luafunc:fzf_history",
+              "List history entries; choose one to insert it (press DEL to delete selected history entry)")
 function fzf_history(rl_buffer)
     local clink_command = get_clink()
     if #clink_command == 0 then
@@ -373,16 +485,21 @@ function fzf_history(rl_buffer)
     end
 
     -- Build command to get history for the current Clink session.
-    local history = clink_command .. ' --session ' .. clink.getsession() .. ' history --bare'
+    local history = clink_command..' --session '..clink.getsession()..' history --time-format " "'
     if diag then
-        history = history .. ' --diag'
+        history = history..' --diag'
     end
+
+    -- Make key binding for DEL to delete a history entry.
+    local history_delete = escape_quotes(clink_command..' --session '..clink.getsession()..' history delete {1}')
+    local history_reload = escape_quotes(history)
+    local del_binding = '--bind "del:execute-silent('..history_delete..')+reload('..history_reload..')"'
 
     -- This produces a '--query' string by stripping certain problematic
     -- characters from the input line.  This still does a good job of matching,
     -- because fzf uses fuzzy matching.
     local qs = make_query_string(rl_buffer)
-    local r = io.popen('2>nul ' .. history .. ' | ' .. get_fzf('FZF_CTRL_R_OPTS') .. ' -i --tac ' .. qs)
+    local r = io.popen('2>nul '..history..' | '..get_fzf('FZF_CTRL_R_OPTS', del_binding)..' -i --tac '..qs)
     if not r then
         rl_buffer:ding()
         return
@@ -396,7 +513,7 @@ function fzf_history(rl_buffer)
     if #str > 0 then
         rl_buffer:beginundogroup()
         rl_buffer:remove(0, -1)
-        rl_buffer:insert(str)
+        rl_buffer:insert(string.gsub(str, '^%s*%d+%s*(.-)$', '%1'))
         rl_buffer:endundogroup()
     end
 
@@ -404,12 +521,15 @@ function fzf_history(rl_buffer)
 end
 
 -- luacheck: globals fzf_file
-add_help_desc("luafunc:fzf_file", "List files recursively; choose one or multiple to insert them")
+add_help_desc("luafunc:fzf_file",
+              "List files recursively; choose one or multiple to insert them")
 function fzf_file(rl_buffer, line_state)
     local dir = get_word_at_cursor(line_state)
     local command = get_ctrl_t_command(dir)
 
-    local r = io.popen(command .. ' 2>nul | ' .. get_fzf('FZF_CTRL_T_OPTS') .. ' -i -m')
+    local first, last, has_quote, delimit = get_word_insert_bounds(line_state) -- luacheck: no unused
+
+    local r = io.popen(command..' 2>nul | '..get_fzf('FZF_CTRL_T_OPTS')..' -i -m')
     if not r then
         rl_buffer:ding()
         return
@@ -421,19 +541,20 @@ function fzf_file(rl_buffer, line_state)
     r:close()
 
     if #str > 0 then
-        rl_buffer:insert(maybe_quote(str))
+        insert_match(rl_buffer, first, last, has_quote, str)
     end
 
     rl_buffer:refreshline()
 end
 
 -- luacheck: globals fzf_directory
-add_help_desc("luafunc:fzf_directory", "List subdirectories; choose one to 'cd /d' to it")
+add_help_desc("luafunc:fzf_directory",
+              "List subdirectories; choose one to 'cd /d' to it")
 function fzf_directory(rl_buffer, line_state)
     local dir = get_word_at_cursor(line_state)
     local command = get_alt_c_command(dir)
 
-    local r = io.popen(command .. ' 2>nul | ' .. get_fzf('FZF_ALT_C_OPTS') .. ' -i')
+    local r = io.popen(command..' 2>nul | '..get_fzf('FZF_ALT_C_OPTS')..' -i')
     if not r then
         rl_buffer:ding()
         return
@@ -444,9 +565,15 @@ function fzf_directory(rl_buffer, line_state)
     r:close()
 
     if #str > 0 then
+        str = maybe_strip_icon(str)
         rl_buffer:beginundogroup()
         rl_buffer:remove(0, -1)
-        rl_buffer:insert('cd /d ' .. str)
+        local drive = need_cd_drive(str)
+        if drive then
+            rl_buffer:insert(drive..' & cd '..str)
+        else
+            rl_buffer:insert('cd '..str)
+        end
         rl_buffer:endundogroup()
         rl_buffer:refreshline()
         rl.invokecommand('accept-line')
@@ -457,7 +584,8 @@ function fzf_directory(rl_buffer, line_state)
 end
 
 -- luacheck: globals fzf_bindings
-add_help_desc("luafunc:fzf_bindings", "List key bindings; choose one to invoke it")
+add_help_desc("luafunc:fzf_bindings",
+              "List key bindings; choose one to invoke it")
 function fzf_bindings(rl_buffer)
     if not rl.getkeybindings then
         rl_buffer:beginoutput()
@@ -472,11 +600,11 @@ function fzf_bindings(rl_buffer)
     end
 
     local line
-    local r, w = io.popenrw(get_fzf('FZF_BINDINGS_OPTS') .. ' -i')
+    local r,w = io.popenrw(get_fzf('FZF_BINDINGS_OPTS')..' -i')
     if r and w then
         -- Write key bindings to the write pipe.
-        for _, kb in ipairs(bindings) do
-            w:write(kb.key .. ' : ' .. kb.binding .. '\n')
+        for _,kb in ipairs(bindings) do
+            w:write(kb.key..' : '..kb.binding..'\n')
         end
         w:close()
 
@@ -505,14 +633,22 @@ local function filter_matches(matches, completion_type, filename_completion_desi
     end
 
     -- Start fzf.
-    local r, w = io.popenrw(get_fzf('FZF_COMPLETE_OPTS'))
+    local r,w = io.popenrw(get_fzf('FZF_COMPLETE_OPTS'))
     if not r or not w then
         return
     end
 
     -- Write matches to the write pipe.
-    for _, m in ipairs(matches) do
-        w:write(m.match .. '\n')
+    local which = {}
+    for _,m in ipairs(matches) do
+        if m.display and console.plaintext then
+            local text = console.plaintext(m.display)
+            table.insert(which, text)
+            w:write(text..'\n')
+        else
+            table.insert(which, m.match)
+            w:write(m.match..'\n')
+        end
     end
     w:close()
 
@@ -523,8 +659,8 @@ local function filter_matches(matches, completion_type, filename_completion_desi
         if not line then
             break
         end
-        for _, m in ipairs(matches) do
-            if m.match == line then
+        for i,m in ipairs(matches) do
+            if line == which[i] then
                 table.insert(ret, m)
             end
         end
@@ -544,7 +680,7 @@ function interceptor:generate(line_state, match_builder) -- luacheck: no unused
     return false
 end
 
-clink.onbeginedit(function()
+clink.onbeginedit(function ()
     fzf_complete_intercept = false
 end)
 
@@ -559,7 +695,7 @@ local addexarg
 local addexflags
 
 do
-    local link = "link" .. tmp
+    local link = "link"..tmp
     local meta_link = getmetatable(link)
 
     local function is_parser(x)
@@ -584,7 +720,7 @@ do
         if elm.opteq ~= nil then
             opteq = elm.opteq
         end
-
+        ---@type 'matcher'|'nested'|string|number|boolean|table|function|thread|userdata
         local t = type(arg)
         local arglinked = is_link(arg)
         if arglinked or is_parser(arg) then
@@ -593,7 +729,7 @@ do
             if elm[4] then
                 t = "nested"
             else
-                for _, scan in ipairs(elm) do
+                for _,scan in ipairs(elm) do
                     if type(scan) == "table" then
                         t = "nested"
                         break
@@ -601,7 +737,6 @@ do
                 end
             end
         end
-
         if t == "string" or t == "number" or t == "matcher" then
             if t == "matcher" then
                 table.insert(list, arg)
@@ -610,10 +745,10 @@ do
                     if arg._key:sub(-1) == '=' then
                         altkey = arg._key:sub(1, #arg._key - 1)
                     else
-                        altkey = arg._key .. '='
+                        altkey = arg._key..'='
                     end
                     table.insert(hide, altkey)
-                    table.insert(list, {altkey .. arg._matcher})
+                    table.insert(list, { altkey..arg._matcher })
                 end
             else
                 table.insert(list, tostring(arg))
@@ -621,9 +756,9 @@ do
             if elm[2] and descriptions then
                 local name = arglinked and arg._key or arg
                 if elm[3] then
-                    descriptions[name] = {elm[2], elm[3]}
+                    descriptions[name] = { elm[2], elm[3] }
                 else
-                    descriptions[name] = {elm[2]}
+                    descriptions[name] = { elm[2] }
                 end
             end
             if elm.hide then
@@ -633,7 +768,7 @@ do
         elseif t == "function" then
             table.insert(list, arg)
         elseif t == "nested" then
-            for _, sub_elm in ipairs(elm) do
+            for _,sub_elm in ipairs(elm) do
                 add_elm(sub_elm, list, descriptions, hide, opteq)
             end
         else
@@ -650,7 +785,7 @@ do
             pause('table expected.')
             error('table expected.')
         end
-        for _, elm in ipairs(tbl) do
+        for _,elm in ipairs(tbl) do
             local t = type(elm)
             if t == "table" then
                 add_elm(elm, list, descriptions, hide, tbl.opteq)
@@ -695,35 +830,35 @@ end
 -- luacheck: no max line length
 
 local algos = addexarg(clink.argmatcher(), {
-    {'v1', 'Optimal scoring algorithm (quality)'},
-    {'v2', 'Faster but not guaranteed to find the optimal result (performance)'}
+    { 'v1',             'Optimal scoring algorithm (quality)' },
+    { 'v2',             'Faster but not guaranteed to find the optimal result (performance)' },
 })
 local scheme = clink.argmatcher():addarg({'default', 'path', 'history'})
-local nth = clink.argmatcher():addarg({fromhistory = true, loopchars = ','})
-local delim = clink.argmatcher():addarg({fromhistory = true})
+local nth = clink.argmatcher():addarg({fromhistory=true, loopchars=','})
+local delim = clink.argmatcher():addarg({fromhistory=true})
 local criteria = clink.argmatcher():addarg({
-    loopchars = ',',
-    {'length', 'Prefers line with shorter length'},
-    {'chunk', 'Prefers line with shorter matched chunk'},
-    {'begin', 'Prefers line with matched substring closer to the beginning'},
-    {'end', 'Prefers line with matched substring closer to the end'},
-    {'index', 'Prefers line that appeared earlier in the input stream'}
+    loopchars=',',
+    { 'length',         'Prefers line with shorter length' },
+    { 'chunk',          'Prefers line with shorter matched chunk' },
+    { 'begin',          'Prefers line with matched substring closer to the beginning' },
+    { 'end',            'Prefers line with matched substring closer to the end' },
+    { 'index',          'Prefers line that appeared earlier in the input stream' },
 })
-local multimax = clink.argmatcher():addarg({fromhistory = true})
-local keybinds = clink.argmatcher():addarg({fromhistory = true, loopchars = ','})
-local scrolloff = clink.argmatcher():addarg({fromhistory = true, '0'})
-local hscrolloff = clink.argmatcher():addarg({fromhistory = true, '10'})
-local jumplabels = clink.argmatcher():addarg({fromhistory = true})
-local heights = clink.argmatcher():addarg({fromhistory = true, '10', '15', '20', '25%', '30%', '40%', '50%'})
-local minheight = clink.argmatcher():addarg({fromhistory = true, '10'})
+local multimax = clink.argmatcher():addarg({fromhistory=true})
+local keybinds = clink.argmatcher():addarg({fromhistory=true, loopchars=','})
+local scrolloff = clink.argmatcher():addarg({fromhistory=true, '0'})
+local hscrolloff = clink.argmatcher():addarg({fromhistory=true, '10'})
+local jumplabels = clink.argmatcher():addarg({fromhistory=true})
+local heights = clink.argmatcher():addarg({fromhistory=true, '10', '15', '20', '25%', '30%', '40%', '50%'})
+local minheight = clink.argmatcher():addarg({fromhistory=true, '10'})
 local layout = addexarg(clink.argmatcher(), {
-    nosort = true,
-    {'default', 'Display from the bottom of the screen'},
-    {'reverse', 'Display from the top of the screen'},
-    {'reverse-list', 'Display from the top of the screen, prompt at the bottom'}
+    nosort=true,
+    { 'default',        'Display from the bottom of the screen' },
+    { 'reverse',        'Display from the top of the screen' },
+    { 'reverse-list',   'Display from the top of the screen, prompt at the bottom' },
 })
 local borderstyle = clink.argmatcher():addarg({
-    nosort = true,
+    nosort=true,
     'rounded',
     'sharp',
     'bold',
@@ -734,194 +869,155 @@ local borderstyle = clink.argmatcher():addarg({
     'bottom',
     'left',
     'right',
-    'none'
+    'none',
 })
-local borderlabel = clink.argmatcher():addarg({fromhistory = true})
-local borderlabelpos = clink.argmatcher():addarg({fromhistory = true})
-local margin = clink.argmatcher():addarg({fromhistory = true, loopchars = ',', '0', '1', '2'})
-local padding = clink.argmatcher():addarg({fromhistory = true, loopchars = ',', '0', '1', '2'})
+local borderlabel = clink.argmatcher():addarg({fromhistory=true})
+local borderlabelpos = clink.argmatcher():addarg({fromhistory=true})
+local margin = clink.argmatcher():addarg({fromhistory=true, loopchars=',', '0', '1', '2'})
+local padding = clink.argmatcher():addarg({fromhistory=true, loopchars=',', '0', '1', '2'})
 local infostyle = addexarg(clink.argmatcher(), {
-    nosort = true,
-    {'default', 'Display on the next line to the prompt'},
-    {'inline', 'Display on the same line as the prompt'},
-    {'hidden', 'Do not display finder info'}
+    nosort=true,
+    { 'default',        'Display on the next line to the prompt' },
+    { 'inline',         'Display on the same line as the prompt' },
+    { 'hidden',         'Do not display finder info' },
 })
-local prompt = clink.argmatcher():addarg({fromhistory = true, '"> "'})
-local pointer = clink.argmatcher():addarg({fromhistory = true, '">"', '"*"'})
-local marker = clink.argmatcher():addarg({fromhistory = true, '">"', '"*"'})
-local header = clink.argmatcher():addarg({fromhistory = true})
-local headerlines = clink.argmatcher():addarg({fromhistory = true})
-local ellipsis = clink.argmatcher():addarg({fromhistory = true, '..', '...', '…'})
-local tabstop = clink.argmatcher():addarg({fromhistory = true, '8'})
-local colspec = clink.argmatcher():addarg({fromhistory = true, loopchars = ','})
-local historysize = clink.argmatcher():addarg({fromhistory = true, '1000'})
-local previewcommand = clink.argmatcher():addarg({fromhistory = true})
+local prompt = clink.argmatcher():addarg({fromhistory=true, '"> "'})
+local pointer = clink.argmatcher():addarg({fromhistory=true, '">"', '"*"'})
+local marker = clink.argmatcher():addarg({fromhistory=true, '">"', '"*"'})
+local header = clink.argmatcher():addarg({fromhistory=true})
+local headerlines = clink.argmatcher():addarg({fromhistory=true})
+local ellipsis = clink.argmatcher():addarg({fromhistory=true, '..', '...', '…'})
+local tabstop = clink.argmatcher():addarg({fromhistory=true, '8'})
+local colspec = clink.argmatcher():addarg({fromhistory=true, loopchars=','})
+local historysize = clink.argmatcher():addarg({fromhistory=true, '1000'})
+local previewcommand = clink.argmatcher():addarg({fromhistory=true})
 local previewopt = clink.argmatcher():addarg({
-    fromhistory = true,
-    loopchars = ',:',
-    'up',
-    'down',
-    'left',
-    'right',
-    '10%',
-    '20%',
-    '25%',
-    '30%',
-    '40%',
-    '50%',
-    '60%',
-    '70%',
-    '75%',
-    '80%',
-    '90%',
-    'wrap',
-    'nowrap',
-    'cycle',
-    'nocycle',
-    'follow',
-    'nofollow',
-    'hidden',
-    'nohidden',
+    fromhistory=true,
+    loopchars=',:',
+    'up', 'down', 'left', 'right',
+    '10%', '20%', '25%', '30%', '40%', '50%', '60%', '70%', '75%', '80%', '90%',
+    'wrap', 'nowrap',
+    'cycle', 'nocycle',
+    'follow', 'nofollow',
+    'hidden', 'nohidden',
     'border',
-    'border-rounded',
-    'border-sharp',
-    'border-horizontal',
-    'border-vertical',
-    'border-top',
-    'border-bottom',
-    'border-left',
-    'border-right',
+    'border-rounded', 'border-sharp',
+    'border-horizontal', 'border-vertical',
+    'border-top', 'border-bottom', 'border-left', 'border-right',
     'border-none',
     '+SCROLL[OFFSETS][/DENOM]',
     '~HEADER_LINES',
-    'default'
+    'default',
 })
-local previewlabel = clink.argmatcher():addarg({fromhistory = true})
-local previewlabelpos = clink.argmatcher():addarg({fromhistory = true})
-local query = clink.argmatcher():addarg({fromhistory = true})
-local filter = clink.argmatcher():addarg({fromhistory = true})
-local expect = clink.argmatcher():addarg({fromhistory = true, loopchars = ','})
-local separatorstr = clink.argmatcher():addarg({fromhistory = true})
-local scrollbarchars = clink.argmatcher():addarg({fromhistory = true})
+local previewlabel = clink.argmatcher():addarg({fromhistory=true})
+local previewlabelpos = clink.argmatcher():addarg({fromhistory=true})
+local query = clink.argmatcher():addarg({fromhistory=true})
+local filter = clink.argmatcher():addarg({fromhistory=true})
+local expect = clink.argmatcher():addarg({fromhistory=true, loopchars=','})
+local separatorstr = clink.argmatcher():addarg({fromhistory=true})
+local scrollbarchars = clink.argmatcher():addarg({fromhistory=true})
 
 addexflags(clink.argmatcher('fzf'), {
-    opteq = true,
+    opteq=true,
     -- Search options
-    {'-x', 'Extended-search mode (enabled by default; +x or --no-extended to disable)'},
-    {'+x', 'Disable extended-search mode'},
-    {'--extended', 'Extended-search mode (enabled by default; +x or --no-extended to disable)'},
-    {'--no-extended', 'Disable extended-search mode'},
-    {'-e', 'Enable Exact-match'},
-    {'--exact', 'Enable Exact-match'},
-    {'-i', 'Case-insensitive match (default: smart-case match; +i for case-sensitive match)'},
-    {'+i', 'Case-sensitive match'},
-    {'--literal', 'Do not normalize latin script letters before matching'},
-    {'--scheme=' .. scheme, 'SCHEME', 'Scoring scheme'},
-    {'--algo=' .. algos, 'TYPE', 'Fuzzy matching algorithm'},
-    {
-        '-n' .. nth, ' N[,..]',
-        'Comma-separated list of field index expressions for limiting search scope (non-zero integer or range expression "1..4")'
-    },
-    {
-        '--nth=' .. nth, 'N[,..]',
-        'Comma-separated list of field index expressions for limiting search scope (non-zero integer or range expression "1..4")'
-    },
-    {'--with-nth=' .. nth, 'N[,..]', 'Transform the presentation of each line using field index expressions'},
-    {'-d' .. delim, ' STR', 'Field delimiter regex (default: AWK-style)'},
-    {'--delimiter=' .. delim, 'STR', 'Field delimiter regex (default: AWK-style)'},
-    {'--disabled', 'Do not perform search (simple selector interface)'},
-    {'+s', 'Do not sort the result'},
-    {'--no-sort', 'Do not sort the result'},
-    {'--track', 'Track the current selection when the result is updated'},
-    {'--tac', 'Reverse the order of the input'},
-    {
-        '--tiebreak=' .. criteria, 'CRI[,..]',
-        'Comma-separated list of sort criteria to apply when the scores are tied (default: length)'
-    },
+    { '-x',                             'Extended-search mode (enabled by default; +x or --no-extended to disable)' },
+    { '+x',                             'Disable extended-search mode' },
+    { '--extended',                     'Extended-search mode (enabled by default; +x or --no-extended to disable)' },
+    { '--no-extended',                  'Disable extended-search mode' },
+    { '-e',                             'Enable Exact-match' },
+    { '--exact',                        'Enable Exact-match' },
+    { '-i',                             'Case-insensitive match (default: smart-case match; +i for case-sensitive match)' },
+    { '+i',                             'Case-sensitive match' },
+    { '--literal',                      'Do not normalize latin script letters before matching' },
+    { '--scheme='..scheme, 'SCHEME',    'Scoring scheme' },
+    { '--algo='..algos, 'TYPE',         'Fuzzy matching algorithm' },
+    { '-n'..nth, ' N[,..]',             'Comma-separated list of field index expressions for limiting search scope (non-zero integer or range expression "1..4")' },
+    { '--nth='..nth, 'N[,..]',          'Comma-separated list of field index expressions for limiting search scope (non-zero integer or range expression "1..4")' },
+    { '--with-nth='..nth, 'N[,..]',     'Transform the presentation of each line using field index expressions' },
+    { '-d'..delim, ' STR',              'Field delimiter regex (default: AWK-style)' },
+    { '--delimiter='..delim, 'STR',     'Field delimiter regex (default: AWK-style)' },
+    { '--disabled',                     'Do not perform search (simple selector interface)' },
+    { '+s',                             'Do not sort the result' },
+    { '--no-sort',                      'Do not sort the result' },
+    { '--track',                        'Track the current selection when the result is updated' },
+    { '--tac',                          'Reverse the order of the input' },
+    { '--tiebreak='..criteria, 'CRI[,..]', 'Comma-separated list of sort criteria to apply when the scores are tied (default: length)' },
 
     -- Interface options
-    {'-m', 'Enable multi-select with tab/shift-tab'},
-    {'--multi', 'Enable multi-select with tab/shift-tab'},
-    {'--multi=' .. multimax, 'MAX', 'Enable multi-select with tab/shift-tab', opteq = false},
-    {'--no-mouse', 'Disable mouse'},
-    {'--bind=' .. keybinds, 'KEYBINDS', 'Custom key bindings. Refer to the man page'},
-    {'--cycle', 'Enable cyclic scroll'},
-    {'--keep-right', 'Keep the right end of the line visible on overflow'},
-    {
-        '--scroll-off=' .. scrolloff, 'LINES',
-        'Number of screen lines to keep above or below when scrolling to the top or to the bottom (default: 0)'
-    },
-    {'--no-hscroll', 'Disable horizontal scroll'},
-    {
-        '--hscroll-off=' .. hscrolloff, 'COLS',
-        'Number of screen columns to keep to the right of the highlighted substring (default: 10)'
-    },
-    {'--filepath-word', 'Make word-wise movements respect path separators'},
-    {'--jump-labels=' .. jumplabels, 'CHARS', 'Label characters for jump and jump-accept'},
+    { '-m',                             'Enable multi-select with tab/shift-tab' },
+    { '--multi',                        'Enable multi-select with tab/shift-tab' },
+    { '--multi='..multimax, 'MAX',      'Enable multi-select with tab/shift-tab', opteq=false },
+    { '--no-mouse',                     'Disable mouse' },
+    { '--bind='..keybinds, 'KEYBINDS',  'Custom key bindings. Refer to the man page' },
+    { '--cycle',                        'Enable cyclic scroll' },
+    { '--keep-right',                   'Keep the right end of the line visible on overflow' },
+    { '--scroll-off='..scrolloff, 'LINES', 'Number of screen lines to keep above or below when scrolling to the top or to the bottom (default: 0)' },
+    { '--no-hscroll',                   'Disable horizontal scroll' },
+    { '--hscroll-off='..hscrolloff, 'COLS', 'Number of screen columns to keep to the right of the highlighted substring (default: 10)' },
+    { '--filepath-word',                'Make word-wise movements respect path separators' },
+    { '--jump-labels='..jumplabels, 'CHARS', 'Label characters for jump and jump-accept' },
 
     -- Layout options
-    {
-        '--height=' .. heights, 'HEIGHT[%]',
-        'Display fzf window below the cursor with the given height instead of using fullscreen'
-    },
-    {'--min-height=' .. minheight, 'HEIGHT', 'Minimum height when --height is given in percent (default: 10)'},
-    {'--layout=' .. layout, 'LAYOUT', 'Choose layout'},
-    {'--reverse', 'A synonym for --layout=reverse'},
-    {'--border', 'Draw border around the finder (default: rounded)'},
-    {'--border=' .. borderstyle, 'STYLE', 'Draw border around the finder (default: rounded)', opteq = false},
-    {'--border-label=' .. borderlabel, 'LABEL', 'Label to print on the border'},
-    {'--border-label-pos=' .. borderlabelpos, 'N[:top|bottom]', 'Position of border label'},
-    {'--no-unicode', 'Use ASCII characters instead of Unicode drawing characters'},
-    {'--margin=' .. margin, 'MARGIN', 'Screen margin (TRBL | TB,RL | T,RL,B | T,R,B,L)'},
-    {'--padding=' .. padding, 'PADDING', 'Padding inside border (TRBL | TB,RL | T,RL,B | T,R,B,L)'},
-    {'--info=' .. infostyle, 'STYLE', 'Finder info style'},
-    {'--no-info', 'Hide the finder info (synonym for --info=hidden)'},
-    {'--separator=' .. separatorstr, 'STR', 'Hide info line separator'},
-    {'--no-separator', 'Hide info line separator'},
-    {'--scrollbar', 'Show scrollbar'},
-    {'--scrollbar=' .. scrollbarchars, 'C1[C2]', 'Scrollbar character for main [and preview] window', opteq = false},
-    {'--no-scrollbar', 'Hide scrollbar'},
-    {'--prompt=' .. prompt, 'STR', "Input prompt (default: '> ')"},
-    {'--pointer=' .. pointer, 'STR', "Pointer to the current line (default: '>')"},
-    {'--marker=' .. marker, 'STR', "Multi-select marker (default: '>')"},
-    {'--header=' .. header, 'STR', "String to print as header"},
-    {'--header-lines=' .. headerlines, 'N', 'The first N lines of the input are treated as header'},
-    {'--header-first', 'Print header before the prompt line'},
-    {'--ellipsis=' .. ellipsis, 'STR', "Ellipsis to show when line is truncated (default: '..')"},
+    { '--height='..heights, 'HEIGHT[%]', 'Display fzf window below the cursor with the given height instead of using fullscreen' },
+    { '--min-height='..minheight, 'HEIGHT', 'Minimum height when --height is given in percent (default: 10)' },
+    { '--layout='..layout, 'LAYOUT',    'Choose layout' },
+    { '--reverse',                      'A synonym for --layout=reverse' },
+    { '--border',                       'Draw border around the finder (default: rounded)' },
+    { '--border='..borderstyle, 'STYLE', 'Draw border around the finder (default: rounded)', opteq=false },
+    { '--border-label='..borderlabel, 'LABEL', 'Label to print on the border' },
+    { '--border-label-pos='..borderlabelpos, 'N[:top|bottom]', 'Position of border label' },
+    { '--no-unicode',                   'Use ASCII characters instead of Unicode drawing characters' },
+    { '--margin='..margin, 'MARGIN',    'Screen margin (TRBL | TB,RL | T,RL,B | T,R,B,L)' },
+    { '--padding='..padding, 'PADDING', 'Padding inside border (TRBL | TB,RL | T,RL,B | T,R,B,L)' },
+    { '--info='..infostyle, 'STYLE',    'Finder info style' },
+    { '--no-info',                      'Hide the finder info (synonym for --info=hidden)' },
+    { '--separator='..separatorstr, 'STR', 'Hide info line separator' },
+    { '--no-separator',                 'Hide info line separator' },
+    { '--scrollbar',                    'Show scrollbar' },
+    { '--scrollbar='..scrollbarchars, 'C1[C2]', 'Scrollbar character for main [and preview] window', opteq=false },
+    { '--no-scrollbar',                 'Hide scrollbar' },
+    { '--prompt='..prompt, 'STR',       "Input prompt (default: '> ')" },
+    { '--pointer='..pointer, 'STR',     "Pointer to the current line (default: '>')" },
+    { '--marker='..marker, 'STR',       "Multi-select marker (default: '>')" },
+    { '--header='..header, 'STR',       "String to print as header" },
+    { '--header-lines='..headerlines, 'N', 'The first N lines of the input are treated as header' },
+    { '--header-first',                 'Print header before the prompt line' },
+    { '--ellipsis='..ellipsis, 'STR',   "Ellipsis to show when line is truncated (default: '..')" },
 
     -- Display options
-    {'--ansi', 'Enable processing of ANSI color codes'},
-    {'--tabstop=' .. tabstop, 'SPACES', 'Number of spaces for a tab character (default: 8)'},
-    {'--color=' .. colspec, 'COLSPEC', 'Base scheme and/or custom colors'},
-    {'--no-bold', 'Do not use bold text'},
-    {'--black', 'Use black background'},
+    { '--ansi',                         'Enable processing of ANSI color codes' },
+    { '--tabstop='..tabstop, 'SPACES',  'Number of spaces for a tab character (default: 8)' },
+    { '--color='..colspec, 'COLSPEC',   'Base scheme and/or custom colors' },
+    { '--no-bold',                      'Do not use bold text' },
+    { '--black',                        'Use black background' },
 
     -- History options
-    {'--history=', 'FILE', 'History file'},
-    {'--history-size=' .. historysize, 'N', 'Maximum number of history entries (default: 1000)'},
+    { '--history=', 'FILE',             'History file' },
+    { '--history-size='..historysize, 'N', 'Maximum number of history entries (default: 1000)' },
 
     -- Preview options
-    {'--preview=' .. previewcommand, 'COMMAND', 'Command to preview highlighted line ({})'},
-    {'--preview-label=' .. previewlabel, 'LABEL', 'Label to print on preview window border'},
-    {'--preview-label-pos=' .. previewlabelpos, 'N[:top|bottom]', 'Position of label on preview window border'},
-    {'--preview-window=' .. previewopt, 'OPTS', 'Preview window layout (default: right,50%)'},
+    { '--preview='..previewcommand, 'COMMAND', 'Command to preview highlighted line ({})' },
+    { '--preview-label='..previewlabel, 'LABEL', 'Label to print on preview window border' },
+    { '--preview-label-pos='..previewlabelpos, 'N[:top|bottom]', 'Position of label on preview window border' },
+    { '--preview-window='..previewopt, 'OPTS', 'Preview window layout (default: right,50%)' },
 
     -- Scripting options
-    {'-q' .. query, ' STR', 'Start the finder with the given query'},
-    {'--query=' .. query, 'STR', 'Start the finder with the given query'},
-    {'-1', 'Automatically select the only match'},
-    {'--select-1', 'Automatically select the only match'},
-    {'-0', 'Exit immediately when there\'s no match'},
-    {'--exit-0', 'Exit immediately when there\'s no match'},
-    {'-f' .. filter, ' STR', 'Filter mode. Do not start interactive finder'},
-    {'--filter=' .. filter, 'STR', 'Filter mode. Do not start interactive finder'},
-    {'--print-query', 'Print query as the first line'},
-    {'--expect=' .. expect, 'KEYS', 'Comma-separated list of keys to complete fzf'},
-    {'--no-expect', 'Clear list of keys to complete fzf'},
-    {'--read0', 'Read input delimited by ASCII NUL characters'},
-    {'--print0', 'Print output delimited by ASCII NUL characters'},
-    {'--sync', 'Synchronous search for multi-staged filtering'},
-    {'--version', 'Display version information and exit'},
-    {'-h', 'Display help text'},
-    {'--help', 'Display help text'}
+    { '-q'..query, ' STR',              'Start the finder with the given query' },
+    { '--query='..query, 'STR',         'Start the finder with the given query' },
+    { '-1',                             'Automatically select the only match' },
+    { '--select-1',                     'Automatically select the only match' },
+    { '-0',                             'Exit immediately when there\'s no match' },
+    { '--exit-0',                       'Exit immediately when there\'s no match' },
+    { '-f'..filter, ' STR',             'Filter mode. Do not start interactive finder' },
+    { '--filter='..filter, 'STR',       'Filter mode. Do not start interactive finder' },
+    { '--print-query',                  'Print query as the first line' },
+    { '--expect='..expect, 'KEYS',      'Comma-separated list of keys to complete fzf' },
+    { '--no-expect',                    'Clear list of keys to complete fzf' },
+    { '--read0',                        'Read input delimited by ASCII NUL characters' },
+    { '--print0',                       'Print output delimited by ASCII NUL characters' },
+    { '--sync',                         'Synchronous search for multi-staged filtering' },
+    { '--version',                      'Display version information and exit' },
+    { '-h',                             'Display help text' },
+    { '--help',                         'Display help text' },
 })
+

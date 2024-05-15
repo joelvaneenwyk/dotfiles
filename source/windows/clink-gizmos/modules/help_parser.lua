@@ -285,7 +285,9 @@ local function basic_parser(context, flags, descriptions, hideflags, line)
         if not pd then
             f = f:gsub('%[.*%]$', '')
         end
-        d = d:gsub('[ \t]+$', '')
+        if d ~= nil then
+            d = d:gsub('[ \t]+$', '')
+        end
 
         -- Set pending flag.
         local x, y = f:match('^([^ \t]+)([ \t].+)$')

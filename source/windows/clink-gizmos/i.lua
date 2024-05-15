@@ -11,6 +11,9 @@
 -- Completion generators for {command} show matches as though {dir} were the
 -- current directory.
 
+-- luacheck: globals command_name
+command_name = nil
+
 if (clink.version_encoded or 0) < 10030013 then
     print("i.lua requires a newer version of Clink; please upgrade.")
     return
@@ -73,16 +76,17 @@ local function i_getdir(line)
     if not candidate then
         return
     end
+    local new_command_name
     local commands = string.explode(i_commands or "i")
-    local command_name
     for _,name in ipairs(commands) do
         if candidate == name then
-            command_name = name
+            new_command_name = name
         end
     end
-    if not command_name then
+    if not new_command_name then
         return
     end
+    command_name = new_command_name
     line = line:gsub("^[ \t]*[^ \t]+[ \t]+", "")
 
     -- Get dir argument.

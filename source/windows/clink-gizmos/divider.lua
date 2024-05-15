@@ -128,6 +128,7 @@ local function make_divider_begin(line, transient)
             div = line_color .. bar .. text_color .. " " .. div .. " " .. line_color .. bar
         end
         div = div .. string.rep(top_char, console.getwidth() - 1 - console.cellcount(div)) .. "\x1b[m\n"
+        -- luacheck: globals flexprompt
         if transient and flexprompt and flexprompt.get_spacing and flexprompt.get_spacing() == "sparse" then
             div = "\n" .. div
         end
