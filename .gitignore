@@ -2,6 +2,8 @@
 # Files to ignore for dotfiles repository
 #
 
+/luarocks*.tar.gz
+
 cover_db/
 .clj-kondo/
 .lsp/
