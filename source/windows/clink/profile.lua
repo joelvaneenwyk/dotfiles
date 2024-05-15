@@ -8,6 +8,7 @@ been somewhat heavily modified and also just out of date with most recent versio
 ===============================================------
 --]]
 
+-- luacheck: globals mycelio_log mycelio_log_debug mycelio_log_info mycelio_log_warning mycelio_log_error logger self
 function mycelio_log(message, level)
     local output_message = "[clink] "
     local should_print_to_console = true
@@ -98,14 +99,14 @@ local function add_modules(input_path)
 end
 
 local cwd_prompt = clink.promptfilter(30)
-function cwd_prompt:filter(_)
+function cwd_prompt:filter(_) -- luacheck: no unused args
     ---@diagnostic disable-next-line: undefined-field
     return local_settings.color_prompt .. os.getcwd() .. color_normal
 end
 
 -- A prompt filter that adds a line feed and angle bracket.
 local bracket_prompt = clink.promptfilter(150)
-function bracket_prompt:filter(prompt)
+function bracket_prompt:filter(prompt) -- luacheck: no unused args
     return prompt .. "\n → "
 end
 

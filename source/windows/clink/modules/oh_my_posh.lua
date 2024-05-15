@@ -1,3 +1,4 @@
+-- luacheck: globals logger
 local function load_oh_my_posh(mycelio_root_dir)
     local home = os.getenv("HOME") or os.getenv("USERPROFILE")
     local mycelio_config = path.normalise(mycelio_root_dir .. "/packages/shell/.poshthemes/mycelio.omp.json")

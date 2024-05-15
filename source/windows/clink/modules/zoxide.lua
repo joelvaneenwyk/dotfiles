@@ -3,6 +3,8 @@
 -- Settings copied from 'zoxide init'. Run `clink set` to modify these options, e.g. `clink set zoxide.cmd f`
 --
 
+-- luacheck: globals ZOXIDE_PATH logger zoxide_cmd __zoxide_hook __zoxide_cd __zoxide_query __zoxide_add
+-- luacheck: globals __zoxide_z __zoxide_zi onfilterinput zoxide_no_aliases args
 settings.add('zoxide.cmd', 'z', 'Changes the prefix of the aliases')
 settings.add('zoxide.hook', { 'pwd', 'prompt', 'none' }, 'Changes when directory scores are incremented')
 settings.add('zoxide.no_aliases', false, "Don't define aliases")
@@ -21,7 +23,7 @@ local function __get_zoxide_path()
     if ZOXIDE_PATH == nil then
         local home = os.getenv("HOME") or os.getenv("USERPROFILE")
         local local_executable = ""
-        local loaded = false
+        -- local loaded = false
         local values = {
             home .. "/AppData/Local/Microsoft/WinGet/Links/zoxide.exe",
             home .. "/.cargo/bin/zoxide.exe",
@@ -72,11 +74,11 @@ local function __zoxide_query(options, keywords)
 
     local file = io.popen(__get_zoxide_path() .. ' query ' .. options .. ' -- ' .. keywords)
     if file ~= nil then
-        local result = file:read '*line'
+        local qresult = file:read '*line'
         local ok = file:close()
 
         if ok then
-            result = __zoxide_cd(result)
+            result = __zoxide_cd(qresult)
         end
     end
 
@@ -123,7 +125,7 @@ if __get_zoxide_path() ~= nil then
         local __promptfilter_prio = settings.get 'zoxide.promptfilter_prio'
         local __zoxide_prompt = clink.promptfilter(__promptfilter_prio)
 
-        function __zoxide_prompt:filter()
+        function __zoxide_prompt:filter() -- luacheck: no unused args
             __zoxide_hook()
         end
     else

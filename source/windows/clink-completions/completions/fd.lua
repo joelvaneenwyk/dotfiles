@@ -1,5 +1,7 @@
 ------------------------------------------------------------------------------
 -- FD
+-- luacheck: no max comment line length
+-- luacheck: no max code line length
 
 local function try_require(module)
     local r

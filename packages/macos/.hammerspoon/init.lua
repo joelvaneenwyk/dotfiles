@@ -1,4 +1,5 @@
 ---@diagnostic disable: lowercase-global
+-- luacheck: globals hs usbWatcher keyboardLayout setLayout setHindi hyper usbDeviceCallback
 
 usbWatcher = nil
 keyboardLayout = nil

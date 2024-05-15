@@ -14,7 +14,9 @@ local rg_maxdepth = clink.argmatcher():addarg({})
 local rg_beforecontext = clink.argmatcher():addarg({})
 local rg_maxfilesize = clink.argmatcher():addarg({})
 local rg_pathseparator = clink.argmatcher():addarg({})
-local rg_generate = clink.argmatcher():addarg({"man", "complete-bash", "complete-zsh", "complete-fish", "complete-powershell"})
+local rg_generate = clink.argmatcher():addarg({
+    "man", "complete-bash", "complete-zsh", "complete-fish", "complete-powershell",
+})
 local rg_colors = clink.argmatcher():addarg({})
 local rg_hostnamebin = clink.argmatcher():addarg({"(__fish_complete_command)"})
 local rg_context = clink.argmatcher():addarg({})

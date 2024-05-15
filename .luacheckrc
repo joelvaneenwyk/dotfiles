@@ -11,6 +11,8 @@ return {
         disable = { "undefined-field", "cast-local-type", "lowercase-global" },
         enable = true,
         globals = {
+            "logger", "ZOXIDE_PATH", "loaded", "self",
+            "mycelio_log", "mycelio_log_warning", "mycelio_log_error", "mycelio_log_debug",
             "ARGHELPER_DISABLE_DESCRIPTIONS", "CLINK_EXE",
             "clink_gizmos_command_substitution", "clink", "cmderGitStatusOptIn",
             "console", "describe", "DISABLE_GIT_REMOTE_IN_PROMPT", "explode",
@@ -29,7 +31,7 @@ return {
     ["runtime.version"] = "Lua 5.3",
     ["semantic.enable"] = true,
     ["workspace.checkThirdParty"] = false,
-    ["workspace.ignoreDir"] = { ".vscode" },
+    ["workspace.ignoreDir"] = { ".vscode", "luarocks-3.11.0" },
     ["workspace.library"] = {
         "${3rd}/luassert/library",
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/busted/module/library",
@@ -37,8 +39,10 @@ return {
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/luafilesystem/module/library",
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/lualogging/module/library",
         "${userHome}/AppData/Roaming/Code/User/globalStorage/sumneko.lua/addonManager/addons/luaunit/module/library",
-        "macos/.hammerspoon", "micro/.config",
-        "source/windows/clink-completions", "source/windows/clink"
+        "macos/.hammerspoon",
+        "micro/.config",
+        "source/windows/clink-completions",
+        "source/windows/clink"
     },
     globals = {
         "_co_error_handler", "_compat_warning", "_error_handler",

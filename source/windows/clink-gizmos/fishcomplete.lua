@@ -464,6 +464,7 @@ local function parse_fish_completions(name, fish)
 end
 
 if standalone then
+    ---@diagnostic disable-next-line: different-requires
     require('modules/dumpvar')
 
     local function escape_string(s)
