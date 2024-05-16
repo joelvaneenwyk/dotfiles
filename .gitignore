@@ -2,6 +2,10 @@
 # Files to ignore for dotfiles repository
 #
 
+.pnp.cjs
+.pnp.loader.mjs
+.yarn/
+
 /luarocks*.tar.gz
 
 cover_db/

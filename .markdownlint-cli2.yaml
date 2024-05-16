@@ -2,6 +2,8 @@
 # An example .markdownlint-cli2.yaml file
 #
 
+$schema: "https://json.schemastore.org/markdownlint-cli2"
+
 # Disable some built-in rules
 config:
   no-trailing-spaces: false
@@ -35,6 +37,7 @@ ignores:
   - "**/clink-completions/README.md"
   - "**/clink-completions/RELEASENOTES.md"
   - "**/stow/INSTALL.md"
+  - "**/secrets/**"
 
 # Additional paths to resolve module locations from
 modulePaths:
