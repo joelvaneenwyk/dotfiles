@@ -274,7 +274,11 @@
     "terminal.integrated.confirmOnExit": "never",
     "terminal.integrated.cursorBlinking": true,
     "terminal.integrated.cwd": "${workspaceFolder}",
-    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.automationProfile.linux": {
+        "path": "bash",
+        "icon": "account"
+    },
+    "terminal.integrated.defaultProfile.linux": "bash_profile",
     "terminal.integrated.defaultProfile.osx": "bash",
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
     "terminal.integrated.environmentChangesRelaunch": true,

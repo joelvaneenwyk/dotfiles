@@ -689,6 +689,10 @@ initialize_profile() {
         . "$HOME/.cargo/env"
     fi
 
+    if [ -d "$HOME/.proto/shims" ]; then
+        _add_path "prepend" "$HOME/.proto/shims"
+    fi
+
     _log_debug "Added paths to environment."
 
     # Clear out TMP as TEMP may come from Windows and we do not want tools confused
