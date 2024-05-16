@@ -5,6 +5,8 @@ alnum
 antialiasing
 apexlog
 ARGHELPER
+argmatcher
+argmatchers
 armhf
 armv
 ASAN
@@ -16,10 +18,12 @@ authonly
 Autobuild
 Autocloaking
 autocrlf
+autoexpand
 autofetch
 autohide
 automake
 automount
+autopull
 autoreconf
 autorefresh
 autorun
@@ -48,6 +52,7 @@ checkwinsize
 CHERE
 chkstow
 CHOST
+chrisant
 classpath
 clearsign
 CLICOLOR
@@ -121,6 +126,7 @@ fgrep
 figlet
 filelocator
 findstr
+fishcomplete
 fishd
 Flwv
 fmask
@@ -174,6 +180,7 @@ ignoreboth
 INFOPATH
 inifmt
 inputrc
+installscripts
 invokation
 ipynb
 irblack
@@ -344,6 +351,7 @@ shellcheck
 shellenv
 shfmt
 shogo
+siteprefix
 SNAME
 snyk
 softfloat

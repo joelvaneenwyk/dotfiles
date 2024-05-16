@@ -141,8 +141,8 @@ function use_perl_local_lib() {
     local _perl_local_args
     _perl_local_args=(-I "$STOW_PERL_LOCAL_LIB/lib/perl5")
 
-    if perldoc -l Module::Build; then
-        if "$STOW_PERL" "${_perl_local_args[@]}" -Mlocal::lib -le 1 2>/dev/null; then
+    if perldoc -l Module::Build &>/dev/null; then
+        if "$STOW_PERL" "${_perl_local_args[@]}" -Mlocal::lib -le 1 &>/dev/null; then
             # shellcheck disable=SC2054
             _perl_local_args+=("-Mlocal::lib=""$STOW_PERL_LOCAL_LIB")
 
@@ -343,7 +343,7 @@ function install_system_dependencies() {
     if [ -x "$(command -v apt-get)" ]; then
         packages+=(
             sudo git bzip2 gawk wget curl patch
-            perl libssl-dev openssl libz-dev
+            perl perl-doc libssl-dev openssl libz-dev
             build-essential make autotools-dev automake autoconf
             texlive texinfo
         )

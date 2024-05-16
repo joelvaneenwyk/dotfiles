@@ -12,12 +12,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
-    name: ShellCheck
-    runs-on: ubuntu-latest
+  perl_check:
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest]
+        perl: ["5.32"]
+
+    name: "Stow Check"
+    runs-on: ${{ matrix.platform }}
     if: always()
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    env:
+      STOW_TEST_RESULTS: ${{ github.workspace }}/test_results*.xml
+      STOW_CPAN_LOGS: ${{ format('{0}/*.log', github.workspace) }}
+      script_extension: ${{ '.sh' }}
+      script_tool: ${{ './tools/' }}
+      perl_distribution: ${{ 'default' }}
+
+    defaults:
+      run:
+        shell: 'bash'
+        working-directory: ${{ github.workspace }}/source/stow
+
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
@@ -26,17 +44,65 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        env:
-          SHELLCHECK_OPTS: --external-sources
+      - name: Setup Perl ${{ matrix.perl }}
+        uses: shogo82148/actions-setup-perl@v1
         with:
-          ignore_names: bin doc
+          perl-version: ${{ matrix.perl }}
+
+      - name: Check Environment
+        run: ${{ env.script_tool }}stow-environment${{ env.script_extension }}
+
+      - name: Install Dependencies
+        run: ${{ env.script_tool }}install-dependencies${{ env.script_extension }}
+
+      - name: Make Stow
+        run: ${{ env.script_tool }}make-stow${{ env.script_extension }}
+
+      - name: Run Tests
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ${{ env.script_tool }}run-tests${{ env.script_extension }}
+
+      - name: Unix Install
+        if: ${{ ! startsWith(matrix.platform, 'windows') }}
+        run: |
+          ./tools/make-clean.sh
+
+          autoreconf --install
+          eval `perl -V:siteprefix`
+
+          # Note: this will complain Test::Output isn't yet installed:
+          ./configure --prefix="$siteprefix"
+
+          make
+
+          # But that's OK because we install it here:
+          sudo make cpanm
+
+      - name: Unix Distribution
+        if: ${{ ! startsWith(matrix.platform, 'windows') }}
+        run: |
+          make distcheck
+          perl Build.PL
+          ./Build build
+          ./Build distcheck
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        name: Upload Logs
+        with:
+          name: cpanm-logs
+          path: ${{ env.STOW_CPAN_LOGS }}
+
+      - name: Upload Unit Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test Results
+          path: ${{ env.STOW_TEST_RESULTS }}
 
   perl_test_matrix:
-    name: "[${{ matrix.msys && 'windows-msys-latest' || matrix.platform }}] Perl v${{ matrix.perl }}"
-    runs-on: ${{ matrix.platform }}
-    if: always()
+    needs: perl_check
 
     strategy:
       fail-fast: false
@@ -86,6 +152,8 @@ jobs:
         shell: ${{ matrix.msys && 'msys2 {0}' || ( startsWith(matrix.platform, 'windows') && 'cmd' || 'bash' ) }}
         working-directory: ${{ github.workspace }}/source/stow
 
+    name: "[${{ matrix.msys && 'windows-msys-latest' || matrix.platform }}] Perl v${{ matrix.perl }}"
+    runs-on: ${{ matrix.platform }}
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
