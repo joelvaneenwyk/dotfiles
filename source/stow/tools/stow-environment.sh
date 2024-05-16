@@ -79,6 +79,7 @@ function run_command() {
     fi
 
     (
+        # shellcheck disable=SC2034
         STOW_DEBUG_DISABLE_TRAP=1
         (
             (
@@ -231,7 +232,10 @@ function install_perl_modules() {
     fi
 
     local _cpanm=""
-    local _perl_bin="$(dirname "$STOW_PERL")"
+
+    local _perl_bin
+    _perl_bin="$(dirname "$STOW_PERL")"
+
     local _cpanm_options=(
         "$_perl_bin/cpanm"
         "$_perl_bin/site_perl/$("$STOW_PERL" -e "print substr($^V, 1)")/cpanm"
