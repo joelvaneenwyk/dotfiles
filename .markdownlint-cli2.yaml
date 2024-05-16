@@ -11,6 +11,10 @@ config:
 customRules:
   - markdownlint-rule-titlecase
 
+# Use a plugin to recognize math
+markdownItPlugins:
+  - ["@iktakahiro/markdown-it-katex"]
+
 # Fix any fixable errors
 fix: true
 
@@ -27,10 +31,10 @@ globs:
 # Define glob expressions to ignore
 ignores:
   - "ignore*.md"
-
-# Use a plugin to recognize math
-markdownItPlugins:
-  - - "@iktakahiro/markdown-it-katex"
+  - "**/clink-gizmos/README.md"
+  - "**/clink-completions/README.md"
+  - "**/clink-completions/RELEASENOTES.md"
+  - "**/stow/INSTALL.md"
 
 # Additional paths to resolve module locations from
 modulePaths:
@@ -40,7 +44,7 @@ modulePaths:
 noBanner: true
 
 # Disable inline config comments
-noInlineConfig: true
+noInlineConfig: false
 
 # Disable progress on stdout (only valid at root)
 noProgress: false

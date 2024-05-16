@@ -83,7 +83,7 @@ Please do send comments, questions, and constructive criticism.  The
 mailing lists and any other communication channels are detailed on the
 above home page.
 
-Brief history and authorship
+Brief History and Authorship
 ----------------------------
 
 Stow was inspired by Carnegie Mellon's "Depot" program, but is
