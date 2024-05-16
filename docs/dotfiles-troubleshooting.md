@@ -19,11 +19,11 @@ on `dotfiles` has been due to an incorrect/empty `PATHEXT`.
 - [Why powershell runs executables in separate window? - Server
   Fault](https://serverfault.com/questions/402083/why-powershell-runs-executables-in-separate-window)
 
-## Unix / Linux
+## Unix
 
-### Why do you need ./ (dot-slash) before executable or script name to run it in bash?
+### Why Use "./" Prefix to Execute Scripts?
 
 Hit this a few times debugging issues in scripts where they assume that '.' is
 in the PATH. However, it's not actually recommended to have current directory
 (dot `.`) in your PATH as it is a security risk. See
-[stackoverflow.com/a/6331085](https://stackoverflow.com/a/6331085)
+[stackoverflow.com/a/6331085](https://stackoverflow.com/a/6331085) for details.

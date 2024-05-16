@@ -361,6 +361,7 @@ sonarlint
 spctl
 SPROFILE
 stackdump
+stackoverflow
 startubuntu
 startwm
 stelbent
