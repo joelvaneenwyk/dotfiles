@@ -2,14 +2,21 @@
 
 version: "3"
 
-vars:
-  GREETING: Hello, World!
-
 tasks:
   default:
     cmds:
       - echo "{{.GREETING}}"
     silent: true
+
+  build:
+    cmds:
+      - cmd: >-
+          docker build
+          -f "source/docker/Dockerfile.ubuntu"
+          --pull
+          {{if .CLI_FORCE}}--force-rm{{end}}
+          {{ .CLI_ARGS }}
+          "{{ .TASKFILE_DIR }}"
 
   setup:
     cmds:
@@ -35,6 +42,7 @@ tasks:
       - cmd: git clean -xfd
         silent: true
         ignore_error: true
+      # todo:jve: make this work on non-Windows systems
       - cmd: rmdir /q /s "packages/vim/.vim/bundle/vundle"
       - cmd: rmdir /q /s "packages/macos/Library/Application Support/Resources"
       - cmd: rmdir /q /s "packages/fish/.config/base16-shell"
@@ -50,3 +58,13 @@ tasks:
       - cmd: git clean -xfd > nul 2>&1
       - cmd: git reset --hard origin/main
       - cmd: git clean -xfd > nul 2>&1
+
+  test:
+    vars:
+      LUA_CHECK: "{{ env.HOME }}/scoop/shims/luacheck.exe"
+      BUSTED: "{{ env.HOME }}/scoop/shims/busted.exe"
+    cmds:
+      - cmd: "{{.LUA_CHECK}} ."
+        ignore_error: true
+      - cmd: "{{.BUSTED}} ."
+        ignore_error: true
