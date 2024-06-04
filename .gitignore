@@ -2,6 +2,10 @@
 # Files to ignore for dotfiles repository
 #
 
+node_modules/
+yarn.lock
+package-lock.json
+
 .pnp.cjs
 .pnp.loader.mjs
 .yarn/

@@ -11,6 +11,23 @@ tasks:
       - echo "{{.GREETING}}"
     silent: true
 
+  setup:
+    cmds:
+      - cmd: git submodule update --init --recursive
+      - cmd: git fetch --all
+      - cmd: proto uninstall --yes yarn
+      - cmd: proto uninstall --yes node
+      - cmd: proto uninstall --yes npm
+      - cmd: proto use
+      - cmd: corepack install
+      - cmd: corepack enable
+        ignore_error: true
+      - cmd: yarn install
+
+  lint:
+    cmds:
+      - cmd: yarn lint
+
   clean:
     cmds:
       - cmd: git fetch --all
