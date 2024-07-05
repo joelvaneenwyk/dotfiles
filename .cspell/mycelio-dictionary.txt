@@ -75,6 +75,7 @@ compctl
 compinit
 Consolas
 containerd
+corepack
 cpan
 cpanfile
 cpanm
@@ -375,6 +376,7 @@ synoservicectl
 sysconfdir
 Sysnative
 SYSTEMROOT
+TASKFILE
 texinfo
 TEXINPUTS
 texlive
