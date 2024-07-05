@@ -5,18 +5,24 @@ version: "3"
 tasks:
   default:
     cmds:
-      - echo "{{.GREETING}}"
-    silent: true
+      - task: build
 
   build:
+    vars:
+      DOCKERFILE: "{{ .TASKFILE_DIR }}/source/docker/Dockerfile.ubuntu"
+      DOCKER_CONTEXT: "{{ .TASKFILE_DIR }}"
     cmds:
       - cmd: >-
-          docker build
-          -f "source/docker/Dockerfile.ubuntu"
-          --pull
-          {{if .CLI_FORCE}}--force-rm{{end}}
-          {{ .CLI_ARGS }}
-          "{{ .TASKFILE_DIR }}"
+          docker build "{{ join .ARGS " "}}"
+        vars:
+          ARGS: 
+            - -f
+            - "{{ fromSlash .DOCKERFILE }}"
+            - '--pull'
+            - '{{if .CLI_FORCE}}--force-rm{{end}}'
+            - {{ .CLI_ARGS }}
+            - {{ fromSlash .DOCKER_CONTEXT }}
+          
 
   setup:
     cmds:
