@@ -1,6 +1,5 @@
 cask_args appdir: "/Applications"
 
-tap "homebrew/cask-fonts"
 tap "neovim/neovim"
 tap "koekeishiya/formulae"
 
@@ -13,7 +12,6 @@ brew "wget"
 brew "curl"
 brew "gpg"
 brew "mas"
-brew "exa"
 brew "fd"
 brew "fish"
 brew "hub"
