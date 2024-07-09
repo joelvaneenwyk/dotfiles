@@ -4,6 +4,7 @@ agnoster
 alnum
 antialiasing
 apexlog
+appdir
 ARGHELPER
 argmatcher
 argmatchers
@@ -135,6 +136,7 @@ fontconfig
 fontutil
 foxundermoon
 freedesktop
+fsnotes
 Fullscreen
 funclib
 functioncall
@@ -170,6 +172,7 @@ havok
 Havok
 hediet
 hexeditor
+hiddenbar
 histappend
 histignorealldups
 HKCU
@@ -182,6 +185,7 @@ INFOPATH
 inifmt
 inputrc
 installscripts
+insync
 invokation
 ipynb
 irblack
@@ -192,9 +196,11 @@ jetmartin
 joelvaneenwyk
 jovaneen
 jsbeautifyrc
+keepassxc
 keygen
 keyscan
 kleopatra
+koekeishiya
 Koihik
 ldflags
 LDFLAGS
@@ -231,6 +237,7 @@ luarocks
 luassert
 luaunit
 ludeeus
+macpass
 Mailmate
 Mandalorian
 MANPATH
@@ -264,11 +271,13 @@ MYCO
 mycoshiro
 mycotopia
 mycowin
+mylio
 nameserver
 nanoserver
 nasm
 neede
 neofetch
+neovim
 netfilter
 netgo
 neutrinolabs
@@ -353,6 +362,7 @@ shellenv
 shfmt
 shogo
 siteprefix
+skhd
 SNAME
 snyk
 softfloat
@@ -390,6 +400,7 @@ tldraw
 tolower
 trackpad
 txtsyntax
+typora
 tzdata
 unsetting
 updatestartuptty

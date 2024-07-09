@@ -1,11 +1,11 @@
 version: "0.2"
 ignorePaths: []
 dictionaryDefinitions:
-  - name: mycelio-dictionary
-    path: ./.cspell/mycelio-dictionary.txt
+  - name: dotfiles
+    path: .github/config/cspell-dotfiles.dict
     addWords: true
 dictionaries:
-  - mycelio-dictionary
+  - dotfiles
   - perl
   - en_us
 words: []
