@@ -283,7 +283,7 @@ function install_perl_modules() {
 
         if ! "${_perl_install_args[@]}" -M"$package" -le 1 2>/dev/null; then
             if run_named_command_group "Install '$package'" \
-                "${_perl_install_args[@]}" -MCPAN -e "CPAN::Shell->notest('install', '$package')"; then
+                "${_perl_install_args[@]}" -MCPAN -e "CPAN::Shell->notest('install', '$package')" 0<&-; then
                 :
             else
                 _return_value=$?
