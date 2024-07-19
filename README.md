@@ -65,7 +65,7 @@ which itself was based on [xero/dotfiles](https://github.com/xero/dotfiles).
   - [Introduction](#introduction)
   - [Management](#management)
   - [Implementation](#implementation)
-    - [x11](#x11)
+    - [X11](#x11)
   - [Resources](#resources)
 
 ## Setup
@@ -282,9 +282,9 @@ exist. If a default file was created upon program installation, you can add the
 `--adopt` flag which will delete the existing configuration settings before you
 install a new one with stow.
 
-### x11
+### X11
 
-To install the **x11** config you need to execute the command:
+To install the **X11** config you need to execute the command:
 
 ```bash
 stow -t / x11

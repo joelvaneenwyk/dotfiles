@@ -73,6 +73,7 @@ DEFAULT_IGNORE_LIST = $(srcdir)/default-ignore-list
 TESTS_DIR = $(srcdir)/t
 TESTS_OUT = tmp-testing-trees _test
 TESTS_ENVIRONMENT = $(PERL) -Ibin -Ilib -I$(TESTS_DIR)
+GIT_DIR = $(srcdir)/../../.git
 
 # This is a kind of hack; TESTS needs to be set to ensure that the
 # `check-am' target makes check-TESTS, but we override check-TESTS
@@ -325,14 +326,14 @@ dist-hook: doc/manual-split
 dist-hook: $(dist_man_MANS)
 	## If we are creating a distribution from a git checkout, ensure
 	## the ChangeLog file is in sync the git repository.
-	if test -e "$(srcdir)/.git"; then \
+	if test -e "$(GIT_DIR)"; then \
 	    rm -f ChangeLog \
 	        && $(MAKE) $(AM_MAKEFLAGS) ChangeLog \
 	        && cp -f ChangeLog $(distdir)/ChangeLog; \
 	fi
 
 ChangeLog: doc/ChangeLog.OLD
-	if [ -e "$(srcdir)/.git" ]; then \
+	if [ -e "$(GIT_DIR)" ]; then \
 	    ( \
 	        git log \
 	            --format="format:%ad  %aN <%aE>%n%n    * %w(70,0,4)%s%+b%n" \

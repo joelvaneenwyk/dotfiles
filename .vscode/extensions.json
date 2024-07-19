@@ -1,15 +1,20 @@
 {
     "recommendations": [
-        "foxundermoon.shell-format",
-        "timonwong.shellcheck",
-        "mads-hartmann.bash-ide-vscode",
-        "rogalmic.bash-debug",
-        "mhutchie.git-graph",
-        "eamodio.gitlens",
         "donjayamanne.githistory",
-        "jetmartin.bats",
-        "ms-vscode.powershell",
+        "editorconfig.editorconfig",
+        "foxundermoon.shell-format",
         "github.vscode-github-actions",
-        "editorconfig.editorconfig"
+        "jetmartin.bats",
+        "mads-hartmann.bash-ide-vscode",
+        "mhutchie.git-graph",
+        "ms-vscode-remote.remote-wsl",
+        "ms-vscode-remote.vscode-remote-extensionpack",
+        "ms-vscode.powershell",
+        "sumneko.lua",
+        "timonwong.shellcheck",
+        "usernamehw.errorlens",
+        "davidanson.vscode-markdownlint",
+        "github.vscode-pull-request-github",
+        "ms-kubernetes-tools.vscode-kubernetes-tools"
     ]
 }

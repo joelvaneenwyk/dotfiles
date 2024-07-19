@@ -70,49 +70,49 @@ Function Expand-File {
 
         # If older vresion is available, download and extract latest
         if (Test-Path -Path "$7za920/7za.exe" -PathType Leaf) {
-            $7z2103zip = Join-Path -Path "$script:StowArchivesDir" -ChildPath "7z2103-extra.7z"
-            $7z2103 = Join-Path -Path "$script:StowTempDir" -ChildPath "7z2103"
+            $7z2201zip = Join-Path -Path "$script:StowArchivesDir" -ChildPath '7z2201-extra.7z'
+            $7z2201 = Join-Path -Path "$script:StowTempDir" -ChildPath '7z2201'
 
             # Download latest version of 7zip
-            if (-not(Test-Path -Path "$7z2103zip" -PathType Leaf)) {
-                Get-File -Url "https://www.7-zip.org/a/7z2103-extra.7z" -Filename "$7z2103zip"
+            if (-not(Test-Path -Path "$7z2201zip" -PathType Leaf)) {
+                Get-File -Url 'https://www.7-zip.org/a/7z2201-extra.7z' -Filename "$7z2201zip"
             }
 
             # Extract latest vesrion using old version
-            if (Test-Path -Path "$7z2103zip" -PathType Leaf) {
-                if (-not(Test-Path -Path "$7z2103/7za.exe" -PathType Leaf)) {
-                    & "$7za920/7za.exe" x "$7z2103zip" -aoa -o"$7z2103" -r -y | Out-Default
+            if (Test-Path -Path "$7z2201zip" -PathType Leaf) {
+                if (-not(Test-Path -Path "$7z2201/7za.exe" -PathType Leaf)) {
+                    & "$7za920/7za.exe" x "$7z2201zip" -aoa -o"$7z2201" -r -y | Out-Default
                 }
             }
         }
 
         # Specify latest version of 7zip so that we can use it below
-        if (Test-Path -Path "$7z2103/x64/7za.exe" -PathType Leaf) {
-            $7zip = "$7z2103/x64/7za.exe"
+        if (Test-Path -Path "$7z2201/x64/7za.exe" -PathType Leaf) {
+            $7zip = "$7z2201/x64/7za.exe"
         }
     }
     else {
-        $7z2103zip = Join-Path -Path "$script:StowArchivesDir" -ChildPath "7z2103-linux-x64.tar.xz"
-        $7z2103 = Join-Path -Path "$script:StowTempDir" -ChildPath "7z2103"
+        $7z2201zip = Join-Path -Path "$script:StowArchivesDir" -ChildPath '7z2201-linux-x64.tar.xz'
+        $7z2201 = Join-Path -Path "$script:StowTempDir" -ChildPath '7z2201'
 
         # Download 7zip that was stored in a zip file so that we can extract the latest version stored in 7z format
-        if (-not(Test-Path -Path "$7z2103zip" -PathType Leaf)) {
-            Get-File -Url "https://www.7-zip.org/a/7z2103-linux-x64.tar.xz" -Filename "$7z2103zip"
+        if (-not(Test-Path -Path "$7z2201zip" -PathType Leaf)) {
+            Get-File -Url 'https://www.7-zip.org/a/7z2201-linux-x64.tar.xz' -Filename "$7z2201zip"
         }
 
         # Extract previous version of 7zipTempDir first
-        if (Test-Path -Path "$7z2103zip" -PathType Leaf) {
-            if ( -not(Test-Path -Path "$7z2103") ) {
-                New-Item -ItemType directory -Path "$7z2103" | Out-Null
+        if (Test-Path -Path "$7z2201zip" -PathType Leaf) {
+            if ( -not(Test-Path -Path "$7z2201") ) {
+                New-Item -ItemType directory -Path "$7z2201" | Out-Null
             }
 
-            if (-not(Test-Path -Path "$7z2103/7zz" -PathType Leaf)) {
-                tar -xvf "$7z2103zip" -C "$7z2103"
+            if (-not(Test-Path -Path "$7z2201/7zz" -PathType Leaf)) {
+                tar -xvf "$7z2201zip" -C "$7z2201"
             }
         }
 
-        if (Test-Path -Path "$7z2103/7zz" -PathType Leaf) {
-            $7zip = "$7z2103/7zz"
+        if (Test-Path -Path "$7z2201/7zz" -PathType Leaf) {
+            $7zip = "$7z2201/7zz"
         }
     }
 

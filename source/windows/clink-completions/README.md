@@ -30,9 +30,13 @@ Otherwise, here is the easiest way to install the clink-completions scripts, whe
 
 1. Make sure you have [git](https://www.git-scm.com/downloads) installed.
 2. Clone this repo into a new local directory via `git clone https://github.com/vladimir-kotikov/clink-completions local_directory` (replace `local_directory` with the name of the directory where you want to install the scripts).
-  - **Note:** avoid naming it `completions`, because that's a reserved subdirectory name in Clink.  See [Completion directories](https://chrisant996.github.io/clink/clink.html#completion-directories) for more info.
+
+- **Note:** avoid naming it `completions`, because that's a reserved subdirectory name in Clink.  See [Completion directories](https://chrisant996.github.io/clink/clink.html#completion-directories) for more info.
+
 3. Tell Clink to load scripts from the repo via `clink installscripts full_path_to_local_directory`.
-  - **Note:** it is important to specify the full path to the directory.
+
+- **Note:** it is important to specify the full path to the directory.
+
 4. Start a new session of Clink.
 
 Repo structure
@@ -45,7 +49,6 @@ Scripts in the `completions\` directory are not loaded until the associated comm
 Scripts in the `modules\` directory contain helper functions.  The `!init.lua` script (or `.init.lua` script) tells Clink about the modules and completions directories.
 
 Scripts in the `spec\` directory are tests which the `busted` package can run.
-
 
 Development and contribution
 ============================

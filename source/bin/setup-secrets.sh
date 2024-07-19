@@ -24,7 +24,7 @@ _generate_ssh() {
     echo "2. Press 'New SSH Key'"
     echo "3. Paste in the key from the clipboard and press 'Save'"
     echo "4. Once complete, press any key to continue to clone secrets repository..."
-    read -n 1
+    read -r -n 1
 }
 
 _clone_secrets() {

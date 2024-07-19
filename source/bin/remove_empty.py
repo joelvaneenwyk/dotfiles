@@ -208,11 +208,11 @@ def main() -> int:
             True,
         )
         total += _clean_path(one_drive_business)
-    except Exception:
+    except IOError:
         return_code = 10
         logger.exception("Failed to clean paths.")
     finally:
-        logger.info("Scanned '%d' path entries." % total)
+        logger.info("Scanned '%d' path entries.", total)
 
     return return_code
 

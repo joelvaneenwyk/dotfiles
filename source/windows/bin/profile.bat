@@ -187,14 +187,27 @@ exit /b %errorlevel%
 
     if "%MYCELIO_SKIP_INIT%"=="1" goto:$MainSkipInit
     if not exist "%MYCELIO_ENV_PATH%" goto:$MainSkipInit
-    call "%MYCELIO_ENV_PATH%"
-    :$MainSkipInit
 
-    call :SetupDosKey
-    %MYCELIO_ECHO% [mycelio] Run `help` to get list of commands.
+    :$MainEnvSetup
+        call "%MYCELIO_ENV_PATH%"
+        %MYCELIO_ECHO% [mycelio] Updated environment variables: "%MYCELIO_ENV_PATH%"
+        :$MainSkipInit
 
-    REM If we have already injected Clink then skip it
-    if "%CLINK_INJECTED%"=="1" goto:$SkipClink
+    :$MainDosKeySetup
+        call :SetupDosKey
+
+    :$MainFnm
+        fnm --version >NUL 2>&1
+        if errorlevel 1 goto:$MainFnmSkip
+        REM FOR /f "tokens=*" %%z IN ('fnm env --use-on-cd') DO CALL %%z
+        :$MainFnmSkip
+
+    :$MainClinkSetup
+        %MYCELIO_ECHO% [mycelio] Run `help` to get list of commands.
+
+        REM If we have already injected Clink then skip it
+        if "%CLINK_INJECTED%"=="1" goto:$SkipClink
+
         REM This must be the last operation we do.
         call clink --version >NUL 2>&1
         if errorlevel 1 (
@@ -204,7 +217,7 @@ exit /b %errorlevel%
             set CLINK_INJECTED=1
             call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink" --quiet --nolog
         )
-    :$SkipClink
+        :$SkipClink
 
     :$MycelioProfileEnd
     set "MYCELIO_SKIP_INIT="

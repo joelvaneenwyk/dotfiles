@@ -1,3 +1,4 @@
+-- luacheck: globals logger
 local function load_oh_my_posh(mycelio_root_dir)
     local home = os.getenv("HOME") or os.getenv("USERPROFILE")
     local mycelio_config = path.normalise(mycelio_root_dir .. "/packages/shell/.poshthemes/mycelio.omp.json")
@@ -9,7 +10,6 @@ local function load_oh_my_posh(mycelio_root_dir)
     }
 
     for _, value in pairs(values) do
-        ---@diagnostic disable-next-line: undefined-field
         if os.isfile(local_oh_my_posh_executable) then
             break
         else
@@ -20,7 +20,6 @@ local function load_oh_my_posh(mycelio_root_dir)
         end
     end
 
-    ---@diagnostic disable-next-line: undefined-field
     if not os.isfile(local_oh_my_posh_executable) then
         logger.error('Oh-My-Posh not found: ' .. local_oh_my_posh_executable)
     end

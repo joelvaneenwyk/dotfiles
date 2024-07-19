@@ -50,8 +50,9 @@
             "source.fixAll": "explicit",
             "source.organizeImports": "explicit"
         },
+        "editor.codeLens": true,
         "editor.formatOnSave": true,
-        "editor.semanticHighlighting.enabled": false,
+        "editor.semanticHighlighting.enabled": true,
         "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
     },
     "[python]": {
@@ -63,7 +64,11 @@
         "editor.formatOnSave": true
     },
     "[shellscript]": {
-        // "editor.defaultFormatter": "foxundermoon.shell-format",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.defaultFormatter": "foxundermoon.shell-format",
         "editor.formatOnSave": true,
         "files.eol": "\n"
     },
@@ -121,6 +126,8 @@
         ".xmobarrc",
         ".travis.yml"
     ],
+    "files.trimTrailingWhitespace": true,
+    "files.trimTrailingWhitespaceInRegexAndStrings": true,
     "editor.fontFamily": "PragmataPro Nerd Font, PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, JetBrains Mono NL, Menlo, Monaco, Consolas, Courier New, monospace",
     "editor.fontLigatures": true,
     "esbonio.server.enabled": false,
@@ -133,6 +140,7 @@
         "*.post": "shellscript",
         "*.shbat": "shellscript",
         "*.template": "properties",
+        "*.vsconfig": "json",
         ".busted": "lua",
         ".editorconfig": "editorconfig",
         ".gitconfig_*": "properties",
@@ -145,6 +153,7 @@
         ".luarc": "lua",
         ".wslconfig": "properties",
         "chkstow": "perl",
+        "clink_settings": "ini",
         "cpanfile": "perl",
         "edf": "shellscript",
         "flake8": "ini",
@@ -178,6 +187,7 @@
         "${workspaceFolder}/bin",
         "${workspaceFolder}/t"
     ],
+    "powershell.analyzeOpenDocumentsOnly": false,
     "powershell.buttons.showRunButtons": true,
     "powershell.codeFormatting.addWhitespaceAroundPipe": true,
     "powershell.codeFormatting.alignPropertyValuePairs": true,
@@ -191,10 +201,12 @@
     "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
     "powershell.codeFormatting.whitespaceBetweenParameters": true,
     "powershell.codeFormatting.whitespaceInsideBrace": true,
-    "powershell.integratedConsole.showOnStartup": false,
+    "powershell.integratedConsole.showOnStartup": true,
+    "powershell.integratedConsole.startInBackground": true,
     "powershell.integratedConsole.suppressStartupBanner": true,
     "powershell.scriptAnalysis.enable": true,
     "powershell.scriptAnalysis.settingsPath": "source/config/PSScriptAnalyzerSettings.psd1",
+    "powershell.startAutomatically": true,
     "python.analysis.typeCheckingMode": "basic",
     //
     // Ignore/disable features or extensions
@@ -268,7 +280,7 @@
     },
     "terminal.integrated.defaultProfile.linux": "bash_profile",
     "terminal.integrated.defaultProfile.osx": "bash",
-    "terminal.integrated.defaultProfile.windows": "Mycelio",
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
     "terminal.integrated.environmentChangesRelaunch": true,
     "terminal.integrated.fontFamily": "PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, Menlo, Monaco, Consolas, Courier New, monospace",
     "terminal.integrated.fontSize": 16,

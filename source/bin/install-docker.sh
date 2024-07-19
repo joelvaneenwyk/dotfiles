@@ -1,28 +1,28 @@
 #!/usr/bin/env bash
 
 function install_docker() {
-    sudo sudo apt-get update &&
-        sudo apt-get install -y --no-install-recommends \
+    sudo sudo apt-get update \
+        && sudo apt-get install -y --no-install-recommends \
             apt-transport-https \
             ca-certificates \
             curl \
             gnupg \
-            lsb-release &&
-        sudo apt-get remove docker docker-engine docker.io containerd runc &&
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | (
+            lsb-release \
+        && sudo apt-get remove docker docker-engine docker.io containerd runc \
+        && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | (
             sudo gpg --dearmor --batch --yes -o /usr/share/keyrings/docker-archive-keyring.gpg
-        ) &&
-        echo \
+        ) \
+        && echo \
             "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | (
             sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
-        ) &&
-        sudo apt-get update &&
-        sudo apt-get install -y --no-install-recommends \
-            docker-ce docker-ce-cli containerd.io &&
-        sudo usermod -aG docker "$(whoami)" &&
-        sudo systemctl enable docker.service &&
-        sudo systemctl enable containerd.service &&
-        sudo systemctl restart docker.service
+        ) \
+        && sudo apt-get update \
+        && sudo apt-get install -y --no-install-recommends \
+            docker-ce docker-ce-cli containerd.io \
+        && sudo usermod -aG docker "$(whoami)" \
+        && sudo systemctl enable docker.service \
+        && sudo systemctl enable containerd.service \
+        && sudo systemctl restart docker.service
 }
 
 function test_docker() {

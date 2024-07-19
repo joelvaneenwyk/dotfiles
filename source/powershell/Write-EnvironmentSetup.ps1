@@ -140,26 +140,37 @@ Function Get-Environment {
 
     $environmentVariables = @()
 
+    # We put this here because we want the global install of VSCode to take precedence even if
+    # there is a 'scoop' portable version installed.
+    $environmentVariables += 'C:\Program Files\Microsoft VS Code\bin'
+    $environmentVariables += "$ENV:UserProfile\AppData\Local\Programs\Microsoft VS Code\bin\"
+
+    # We prefer the executable we build ourselves so ensure that Cargo binaries
+    # come before other shims.
+    $cargoHome = [System.Environment]::GetEnvironmentVariable('CARGO_HOME')
+    $environmentVariables += "$cargoHome\bin"
+    $environmentVariables += "$ENV:UserProfile\.cargo\bin"
+    $environmentVariables += "$ENV:UserProfile\scoop\persist\rustup\.cargo\bin"
+
+    # Python Rye shims
     $environmentVariables += "$ENV:UserProfile\.rye\shims"
     $environmentVariables += "$ENV:UserProfile\scoop\persist\rye\shims"
 
-    # We put this here because we want the global install to take precedence even if
-    # there is a 'scoop' portable version installed.
-    $environmentVariables += 'C:\Program Files\Microsoft VS Code\bin'
-
     $environmentVariables += "$ENV:UserProfile\scoop\shims"
-    $environmentVariables += "$ENV:UserProfile\AppData\Local\Microsoft\WindowsApps"
-
-    $environmentVariables += "$script:MycelioRoot"
-    $environmentVariables += "$script:MycelioRoot\source\windows\bin"
 
     $environmentVariables += "$ENV:UserProfile\.pyenv\pyenv-win\bin"
 
-    $environmentVariables += "$ENV:UserProfile\.proto\bin"
+    $environmentVariables += "$script:MycelioRoot\source\windows\bin"
+
+    # Shims must come before the binary folders otherwise tools like Python will fail to run.
     $environmentVariables += "$ENV:UserProfile\.proto\shims"
+    $environmentVariables += "$ENV:UserProfile\.proto\bin"
 
     # Add GitHub CLI ('gh') to environment after shims
     $environmentVariables += 'C:\Program Files\GitHub CLI'
+    $environmentVariables += 'C:\Program Files\Git\bin'
+    $environmentVariables += 'C:\Program Files\Git\cmd'
+    $environmentVariables += 'C:\Program Files\Git\usr\bin\'
 
     $environmentVariables += "$ENV:UserProfile\.local\texlive\bin\win32"
     $environmentVariables += "$ENV:UserProfile\.local\git\mingw64\bin"
@@ -170,17 +181,21 @@ Function Get-Environment {
     $environmentVariables += "$ENV:UserProfile\.local\perl\c\bin"
     $environmentVariables += "$ENV:UserProfile\.local\perl\perl\bin"
 
-    $environmentVariables += "$ENV:CARGO_HOME\bin"
-    $environmentVariables += "$ENV:UserProfile\scoop\persist\rustup\.cargo\bin"
-
     # Expected to contain 'cpan' and other related utilities
     $environmentVariables += "$ENV:UserProfile\.local\perl\perl\site\bin"
+
+    # It is important that this comes *after* the shim folders from proto, rye, scoop, etc.
+    $environmentVariables += "$ENV:UserProfile\AppData\Local\Microsoft\WindowsApps"
 
     # If installed, will give you access to 'gpg' and 'gpgconf' as well as 'Kleopatra'
     $environmentVariables += 'C:\Program Files (x86)\GnuPG\bin'
     $environmentVariables += 'C:\Program Files (x86)\Gpg4win\bin'
 
+    $environmentVariables += 'C:\Program Files\PowerShell\7'
     $environmentVariables += 'C:\Program Files\Docker'
+
+    # Root has generic scripts like 'setup.bat' so add this last.
+    $environmentVariables += "$script:MycelioRoot"
 
     # Initially seemed like a good idea to include these tools in the environment, but there are a
     # lot of dependencies between these tools from dynamic libraries to just include folders that

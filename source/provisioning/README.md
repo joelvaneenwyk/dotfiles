@@ -8,7 +8,7 @@ an enhanced session mode on Linux VMs (Ubuntu, arch) for Hyper-V. You can learn
 more about this in our [blog
 post](https://techcommunity.microsoft.com/t5/virtualization/sneak-peek-taking-a-spin-with-enhanced-linux-vms/ba-p/382415).
 
-## How to use the repo
+## How to Use Repo
 
 You can find the original instructions here: [Ubuntu 20.04 on Hyper-V. Creating
 Virtual Machine | by App Engineering Lab |

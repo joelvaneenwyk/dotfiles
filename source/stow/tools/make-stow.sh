@@ -102,11 +102,11 @@ function make_stow() {
     PMDIR="$STOW_ROOT/lib"
 
     if ! PERL5LIB=$(
-        "$STOW_PERL" -V |
-            awk '/@INC:/ {p=1; next} (p==1) {print $1}' |
-            sed 's/\\/\//g' |
-            grep "$PMDIR" |
-            head -n 1
+        "$STOW_PERL" -V \
+            | awk '/@INC:/ {p=1; next} (p==1) {print $1}' \
+            | sed 's/\\/\//g' \
+            | grep "$PMDIR" \
+            | head -n 1
     ); then
         echo "INFO: Target '$PMDIR' is not in standard include so will be inlined."
     fi

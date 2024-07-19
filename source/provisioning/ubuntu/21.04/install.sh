@@ -35,8 +35,8 @@ fi
 
 # Install hv_kvp utils and the xrdp service so we have the auto start behavior
 apt install -y --no-install-recommends \
-    linux-tools-virtual${HWE} \
-    linux-cloud-tools-virtual${HWE} \
+    "linux-tools-virtual${HWE}" \
+    "linux-cloud-tools-virtual${HWE}" \
     xrdp \
     net-tools
 

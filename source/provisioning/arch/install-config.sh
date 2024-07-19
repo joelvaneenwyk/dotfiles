@@ -12,13 +12,13 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Use Qi to check for exact package name
-if ! pacman -Qi xrdp > /dev/null ; then
+if ! pacman -Qi xrdp >/dev/null; then
     echo 'xrdp not installed. Run makepkg.sh first to install xrdp.' >&2
     exit 1
 fi
 
 # Use Qs to allow xorgxrdp-devel-git
-if ! pacman -Qs xorgxrdp > /dev/null ; then
+if ! pacman -Qs xorgxrdp >/dev/null; then
     echo 'xorgxrdp not installed. Run makepkg.sh first to install xorgxrdp.' >&2
     exit 1
 fi
@@ -47,16 +47,15 @@ sed -i_orig -e 's/bitmap_compression=true/bitmap_compression=false/g' /etc/xrdp/
 sed -i_orig -e 's/FuseMountName=thinclient_drives/FuseMountName=shared-drives/g' /etc/xrdp/sesman.ini
 
 # Change the allowed_users
-echo "allowed_users=anybody" > /etc/X11/Xwrapper.config
-
+echo "allowed_users=anybody" >/etc/X11/Xwrapper.config
 
 #Ensure hv_sock gets loaded
 if [ ! -e /etc/modules-load.d/hv_sock.conf ]; then
-	echo "hv_sock" > /etc/modules-load.d/hv_sock.conf
+    echo "hv_sock" >/etc/modules-load.d/hv_sock.conf
 fi
 
 # Configure the policy xrdp session
-cat > /etc/polkit-1/rules.d/02-allow-colord.rules <<EOF
+cat >/etc/polkit-1/rules.d/02-allow-colord.rules <<EOF
 polkit.addRule(function(action, subject) {
     if ((action.id == "org.freedesktop.color-manager.create-device" ||
          action.id == "org.freedesktop.color-manager.modify-profile" ||
@@ -72,14 +71,13 @@ polkit.addRule(function(action, subject) {
 EOF
 
 # Adapt the xrdp pam config
-cat > /etc/pam.d/xrdp-sesman <<EOF
+cat >/etc/pam.d/xrdp-sesman <<EOF
 #%PAM-1.0
 auth        include     system-remote-login
 account     include     system-remote-login
 password    include     system-remote-login
 session     include     system-remote-login
 EOF
-
 
 ###############################################################################
 # .xinitrc has to be modified manually.
