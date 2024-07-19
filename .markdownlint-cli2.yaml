@@ -1,13 +1,21 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/DavidAnson/markdownlint-cli2/main/schema/markdownlint-cli2-config-schema.json
 #
-# An example .markdownlint-cli2.yaml file
+# dotfiles | markdownlint configuration
 #
-
-$schema: "https://json.schemastore.org/markdownlint-cli2"
 
 # Disable some built-in rules
 config:
   no-trailing-spaces: false
   no-multiple-blanks: false
+  line-length:
+    line_length: 120
+    heading_line_length: 80
+    code_block_line_length: 80
+    code_blocks: true
+    tables: false
+    headings: true
+    strict: false
+    stern: false
 
 # Include a custom rule package
 customRules:
@@ -28,7 +36,7 @@ gitignore: true
 
 # Define glob expressions to use (only valid at root)
 globs:
-  - "!*bout.md"
+  - "**/*.md"
 
 # Define glob expressions to ignore
 ignores:

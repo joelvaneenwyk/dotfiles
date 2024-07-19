@@ -126,8 +126,6 @@
         ".xmobarrc",
         ".travis.yml"
     ],
-    "files.trimTrailingWhitespace": true,
-    "files.trimTrailingWhitespaceInRegexAndStrings": true,
     "editor.fontFamily": "PragmataPro Nerd Font, PragmataProMonoLiga NFM, PragmataPro Mono Liga, JetBrains Mono, Hack, JetBrains Mono NL, Menlo, Monaco, Consolas, Courier New, monospace",
     "editor.fontLigatures": true,
     "esbonio.server.enabled": false,
@@ -138,6 +136,7 @@
         "*.json.git": "jsonc",
         "*.omp.json": "jsonc",
         "*.post": "shellscript",
+        "*.rockspec": "lua",
         "*.shbat": "shellscript",
         "*.template": "properties",
         "*.vsconfig": "json",
@@ -175,10 +174,11 @@
         "source/stow/tmp-testing-trees": true,
         "source/stow/tools/texinfo/**": true
     },
+    "files.trimTrailingWhitespace": true,
+    "files.trimTrailingWhitespaceInRegexAndStrings": true,
     "git.requireGitUserConfig": false,
     "json.format.enable": true,
     "json.validate.enable": true,
-    "markdownlint.ignore": ".markdownlintignore",
     "perl.enable": true,
     "perl.perlCmd": "${env:USERPROFILE}/.local/perl/perl/bin/perl.exe",
     "perl.perlInc": [
@@ -271,13 +271,13 @@
     ],
     "taskExplorer.showFavoritesButton": true,
     "taskExplorer.showLastTasks": false,
+    "terminal.integrated.automationProfile.linux": {
+        "icon": "account",
+        "path": "bash"
+    },
     "terminal.integrated.confirmOnExit": "never",
     "terminal.integrated.cursorBlinking": true,
     "terminal.integrated.cwd": "${workspaceFolder}",
-    "terminal.integrated.automationProfile.linux": {
-        "path": "bash",
-        "icon": "account"
-    },
     "terminal.integrated.defaultProfile.linux": "bash_profile",
     "terminal.integrated.defaultProfile.osx": "bash",
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
