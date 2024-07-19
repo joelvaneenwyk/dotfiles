@@ -61,6 +61,7 @@ clmv
 cluacov
 CMDCMDLINE
 cmder
+cmdkey
 cmds
 codacy
 codecov
@@ -70,12 +71,14 @@ Codespace
 codespaces
 colord
 Colord
+colortool
 commandline
 compat
 compctl
 compinit
 Consolas
 containerd
+cordova
 corepack
 cpan
 cpanfile
@@ -124,6 +127,7 @@ extdebug
 extldflags
 factorypath
 fantomasignore
+fastboot
 fgrep
 figlet
 filelocator
@@ -147,6 +151,7 @@ gintronic
 gistpad
 githistory
 gitmodules
+gitutil
 gmail
 gnugp
 GOARCH
@@ -181,6 +186,7 @@ hlsl
 hookyqr
 icnv
 ignoreboth
+iktakahiro
 INFOPATH
 inifmt
 inputrc
@@ -196,6 +202,7 @@ jetmartin
 joelvaneenwyk
 jovaneen
 jsbeautifyrc
+katex
 keepassxc
 keygen
 keyscan
@@ -241,6 +248,7 @@ macpass
 Mailmate
 Mandalorian
 MANPATH
+markdownlint
 matchicons
 matchtext
 maxdepth
@@ -265,6 +273,7 @@ msvcrt
 msys
 msysgit
 msystem
+multicharflags
 myceli
 mycelio
 MYCO
@@ -309,6 +318,7 @@ powerline
 powerquery
 PragmataProMonoLiga
 precommit
+premake
 prettyxml
 Procfile
 Procomm
@@ -326,6 +336,7 @@ realpath
 rech
 Redist
 Reflogs
+RELEASENOTES
 reloadagent
 resolv
 restow
@@ -333,6 +344,7 @@ retval
 rfxcodec
 rlespinasse
 Robocopy
+rockspec
 rogalmic
 rstow
 runc
@@ -361,6 +373,7 @@ shellcheck
 shellenv
 shfmt
 shogo
+signtool
 siteprefix
 skhd
 SNAME
@@ -395,6 +408,7 @@ texput
 thinclient
 tilesize
 timonwong
+titlecase
 tldr
 tldraw
 tolower
@@ -421,6 +435,7 @@ vulncheck
 vundle
 webhint
 windir
+winget
 winsymlinks
 worktrees
 wslconfig
