@@ -54,6 +54,7 @@ CHERE
 chkstow
 CHOST
 chrisant
+cjson
 classpath
 clearsign
 CLICOLOR
@@ -209,6 +210,7 @@ keyscan
 kleopatra
 koekeishiya
 Koihik
+kondo
 ldflags
 LDFLAGS
 leafo
@@ -281,6 +283,7 @@ mycoshiro
 mycotopia
 mycowin
 mylio
+mypy
 nameserver
 nanoserver
 nasm
