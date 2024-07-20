@@ -5,7 +5,16 @@ version: "3"
 tasks:
   default:
     cmds:
-      - task: build
+      - task: start
+
+  start:
+    cmds:
+      - cmd: |
+          cmd.exe /D /E:ON /C "{{ joinPath .TASKFILE_DIR "setup.bat" }}"
+        platforms: [windows]
+      - cmd: |
+          "{{ joinPath .TASKFILE_DIR "setup.sh" }}"
+        platforms: [linux, darwin]
 
   build:
     vars:
@@ -22,9 +31,8 @@ tasks:
             - '{{if .CLI_FORCE}}--force-rm{{end}}'
             - {{ .CLI_ARGS }}
             - {{ fromSlash .DOCKER_CONTEXT }}
-          
 
-  setup:
+  init:
     cmds:
       - cmd: git submodule update --init --recursive
       - cmd: git fetch --all
@@ -41,29 +49,42 @@ tasks:
     cmds:
       - cmd: yarn lint
 
-  clean:
+  git-clean:
+    vars:
+      CLOSE_STDIN: '{{if eq OS "windows"}}<nul{{else}}0<&-{{end}}'
     cmds:
-      - cmd: git fetch --all
-      - cmd: git submodule update --init --recursive
-      - cmd: git clean -xfd
+      - cmd: git add .
+      - cmd: git clean -xfd {{.CLOSE_STDIN}}
         silent: true
         ignore_error: true
-      # todo:jve: make this work on non-Windows systems
-      - cmd: rmdir /q /s "packages/vim/.vim/bundle/vundle"
-      - cmd: rmdir /q /s "packages/macos/Library/Application Support/Resources"
-      - cmd: rmdir /q /s "packages/fish/.config/base16-shell"
-      - cmd: rmdir /q /s "packages/fish/.config/base16-fzf"
-      - cmd: rmdir /q /s "packages/fish/.config/git-fuzzy"
-      - cmd: rmdir /q /s "test/bats"
-      - cmd: rmdir /q /s "test/test_helper/bats-support"
-      - cmd: rmdir /q /s "test/test_helper/bats-assert"
-      - cmd: git branch "backups/main"
+
+  clean:
+    cmds:
+      - task: git-clean
+      - cmd: git fetch --all
+      - cmd: git submodule update --init --recursive
+      - task: delete
+        vars: { TARGET_DIR: "packages/vim/.vim/bundle/vundle" }
+      - task: delete
+        vars: { TARGET_DIR: "packages/macos/Library/Application Support/Resources" }
+      - task: delete
+        vars: { TARGET_DIR: "packages/fish/.config/base16-shell" }
+      - task: delete
+        vars: { TARGET_DIR: "packages/fish/.config/base16-fzf" }
+      - task: delete
+        vars: { TARGET_DIR: "packages/fish/.config/git-fuzzy" }
+      - task: delete
+        vars: { TARGET_DIR: "test/bats" }
+      - task: delete
+        vars: { TARGET_DIR: "test/test_helper/bats-support" }
+      - task: delete
+        vars: { TARGET_DIR: "test/test_helper/bats-assert" }
 
   reset:
     cmds:
-      - cmd: git clean -xfd > nul 2>&1
+      - task: git-clean
       - cmd: git reset --hard origin/main
-      - cmd: git clean -xfd > nul 2>&1
+      - task: git-clean
 
   test:
     vars:
@@ -74,3 +95,18 @@ tasks:
         ignore_error: true
       - cmd: "{{.BUSTED}} ."
         ignore_error: true
+
+  delete:  
+    vars:
+      RUN_WINDOWS: "cmd /D /E:ON /C"
+      RUN_UNIX: "sh -c"
+      RUN: '{{if eq OS "windows"}}{{.RUN_WINDOWS}}{{ else }}{{.RUN_UNIX}}{{ end }}'
+    internal: true
+    requires: { vars: [TARGET_DIR] }
+    status:
+      - 'test -d "{{.TARGET_DIR}}"'
+    cmds:
+      - cmd: '{{.RUN}} if exist "{{.TARGET_DIR}}" rmdir /s /q "{{.TARGET_DIR}}"'
+        platforms: [windows]
+      - cmd: '{{.RUN}} rm -rf "{{.TARGET_DIR}}"'
+        platforms: [linux, darwin]
