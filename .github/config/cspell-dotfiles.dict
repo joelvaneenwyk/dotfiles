@@ -166,6 +166,7 @@ GOPATH
 GOROOT
 gpgconf
 gpgreset
+gpgsign
 gpgtest
 grayscale
 gsudo
@@ -341,6 +342,7 @@ Redist
 Reflogs
 RELEASENOTES
 reloadagent
+renamelimit
 resolv
 restow
 retval
@@ -376,6 +378,7 @@ shellcheck
 shellenv
 shfmt
 shogo
+signingkey
 signtool
 siteprefix
 skhd
@@ -394,6 +397,7 @@ startwm
 stelbent
 stty
 submodules
+subup
 sumneko
 symlink
 symlinking
