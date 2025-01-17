@@ -1,14 +1,13 @@
+@echo off && goto:$Main
 ::
 :: Call PowerShell to generate a batch script that sets up the
 :: environment variables for the current user.
 ::
-@echo off
-goto:$Main
 
+:Generate
 ::
 :: Generate environment batch file and then execute it.
 ::
-:Generate
 setlocal EnableDelayedExpansion
     goto:$GetRoot
     :GetRoot
@@ -51,9 +50,6 @@ endlocal & (
     set "MYCELIO_ROOT=%MYCELIO_ROOT%"
 )
 exit /b %MYCELIO_LAST_ERROR%
-
-:SetError
-exit /b %~1
 
 :$Main
     call :Generate %*
