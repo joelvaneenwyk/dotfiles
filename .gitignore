@@ -117,3 +117,7 @@ texput.log
 /lua.bat
 /lua_modules
 /.luarocks
+
+/out.*
+
+*.omp.json.bak
