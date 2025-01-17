@@ -1,12 +1,12 @@
 @echo off && goto:$Main
-REM
-REM Mycelio - Profile Entrypoint
-REM
-REM This auto-run script runs for every new cmd executable instance and when
-REM running loops in control statements. We do not want it to run initialization
-REM steps in loops as it can have unexpected side effects on the parent script
-REM variables and can severely impact performance of scripts.
-REM
+::
+:: Mycelio - Profile Entrypoint
+::
+:: This auto-run script runs for every new cmd executable instance and when
+:: running loops in control statements. We do not want it to run initialization
+:: steps in loops as it can have unexpected side effects on the parent script
+:: variables and can severely impact performance of scripts.
+::
 
 :GetRoot
 setlocal EnableDelayedExpansion
@@ -26,17 +26,17 @@ endlocal & (
 :ClearErrorLevel
 exit /b 0
 
-REM
-REM Although it is feasible to extract the command for running a new cmd instance
-REM from the Command Prompt "lnk" shortcut file using the "WshShell.CreateShortcut"
-REM function in JScript and then comparing it to the "CMDCMDLINE" variable but
-REM this would be performance heavy to do with each new instance which makes it
-REM unacceptable unless we do it only once at install time.
-REM
-REM The workaround used here is that we check that a fully quoted "COMSPEC" was
-REM used while avoiding the "/c" argument. Make sure to use delayed expansion
-REM for "CMDCMDLINE" as it may contain unprotected characters.
-REM
+::
+:: Although it is feasible to extract the command for running a new cmd instance
+:: from the Command Prompt "lnk" shortcut file using the "WshShell.CreateShortcut"
+:: function in JScript and then comparing it to the "CMDCMDLINE" variable but
+:: this would be performance heavy to do with each new instance which makes it
+:: unacceptable unless we do it only once at install time.
+::
+:: The workaround used here is that we check that a fully quoted "COMSPEC" was
+:: used while avoiding the "/c" argument. Make sure to use delayed expansion
+:: for "CMDCMDLINE" as it may contain unprotected characters.
+::
 :GetEnvironment
 setlocal EnableDelayedExpansion EnableExtensions
     goto:$GetEnvironmentStart
@@ -108,25 +108,25 @@ endlocal & (
 )
 exit /b %errorlevel%
 
-REM
-REM This logo was generated with figlet after testing with selection of fonts.
-REM
-REM    - apt install figlet
-REM    - git clone https://github.com/xero/figlet-fonts
-REM    - find figlet-fonts/ -printf "%f\n" ^| xargs -n 1 -I % figlet -d ./figlet-fonts/ -f % myceli0
-REM
-REM These fonts all display the logo quite well, see https://www.programmingfonts.org
-REM
-REM    - fire code (good but "I" does not align)
-REM    - gintronic (very nice)
-REM    - hasklig (pretty good)
-REM    - jetbrains mono (better than most)
-REM    - julia-mono (amazing)
-REM    - mensch
-REM    - luculent
-REM    - victor mono (quite good)
-REM    - source code pro (bars have spaces)
-REM
+::
+:: This logo was generated with figlet after testing with selection of fonts.
+::
+::    - apt install figlet
+::    - git clone https://github.com/xero/figlet-fonts
+::    - find figlet-fonts/ -printf "%f\n" ^| xargs -n 1 -I % figlet -d ./figlet-fonts/ -f % myceli0
+::
+:: These fonts all display the logo quite well, see https://www.programmingfonts.org
+::
+::    - fire code (good but "I" does not align)
+::    - gintronic (very nice)
+::    - hasklig (pretty good)
+::    - jetbrains mono (better than most)
+::    - julia-mono (amazing)
+::    - mensch
+::    - luculent
+::    - victor mono (quite good)
+::    - source code pro (bars have spaces)
+::
 :PrintLogo
     setlocal EnableDelayedExpansion
     if "%MYCELIO_ECHO%"=="REM" goto:$PrintLogoDone
