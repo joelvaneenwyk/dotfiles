@@ -209,14 +209,12 @@ exit /b %errorlevel%
         if "%CLINK_INJECTED%"=="1" goto:$SkipClink
 
         REM This must be the last operation we do.
-        call clink --version >NUL 2>&1
+        call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink" --quiet --nolog
         if errorlevel 1 (
             %MYCELIO_ECHO% Initialized `dotfiles` environment without clink.
-            call :ClearErrorLevel
-        ) else (
-            set CLINK_INJECTED=1
-            call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink" --quiet --nolog
         )
+        call :ClearErrorLevel
+        set CLINK_INJECTED=1
         :$SkipClink
 
     :$MycelioProfileEnd
