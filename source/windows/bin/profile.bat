@@ -196,12 +196,6 @@ exit /b %errorlevel%
     :$MainDosKeySetup
         call :SetupDosKey
 
-    :$MainFnm
-        fnm --version >NUL 2>&1
-        if errorlevel 1 goto:$MainFnmSkip
-        REM FOR /f "tokens=*" %%z IN ('fnm env --use-on-cd') DO CALL %%z
-        :$MainFnmSkip
-
     :$MainClinkSetup
         %MYCELIO_ECHO% [mycelio] Run `help` to get list of commands.
 
