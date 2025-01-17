@@ -1,0 +1,9 @@
+[tools]
+shfmt = "latest"
+task = "latest"
+shellcheck = "latest"
+go = "latest"
+actionlint = "latest"
+act = "latest"
+npm = "10"
+node = "22"
