@@ -1,5 +1,17 @@
-@echo off
-goto:$Main
+@echo off && goto:$Main
+::
+:: Sets up the local environment by tweaking OS settings and installing
+:: any required dependencies.
+::
+:: `Run` - function executes a command with arguments and prints the command.
+::         If running in GitHub Actions, it formats the command differently.
+::         It then calls the command and preserves the environment variables.
+::
+:: `RunSudo` - Similar to `Run` but calls the command with `sudo`.
+::
+:: `RunPowerShell` - Defined to run PowerShell commands with specific settings.
+::
+::---------------------------------------------------------------------------------------------------
 
 ::
 :: Local functions
@@ -151,13 +163,13 @@ exit /b %ERRORLEVEL%
 :: Query if autorun installed
 ::-----------------------------------
 :CheckAutoRunInstalled %1=Hive %2=OutputVarName
-setlocal EnableExtensions EnableDelayedExpansion
-set "KEY=%~1\Software\Microsoft\Command Processor"
-for /f "tokens=2,3*" %%a in ('reg query "!KEY!" /v AutoRun 2^>NUL ^| findstr AutoRun') do (
-  set "TYPE=%%a"
-  call set "VALUE=%%b"
-  if "!TYPE!"=="REG_EXPAND_SZ" call set "VALUE=!VALUE!"
-)
+    setlocal EnableExtensions EnableDelayedExpansion
+    set "KEY=%~1\Software\Microsoft\Command Processor"
+    for /f "tokens=2,3*" %%a in ('reg query "!KEY!" /v AutoRun 2^>NUL ^| findstr AutoRun') do (
+      set "TYPE=%%a"
+      call set "VALUE=%%b"
+      if "!TYPE!"=="REG_EXPAND_SZ" call set "VALUE=!VALUE!"
+    )
 endlocal & (if not "%~2"=="" (set "%~2=%VALUE%")) & exit /b
 
 :CheckAutoRun %1=Hive %2=VarName

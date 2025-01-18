@@ -34,8 +34,8 @@ set PMDIR=%STOW_ROOT%\lib
 set PMDIR=%PMDIR:\=/%
 
 set _found=X
-echo !STOW_PERL! !PMDIR!
-for /f "tokens=* usebackq" %%a in (`!STOW_PERL! -V`) do (
+echo "!STOW_PERL!" !PMDIR!
+for /f "tokens=* usebackq" %%a in (`"!STOW_PERL!" -V`) do (
     set "_include=%%a"
     if exist "%%a" (
         echo "!_include!" | "%SystemRoot%\System32\find.exe" /I "!PMDIR!" >nul
