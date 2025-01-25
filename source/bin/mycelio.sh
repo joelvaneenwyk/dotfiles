@@ -906,7 +906,7 @@ function install_oh_my_posh {
         if [ -f "$MYCELIO_GOEXE" ]; then
             mkdir -p "$_oh_my_posh_tmp"
             rm -rf "$_oh_my_posh_tmp"
-            run_task "oh-my-posh.git.clone" git -c advice.detachedHead=false clone -b "v7.26.0" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
+            run_task "oh-my-posh.git.clone" git -c advice.detachedHead=false clone -b "v24.18.1" "https://github.com/JanDeDobbeleer/oh-my-posh.git" "$_oh_my_posh_tmp"
 
             if (
                 cd "$_oh_my_posh_tmp/src"
