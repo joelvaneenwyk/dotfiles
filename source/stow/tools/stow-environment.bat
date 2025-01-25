@@ -75,7 +75,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     )
 
     call :StorePerlOutput "STOW_PERL_VERSION" -e "print substr($^^V, 1)"
-    if not "!ERRORLEVEL!"=="0" (
+    if not "%ERRORLEVEL%"=="0" (
         echo [ERROR] Perl executable invalid: "!STOW_PERL!"
         set STOW_PERL=
         goto:$InitializeEnvironment
@@ -97,7 +97,7 @@ setlocal EnableExtensions EnableDelayedExpansion
     if exist "!STOW_PERL_INIT!" del "!STOW_PERL_INIT!"
 
     call "!STOW_PERL!" !STOW_PERL_ARGS! -Mlocal::lib -le 1 > nul 2>&1
-    if not "!ERRORLEVEL!"=="0" goto:$PerlLocalLibInitialized
+    if errorlevel 1 goto:$PerlLocalLibInitialized
         set "STOW_PERL_ARGS=!STOW_PERL_ARGS! -Mlocal::lib^="!STOW_PERL_LOCAL_LIB_UNIX!""
         echo ##[cmd] "!STOW_PERL!" -Mlocal::lib="!STOW_PERL_LOCAL_LIB_UNIX!"
         "!STOW_PERL!" -Mlocal::lib="!STOW_PERL_LOCAL_LIB_UNIX!" >"!STOW_PERL_INIT!"
@@ -239,23 +239,23 @@ exit /b %errorlevel%
             set "_arg=%~1"
             if "!_arg!"=="" goto:$ExecutePerlCommand
             set "_arg=%1"
-            set "_args=%_args% !_arg!"
+            set "_args=!_args! !_arg!"
             shift
         goto:$GetPerlArgs
         :$ExecutePerlCommand
 
-        set "_cmd=%STOW_PERL% -I "!STOW_PERL_LOCAL_LIB_UNIX!/lib/perl5" -Mlocal::lib^="%STOW_PERL_LOCAL_LIB_UNIX%""
+        set "_cmd="%STOW_PERL%" -I "!STOW_PERL_LOCAL_LIB_UNIX!/lib/perl5" -Mlocal::lib^="%STOW_PERL_LOCAL_LIB_UNIX%""
 
         if "%GITHUB_ACTIONS%"=="" (
             echo ^=^=----------------------
-            echo ## !_cmd! %_args%
+            echo ## !_cmd! !_args!
             echo ^=^=----------------------
         ) else (
-            echo ::group::!_cmd! %_args%
-            echo [command]!_cmd! %_args%
+            echo ::group::!_cmd! !_args!
+            echo [command]!_cmd! !_args!
         )
 
-        for /f "tokens=* usebackq" %%a in (`!_cmd! %_args%`) do (
+        for /f "tokens=* usebackq" %%a in (`call !_cmd! !_args!`) do (
             set "_output=%%a"
             goto:$PerlCommandDone
         )
@@ -280,21 +280,21 @@ exit /b %errorlevel%
         shift
         :$GetArgs
             if "%~1"=="" goto:$ExecuteCommand
-            set "_args=%_args% %1"
+            set "_args=!_args! %1"
             shift
         goto:$GetArgs
         :$ExecuteCommand
 
         if "%GITHUB_ACTIONS%"=="" (
             echo ^=^=----------------------
-            echo ## !_cmd! %_args%
+            echo ## !_cmd! !_args!
             echo ^=^=----------------------
         ) else (
-            echo ::group::!_cmd! %_args%
-            echo [command]!_cmd! %_args%
+            echo ::group::!_cmd! !_args!
+            echo [command]!_cmd! !_args!
         )
 
-        for /f "tokens=* usebackq" %%a in (`%_args%`) do (
+        for /f "tokens=* usebackq" %%a in (`call !_cmd! !_args!`) do (
             set "_output=%%a"
             goto:$CommandDone
         )
@@ -339,11 +339,11 @@ exit /b
 :Run %*=Command with arguments
     if "%GITHUB_ACTIONS%"=="" (
         echo ^=^=----------------------
-        echo ## !_cmd! %_args%
+        echo ## %*
         echo ^=^=----------------------
     ) else (
-        echo ::group::!_cmd! %_args%
-        echo [command]!_cmd! %_args%
+        echo ::group::%*
+        echo [command]%*
     )
     call %*
 exit /b
