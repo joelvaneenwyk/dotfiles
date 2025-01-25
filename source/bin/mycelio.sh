@@ -344,19 +344,19 @@ function _has_admin_rights() {
         # Initial attempt failed
         if _sudo_machine_output="$(uname -s 2>/dev/null)"; then
             case "${_sudo_machine_output:-}" in
-                Darwin*)
-                    if dscl . -authonly "$_user" "" >/dev/null 2>&1; then
-                        # Password is empty string.
+            Darwin*)
+                if dscl . -authonly "$_user" "" >/dev/null 2>&1; then
+                    # Password is empty string.
+                    return 0
+                else
+                    # Authority check failed
+                    if _timeout 2 sudo id >/dev/null 2>&1; then
+                        # If this passes then we do have a password set
                         return 0
-                    else
-                        # Authority check failed
-                        if _timeout 2 sudo id >/dev/null 2>&1; then
-                            # If this passes then we do have a password set
-                            return 0
-                        fi
                     fi
-                    ;;
-                *) ;;
+                fi
+                ;;
+            *) ;;
             esac
         fi
     fi
@@ -483,15 +483,15 @@ function _mycelio_get_profile_root() {
 
 function _is_windows() {
     case "$(uname -s)" in
-        CYGWIN*)
-            return 0
-            ;;
-        MINGW*)
-            return 0
-            ;;
-        MSYS*)
-            return 0
-            ;;
+    CYGWIN*)
+        return 0
+        ;;
+    MINGW*)
+        return 0
+        ;;
+    MSYS*)
+        return 0
+        ;;
     esac
 
     return 1
@@ -549,8 +549,8 @@ function _stow_internal() {
             if [[ "$*" == *"--delete"* ]] || [ $_is_target_link_invalid = 1 ]; then
                 # Remove empty directories in target. It will not delete directories
                 # that have files in them.
-                if find "$_target" -type d -empty -delete >/dev/null 2>&1 \
-                    && rm -df "$_target" >/dev/null 2>&1; then
+                if find "$_target" -type d -empty -delete >/dev/null 2>&1 &&
+                    rm -df "$_target" >/dev/null 2>&1; then
                     echo "REMOVED: $_name"
                 else
                     echo "SKIPPED: $_name"
@@ -1331,12 +1331,12 @@ function install_go {
         if [ "$_go_compiled" = "0" ]; then
             if _uname_output="$(uname -s 2>/dev/null)"; then
                 case "${_uname_output}" in
-                    Linux*)
-                        _go_archive="go$_go_version.linux-$MYCELIO_ARCH.tar.gz"
-                        ;;
-                    Darwin*)
-                        _go_archive="go$_go_version.darwin-$MYCELIO_ARCH.tar.gz"
-                        ;;
+                Linux*)
+                    _go_archive="go$_go_version.linux-$MYCELIO_ARCH.tar.gz"
+                    ;;
+                Darwin*)
+                    _go_archive="go$_go_version.darwin-$MYCELIO_ARCH.tar.gz"
+                    ;;
                 esac
             fi
 
@@ -1939,53 +1939,53 @@ function _setup_environment() {
     MYCELIO_386=""
 
     case "$_arch_name" in
-        'x86_64')
-            MYCELIO_ARCH='amd64'
-            ;;
-        'arm64')
-            MYCELIO_ARCH='arm64'
-            ;;
-        'armhf')
-            MYCELIO_ARCH='arm' MYCELIO_ARM='6'
-            ;;
-        'armv7')
-            MYCELIO_ARCH='arm' MYCELIO_ARM='7'
-            ;;
-        'armv7l')
-            # Raspberry PI
-            MYCELIO_ARCH='arm' MYCELIO_ARM='7'
-            ;;
-        'aarch64')
-            MYCELIO_ARCH='arm64'
-            ;;
-        'x86')
-            MYCELIO_ARCH='386' MYCELIO_386='softfloat'
-            ;;
-        'ppc64le')
-            MYCELIO_ARCH='ppc64le'
-            ;;
-        's390x')
-            MYCELIO_ARCH='s390x'
-            ;;
-        *)
-            echo >&2 "[mycelio] ERROR: Unsupported architecture '$_arch_name'"
-            exit 1
-            ;;
+    'x86_64')
+        MYCELIO_ARCH='amd64'
+        ;;
+    'arm64')
+        MYCELIO_ARCH='arm64'
+        ;;
+    'armhf')
+        MYCELIO_ARCH='arm' MYCELIO_ARM='6'
+        ;;
+    'armv7')
+        MYCELIO_ARCH='arm' MYCELIO_ARM='7'
+        ;;
+    'armv7l')
+        # Raspberry PI
+        MYCELIO_ARCH='arm' MYCELIO_ARM='7'
+        ;;
+    'aarch64')
+        MYCELIO_ARCH='arm64'
+        ;;
+    'x86')
+        MYCELIO_ARCH='386' MYCELIO_386='softfloat'
+        ;;
+    'ppc64le')
+        MYCELIO_ARCH='ppc64le'
+        ;;
+    's390x')
+        MYCELIO_ARCH='s390x'
+        ;;
+    *)
+        echo >&2 "[mycelio] ERROR: Unsupported architecture '$_arch_name'"
+        exit 1
+        ;;
     esac
 
     export MYCELIO_ARCH MYCELIO_386 MYCELIO_ARM
 
     MYCELIO_OS="$(uname -s)"
     case "${MYCELIO_OS}" in
-        Linux*)
-            MYCELIO_OS='linux'
-            ;;
-        Darwin*)
-            MYCELIO_OS='darwin'
-            ;;
-        CYGWIN* | MINGW* | MSYS*)
-            MYCELIO_OS='windows'
-            ;;
+    Linux*)
+        MYCELIO_OS='linux'
+        ;;
+    Darwin*)
+        MYCELIO_OS='darwin'
+        ;;
+    CYGWIN* | MINGW* | MSYS*)
+        MYCELIO_OS='windows'
+        ;;
     esac
     export MYCELIO_OS
 
@@ -2035,32 +2035,32 @@ function _parse_arguments() {
         key="$1"
 
         case $key in
-            -c | --clean)
-                export MYCELIO_ARG_CLEAN=1
-                shift # past argument
-                ;;
-            -d | --debug)
-                export MYCELIO_ARG_DEBUG=1
-                shift # past argument
-                ;;
-            -f | --force)
-                export MYCELIO_ARG_FORCE=1
-                shift # past argument
-                ;;
-            -y | --yes)
-                # Equivalent to the apt-get "assume yes" of '-y'
-                export MYCELIO_INTERACTIVE=0
-                shift # past argument
-                ;;
-            -h | --home)
-                export MYCELIO_HOME="$2"
-                shift # past argument
-                shift # past value
-                ;;
-            *)                     # unknown option
-                POSITIONAL+=("$1") # save it in an array for later
-                shift              # past argument
-                ;;
+        -c | --clean)
+            export MYCELIO_ARG_CLEAN=1
+            shift # past argument
+            ;;
+        -d | --debug)
+            export MYCELIO_ARG_DEBUG=1
+            shift # past argument
+            ;;
+        -f | --force)
+            export MYCELIO_ARG_FORCE=1
+            shift # past argument
+            ;;
+        -y | --yes)
+            # Equivalent to the apt-get "assume yes" of '-y'
+            export MYCELIO_INTERACTIVE=0
+            shift # past argument
+            ;;
+        -h | --home)
+            export MYCELIO_HOME="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        *)                     # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift              # past argument
+            ;;
         esac
     done
 }
