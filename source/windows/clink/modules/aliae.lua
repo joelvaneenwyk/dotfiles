@@ -5,6 +5,7 @@
 --
 
 local file = io.popen('aliae init cmd')
+local result = nil
 if file ~= nil then
     local qresult = file:read('*a')
     local ok = file:close()
