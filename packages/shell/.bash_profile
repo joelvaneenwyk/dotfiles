@@ -9,7 +9,7 @@
 #
 
 if [ -n "${BASH_VERSION:-}" ] && [ -f "${HOME:-}/.bashrc" ]; then
-    # shellcheck source=packages/shell/.bashrc
+    # shellcheck disable=SC1091
     . "${HOME}/.bashrc"
 else
     echo "Failed to load both '.profile' and '.bashrc' files."
