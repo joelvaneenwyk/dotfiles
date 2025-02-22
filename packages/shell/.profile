@@ -19,7 +19,7 @@ _log_info() {
 }
 
 _log_warning() {
-    echo "WARNING: $@"
+    echo "WARNING: $*"
 }
 
 #
@@ -467,7 +467,7 @@ _get_profile_root() {
     _windows_root="$(_get_windows_root)"
     _cmd="$_windows_root/Windows/System32/cmd.exe"
 
-    if [ -x "$(command -v wslpath)" -a -x "$(command -v wslvar)" ]; then
+    if [ -x "$(command -v wslpath)" ] && [ -x "$(command -v wslvar)" ]; then
         _user_profile="$(wslpath "$(wslvar USERPROFILE)" 2>&1)"
     fi
 
@@ -551,8 +551,7 @@ initialize_profile() {
         IFS="$(printf '\n ')"
         IFS="${IFS% }"
 
-        # shellcheck disable=SC2013
-        for _line in $(grep -v '^#.*' "$dotenv" || ""); do
+        for _line in $(grep -v '^#.*' "$dotenv" || true); do
             if [ -n "${_line:-}" ]; then
                 eval "export $_line" >/dev/null 2>&1 || true
             fi
@@ -614,7 +613,7 @@ initialize_profile() {
 
     # Make sure that USER is defined because some scripts (e.g. Oh My Posh) expect
     # the variable to be defined.
-    export USER=${USER:-"$(whoami)"}
+    export USER="${USER:-"$(whoami)"}"
 
     # Define a default for this as it is used by Oh My Posh and we do not want an
     # error due to undefined access.
@@ -649,7 +648,7 @@ initialize_profile() {
 
     # Add 'dot' (current directory) to list of inputs which is required on some versions
     # of Tex on some operating systems.
-    export TEXINPUTS=.:${TEXINPUTS:-}
+    export TEXINPUTS=".:${TEXINPUTS:-}"
 
     if [ "${MSYSTEM:-}" = "MSYS" ]; then
         _add_path "prepend" "/usr/bin"
@@ -686,6 +685,7 @@ initialize_profile() {
     _add_path "append" "$HOME/.config/git-fuzzy/bin"
 
     if [ -f "${HOME:-}/.cargo/env" ]; then
+        # shellcheck disable=SC1091
         . "$HOME/.cargo/env"
     fi
 
@@ -704,6 +704,7 @@ initialize_profile() {
 
 initialize() {
     if [ -f "$HOME/.fig/shell/profile.pre.bash" ]; then
+        # shellcheck disable=SC1091
         . "$HOME/.fig/shell/profile.pre.bash"
     fi
 
@@ -727,6 +728,7 @@ initialize() {
     export MYCELIO_PROFILE_INITIALIZED=1
 
     if [ -f "$HOME/.fig/shell/profile.post.bash" ]; then
+        # shellcheck disable=SC1091
         . "$HOME/.fig/shell/profile.post.bash"
     fi
 }
