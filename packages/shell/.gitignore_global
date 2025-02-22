@@ -2,6 +2,10 @@
 # mycelio | gitignore_global
 #
 
+/.git/
 .DS_Store
 node_modules/
+secrets/
 yarn-error.log
+mise.toml
+.env
