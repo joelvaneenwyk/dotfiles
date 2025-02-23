@@ -1,0 +1,68 @@
+#!/usr/bin/env sh
+
+# Usage: git get-branch <feature_branch>
+# 
+# 1) From your current branch (say 'main' or 'develop'), create a new
+#    temporary branch from <feature_branch> called <feature_branch>_<target>.
+# 2) Merge the current branch into the temporary branch so it’s up to date.
+# 3) Check out your original branch again and forcibly overwrite your local
+#    working copy with the content from the temporary branch.
+#
+# Result: your working copy (on the original branch) matches what's in
+# <feature_branch>, plus any merges from your original branch that 
+# were made in the temporary branch—but with *no* merge commit on your 
+# original branch.
+
+feature_branch="$1"
+
+if [ -z "$feature_branch" ]; then
+  echo "Usage: git get-branch <feature_branch>"
+  exit 1
+fi
+
+# Identify the branch you're currently on.
+target_branch="$(git rev-parse --abbrev-ref HEAD)"
+
+if [ "$target_branch" = "$feature_branch" ]; then
+  echo "Error: You’re already on '$feature_branch'. Switch to a different branch first."
+  exit 1
+fi
+
+# Construct a temporary branch name, e.g.: "feature/cool_stuff_main"
+tmp_branch="${feature_branch}_${target_branch}"
+
+echo ">> Creating/updating temporary branch '$tmp_branch' from '$feature_branch'..."
+
+# Switch to the feature branch (freshly).
+git checkout "$feature_branch" || exit 1
+
+# If the tmp_branch already exists, remove it to ensure a clean start.
+if git rev-parse --verify "$tmp_branch" >/dev/null 2>&1; then
+  echo ">> Temporary branch '$tmp_branch' already exists. Deleting it..."
+  git branch -D "$tmp_branch" || exit 1
+fi
+
+# Create the temporary branch from the feature branch
+git checkout -b "$tmp_branch" || exit 1
+
+echo ">> Merging '$target_branch' into '$tmp_branch' to bring it up to date..."
+if ! git merge "$target_branch"; then
+  echo
+  echo "Merge conflict merging '$target_branch' into '$tmp_branch'."
+  echo "Please resolve conflicts, commit the result, and run this script again."
+  exit 1
+fi
+
+echo ">> Switching back to '$target_branch'..."
+git checkout "$target_branch" || exit 1
+
+echo ">> Overwriting local files on '$target_branch' with content from '$tmp_branch'..."
+# This forcibly copies the content from $tmp_branch into your working tree
+# on the target branch. It does NOT create any merge commit.
+git checkout "$tmp_branch" -- .
+
+echo
+echo "Done!"
+echo "Your working copy on '$target_branch' now matches '$tmp_branch',"
+echo "which is an up-to-date version of '$feature_branch'. No merge commit"
+echo "was created on '$target_branch'. Review and commit these changes if desired."
