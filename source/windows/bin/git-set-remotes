@@ -1,0 +1,172 @@
+#!/bin/sh
+#
+# update_fork_remotes.sh
+#
+# A POSIX-compliant script to automatically set the "origin" remote
+# to your fork and the "upstream" remote to the parent repository,
+# if this repository is indeed a fork on GitHub.
+#
+# Default: Uses SSH remotes.
+# Pass `--https` or `-h` as an argument to use HTTPS remotes instead.
+#
+# Requires:
+#   - GitHub CLI: https://cli.github.com
+#   - git in PATH
+#
+# Usage:
+#   1. cd into your local repository directory.
+#   2. ./update_fork_remotes.sh [--https|-h]
+#
+# Exit codes:
+#   0  -> Success
+#   1  -> Not a git repository or GH CLI missing
+#   2  -> Current repo is not a fork
+#   3  -> Failed to retrieve or parse repo info
+#   4  -> Git operations failed
+
+set -u  # Treat unset variables as errors
+set -e  # Exit on command errors
+
+###############################################################################
+# Helper function to log messages
+###############################################################################
+
+log_info() {
+  echo "[INFO] $*"
+}
+
+log_error() {
+  echo "[ERROR] $*" >&2
+}
+
+git_run() {
+    log_info "##[cmd] \`git $*\`"
+    git "$@"
+}
+
+###############################################################################
+# Step 0: Parse arguments (decide between SSH and HTTPS)
+###############################################################################
+
+USE_SSH="true"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --https|-h)
+      USE_SSH="false"
+      shift
+      ;;
+    *)
+      # Ignore unknown arguments or add your own handling
+      shift
+      ;;
+  esac
+done
+
+###############################################################################
+# Step 1: Ensure we have both 'git' and 'gh' commands
+###############################################################################
+if ! command -v git >/dev/null 2>&1; then
+  log_error "git is not installed or not in PATH."
+  exit 1
+fi
+
+if ! command -v gh >/dev/null 2>&1; then
+  log_error "GitHub CLI (gh) is not installed or not in PATH."
+  exit 1
+fi
+
+###############################################################################
+# Step 2: Validate we're inside a Git repository
+###############################################################################
+if ! git_run rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  log_error "This is not a git repository. Please run this script inside a repo."
+  exit 1
+fi
+
+###############################################################################
+# Step 3: Retrieve repository info via gh
+# We query for:
+#   - nameWithOwner: the full name of the current repo/fork
+#   - isFork: a boolean flag indicating if this repo is a fork
+#   - parent: object containing info about the parent repo (if a fork)
+###############################################################################
+REPO_INFO_JSON="$(gh repo view --json nameWithOwner,isFork,parent || true)"
+if [ -z "$REPO_INFO_JSON" ]; then
+  log_error "Failed to retrieve repository information via gh."
+  exit 3
+fi
+echo "$REPO_INFO_JSON"
+
+# Check if the repository is a fork by looking for "isFork": true
+IS_FORK="$(printf '%s\n' "$REPO_INFO_JSON" | grep '"isFork":true' || true)"
+if [ -z "$IS_FORK" ]; then
+  log_error "Repository is not a fork. Nothing to update."
+  exit 2
+fi
+
+# Extract the 'nameWithOwner' of the current fork
+CURRENT_FORK="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"nameWithOwner":"\([^"]*\)".*/\1/p')"
+
+# Extract the parent's 'name' from the "parent" object
+PARENT_REPO_NAME="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"parent":{[^}]*"name":"\([^"]*\)".*/\1/p')"
+PARENT_REPO_OWNER="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"owner":{[^}]*"login":"\([^"]*\)".*/\1/p')"
+PARENT_REPO="$PARENT_REPO_OWNER/$PARENT_REPO_NAME"
+
+if [ -z "$CURRENT_FORK" ] || [ -z "$PARENT_REPO" ]; then
+  log_error "Could not parse fork or parent info properly."
+  exit 3
+fi
+
+log_info "Detected that '$CURRENT_FORK' is a fork of '$PARENT_REPO'."
+
+###############################################################################
+# Step 4: Determine remote URLs (default SSH, optional HTTPS)
+###############################################################################
+if [ "$USE_SSH" = "true" ]; then
+  log_info "Using SSH remotes..."
+  FORK_URL="git@github.com:$CURRENT_FORK.git"
+  PARENT_URL="git@github.com:$PARENT_REPO.git"
+else
+  log_info "Using HTTPS remotes..."
+  FORK_URL="https://github.com/$CURRENT_FORK.git"
+  PARENT_URL="https://github.com/$PARENT_REPO.git"
+fi
+
+log_info "Setting 'origin' to your fork and 'upstream' to the parent..."
+
+###############################################################################
+# Step 5: Repoint or add 'origin' to the user's fork and 'upstream' to the parent
+###############################################################################
+# Update or create origin
+if git_run remote get-url origin >/dev/null 2>&1; then
+  log_info "Updating existing 'origin' remote..."
+  git_run remote set-url origin "$FORK_URL" || {
+    log_error "Failed to set URL for origin."
+    exit 4
+  }
+else
+  log_info "Adding 'origin' remote..."
+  git_run remote add origin "$FORK_URL" || {
+    log_error "Failed to add origin remote."
+    exit 4
+  }
+fi
+
+# Update or create upstream
+if git_run remote get-url upstream >/dev/null 2>&1; then
+  log_info "Updating existing 'upstream' remote..."
+  git_run remote set-url upstream "$PARENT_URL" || {
+    log_error "Failed to set URL for upstream."
+    exit 4
+  }
+else
+  log_info "Adding 'upstream' remote..."
+  git_run remote add upstream "$PARENT_URL" || {
+    log_error "Failed to add upstream remote."
+    exit 4
+  }
+fi
+
+git_run fetch upstream
+log_info "Remotes updated successfully!"
