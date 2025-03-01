@@ -84,6 +84,14 @@ if ! git_run rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
+CURRENT_FORK=""
+PARENT_REPO=""
+# Get the current GitHub account from gh auth status
+CURRENT_USER=$(gh auth status 2>&1 | grep -o "account.*(" | cut -d' ' -f2)
+if [ -z "$CURRENT_USER" ]; then
+    CURRENT_USER="$(gh api user --jq '.login')"
+fi
+
 ###############################################################################
 # Step 3: Retrieve repository info via gh
 # We query for:
@@ -91,7 +99,9 @@ fi
 #   - isFork: a boolean flag indicating if this repo is a fork
 #   - parent: object containing info about the parent repo (if a fork)
 ###############################################################################
-REPO_INFO_JSON="$(gh repo view --json nameWithOwner,isFork,parent || true)"
+REPO_NAME="$(basename "$(git rev-parse --show-toplevel)")"
+echo "gh api repos/${CURRENT_USER}/${REPO_NAME} --jq '{nameWithOwner,isFork,parent}'"
+REPO_INFO_JSON="$(gh api repos/${CURRENT_USER}/${REPO_NAME} --jq '{fork,full_name,owner: .owner.login, name: .name, parent: {name: .parent.name, owner: .parent.owner.login}}')"
 if [ -z "$REPO_INFO_JSON" ]; then
   log_error "Failed to retrieve repository information via gh."
   exit 3
@@ -99,18 +109,18 @@ fi
 echo "$REPO_INFO_JSON"
 
 # Check if the repository is a fork by looking for "isFork": true
-IS_FORK="$(printf '%s\n' "$REPO_INFO_JSON" | grep '"isFork":true' || true)"
+IS_FORK="$(printf '%s\n' "$REPO_INFO_JSON" | grep '"fork":true' || true)"
 if [ -z "$IS_FORK" ]; then
   log_error "Repository is not a fork. Nothing to update."
   exit 2
 fi
 
 # Extract the 'nameWithOwner' of the current fork
-CURRENT_FORK="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"nameWithOwner":"\([^"]*\)".*/\1/p')"
+CURRENT_FORK="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"full_name":"\([^"]*\)".*/\1/p')"
 
 # Extract the parent's 'name' from the "parent" object
 PARENT_REPO_NAME="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"parent":{[^}]*"name":"\([^"]*\)".*/\1/p')"
-PARENT_REPO_OWNER="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"owner":{[^}]*"login":"\([^"]*\)".*/\1/p')"
+PARENT_REPO_OWNER="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"parent":{[^}]*"owner":"\([^"]*\)".*/\1/p')"
 PARENT_REPO="$PARENT_REPO_OWNER/$PARENT_REPO_NAME"
 
 if [ -z "$CURRENT_FORK" ] || [ -z "$PARENT_REPO" ]; then
