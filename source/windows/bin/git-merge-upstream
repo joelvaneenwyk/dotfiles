@@ -212,7 +212,7 @@ if [ -z "$DEFAULT_BRANCH" ]; then
 fi
 
 log_info "Merging upstream/$DEFAULT_BRANCH into $CURRENT_BRANCH..."
-if ! git_exec_mutating merge "upstream/$DEFAULT_BRANCH"; then
+if ! git_exec_mutating merge --no-ff "upstream/$DEFAULT_BRANCH" -m "Merge upstream/$DEFAULT_BRANCH into $CURRENT_BRANCH"; then
     log_error "Merge failed. You may have conflicts that need to be resolved manually."
     exit 4
 fi
