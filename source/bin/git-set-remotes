@@ -110,25 +110,25 @@ echo "$REPO_INFO_JSON"
 
 # Check if the repository is a fork by looking for "isFork": true
 IS_FORK="$(printf '%s\n' "$REPO_INFO_JSON" | grep '"fork":true' || true)"
-if [ -z "$IS_FORK" ]; then
-  log_error "Repository is not a fork. Nothing to update."
-  exit 2
+if [ -n "$IS_FORK" ]; then
+    # Extract the 'nameWithOwner' of the current fork
+    CURRENT_FORK="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"full_name":"\([^"]*\)".*/\1/p')"
+
+    # Extract the parent's 'name' from the "parent" object
+    PARENT_REPO_NAME="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"parent":{[^}]*"name":"\([^"]*\)".*/\1/p')"
+    PARENT_REPO_OWNER="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"parent":{[^}]*"owner":"\([^"]*\)".*/\1/p')"
+    PARENT_REPO="$PARENT_REPO_OWNER/$PARENT_REPO_NAME"
+
+    if [ -z "$CURRENT_FORK" ] || [ -z "$PARENT_REPO" ]; then
+    log_error "Could not parse fork or parent info properly."
+    exit 3
+    fi
+
+    log_info "Detected that '$CURRENT_FORK' is a fork of '$PARENT_REPO'."
+else
+    CURRENT_FORK="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"full_name":"\([^"]*\)".*/\1/p')"
+    PARENT_REPO="$CURRENT_FORK"
 fi
-
-# Extract the 'nameWithOwner' of the current fork
-CURRENT_FORK="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"full_name":"\([^"]*\)".*/\1/p')"
-
-# Extract the parent's 'name' from the "parent" object
-PARENT_REPO_NAME="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"parent":{[^}]*"name":"\([^"]*\)".*/\1/p')"
-PARENT_REPO_OWNER="$(printf '%s\n' "$REPO_INFO_JSON" | sed -n 's/.*"parent":{[^}]*"owner":"\([^"]*\)".*/\1/p')"
-PARENT_REPO="$PARENT_REPO_OWNER/$PARENT_REPO_NAME"
-
-if [ -z "$CURRENT_FORK" ] || [ -z "$PARENT_REPO" ]; then
-  log_error "Could not parse fork or parent info properly."
-  exit 3
-fi
-
-log_info "Detected that '$CURRENT_FORK' is a fork of '$PARENT_REPO'."
 
 ###############################################################################
 # Step 4: Determine remote URLs (default SSH, optional HTTPS)
