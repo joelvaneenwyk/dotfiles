@@ -7,4 +7,8 @@ actionlint = "latest"
 act = "latest"
 npm = "10"
 node = "22"
-perl = "latest"
+
+# Error: 
+#   0: failed to install aqua:skaji/relocatable-perl@5.40.1.0
+#   1: unsupported env: windows/amd64
+# perl = "latest"
