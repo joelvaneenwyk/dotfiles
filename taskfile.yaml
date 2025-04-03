@@ -5,16 +5,20 @@ version: "3"
 
 tasks:
   default:
+    deps: [init]
     cmds:
       - cmd: |
           cargo install --git https://github.com/joelvaneenwyk/mise --locked
       - cmd: |
           mise install
       - cmd: |
+          corepack install
+      - cmd: |
           yarn install
       - task: start
 
   start:
+    desc: Initiate environment setup
     cmds:
       - cmd: |
           cmd.exe /D /E:ON /C "{{ joinPath .TASKFILE_DIR "setup.bat" }}"
@@ -24,6 +28,7 @@ tasks:
         platforms: [linux, darwin]
 
   build:
+    desc: Build the docker image
     vars:
       DOCKERFILE: "{{ .TASKFILE_DIR }}/source/docker/Dockerfile.ubuntu"
       DOCKER_CONTEXT: "{{ .TASKFILE_DIR }}"
@@ -40,17 +45,10 @@ tasks:
           docker build "{{ join .ARGS " "}}"
 
   init:
+    desc: Initialize the environment
     cmds:
       - cmd: git submodule update --init --recursive
       - cmd: git fetch --all
-      - cmd: proto uninstall --yes yarn
-      - cmd: proto uninstall --yes node
-      - cmd: proto uninstall --yes npm
-      - cmd: proto use
-      - cmd: corepack install
-      - cmd: corepack enable
-        ignore_error: true
-      - cmd: yarn install
 
   lint:
     cmds:
@@ -94,6 +92,7 @@ tasks:
       - task: git-clean
 
   test:
+    desc: Run Lua tests
     vars:
       LUA_CHECK: "{{ env.HOME }}/scoop/shims/luacheck.exe"
       BUSTED: "{{ env.HOME }}/scoop/shims/busted.exe"
@@ -103,7 +102,8 @@ tasks:
       - cmd: "{{.BUSTED}} ."
         ignore_error: true
 
-  delete:  
+  delete:
+    desc: Delete a directory
     vars:
       RUN_WINDOWS: "cmd /D /E:ON /C"
       RUN_UNIX: "sh -c"
