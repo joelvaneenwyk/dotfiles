@@ -1,10 +1,17 @@
 # https://taskfile.dev
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
 
 version: "3"
 
 tasks:
   default:
     cmds:
+      - cmd: |
+          cargo install --git https://github.com/joelvaneenwyk/mise --locked
+      - cmd: |
+          mise install
+      - cmd: |
+          yarn install
       - task: start
 
   start:
@@ -20,17 +27,17 @@ tasks:
     vars:
       DOCKERFILE: "{{ .TASKFILE_DIR }}/source/docker/Dockerfile.ubuntu"
       DOCKER_CONTEXT: "{{ .TASKFILE_DIR }}"
+      ARGS: [
+        -f,
+        "{{ fromSlash .DOCKERFILE }}",
+        '--pull',
+        '{{if .CLI_FORCE}}--force-rm{{end}}',
+        '{{ .CLI_ARGS }}',
+        '{{ fromSlash .DOCKER_CONTEXT }}'
+      ]
     cmds:
-      - cmd: >-
+      - cmd: |
           docker build "{{ join .ARGS " "}}"
-        vars:
-          ARGS: 
-            - -f
-            - "{{ fromSlash .DOCKERFILE }}"
-            - '--pull'
-            - '{{if .CLI_FORCE}}--force-rm{{end}}'
-            - {{ .CLI_ARGS }}
-            - {{ fromSlash .DOCKER_CONTEXT }}
 
   init:
     cmds:
