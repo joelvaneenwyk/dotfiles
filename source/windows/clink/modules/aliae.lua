@@ -10,7 +10,6 @@ aliae_path = potential_path
 
 local command = '\"' .. aliae_path .. '\"' .. ' init cmd'
 logger.info('##[cmd] ' .. command)
-load(io.popen(command):read("*a"))()
 
 local file = io.popen(command)
 local result = nil
