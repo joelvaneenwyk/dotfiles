@@ -14,3 +14,5 @@ if [ -n "${BASH_VERSION:-}" ] && [ -f "${HOME:-}/.bashrc" ]; then
 else
     echo "Failed to load both '.profile' and '.bashrc' files."
 fi
+
+. "$HOME/.local/bin/env"
