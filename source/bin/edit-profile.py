@@ -27,18 +27,22 @@ DEBOUNCE_MS: int = 300  # close‑delay to reduce flicker
 import psutil
 
 
-def find_window_handle(process_id: int) -> int:
-    """Find the window handle (HWND) for the given process ID, window title, and process name.
-    If not all criteria are met, try to find the best match and warn. Raise if no reasonable match is found.
-    """
-    found_info = []
-    best_match = None
-    best_score = 0
+def find_window_handle(process_id: int, window_title:str =WINDOW_TITLE) -> int:
+    """Enumerate all windows for the process and its subprocesses, score them, and return the best match."""
+    # Gather all relevant pids: process and all descendants
+    try:
+        root_proc = psutil.Process(process_id)
+        all_pids = {process_id}
+        all_pids.update(p.pid for p in root_proc.children(recursive=True))
+    except Exception as e:
+        logging.warning(f"Could not enumerate subprocesses for pid={process_id}: {e}")
+        all_pids = {process_id}
+
+    windows = []
 
     def enum_callback(handle: int, _: int) -> None:
         if not win32gui.IsWindowVisible(handle):
             return
-
         _, pid = win32process.GetWindowThreadProcessId(handle)
         title = win32gui.GetWindowText(handle)
         try:
@@ -47,53 +51,60 @@ def find_window_handle(process_id: int) -> int:
         except Exception:
             proc_name = None
         score = 0
-        if pid == process_id:
+        if pid in all_pids:
             score += 1
-        if WINDOW_TITLE in title:
+        if window_title in title:
             score += 1
         if proc_name and proc_name.lower() == "cmd.exe":
             score += 1
-        found_info.append((handle, pid, title, proc_name, score))
+        windows.append({
+            "handle": handle,
+            "pid": pid,
+            "title": title,
+            "proc_name": proc_name,
+            "score": score,
+        })
         logging.debug(
             f"Window: hwnd={handle}, pid={pid}, title='{title}', proc_name={proc_name}, score={score}"
         )
-        nonlocal best_match, best_score
-        if score > best_score:
-            best_match = (handle, pid, title, proc_name, score)
-            best_score = score
 
     win32gui.EnumWindows(enum_callback, 0)
 
-    if best_match and best_score == 3:
-        hwnd = best_match[0]
-        left, top, width, height = get_window_rect(hwnd)
-        logging.info(
-            f"Selected window: hwnd={hwnd}, pid={process_id}, title='{best_match[2]}', proc_name={best_match[3]}, rect=({left},{top},{width},{height})"
-        )
-        return hwnd
-    elif best_match and best_score >= 2:
-        hwnd, pid, title, proc_name, score = best_match
-        left, top, width, height = get_window_rect(hwnd)
-        missing = []
-        if pid != process_id:
-            missing.append(f"pid (expected {process_id}, got {pid})")
-        if WINDOW_TITLE not in title:
-            missing.append(
-                f"title (expected to contain '{WINDOW_TITLE}', got '{title}')"
+    # Sort windows by score (descending), then by handle for stability
+    windows.sort(key=lambda w: (w["score"], w["handle"]), reverse=True)
+
+    if windows:
+        top = windows[0]
+        hwnd = top["handle"]
+        left, top_, width, height = get_window_rect(hwnd)
+        if top["score"] == 3:
+            logging.info(
+                f"Selected window: hwnd={hwnd}, pid={top['pid']}, title='{top['title']}', proc_name={top['proc_name']}, rect=({left},{top_},{width},{height})"
             )
-        if not (proc_name and proc_name.lower() == "cmd.exe"):
-            missing.append(f"proc_name (expected 'cmd.exe', got '{proc_name}')")
-        logging.warning(
-            f"Selected window with partial match (score={score}/3, missing: {', '.join(missing)}): hwnd={hwnd}, pid={pid}, title='{title}', proc_name={proc_name}, rect=({left},{top},{width},{height})"
-        )
+        else:
+            missing = []
+            if top["pid"] not in all_pids:
+                missing.append(f"pid (expected one of {all_pids}, got {top['pid']})")
+            if window_title not in top["title"]:
+                missing.append(
+                    f"title (expected to contain '{window_title}', got '{top['title']}')"
+                )
+            if not (top["proc_name"] and top["proc_name"].lower() == "cmd.exe"):
+                missing.append(
+                    f"proc_name (expected 'cmd.exe', got '{top['proc_name']}')"
+                )
+            logging.warning(
+                f"Selected window with partial match (score={top['score']}/3, missing: {', '.join(missing)}): hwnd={hwnd}, pid={top['pid']}, title='{top['title']}', proc_name={top['proc_name']}, rect=({left},{top_},{width},{height})"
+            )
         return hwnd
+
     # If not found, raise with details
     error_lines = [
-        f"Could not find window for pid={process_id} with title containing '{WINDOW_TITLE}' and process name 'cmd.exe'. Windows found:",
+        f"Could not find window for pid={process_id} (and subprocesses) with title containing '{window_title}' and process name 'cmd.exe'. Windows found:",
     ]
-    for handle, pid, title, proc_name, score in found_info:
+    for w in windows:
         error_lines.append(
-            f"  hwnd={handle}, pid={pid}, title='{title}', proc_name={proc_name}, score={score}"
+            f"  hwnd={w['handle']}, pid={w['pid']}, title='{w['title']}', proc_name={w['proc_name']}, score={w['score']}"
         )
     if len(error_lines) == 1:
         error_lines.append("  (No windows found)")
