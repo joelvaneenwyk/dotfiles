@@ -1,43 +1,42 @@
-# OS Differences
+# Windows Platform Differences
 
-Good summary of differences: <https://stackoverflow.com/a/10712976>
+> See <https://stackoverflow.com/a/10712976> for a good summary of differences.
 
-Cygwin is a library that endeavours to make UNIX programs able to compile and
-run on Windows systems with minimal or no modifications, and a comprehensive set
-of packaged UNIX tools and applications compiled with this library. It is almost
-a complete wrapper around Windows. It includes an X server and an awful lot of
-the programs that you can expect to find in a Linux distribution. It is great
-for people who want to learn or use the UNIX command line in Windows.
+**Cygwin** is a library and environment that enables UNIX programs to compile and run on Windows systems with minimal or no modifications. It provides a comprehensive set of UNIX tools and applications, including an X server, and is almost a complete wrapper around Windows. Cygwin is great for people who want to use or learn the UNIX command line in Windows, or need a full POSIX-like environment.
 
-MSYS is mostly a port of the UNIX tools necessary to build GNU style packages
-(with a configure etc) on Windows systems with the MinGW compiler. It uses a
-variant of the Cygwin library modified to sacrifice some compatibility for
-efficiency, and is more Windows-friendly.
+**MSYS** is a lightweight environment mainly intended to provide the UNIX tools necessary to build GNU-style packages (with `configure`, `make`, etc.) on Windows, typically with the MinGW compiler. It uses a variant of the Cygwin library, modified for efficiency and better Windows integration, but sacrifices some compatibility. MSYS is more Windows-friendly and is often used as a build environment rather than a full UNIX shell.
 
-GnuWin32 is simply a port of some of the GNU tools to Windows. Like MSYS, it
-uses `msvcrt.dll`, as well as an additional library to provide some UNIX
-compatibility functions. Its main purpose appears to be to allow Windows
-programs and batch files to use some of the GNU programs and libraries directly.
+**GnuWin32** is a collection of individual GNU tools ported to Windows. Like MSYS, it uses `msvcrt.dll` and an additional library for UNIX compatibility functions. Its main purpose is to allow Windows programs and batch files to use some GNU programs and libraries directly. GnuWin32 is best for users who just need a few UNIX utilities in their Windows environment, not a full shell or POSIX environment.
 
-For the most part, they all provide UNIX programs on Windows, but there are many
-subtle differences, including:
+For the most part, all three provide UNIX programs on Windows, but there are many subtle differences, including:
 
 ## Intent
 
-- Cygwin is for people who want to use UNIX on their Windows OS.
-- MSYS is for people who want to build Windows programs using the GNU/UNIX build
-  tools. GnuWin32 is a port of individual GNU programs and libraries to Windows.
+- **Cygwin**: For people who want to use UNIX on their Windows OS, or need a full POSIX-like environment.
+- **MSYS**: For people who want to build Windows programs using GNU/UNIX build tools (with MinGW). Not intended as a full UNIX shell.
+- **GnuWin32**: For people who want a few GNU programs and libraries on Windows, not a full environment.
 
 ## Line Endings
 
-Cygwin lets you use CR/LF or LF. MSYS expects LF line endings. GnuWin32 programs
-expect CR/LF line endings.
+- **Cygwin**: Supports both CR/LF and LF line endings.
+- **MSYS**: Expects LF line endings.
+- **GnuWin32**: Expects CR/LF line endings.
 
 ## Supplied Programs
 
-In particular, Cygwin has a lot more packages, and GnuWin32 doesn't provide any
-shells.
+- **Cygwin**: Offers a large number of packages, including shells and development tools.
+- **MSYS**: Provides a minimal set of tools needed for building software.
+- **GnuWin32**: Does not provide any shells; just individual utilities.
 
-As for git, it is available with Cygwin - this version can be used in a Windows
-directory (accessible under `/cygdrive`). Also, as mentioned, there is
-`msysgit`.
+## Notes on Git
+
+- Git is available with Cygwin and can be used in Windows directories (accessible under `/cygdrive`).
+- There is also `msysgit`, which is a version of Git for Windows based on MSYS.
+
+## Additional Notes
+
+- **Cygwin** is suitable for users who want a full UNIX-like environment on Windows, or need to run complex POSIX software.
+- **MSYS** is best for developers who need a minimal UNIX-like environment to build native Windows programs.
+- **GnuWin32** is best for users who just want a few UNIX utilities in their Windows PATH.
+
+All three projects are less actively maintained than in the past, and for many use cases, [WSL (Windows Subsystem for Linux)](https://docs.microsoft.com/en-us/windows/wsl/) is now the preferred way to run Linux tools on Windows.
