@@ -4,6 +4,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+import psutil
 
 import win32con
 import win32gui
@@ -15,16 +16,12 @@ from watchdog.observers import Observer
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 # ── config ─────────────────────────────────────────────
-# ── config ─────────────────────────────────────────────
 ROOT: Path = Path(__file__).resolve().parent.parent
 SCRIPT: Path = (ROOT / "windows" / "bin" / "profile.bat").resolve()
 WINDOW_TITLE: str = "DEV-LOOP"  # unique window title
 CMD_ARGS: list[str] = ["cmd.exe", "/d", "/k", f"echo hi & call {SCRIPT} & echo done"]
 DEBOUNCE_MS: int = 300  # close‑delay to reduce flicker
 # ───────────────────────────────────────────────────────
-
-
-import psutil
 
 
 def find_window_handle(process_id: int, window_title:str =WINDOW_TITLE) -> int:
