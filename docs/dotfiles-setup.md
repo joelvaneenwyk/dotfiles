@@ -10,11 +10,13 @@ This guide will help you set up your development environment on a new machine us
    - Download from [git-scm.com](https://git-scm.com/download/win)
 2. **Clone the dotfiles repository**
    - Open Command Prompt or PowerShell:
+
      ```powershell
      git clone -c core.symlinks=true --recursive https://github.com/joelvaneenwyk/dotfiles.git "%USERPROFILE%\.dotfiles"
      cd $env:USERPROFILE\.dotfiles
      .\init
      ```
+
 3. **(Optional) Set up GPG for commit signing**
    - Download and install [Gpg4win - Kleopatra](https://www.gpg4win.org/index.html)
    - Import your secret key from a secure location (e.g., cloud storage)
@@ -30,11 +32,13 @@ This guide will help you set up your development environment on a new machine us
 1. **Install Git** (if not already installed)
    - Run `git --version` in Terminal. If missing, install via [Homebrew](https://brew.sh/) or Xcode Command Line Tools.
 2. **Clone the dotfiles repository**
+
    ```bash
    git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git
    cd ~/dotfiles
    ./init-osx.sh
    ```
+
 3. **(Optional) Install Homebrew**
    - [Homebrew](https://brew.sh/) is recommended for managing packages on macOS.
 4. **(Optional) Set up GPG for commit signing**
@@ -49,19 +53,25 @@ This guide will help you set up your development environment on a new machine us
      - `sudo apt-get install git` (Debian/Ubuntu)
      - `sudo pacman -S git` (Arch)
 2. **Clone the dotfiles repository**
+
    ```bash
    git -C "$HOME" clone --recursive https://github.com/joelvaneenwyk/dotfiles.git
    cd ~/dotfiles
    ```
+
 3. **Install bash settings**
+
    ```bash
    stow --adopt bash
    sudo stow bash -t /root
    ```
+
 4. **(Optional) Install Xmonad configs**
+
    ```bash
    stow xmonad
    ```
+
 5. **(Optional) Set up GPG for commit signing**
    - Install `gpg` via your package manager and import your key.
 
