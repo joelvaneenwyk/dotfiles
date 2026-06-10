@@ -1,0 +1,41 @@
+site_name: dotfiles
+site_description: Custom config files (dotfiles) for Linux, macOS, and Windows
+site_url: https://joelvaneenwyk.github.io/dotfiles/
+repo_url: https://github.com/joelvaneenwyk/dotfiles
+repo_name: joelvaneenwyk/dotfiles
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Setup: dotfiles-setup.md
+  - Platforms: platform.md
+  - GNU Stow: gnu-stow-overview.md
+  - Home Directory: home-overview.md
+  - WSL: wsl.md
+  - Docker Troubleshooting: docker-troubleshooting.md
+  - Troubleshooting: dotfiles-troubleshooting.md
+  - Roadmap: dotfiles-roadmap.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
