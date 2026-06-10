@@ -15,4 +15,7 @@ else
     echo "Failed to load both '.profile' and '.bashrc' files."
 fi
 
-. "$HOME/.local/bin/env"
+if [ -f "$HOME/.local/bin/env" ]; then
+    # shellcheck disable=SC1091
+    . "$HOME/.local/bin/env"
+fi
