@@ -22,11 +22,11 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - uses: joelvaneenwyk/gh-actions-lua@main
+      - uses: leafo/gh-actions-lua@v11
         with:
           luaVersion: "5.2.4"
 
-      - uses: joelvaneenwyk/gh-actions-luarocks@main
+      - uses: leafo/gh-actions-luarocks@v5
 
       - name: Install dependencies
         run: |
