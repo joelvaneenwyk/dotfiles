@@ -14,14 +14,19 @@ Each installed distribution has its own executable (e.g., `ubuntu.exe`, `debian.
 ```cmd
 <DistributionName> config --default-user <Username>
 ```
+
 Example for Ubuntu:
+
 ```cmd
 ubuntu config --default-user myusername
 ```
+
 If the distribution executable is not in your PATH, you can find it in:
+
 ```
 C:\Users\<YourUser>\AppData\Local\Microsoft\WindowsApps\
 ```
+
 Look for files like `Ubuntu.exe`, `Debian.exe`, etc.
 
 ### 2. Using wsl.conf (Recommended for Persistent Settings)
@@ -32,11 +37,15 @@ You can set the default user in the `/etc/wsl.conf` file inside your Linux distr
 [user]
 default = myusername
 ```
+
 After editing `/etc/wsl.conf`, restart your distribution for changes to take effect. You can do this with:
+
 ```powershell
 wsl --shutdown
 ```
+
 or to terminate just one distribution:
+
 ```powershell
 wsl --terminate <DistroName>
 ```
@@ -44,17 +53,23 @@ wsl --terminate <DistroName>
 ## Additional Modern WSL Tips
 
 - **Check running distributions:**
+
   ```powershell
   wsl --list --running
   ```
+
 - **Restart all WSL instances:**
+
   ```powershell
   wsl --shutdown
   ```
+
 - **Find your installed distributions:**
+
   ```powershell
   wsl --list --verbose
   ```
+
 - **Edit global WSL settings:**
   Create or edit `%UserProfile%\.wslconfig` for global settings (memory, CPUs, etc.).
 
