@@ -1968,8 +1968,8 @@ function _setup_environment() {
         MYCELIO_ARCH='s390x'
         ;;
     *)
-        echo >&2 "[mycelio] ERROR: Unsupported architecture '$_arch_name'"
-        exit 1
+        echo >&2 "[mycelio] WARNING: Unknown architecture '$_arch_name', defaulting to amd64"
+        MYCELIO_ARCH='amd64'
         ;;
     esac
 

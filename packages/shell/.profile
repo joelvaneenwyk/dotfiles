@@ -693,6 +693,46 @@ initialize_profile() {
         _add_path "prepend" "$HOME/.proto/shims"
     fi
 
+    # GitHub CLI (gh) - common install locations on macOS via Homebrew
+    if [ -d "/opt/homebrew/bin" ]; then
+        _add_path "prepend" "/opt/homebrew/bin"
+    fi
+
+    # mise (formerly rtx) - development tool version manager
+    if [ -f "$HOME/.local/bin/mise" ]; then
+        if [ -n "${BASH_VERSION:-}" ]; then
+            eval "$("$HOME/.local/bin/mise" activate bash 2>/dev/null)" || true
+        elif [ -n "${ZSH_VERSION:-}" ]; then
+            eval "$("$HOME/.local/bin/mise" activate zsh 2>/dev/null)" || true
+        else
+            eval "$("$HOME/.local/bin/mise" activate 2>/dev/null)" || true
+        fi
+    elif [ -x "$(command -v mise)" ]; then
+        if [ -n "${BASH_VERSION:-}" ]; then
+            eval "$(mise activate bash 2>/dev/null)" || true
+        elif [ -n "${ZSH_VERSION:-}" ]; then
+            eval "$(mise activate zsh 2>/dev/null)" || true
+        else
+            eval "$(mise activate 2>/dev/null)" || true
+        fi
+    fi
+
+    # aliae - cross-shell alias management
+    if [ -x "$(command -v aliae)" ]; then
+        if [ -n "${BASH_VERSION:-}" ]; then
+            eval "$(aliae init bash 2>/dev/null)" || true
+        elif [ -n "${ZSH_VERSION:-}" ]; then
+            eval "$(aliae init zsh 2>/dev/null)" || true
+        else
+            eval "$(aliae init sh 2>/dev/null)" || true
+        fi
+    fi
+
+    # GitHub Copilot CLI aliases (gh copilot)
+    if [ -x "$(command -v gh)" ]; then
+        eval "$(gh copilot alias -- bash 2>/dev/null)" || true
+    fi
+
     _log_debug "Added paths to environment."
 
     # Clear out TMP as TEMP may come from Windows and we do not want tools confused
