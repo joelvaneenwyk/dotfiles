@@ -121,3 +121,6 @@ texput.log
 /out.*
 
 *.omp.json.bak
+
+# mkdocs build output
+site/
