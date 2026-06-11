@@ -1,33 +1,31 @@
 --
--- Clink parsers for Mycelio dotfiles project
+-- Clink integration for mise (runtime version manager)
 --
 -- https://mise.jdx.dev/
 --
 
-local mise_path = "mise"
-local debug_path = "E:\\source\\github.com\\joelvaneenwyk\\mise\\target\\debug\\mise.exe"
-local appdata_path = os.getenv("USERPROFILE") .. "\\AppData\\Local\\Programs\\mise\\bin\\mise.exe"
+local t = mycelio_timer_start()
 
-if os.rename(debug_path, debug_path) then
-    mise_path = debug_path
-elseif os.rename(appdata_path, appdata_path) then
-    mise_path = appdata_path
-else
-    mise_path = "mise"
+local mise_path = os.getenv("MISE_PATH")
+if not mise_path then
+    local appdata_path = os.getenv("USERPROFILE") .. "\\AppData\\Local\\Programs\\mise\\bin\\mise.exe"
+    if os.isfile(appdata_path) then
+        mise_path = appdata_path
+    end
 end
 
-local command = '\"' .. mise_path .. '\"' .. ' activate cmd'
-logger.info('##[cmd] ' .. command)
+if not mise_path or not os.isfile(mise_path) then
+    logger.warning('mise not found')
+    return nil
+end
 
-local file = io.popen(command)
-local result = nil
-if file ~= nil then
-    result = file:read('*a')
+local result = mycelio_cached_init("mise", mise_path, "activate cmd")
+if result and #result > 0 then
     load(result)()
-    file:close()
     logger.info('Initialized mise.')
 else
     logger.warning('Failed to setup mise')
 end
 
+mycelio_timer_stop("mise", t)
 return result

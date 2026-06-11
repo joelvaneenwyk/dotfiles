@@ -1,25 +1,25 @@
 --
--- Clink parsers for Mycelio dotfiles project
+-- Clink integration for aliae (shell alias manager)
 --
 -- https://aliae.dev/docs/
 --
 
-local aliae_path = "aliae"
-local potential_path = os.getenv("USERPROFILE") .. "\\AppData\\Local\\Programs\\aliae\\bin\\aliae.exe"
-aliae_path = potential_path
+local t = mycelio_timer_start()
 
-local command = '\"' .. aliae_path .. '\"' .. ' init cmd'
-logger.info('##[cmd] ' .. command)
+local aliae_path = os.getenv("USERPROFILE") .. "\\AppData\\Local\\Programs\\aliae\\bin\\aliae.exe"
 
-local file = io.popen(command)
-local result = nil
-if file ~= nil then
-    result = file:read('*a')
+if not os.isfile(aliae_path) then
+    logger.warning('aliae not found: ' .. aliae_path)
+    return nil
+end
+
+local result = mycelio_cached_init("aliae", aliae_path, "init cmd")
+if result and #result > 0 then
     load(result)()
-    file:close()
     logger.info('Initialized aliae.')
 else
     logger.warning('Failed to setup aliae')
 end
 
+mycelio_timer_stop("aliae", t)
 return result

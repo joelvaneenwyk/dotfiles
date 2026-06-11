@@ -2,6 +2,8 @@
 --
 -- Settings copied from 'zoxide init'. Run `clink set` to modify these options, e.g. `clink set zoxide.cmd f`
 --
+-- luacheck: globals mycelio_timer_start mycelio_timer_stop
+local _zoxide_start = mycelio_timer_start()
 
 -- luacheck: globals ZOXIDE_PATH logger zoxide_cmd __zoxide_hook __zoxide_cd __zoxide_query __zoxide_add
 -- luacheck: globals __zoxide_z __zoxide_zi onfilterinput zoxide_no_aliases args
@@ -211,3 +213,5 @@ end
 --
 -- To initalize zoxide, add this script to one of clink's lua script locations (e.g. zoxide.lua)
 -- (see https://chrisant996.github.io/clink/clink.html#location-of-lua-scripts)
+
+mycelio_timer_stop("zoxide", _zoxide_start)
