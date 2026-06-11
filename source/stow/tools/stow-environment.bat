@@ -74,7 +74,7 @@ setlocal EnableExtensions EnableDelayedExpansion
         goto:$InitializeEnvironment
     )
 
-    call :StorePerlOutput "STOW_PERL_VERSION" -e "print substr($^^V, 1)"
+    call :StorePerlOutput "STOW_PERL_VERSION" -MConfig -e "print $Config{version}"
     if not "%ERRORLEVEL%"=="0" (
         echo [ERROR] Perl executable invalid: "!STOW_PERL!"
         set STOW_PERL=
@@ -83,7 +83,8 @@ setlocal EnableExtensions EnableDelayedExpansion
 
     call :GetDirectoryPath "PERL_BIN_DIR" "!STOW_PERL!"
     call :GetDirectoryPath "STOW_PERL_ROOT" "!PERL_BIN_DIR!\..\..\DISTRIBUTIONS.txt"
-    call :StorePerlOutput "STOW_PERL_HASH" -MDigest::SHA1"=sha1_hex" -le "print substr^(^(sha1_hex $ARGV[1]^), 0, 8^)" "!STOW_PERL!"
+    call :StorePerlOutput "STOW_PERL_HASH" -MDigest::SHA"=sha1_hex" -le "print substr^(^(sha1_hex $ARGV[1]^), 0, 8^)" "!STOW_PERL!"
+    if "!STOW_PERL_HASH!"=="" set "STOW_PERL_HASH=default"
 
     set "STOW_PERL_LOCAL_LIB=!STOW_LOCAL_BUILD_ROOT!\perllib\windows\!STOW_PERL_VERSION!.!STOW_PERL_HASH!"
     if not exist "!STOW_PERL_LOCAL_LIB!" mkdir "!STOW_PERL_LOCAL_LIB!"
@@ -114,18 +115,26 @@ setlocal EnableExtensions EnableDelayedExpansion
     if "!STOW_PERL_UNIX!"=="" set STOW_PERL_UNIX=/bin/perl
 
     echo ::group::Initialize CPAN
-    (
-        echo yes && echo. && echo no && echo exit
-    ) | "!STOW_PERL!" %STOW_PERL_ARGS% "%STOW_ROOT%\tools\initialize-cpan-config.pl"
+    "!STOW_PERL!" %STOW_PERL_ARGS% -MCPAN -le 1 > nul 2>&1
+    if errorlevel 1 (
+        echo WARNING: CPAN module not fully available, skipping CPAN configuration.
+    ) else (
+        (
+            echo yes && echo. && echo no && echo exit
+        ) | "!STOW_PERL!" %STOW_PERL_ARGS% "%STOW_ROOT%\tools\initialize-cpan-config.pl"
+    )
     echo ::endgroup::
 
     :: Get current version of Stow using Perl helper utility
     call :StorePerlOutput "STOW_VERSION" "%STOW_ROOT%\tools\get-version"
 
+    "!STOW_PERL!" %STOW_PERL_ARGS% -MCPAN -le 1 > nul 2>&1
+    if errorlevel 1 goto:$SkipPerlLib
     call :StorePerlOutput "PERL_LIB" -MCPAN -e "use Config; print $Config{privlib};"
     if exist "!PERL_LIB!" (
         set "PERL_CPAN_CONFIG=%PERL_LIB%\CPAN\Config.pm"
     )
+    :$SkipPerlLib
 
     set _cpanm=!PERL_BIN_DIR!\cpanm.bat
     if not exist "!_cpanm!" goto:$InitializeEnvironment
@@ -244,7 +253,14 @@ exit /b %errorlevel%
         goto:$GetPerlArgs
         :$ExecutePerlCommand
 
-        set "_cmd="%STOW_PERL%" -I "!STOW_PERL_LOCAL_LIB_UNIX!/lib/perl5" -Mlocal::lib^="%STOW_PERL_LOCAL_LIB_UNIX%""
+        :: Build perl command - only use local::lib if the path is set and the module is available
+        set "_cmd="%STOW_PERL%""
+        if "!STOW_PERL_LOCAL_LIB_UNIX!"=="" goto:$StorePerlOutputRun
+        set "_cmd="%STOW_PERL%" -I "!STOW_PERL_LOCAL_LIB_UNIX!/lib/perl5""
+        "%STOW_PERL%" -I "!STOW_PERL_LOCAL_LIB_UNIX!/lib/perl5" -Mlocal::lib -le 1 > nul 2>&1
+        if errorlevel 1 goto:$StorePerlOutputRun
+        set "_cmd="%STOW_PERL%" -I "!STOW_PERL_LOCAL_LIB_UNIX!/lib/perl5" -Mlocal::lib^="!STOW_PERL_LOCAL_LIB_UNIX!""
+        :$StorePerlOutputRun
 
         if "%GITHUB_ACTIONS%"=="" (
             echo ^=^=----------------------

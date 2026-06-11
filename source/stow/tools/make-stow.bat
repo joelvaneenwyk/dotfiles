@@ -70,12 +70,20 @@ call :ReplaceVariables "%STOW_ROOT%\lib\Stow.pm"
 :: Append ignore list to the end of the Stow library
 type "%STOW_ROOT%\default-ignore-list" >>"%STOW_ROOT%\lib\Stow.pm"
 
-call :Run "%PERL_BIN_DIR%\pod2man.bat" --name stow --section 8 "%STOW_ROOT%\bin\stow" >"%STOW_ROOT%\doc\stow.8"
-if not "!ERRORLEVEL!"=="0" (
-    set _return_code=!ERRORLEVEL!
-    goto:$MakeEnd
+:: Generate man page - pod2man may not be available with all Perl distributions
+if not exist "%STOW_ROOT%\doc" mkdir "%STOW_ROOT%\doc"
+set "_pod2man_return=0"
+if exist "%PERL_BIN_DIR%\pod2man.bat" (
+    call :Run "%PERL_BIN_DIR%\pod2man.bat" --name stow --section 8 "%STOW_ROOT%\bin\stow" >"%STOW_ROOT%\doc\stow.8"
+    set "_pod2man_return=!ERRORLEVEL!"
+    if "!_pod2man_return!"=="0" (
+        echo Created 'stow.8' with 'pod2man' Perl script.
+    ) else (
+        echo WARNING: pod2man failed, skipping man page generation.
+    )
+) else (
+    echo WARNING: pod2man not found in "%PERL_BIN_DIR%", skipping man page generation.
 )
-echo Created 'stow.8' with 'pod2man' Perl script.
 
 :: Remove all intermediate files before running Stow for the first time
 rmdir /q /s "%STOW_ROOT%\_Inline\" > nul 2>&1
@@ -83,12 +91,14 @@ rmdir /q /s "%STOW_ROOT%\bin\_Inline\" > nul 2>&1
 rmdir /q /s "%STOW_ROOT%\tools\_Inline\" > nul 2>&1
 
 set _cpanm=%PERL_BIN_DIR%\cpanm.bat
+set _cpanm_return=0
 if exist "%_cpanm%" (
     cd /d "%STOW_ROOT%"
     call "%PERL_BIN_DIR%\cpanm.bat" --installdeps --notest .
+    set _cpanm_return=!ERRORLEVEL!
 )
-if not "!ERRORLEVEL!"=="0" (
-    set _return_code=!ERRORLEVEL!
+if not "!_cpanm_return!"=="0" (
+    set _return_code=!_cpanm_return!
     goto:$MakeEnd
 )
 
@@ -107,11 +117,19 @@ call :CreateVersionTexi
 call :MakeDocs
 
 :: Exeute 'Build.PL' to generate build scripts: 'Build' and 'Build.bat'
-cd /d "%STOW_ROOT%"
-call :Run "%STOW_PERL%" %STOW_PERL_ARGS% -I "%STOW_ROOT%\lib" -I "%STOW_ROOT%\bin" "%STOW_ROOT%\Build.PL"
-if not "!ERRORLEVEL!"=="0" (
-    set _return_code=!ERRORLEVEL!
-    goto:$MakeEnd
+set _has_module_build=0
+call :Run "%STOW_PERL%" %STOW_PERL_ARGS% -MModule::Build -e "exit 0"
+if "!ERRORLEVEL!"=="0" set _has_module_build=1
+
+if "!_has_module_build!"=="1" (
+    cd /d "%STOW_ROOT%"
+    call :Run "%STOW_PERL%" %STOW_PERL_ARGS% -I "%STOW_ROOT%\lib" -I "%STOW_ROOT%\bin" "%STOW_ROOT%\Build.PL"
+    if not "!ERRORLEVEL!"=="0" (
+        set _return_code=!ERRORLEVEL!
+        goto:$MakeEnd
+    )
+) else (
+    echo WARNING: Module::Build not installed, skipping Build.PL generation.
 )
 
 :$MakeEnd
@@ -184,7 +202,7 @@ exit /b
     set "MSYSTEM=MSYS"
     set "MSYS2_PATH_TYPE=inherit"
     set "HOME=%STOW_HOME%"
-    set "PATH=%PERL_BIN_C_DIR%;%WIN_UNIX_DIR%\usr\bin;%WIN_UNIX_DIR%\bin;%STOW_LOCAL_BUILD_ROOT%\texlive\bin\win32;%WIN_UNIX_DIR%\usr\bin\core_perl;%WIN_UNIX_DIR%\mingw32\bin"
+    set "PATH=%PERL_BIN_C_DIR%;%WIN_UNIX_DIR%\usr\bin;%WIN_UNIX_DIR%\bin;%STOW_LOCAL_BUILD_ROOT%\texlive\bin\windows;%STOW_LOCAL_BUILD_ROOT%\texlive\bin\win32;%WIN_UNIX_DIR%\usr\bin\core_perl;%WIN_UNIX_DIR%\mingw32\bin"
 
     :: Important that we set both 'Perl' versions here
     set "PERL=%STOW_PERL_UNIX%"
@@ -223,9 +241,17 @@ exit /b
     call :Run %BASH% "make bin/stow bin/chkstow lib/Stow.pm lib/Stow/Util.pm"
     if not "!ERRORLEVEL!"=="0" exit /b
 
+    set _has_pdfetex=0
+    call :Run %BASH% "command -v pdfetex > /dev/null 2>&1"
+    if "!ERRORLEVEL!"=="0" set _has_pdfetex=1
+
     if not exist "%STOW_ROOT%\doc\manual.pdf" (
-        call :Run %BASH% "make doc/manual.pdf"
-        if not "!ERRORLEVEL!"=="0" exit /b
+        if "!_has_pdfetex!"=="1" (
+            call :Run %BASH% "make doc/manual.pdf"
+            if not "!ERRORLEVEL!"=="0" exit /b
+        ) else (
+            echo WARNING: Skipping manual.pdf generation because pdfetex is not available.
+        )
     )
 
     echo ----------------------------------------
