@@ -4,6 +4,7 @@
 -- https://aliae.dev/docs/
 --
 
+-- luacheck: globals logger mycelio_cached_init mycelio_timer_start mycelio_timer_stop
 local t = mycelio_timer_start()
 
 local aliae_path = os.getenv("USERPROFILE") .. "\\AppData\\Local\\Programs\\aliae\\bin\\aliae.exe"

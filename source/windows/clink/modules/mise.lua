@@ -4,6 +4,7 @@
 -- https://mise.jdx.dev/
 --
 
+-- luacheck: globals logger mycelio_cached_init mycelio_timer_start mycelio_timer_stop
 local t = mycelio_timer_start()
 
 local mise_path = os.getenv("MISE_PATH")

@@ -254,7 +254,9 @@ local function load_modules()
                 end
             end
 
-            logger.info("Deferred load complete: completions=" .. completions_ms .. "ms, gizmos=" .. gizmos_ms .. "ms" .. boot_info)
+            local msg = "Deferred load complete: completions=" .. completions_ms ..
+                "ms, gizmos=" .. gizmos_ms .. "ms" .. boot_info
+            logger.info(msg)
         end)
         _profile_timings["completions"] = "deferred"
         _profile_timings["gizmos"] = "deferred"
