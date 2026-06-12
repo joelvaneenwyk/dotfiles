@@ -36,7 +36,13 @@ endlocal & (
     ) else (
         echo [command]%*
     )
+    echo [mycelio] ADMIN: Requesting elevation for: %*
     call sudo %*
+    if "%ERRORLEVEL%"=="0" (
+        echo [mycelio] ADMIN: Elevation succeeded for: %*
+    ) else (
+        echo [mycelio] ADMIN: Elevation failed ^(code: %ERRORLEVEL%^) for: %*
+    )
 endlocal & (
     set "MSYS_SHELL=%MSYS_SHELL%"
     set "PATH=%PATH%"
@@ -100,6 +106,7 @@ endlocal & (
     :: By changing character page we prevent parent console from changing
     :: font, see https://superuser.com/a/1548564
     if exist "C:\Windows\System32\chcp.com" call "C:\Windows\System32\chcp.com" 437 > nul
+    echo [mycelio] ADMIN: Elevating PowerShell for: %*
     call :RunSudo !_powershell! -NoLogo -NoProfile %*
 endlocal & (
     set "MSYS_SHELL=%MSYS_SHELL%"
@@ -145,10 +152,20 @@ endlocal & exit /b %ERRORLEVEL%
 
     :$SystemDeploy
     :: Windows Nano Server does not include Robocopy so copy our local version
-    :: to the currently running server if it exists.
+    :: to the currently running server if it exists. This requires admin privileges.
     if not exist "C:\Windows\System32\%~1" (
-        copy /B /Y /V "%_deploy%\%~1" "C:\Windows\System32\%~1" > nul 2>&1
-        echo Deployed file to 'C:\Windows\System32\' path: '%~1'
+        call :IsAdmin
+        if not errorlevel 1 (
+            echo [mycelio] ADMIN: Deploying missing system file '%~1' to System32 ^(container/Nano Server^).
+            copy /B /Y /V "%_deploy%\%~1" "C:\Windows\System32\%~1" > nul 2>&1
+            if "!ERRORLEVEL!"=="0" (
+                echo [mycelio] ADMIN: Successfully deployed '%~1' to System32.
+            ) else (
+                echo [mycelio] ADMIN: Failed to deploy '%~1' to System32.
+            )
+        ) else (
+            echo [mycelio] SKIP: '%~1' missing from System32 but no admin rights to deploy it.
+        )
     )
 endlocal & exit /b %ERRORLEVEL%
 
@@ -220,8 +237,10 @@ endlocal & exit /b %_check_return_value%
     if not defined HIVE (
         call :IsAdmin
         if not errorlevel 1 (       :# Admin user. All user install.
+            echo [mycelio] ADMIN: Already elevated, installing AutoRun for all users ^(HKLM^).
             set "HIVE=HKLM"
         ) else (                    :# Normal user. Current user install.
+            echo [mycelio] Installing AutoRun for current user only ^(HKCU^). Run as admin for all users.
             set "HIVE=HKCU"
         )
     )
@@ -322,7 +341,20 @@ setlocal EnableDelayedExpansion
     )
 
     call :RunPowerShell -Command "Set-ExecutionPolicy RemoteSigned -scope CurrentUser"
-    call :RunSudoPowerShell -Command "Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1"
+
+    :: Enable long paths - only if we already have admin rights (do NOT elevate for this)
+    call :IsAdmin
+    if not errorlevel 1 (
+        echo [mycelio] ADMIN: Enabling LongPathsEnabled in registry ^(already running elevated^).
+        call :RunPowerShell -Command "Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name 'LongPathsEnabled' -Value 1"
+        if "!ERRORLEVEL!"=="0" (
+            echo [mycelio] ADMIN: Successfully enabled LongPathsEnabled.
+        ) else (
+            echo [mycelio] ADMIN: Failed to set LongPathsEnabled. Non-fatal, continuing.
+        )
+    ) else (
+        echo [mycelio] SKIP: LongPathsEnabled requires admin privileges. Run setup.bat as Administrator to enable.
+    )
 
     call :Run "%_mycelio_root%\source\windows\bin\profile.bat"
     if not "!ERRORLEVEL!"=="0" (
