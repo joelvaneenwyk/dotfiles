@@ -217,6 +217,13 @@ local function load_modules()
     -- Defer completions and gizmos to after first prompt
     local completions_path = mycelio_root_dir .. "/source/windows/clink-completions/"
     local gizmos_path = mycelio_root_dir .. "/source/windows/clink-gizmos/"
+
+    -- Ensure arghelper and other shared modules are available for require()
+    local completions_modules = completions_path .. "modules/?.lua"
+    if not package.path:find(completions_modules, 1, true) then
+        package.path = completions_modules .. ";" .. package.path
+    end
+
     local deferred_loaded = false
 
     if clink.onbeginedit then
@@ -232,7 +239,22 @@ local function load_modules()
             add_modules(gizmos_path)
             local gizmos_ms = mycelio_timer_stop("gizmos", t)
 
-            logger.info("Deferred load complete: completions=" .. completions_ms .. "ms, gizmos=" .. gizmos_ms .. "ms")
+            -- Calculate total boot time from batch start
+            local boot_info = ""
+            local start_env = os.getenv("MYCELIO_START_TIME_MS")
+            local inject_env = os.getenv("MYCELIO_INJECT_TIME_MS")
+            if start_env and inject_env then
+                local start_ms = tonumber(start_env)
+                local inject_ms = tonumber(inject_env)
+                if start_ms and inject_ms then
+                    local batch_time = inject_ms - start_ms
+                    if batch_time < 0 then batch_time = batch_time + 86400000 end
+                    local total_boot = batch_time + math.floor(os.clock() * 1000 + 0.5)
+                    boot_info = ", total_boot=" .. total_boot .. "ms (batch=" .. batch_time .. "ms)"
+                end
+            end
+
+            logger.info("Deferred load complete: completions=" .. completions_ms .. "ms, gizmos=" .. gizmos_ms .. "ms" .. boot_info)
         end)
         _profile_timings["completions"] = "deferred"
         _profile_timings["gizmos"] = "deferred"
