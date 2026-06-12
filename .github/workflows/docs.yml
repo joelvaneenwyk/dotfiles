@@ -1,9 +1,14 @@
-name: Deploy Docs
+name: Deploy GitHub Pages
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: "pages"
@@ -12,33 +17,34 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.13"
+          cache: "pip"
 
       - name: Install dependencies
-        run: pip install mkdocs-material
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs mkdocs-material
 
       - name: Build docs
-        run: mkdocs build --strict
+        run: mkdocs build --strict --site-dir _site
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: _site
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
