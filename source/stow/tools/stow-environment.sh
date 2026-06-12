@@ -460,14 +460,22 @@ function install_perl_dependencies() {
         local::lib App::cpanminus Module::Build YAML Carp Scalar::Util IO::Scalar
     )
 
-    # Only add test modules if we are not running on Synology as some packages are not supported
-    if ! uname -a | grep -q "synology"; then
+    # Only add test modules if we are not running on Synology or MSYS2 as some packages
+    # (especially Devel::Cover which requires C compilation) are not well supported there.
+    if ! uname -a | grep -q "synology" && [ -z "${MSYSTEM:-}" ]; then
         modules+=(
             IO::Socket::SSL Net::SSLeay
             Moose TAP::Harness TAP::Harness::Env
             Test::Harness Test::More Test::Exception Test::Output
             Devel::Cover Devel::Cover::Report::Coveralls
             TAP::Formatter::JUnit
+        )
+    elif ! uname -a | grep -q "synology"; then
+        # On MSYS2, include test modules but skip Devel::Cover (requires C compiler
+        # toolchain that is often incomplete on MSYS2)
+        modules+=(
+            TAP::Harness TAP::Harness::Env
+            Test::Harness Test::More Test::Exception Test::Output
         )
     fi
 

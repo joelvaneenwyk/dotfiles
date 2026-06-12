@@ -420,10 +420,11 @@ endlocal & (
     set "MYCELIO_ERROR=%_error%"
     set "PATH=%PATH%"
     set "POWERSHELL=%_pwsh%"
-    if "%MYCELIO_ERROR%"=="0" (
+    if "%_error%"=="0" (
         echo Completed execution of `dotfiles` initialization.
     ) else (
-        echo Execution of `dotfiles` initialization failed. Error code: '%MYCELIO_ERROR%' 1>&2
+        echo Execution of `dotfiles` initialization failed. Error code: '%_error%' 1>&2
     )
-    exit /b %MYCELIO_ERROR%
+    echo Log: "%USERPROFILE%\.logs\mycelio.log"
+    exit /b %_error%
 )
