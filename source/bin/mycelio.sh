@@ -2108,6 +2108,14 @@ function _initialize_environment() {
     # Need to setup environment variables before anything else
     _setup_environment
 
+    # Create log file for this run
+    mkdir -p "$MYCELIO_HOME/.logs"
+    MYCELIO_LOG_PATH="$MYCELIO_HOME/.logs/mycelio.log"
+    export MYCELIO_LOG_PATH
+
+    # Tee all stdout and stderr to the log file so we have a complete record
+    exec > >(tee "$MYCELIO_LOG_PATH") 2>&1
+
     # Note below that we use 'whoami' since 'USER' variable is not set for
     # scheduled tasks on Synology.
 
@@ -2118,6 +2126,7 @@ function _initialize_environment() {
     echo "║           OS: '$MYCELIO_OS' ($MYCELIO_ARCH)"
     echo "║        Shell: '$MYCELIO_SHELL'"
     echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
+    echo "║          Log: '$MYCELIO_LOG_PATH'"
     echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
 
     # Make sure we have the appropriate permissions to write to home temporary folder

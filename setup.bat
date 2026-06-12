@@ -446,6 +446,9 @@ setlocal EnableDelayedExpansion
 
     :$InitializeDone
     cd /d "%_starting_directory%"
+
+    set "_log_file=%USERPROFILE%\.logs\mycelio.log"
+
 endlocal & (
     set "MYCELIO_ROOT=%_mycelio_root%"
     set "MYCELIO_PROFILE_INITIALIZED=%MYCELIO_PROFILE_INITIALIZED%"
@@ -457,6 +460,10 @@ endlocal & (
     ) else (
         echo Execution of `dotfiles` initialization failed. Error code: '%_error%' 1>&2
     )
-    echo Log: "%USERPROFILE%\.logs\mycelio.log"
+    if exist "%_log_file%" (
+        echo Log: "%_log_file%"
+    ) else (
+        echo Log: "%_log_file%" ^(not found - check MSYS2 setup completed successfully^)
+    )
     exit /b %_error%
 )
