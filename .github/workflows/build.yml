@@ -39,7 +39,7 @@ jobs:
           luacheck .
           busted .
 
-      - uses: codecov/codecov-action@v4.3.0
+      - uses: codecov/codecov-action@v7.0.0
 
   critical:
     needs: lua_check
