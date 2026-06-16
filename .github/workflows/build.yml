@@ -17,16 +17,16 @@ jobs:
     runs-on: ubuntu-latest
     name: Lua Code Check
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           submodules: recursive
 
-      - uses: leafo/gh-actions-lua@v11
+      - uses: leafo/gh-actions-lua@v13
         with:
           luaVersion: "5.2.4"
 
-      - uses: leafo/gh-actions-luarocks@v5
+      - uses: leafo/gh-actions-luarocks@v6
 
       - name: Install dependencies
         run: |
@@ -39,7 +39,7 @@ jobs:
           luacheck .
           busted .
 
-      - uses: codecov/codecov-action@v4.3.0
+      - uses: codecov/codecov-action@v7.0.0
 
   critical:
     needs: lua_check
@@ -50,7 +50,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # Get all history
           fetch-depth: 0
@@ -103,7 +103,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # Get all history
           fetch-depth: 0
