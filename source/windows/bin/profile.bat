@@ -182,6 +182,12 @@ setlocal
 exit /b %errorlevel%
 
 :$Main
+    REM Capture start time for profiling (centisecond precision from %time%)
+    REM Use 1%%x-100 trick to avoid octal interpretation of leading zeros (08, 09)
+    for /f "tokens=1-4 delims=:.," %%a in ("%time: =0%") do (
+        set /a "MYCELIO_START_TIME_MS=(1%%a-100)*3600000+(1%%b-100)*60000+(1%%c-100)*1000+(1%%d-100)*10"
+    )
+
     call :GetEnvironment
     call :PrintLogo
 
@@ -197,10 +203,21 @@ exit /b %errorlevel%
         call :SetupDosKey
 
     :$MainClinkSetup
-        %MYCELIO_ECHO% [mycelio] Run `help` to get list of commands.
+        setlocal EnableDelayedExpansion
+        for /f "tokens=1-4 delims=:.," %%a in ("!time: =0!") do (
+            set /a "_now_ms=(1%%a-100)*3600000+(1%%b-100)*60000+(1%%c-100)*1000+(1%%d-100)*10"
+        )
+        set /a "_elapsed=!_now_ms!-!MYCELIO_START_TIME_MS!"
+        !MYCELIO_ECHO! [mycelio] Initialized in !_elapsed!ms. Run `help` to get list of commands.
+        endlocal
 
         REM If we have already injected Clink then skip it
         if "%CLINK_INJECTED%"=="1" goto:$SkipClink
+
+        REM Capture time just before clink injection for boot profiling
+        for /f "tokens=1-4 delims=:.," %%a in ("%time: =0%") do (
+            set /a "MYCELIO_INJECT_TIME_MS=(1%%a-100)*3600000+(1%%b-100)*60000+(1%%c-100)*1000+(1%%d-100)*10"
+        )
 
         REM This must be the last operation we do.
         call clink inject --session "dot_mycelio" --profile "%MYCELIO_ROOT%\source\windows\clink" --quiet --nolog > nul 2>&1

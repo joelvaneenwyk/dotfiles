@@ -1,62 +1,60 @@
--- luacheck: globals logger
+--
+-- Clink integration for Oh My Posh (prompt theme engine)
+--
+-- https://ohmyposh.dev/
+--
+
+-- luacheck: globals logger mycelio_cached_init mycelio_timer_start mycelio_timer_stop
+local t = mycelio_timer_start()
+
 local function load_oh_my_posh(mycelio_root_dir)
     local home = os.getenv("HOME") or os.getenv("USERPROFILE")
     local mycelio_config = path.normalise(mycelio_root_dir .. "/packages/shell/.poshthemes/mycelio.omp.json")
-    local local_oh_my_posh_executable = ""
-    local loaded = false
-    local values = {
-        home .. "/AppData/Local/Programs/oh-my-posh/bin/oh-my-posh.exe", home .. "/.local/go/bin/oh-my-posh.exe",
+    local exe_path = nil
+    local candidates = {
+        home .. "/AppData/Local/Programs/oh-my-posh/bin/oh-my-posh.exe",
+        home .. "/.local/go/bin/oh-my-posh.exe",
         "C:\\Program Files (x86)\\oh-my-posh\\bin\\oh-my-posh.exe"
     }
 
-    for _, value in pairs(values) do
-        if os.isfile(local_oh_my_posh_executable) then
+    for _, candidate in ipairs(candidates) do
+        local normalized = path.normalise(candidate)
+        if os.isfile(normalized) then
+            exe_path = normalized
             break
-        else
-            if local_oh_my_posh_executable ~= "" then
-                logger.debug('Oh-My-Posh not here: ' .. local_oh_my_posh_executable)
-            end
-            local_oh_my_posh_executable = path.normalise(value)
         end
     end
 
-    if not os.isfile(local_oh_my_posh_executable) then
-        logger.error('Oh-My-Posh not found: ' .. local_oh_my_posh_executable)
+    if not exe_path then
+        logger.error('Oh-My-Posh not found')
+        return false
     end
 
     if not os.isfile(mycelio_config) then
         logger.error('Oh My Posh config missing: ' .. mycelio_config)
+        return false
     end
 
-    if os.isfile(local_oh_my_posh_executable) and os.isfile(mycelio_config) then
-        local omp = "\"" .. local_oh_my_posh_executable .. "\""
-        local version_process = io.popen(omp .. " --version")
-        local version = nil
+    local result = mycelio_cached_init(
+        "oh_my_posh",
+        exe_path,
+        "init cmd --config " .. mycelio_config,
+        { mycelio_config }
+    )
 
-        ---@diagnostic disable-next-line: undefined-field
-        if version_process ~= nil then
-            version = version_process:read("*a")
-        end
-
-        if version == nil then
-            logger.warning('Failed to get Oh-My-Posh version: ' .. omp)
-        else
-            local process = io.popen(omp .. " init cmd --config " .. mycelio_config)
-            if process ~= nil then
-                local command = process:read("*a")
-                load(command)()
-                logger.info('Initialized Oh-My-Posh: ' .. omp)
-            else
-                logger.warning('Oh-My-Posh init failed: ' .. omp)
-            end
-            loaded = true
-        end
+    if result and #result > 0 then
+        load(result)()
+        logger.info('Initialized Oh-My-Posh: "' .. exe_path .. '"')
+        return true
+    else
+        logger.warning('Oh-My-Posh init failed')
+        return false
     end
-
-    return loaded
 end
 
 ---@diagnostic disable-next-line: param-type-mismatch
 local script_dir = path.normalise(debug.getinfo(1, "S").source:match [[^@?(.*[\/])[^\/]-$]])
 local mycelio_root_dir = path.normalise(script_dir .. "../../../..")
 load_oh_my_posh(mycelio_root_dir)
+
+mycelio_timer_stop("oh_my_posh", t)

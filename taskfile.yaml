@@ -8,13 +8,13 @@ tasks:
     deps: [init]
     cmds:
       - cmd: |
-          cargo install --git https://github.com/joelvaneenwyk/mise --locked
+          cargo install --git https://github.com/joelvaneenwyk/mise --locked mise
       - cmd: |
           mise install
       - cmd: |
           corepack install
       - cmd: |
-          yarn install
+          corepack yarn install
       - task: start
 
   start:
@@ -52,7 +52,7 @@ tasks:
 
   lint:
     cmds:
-      - cmd: yarn lint
+      - cmd: corepack yarn lint
 
   git-clean:
     vars:

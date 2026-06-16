@@ -19,23 +19,46 @@
 use strict;
 use warnings;
 
-use File::Basename;
+use FindBin qw($RealBin);
+use File::Spec;
 
-my $dirname = dirname(__FILE__);
-my $configure = "$dirname/configure.ac";
+my @candidates = ();
 
-unless (-e "$configure") {
-  $configure = "$dirname/../configure.ac";
+if ( defined $ENV{STOW_ROOT} && $ENV{STOW_ROOT} ne '' ) {
+    push @candidates, File::Spec->catfile( $ENV{STOW_ROOT}, 'configure.ac' );
 }
 
-open(my $CONF, "<", "$configure")
-  or die "Failed to get Stow version.\nSearch path: '$configure'\nUnable to find 'configure.ac' file: '$!'";
+push @candidates,
+  File::Spec->catfile( $RealBin, 'configure.ac' ),
+  File::Spec->catfile( $RealBin, '..',   'configure.ac' ),
+  File::Spec->catfile( 'source', 'stow', 'configure.ac' ),
+  File::Spec->catfile( '..',     'configure.ac' ),
+  File::Spec->catfile( '.',      'configure.ac' );
 
-while (my $line = <$CONF>) {
-  if ($line =~ /^AC_INIT\(\[stow\], \[(.+?)\]/) {
-    print "$1\n";
-    exit 0;
-  }
+my $configure;
+for my $candidate (@candidates) {
+    if ( -e $candidate ) {
+        $configure = $candidate;
+        last;
+    }
+}
+
+my $searched_paths = join( "\n", map { "  - $_" } @candidates );
+
+unless ( defined $configure ) {
+    die
+"Failed to get Stow version.\nSearch paths:\n$searched_paths\nUnable to find 'configure.ac' file.";
+}
+
+open( my $CONF, "<", "$configure" )
+  or die
+"Failed to get Stow version.\nSearch path: '$configure'\nUnable to find 'configure.ac' file: '$!'";
+
+while ( my $line = <$CONF> ) {
+    if ( $line =~ /^AC_INIT\(\[stow\], \[(.+?)\]/ ) {
+        print "$1\n";
+        exit 0;
+    }
 }
 
 exit 1;

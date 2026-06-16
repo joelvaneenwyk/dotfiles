@@ -1639,23 +1639,39 @@ function install_packages() {
 function install_python() {
     if [ "$(whoami)" == "root" ] && uname -a | grep -q "synology"; then
         echo "Skipped Python setup for root user."
+    elif [ -x "$(command -v uv)" ]; then
+        # Use uv directly if available (avoids PEP 668 externally-managed-environment errors)
+        echo "Python (managed by uv): $(uv python find 2>/dev/null || echo 'default')"
+        run_command "python.uv.precommit" uv tool install pre-commit
+        echo "✔ Installed 'pre-commit' package via uv."
     elif [ -x "$(command -v python3)" ] && _python_version=$(python3 --version); then
         echo "$_python_version"
 
-        if ! python3 -m pip --version >/dev/null 2>&1; then
-            run_task "pip.get" get_file "$MYCELIO_TEMP/get-pip.py" "https://bootstrap.pypa.io/get-pip.py"
-            chmod a+x "$MYCELIO_TEMP/get-pip.py"
-            run_task "pip.install" python3 "$MYCELIO_TEMP/get-pip.py"
+        # Check if this Python is externally managed (PEP 668)
+        if python3 -c "import sysconfig; import os; exit(0 if os.path.isfile(os.path.join(sysconfig.get_path('stdlib'), 'EXTERNALLY-MANAGED')) else 1)" 2>/dev/null; then
+            # Python is externally managed (e.g., by uv), use pipx or uv tool
+            if [ -x "$(command -v pipx)" ]; then
+                run_command "python.pipx.precommit" pipx install pre-commit
+                echo "✔ Installed 'pre-commit' package via pipx."
+            else
+                echo "⚠ Python is externally managed and no pipx/uv available. Skipping pip installs."
+            fi
+        else
+            if ! python3 -m pip --version >/dev/null 2>&1; then
+                run_task "pip.get" get_file "$MYCELIO_TEMP/get-pip.py" "https://bootstrap.pypa.io/get-pip.py"
+                chmod a+x "$MYCELIO_TEMP/get-pip.py"
+                run_task "pip.install" python3 "$MYCELIO_TEMP/get-pip.py"
+            fi
+
+            run_command "python.pip.upgrade" python3 -m pip install --user --upgrade pip
+
+            # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
+            # consistency between platforms and not install hacks we just use 'pip3' instead. For
+            # details on the issue, see https://github.com/microsoft/WSL/issues/5126
+            run_command "python.pip.precommit" python3 -m pip install --user pre-commit
+
+            echo "✔ Upgraded 'pip3' and installed 'pre-commit' package."
         fi
-
-        run_command "python.pip.upgrade" python3 -m pip install --user --upgrade pip
-
-        # Could install with 'snapd' but there are issues with 'snapd' on WSL so to maintain
-        # consistency between platforms and not install hacks we just use 'pip3' instead. For
-        # details on the issue, see https://github.com/microsoft/WSL/issues/5126
-        run_command "python.pip.precommit" python3 -m pip install --user pre-commit
-
-        echo "✔ Upgraded 'pip3' and installed 'pre-commit' package."
     else
         log_error "Missing or invalid Python 3 install: $(command -v python3)"
     fi
@@ -2092,6 +2108,14 @@ function _initialize_environment() {
     # Need to setup environment variables before anything else
     _setup_environment
 
+    # Create log file for this run
+    mkdir -p "$MYCELIO_HOME/.logs"
+    MYCELIO_LOG_PATH="$MYCELIO_HOME/.logs/mycelio.log"
+    export MYCELIO_LOG_PATH
+
+    # Tee all stdout and stderr to the log file so we have a complete record
+    exec > >(tee "$MYCELIO_LOG_PATH") 2>&1
+
     # Note below that we use 'whoami' since 'USER' variable is not set for
     # scheduled tasks on Synology.
 
@@ -2102,6 +2126,7 @@ function _initialize_environment() {
     echo "║           OS: '$MYCELIO_OS' ($MYCELIO_ARCH)"
     echo "║        Shell: '$MYCELIO_SHELL'"
     echo "║  Debug Trace: '$MYCELIO_DEBUG_TRACE_FILE'"
+    echo "║          Log: '$MYCELIO_LOG_PATH'"
     echo "╚▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄"
 
     # Make sure we have the appropriate permissions to write to home temporary folder

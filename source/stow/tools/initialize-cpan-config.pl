@@ -67,7 +67,23 @@ sub initialize_config {
     #   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #   at -e line 1
     #   make: *** [pure_site_install] Error 13
-    $config->edit(make_install_make_command => "sudo " . normalize_path($CPAN::Config->{make_install_make_command}));
+    #
+    # On MSYS2/Windows we skip sudo to avoid admin elevation popups and instead
+    # configure CPAN to install to a user-local directory.
+    my $make_cmd = normalize_path($CPAN::Config->{make_install_make_command});
+    if ($ENV{MSYSTEM} || $^O eq 'msys' || $^O eq 'MSWin32' || $^O eq 'cygwin') {
+        $config->edit(make_install_make_command => $make_cmd);
+
+        # Configure install paths to a user-local directory to avoid needing elevated permissions
+        my $local_lib = $ENV{STOW_PERL_LOCAL_LIB} || $ENV{PERL_LOCAL_LIB_ROOT};
+        if ($local_lib) {
+            $local_lib = normalize_path($local_lib);
+            $config->edit(makepl_arg => "INSTALL_BASE=$local_lib");
+            $config->edit(mbuildpl_arg => "--install_base $local_lib");
+        }
+    } else {
+        $config->edit(make_install_make_command => "sudo " . $make_cmd);
+    }
 }
 
 initialize_config

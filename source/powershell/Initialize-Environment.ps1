@@ -20,8 +20,8 @@
 .OUTPUTS
     Whether or not the command exists and can be executed.
 #>
-Function Test-CommandValid {
-    Param ($command)
+function Test-CommandValid {
+    param ($command)
 
     $oldPreference = $ErrorActionPreference
 
@@ -43,7 +43,7 @@ Function Test-CommandValid {
     return $IsValid
 }
 
-Function AddSymbolicLinkPermissions($accountToAdd) {
+function AddSymbolicLinkPermissions($accountToAdd) {
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     if (-not ($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))) {
         Write-Host 'Unable to add symbolic link privileges. Please run as administrator.'
@@ -121,7 +121,7 @@ SECreateSymbolicLinkPrivilege = $($currentSetting)
     }
 }
 
-Function Expand-File {
+function Expand-File {
     <#
 .SYNOPSIS
     Extract an archive using 7zip if available otherwise use built-in utilities.
@@ -134,7 +134,7 @@ Function Expand-File {
 .EXAMPLE
     C:\PS> Get-File -Name "mynuget.exe" -Url https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
     #>
-    Param(
+    param(
         [Parameter(Position = 0, mandatory = $true)]
         [string]$DestinationPath,
         [string]$Path = ''
@@ -179,56 +179,56 @@ Function Expand-File {
 
         # If older vresion is available, download and extract latest
         if (Test-Path -Path "$7za920/7za.exe" -PathType Leaf) {
-            $7z2201zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath '7z2201-extra.7z'
-            $7z2201 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath '7z2201'
+            $7z2601zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath '7z2601-extra.7z'
+            $7z2601 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath '7z2601'
 
             # Download latest version of 7zip
-            if (-not(Test-Path -Path "$7z2201zip" -PathType Leaf)) {
-                Get-File -Url 'https://www.7-zip.org/a/7z2201-extra.7z' -Filename "$7z2201zip"
+            if (-not(Test-Path -Path "$7z2601zip" -PathType Leaf)) {
+                Get-File -Url 'https://github.com/ip7z/7zip/releases/download/26.01/7z2601-extra.7z' -Filename "$7z2601zip"
             }
 
             # Extract latest vesrion using old version
-            if (Test-Path -Path "$7z2201zip" -PathType Leaf) {
-                if ( -not(Test-Path -Path "$7z2201") ) {
-                    New-Item -ItemType directory -Path "$7z2201" | Out-Null
+            if (Test-Path -Path "$7z2601zip" -PathType Leaf) {
+                if ( -not(Test-Path -Path "$7z2601") ) {
+                    New-Item -ItemType directory -Path "$7z2601" | Out-Null
                 }
 
-                if (-not(Test-Path -Path "$7z2201/7za.exe" -PathType Leaf)) {
-                    Write-Host "$7za920/7za.exe x $7z2201zip -aoa -o$7z2201 -r -y"
+                if (-not(Test-Path -Path "$7z2601/7za.exe" -PathType Leaf)) {
+                    Write-Host "$7za920/7za.exe x $7z2601zip -aoa -o$7z2601 -r -y"
                     & "$7za920/7za.exe" @(
-                        'x', "$7z2201zip", '-aoa', "-o$7z2201", '-r', '-y')
-                    Write-Host "Extracted archive: '$7z2201'"
+                        'x', "$7z2601zip", '-aoa', "-o$7z2601", '-r', '-y')
+                    Write-Host "Extracted archive: '$7z2601'"
                 }
             }
         }
 
         # Specify latest version of 7zip so that we can use it below
-        if (Test-Path -Path "$7z2201/x64/7za.exe" -PathType Leaf) {
-            $7zip = "$7z2201/x64/7za.exe"
+        if (Test-Path -Path "$7z2601/x64/7za.exe" -PathType Leaf) {
+            $7zip = "$7z2601/x64/7za.exe"
         }
     }
     else {
-        $7z2201zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath '7z2201-linux-x64.tar.xz'
-        $7z2201 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath '7z2201'
+        $7z2601zip = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath '7z2601-linux-x64.tar.xz'
+        $7z2601 = Join-Path -Path "$script:MycelioLocalDir" -ChildPath '7z2601'
 
         # Download 7zip that was stored in a zip file so that we can extract the latest version stored in 7z format
-        if (-not(Test-Path -Path "$7z2201zip" -PathType Leaf)) {
-            Get-File -Url 'https://www.7-zip.org/a/7z2201-linux-x64.tar.xz' -Filename "$7z2201zip"
+        if (-not(Test-Path -Path "$7z2601zip" -PathType Leaf)) {
+            Get-File -Url 'https://github.com/ip7z/7zip/releases/download/26.01/7z2601-linux-x64.tar.xz' -Filename "$7z2601zip"
         }
 
         # Extract previous version of 7zipTempDir first
-        if (Test-Path -Path "$7z2201zip" -PathType Leaf) {
-            if ( -not(Test-Path -Path "$7z2201") ) {
-                New-Item -ItemType directory -Path "$7z2201" | Out-Null
+        if (Test-Path -Path "$7z2601zip" -PathType Leaf) {
+            if ( -not(Test-Path -Path "$7z2601") ) {
+                New-Item -ItemType directory -Path "$7z2601" | Out-Null
             }
 
-            if (-not(Test-Path -Path "$7z2201/7zz" -PathType Leaf)) {
-                tar -xvf "$7z2201zip" -C "$7z2201"
+            if (-not(Test-Path -Path "$7z2601/7zz" -PathType Leaf)) {
+                tar -xvf "$7z2601zip" -C "$7z2601"
             }
         }
 
-        if (Test-Path -Path "$7z2201/7zz" -PathType Leaf) {
-            $7zip = "$7z2201/7zz"
+        if (Test-Path -Path "$7z2601/7zz" -PathType Leaf) {
+            $7zip = "$7z2601/7zz"
         }
     }
 
@@ -273,7 +273,7 @@ Function Expand-File {
     }
 }
 
-Function Get-File {
+function Get-File {
     <#
 .SYNOPSIS
     Downloads a file
@@ -287,7 +287,7 @@ Function Get-File {
     C:\PS> Get-File -Name "mynuget.exe" -Url https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
 #>
 
-    Param(
+    param(
         [Parameter(Position = 0, mandatory = $true)]
         [string]$Url,
         [string]$Filename = ''
@@ -375,7 +375,7 @@ Function Get-File {
     }
 }
 
-Function Install-Git {
+function Install-Git {
     # Install git so we can clone repositories
     try {
         $script:MycelioGit = ''
@@ -400,14 +400,14 @@ Function Install-Git {
         $MycelioLocalGitBinDir = Join-Path -Path "$MycelioLocalGitDir" -ChildPath 'cmd'
         $script:MycelioLocalGit = Join-Path -Path "$MycelioLocalGitBinDir" -ChildPath 'git.exe'
 
-        if (-Not (Test-Path -Path "$script:MycelioLocalGit" -PathType Leaf)) {
+        if (-not (Test-Path -Path "$script:MycelioLocalGit" -PathType Leaf)) {
             $gitFilename = 'MinGit-2.33.0.2-64-bit.zip'
             $gitArchive = Join-Path -Path "$script:MycelioArchivesDir" -ChildPath "$gitFilename"
             Get-File -Url "https://github.com/git-for-windows/git/releases/download/v2.33.0.windows.2/$gitFilename" -Filename "$gitArchive"
             Expand-File -Path "$gitArchive" -DestinationPath "$MycelioLocalGitDir"
         }
 
-        if (-Not (Test-Path -Path "$script:MycelioGit" -PathType Leaf)) {
+        if (-not (Test-Path -Path "$script:MycelioGit" -PathType Leaf)) {
             $script:MycelioGit = "$script:MycelioLocalGit"
         }
 
@@ -434,7 +434,7 @@ Function Install-Git {
     }
 }
 
-Function Install-Tool {
+function Install-Tool {
     <#
 .SYNOPSIS
     Installs a tool with 'scoop' if it does not exist.
@@ -446,7 +446,7 @@ Function Install-Tool {
     C:\PS> Install-Tool sudo
 #>
 
-    Param(
+    param(
         [Parameter(Position = 0, mandatory = $true)]
         [string]$Tool
     )
@@ -456,13 +456,13 @@ Function Install-Tool {
     }
 }
 
-Function Write-WindowsSandboxTemplate {
+function Write-WindowsSandboxTemplate {
     $sandboxTemplate = Get-Content -Path "$script:MycelioRoot\source\windows\sandbox\sandbox.wsb.template" | Out-String
     $sandbox = $sandboxTemplate -replace '${workspaceFolder}', $script:MycelioRoot
     Set-Content -Path "$script:MycelioArtifactsDir\sandbox.wsb" -Value "$sandbox"
 }
 
-Function Initialize-ConsoleFont {
+function Initialize-ConsoleFont {
     Write-Host '::group::Initialize Console Font'
 
     $fontBaseName = 'JetBrains Mono'
@@ -518,7 +518,7 @@ Function Initialize-ConsoleFont {
         }
 
         # Remove the existing font first
-        If (Test-Path "$targetFontPath" -PathType Any) {
+        if (Test-Path "$targetFontPath" -PathType Any) {
             # Very likely for this to fail so do not print errors
             Remove-Item "$targetFontPath" -Recurse -Force -ErrorAction SilentlyContinue >$null
         }
@@ -529,7 +529,7 @@ Function Initialize-ConsoleFont {
         #    - https://richardspowershellblog.wordpress.com/2008/03/20/special-folders/
         #    - https://gist.github.com/anthonyeden/0088b07de8951403a643a8485af2709b
         $fontsFolder = (New-Object -ComObject Shell.Application).Namespace(0x14)
-        If (-not(Test-Path "$targetFontPath" -PathType Container)) {
+        if (-not(Test-Path "$targetFontPath" -PathType Container)) {
             # Following action performs the install and hides confirmation
             #    - FOF_SILENT            0x0004
             #    - FOF_NOCONFIRMATION    0x0010
@@ -588,11 +588,11 @@ Function Initialize-ConsoleFont {
     Write-Host '::endgroup::'
 }
 
-Function Install-TexLive {
+function Install-TexLive {
     try {
         Write-Host '::group::Get TexLive'
 
-        [Environment]::SetEnvironmentVariable("TEXLIVE_INSTALL_ENV_NOCHECK", $env:TEXLIVE_INSTALL_ENV_NOCHECK, [System.EnvironmentVariableTarget]::User)
+        [Environment]::SetEnvironmentVariable('TEXLIVE_INSTALL_ENV_NOCHECK', $env:TEXLIVE_INSTALL_ENV_NOCHECK, [System.EnvironmentVariableTarget]::User)
 
         if ($IsWindows -or $ENV:OS) {
             Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -614,7 +614,7 @@ Function Install-TexLive {
             Get-File -Url 'https://mirror.ctan.org/systems/texlive/tlnet/install-tl.zip' -Filename "$tempTexArchive"
 
             # Remove tex foFFlder if it exists
-            If (Test-Path "$tempTexFolder" -PathType Any) {
+            if (Test-Path "$tempTexFolder" -PathType Any) {
                 Remove-Item -Recurse -Force "$tempTexFolder" | Out-Null
             }
             Expand-File -Path "$tempTexArchive" -DestinationPath "$tempTexFolder"
@@ -626,7 +626,7 @@ Function Install-TexLive {
         }
 
         # Remove tex folder if it exists
-        If (Test-Path "$tempTexFolder" -PathType Any) {
+        if (Test-Path "$tempTexFolder" -PathType Any) {
             Remove-Item -Recurse -Force "$tempTexFolder" | Out-Null
         }
 
@@ -696,7 +696,7 @@ tlpdbopt_w32_multi_user 0
         $env:Path = "$ENV:SystemRoot\System32\;$env:TEXLIVE_BIN;$env:Path"
 
         $texExecutable = Join-Path -Path "$env:TEXLIVE_BIN" -ChildPath 'tex.exe'
-        If (Test-Path "$texExecutable" -PathType Leaf) {
+        if (Test-Path "$texExecutable" -PathType Leaf) {
             Write-Host "Skipped install. TeX already exists: '$texExecutable'"
         }
         elseif (($IsWindows -or $ENV:OS) -and (Test-Path -Path "$env:TEXLIVE_INSTALL" -PathType Leaf)) {
@@ -707,7 +707,8 @@ tlpdbopt_w32_multi_user 0
                 # We redirect stderr to stdout because of a seemingly unavoidable error that we get during
                 # install e.g. 'Use of uninitialized value $deftmflocal in string at C:\...\texlive-install\install-tl line 1364.'
                 & "$ENV:SystemRoot\System32\cmd.exe" /d /c """$env:TEXLIVE_INSTALL"" -no-gui -portable -profile ""$texLiveProfile""" | Tee-Object -FilePath "$script:MycelioArtifactsDir\texlive-install.log"
-            } finally {
+            }
+            finally {
                 $ErrorActionPreference = $errorPreference
             }
 
@@ -730,7 +731,7 @@ tlpdbopt_w32_multi_user 0
     }
 }
 
-Function Start-Bash() {
+function Start-Bash() {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute(
         'PSUseShouldProcessForStateChangingFunctions', '', Scope = 'Function')]
     param()
@@ -745,7 +746,7 @@ Function Start-Bash() {
     }
 }
 
-Function Test-SymbolicLink {
+function Test-SymbolicLink {
     $errorPreference = $ErrorActionPreference
     $ErrorActionPreference = 'SilentlyContinue'
 
@@ -769,7 +770,7 @@ Function Test-SymbolicLink {
 
     return $createdSymbolicLink
 }
-Function Install-MSYS2 {
+function Install-MSYS2 {
     $script:MsysTargetDir = "$script:MycelioLocalDir/msys64"
     $script:MsysInstaller = 'msys2-base-x86_64-20221028.sfx.exe'
     $script:MsysArchive = "$script:MycelioArchivesDir/$script:MsysInstaller"
@@ -879,7 +880,7 @@ fi
     }
 }
 
-Function Install-Scoop {
+function Install-Scoop {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingInvokeExpression', '', Scope = 'Function')]
     param()
 
@@ -899,7 +900,7 @@ Function Install-Scoop {
     }
 }
 
-Function Install-Toolset {
+function Install-Toolset {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPositionalParameters', '', Scope = 'Function')]
     param()
 
@@ -907,7 +908,7 @@ Function Install-Toolset {
 
     # Install Perl which is necessary for 'Mycelio' so that we can run it outside of MSYS2 environment.
     try {
-        if (-Not (Test-Path -Path "$script:MycelioLocalDir/perl/portableshell.bat" -PathType Leaf)) {
+        if (-not (Test-Path -Path "$script:MycelioLocalDir/perl/portableshell.bat" -PathType Leaf)) {
             $strawberryPerlVersion = '5.32.1.1'
             $strawberyPerlUrl = "https://strawberryperl.com/download/$strawberryPerlVersion/strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
             Get-File -Url "$strawberyPerlUrl" -Filename "$script:MycelioTempDir\strawberry-perl-$strawberryPerlVersion-64bit-portable.zip"
@@ -920,7 +921,7 @@ Function Install-Toolset {
 
     # Install mutagen so that we can synchronize folders much like 'rclone' but better
     try {
-        if (-Not (Test-Path -Path "$script:MycelioLocalDir/mutagen/mutagen.exe" -PathType Leaf)) {
+        if (-not (Test-Path -Path "$script:MycelioLocalDir/mutagen/mutagen.exe" -PathType Leaf)) {
             $mutagenVersion = 'v0.11.8'
             $mutagenArchive = "mutagen_windows_amd64_$mutagenVersion.zip"
             $mutagenUrl = "https://github.com/mutagen-io/mutagen/releases/download/$mutagenVersion/$mutagenArchive"
@@ -1115,7 +1116,7 @@ Install-WMF5.1.ps1
 .DESCRIPTION
  Test the compatibility of current system with WMF 5.1 and install the package if requirements are met.
 #>
-Function Install-PowerShell {
+function Install-PowerShell {
     param(
         [bool] $AcceptEULA = $false,
         [bool] $AllowRestart = $true
@@ -1197,8 +1198,8 @@ Function Install-PowerShell {
     }
 }
 
-Function Prepare-Environment {
-    Param(
+function Prepare-Environment {
+    param(
         [Parameter(Position = 0, mandatory = $true)]
         [string]$ScriptPath
     )
@@ -1263,7 +1264,7 @@ Function Prepare-Environment {
     }
 }
 
-Function Install-Mutagen {
+function Install-Mutagen {
     try {
         $mutagen = "$script:MycelioUserProfile\.local\mutagen\mutagen.exe"
         $rclone = "$script:MycelioUserProfile\scoop\apps\rclone\current\rclone.exe"
@@ -1302,8 +1303,8 @@ Function Install-Mutagen {
     }
 }
 
-Function Initialize-Environment {
-    Param(
+function Initialize-Environment {
+    param(
         [Parameter(Position = 0, mandatory = $true)]
         [string]$ScriptPath
     )
